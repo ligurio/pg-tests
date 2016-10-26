@@ -130,10 +130,7 @@ def setup_psql(major, minor, distro):
        subprocess.call(["service", "postgresql-%s.%s" % (major, minor), "start"])
        subprocess.call(["chkconfig", "postgresql-%s.%s" % (major, minor), "on"])
 
-    path = os.environ['PATH']
-    path = path + "/usr/pgsql-%s.%s/bin/" % (major, minor)
-    print os.environ['PATH']
-
+    os.environ['PATH'] = os.environ['PATH'] + "/usr/pgsql-%s.%s/bin/" % (major, minor)
     PG_PASSWORD = 'password'
     subprocess.call(["sudo", "-u", "postgres", "psql", "-c", "ALTER USER postgres WITH PASSWORD '%s';" % PG_PASSWORD])
 
@@ -179,7 +176,7 @@ def install_product(name, edition, version, milestone, build):
     major = version.split(".")[0]
     minor = version.split(".")[1]
 
-    os.environ['PATH'] = os.environ['PATH'] + "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin:/root/bin"
+    os.environ['PATH'] = os.environ['PATH'] + "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin"
     d = get_distro()
     setup_repo(d, major, minor, name, edition, milestone, build)
     package_mgmt(major, minor, milestone, edition, d['distro'], "install")
