@@ -1,0 +1,168 @@
+---
+- hosts: all
+  gather_facts: true
+  tasks:
+
+  - name: subscribe to RHSM
+    redhat_subscription: state=present username=a.slaykovsky@postgrespro.ru password=password_LOL autosubscribe=yes
+    become_method: su
+    become: true
+    when: ansible_distribution == "RedHat"
+
+  - name: install required packages (YUM)
+    yum: name={{ item }} state=present update_cache=yes
+    with_items:
+        - git
+        - gcc
+        - python-devel
+        - postgresql-devel 
+        - libselinux-python
+    when: ansible_pkg_mgr == "yum"
+    become_method: su
+    become: true
+# FIXME: Alt 7, SPT-{6,7}
+# FIXME: Astra Linux 14, astra-smolensk-1.4
+# FIXME: [ubuntu1604]"/bin/sh: 1: /usr/bin/python: not found\r\n"
+# FIXME: [ubuntu1510]"/bin/sh: 1: /usr/bin/python: not found\r\n"
+  - name: install required packages (APT)
+    apt: name={{ item }} state=present update_cache=yes
+    with_items:
+        - git
+        - gcc
+        - python-dev
+        - python-selinux
+        - libpq-dev
+    when: ansible_pkg_mgr == "apt"
+    become_method: su
+    become: true
+# FIXME: Rosa Marathon 2012
+  - name: install required packages (urpmi)
+    urpmi: name={{ item }} state=present update_cache=yes
+    with_items:
+        - git
+        - gcc
+        - python-dev
+        - python-selinux
+    when: ansible_pkg_mgr == "urpmi"
+    become_method: su
+    become: true
+# FIXME: SLES 11
+  - name: install required packages (Zypper)
+    zypper: name={{ item }} state=present update_cache=yes
+    with_items:
+        - git
+        - gcc
+        - python-dev
+        - python-selinux
+    when: ansible_pkg_mgr == "zypper"
+    become_method: su
+    become: true
+
+  - name: set up ssh authorized_keys
+    authorized_key: user=test key="{{ item }}" state=present exclusive=yes
+    with_file:
+    - authorized_keys
+
+  - name: download pip
+    get_url:
+      url: https://bootstrap.pypa.io/get-pip.py
+      dest: /tmp
+      validate_certs: no
+
+  - name: install pip
+    command: "python /tmp/get-pip.py"
+    become_method: su
+    become: true
+
+  - name: delete get-pip.py
+    file: state=absent path=/tmp/get-pip.py
+
+  - name: install pytest framework
+    pip: name=pytest version=3.0.3
+    become_method: su
+    become: true
+
+#   yum install -y python-psycopg2
+#   apt-get install -y python-psycopg2
+  - name: install psycopg2 (PostgreSQL adapter for the Python programming language)
+    pip: name=psycopg2 version=2.6.2
+    environment:
+      PATH: "{{ ansible_env.PATH }}:/usr/pgsql-9.6/bin/" 
+    become_method: su
+    become: true
+
+  - name: remove postgresql-devel (YUM)
+    yum: name=postgresql-devel state=absent
+    when: ansible_pkg_mgr == "yum"
+    become_method: su
+    become: true
+
+  - name: remove libpq-dev (APT)
+    apt: name=libpq-dev state=absent
+    when: ansible_pkg_mgr == "apt"
+    become_method: su
+    become: true
+
+  - name: set selinux to permissive
+    selinux: policy=targeted state=permissive
+    when: ansible_selinux == "Enabled"
+    #when: (ansible_distribution == "Ubuntu" and ansible_distribution_major_version == "15") or
+    #      (ansible_distribution == "Debian" and ansible_distribution_major_version == "7")
+    become_method: su
+    become: true
+
+  - name: make sure we have a 'wheel' group
+    group:
+      name: wheel
+      state: present
+    become_method: su
+    become: true
+
+  - name: allow 'wheel' group to have passwordless become_method
+    lineinfile:
+      dest: /etc/sudoers
+      state: present
+      regexp: '^%wheel'
+      line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+    become_method: su
+    become: true
+
+  - name: add user 'test' to the 'wheel' group
+    user:
+      name: "test"
+      groups: wheel
+      append: yes
+    become_method: su
+    become: true
+
+  - name: coredump handling
+    pam_limits: domain={{ item }} limit_type=soft limit_item=core value=unlimited backup=yes
+    with_items:
+      - test
+      - postgres
+    become_method: su
+    become: true
+
+  - name: make a directory for coredumps
+    file: path="/home/test/coredumps" state=directory
+
+  - name: change coredump filename pattern
+    sysctl: name="kernel.core_pattern" value="/home/test/coredumps/core-%e-%p-%t" sysctl_set=yes state=present
+    become_method: su
+    become: true
+
+  - name: unsubscribe from RHSM
+    redhat_subscription: state=absent username=a.slaykovsky@postgrespro.ru password=password_LOL
+    become_method: su
+    become: true
+    when: ansible_distribution == "RedHat"
+
+  - name: copy PostgreSQL installation script
+    copy: src=pginstall-rpm.py dest=/tmp/pginstall-rpm.py mode="a+rwx"
+    become_method: su
+    become: true
+
+  - name: exec PostgreSQL installation script
+    command: /usr/bin/python /tmp/pginstall-rpm.py
+    become_method: su
+    become: true
