@@ -63,6 +63,19 @@ def mac_address_generator():
             random.randint(0x00, 0xff)]
     return ':'.join(map(lambda x: "%02x" % x, mac))
 
+def copy_file(local_path, remote_path, hostname):
+
+    transport = paramiko.Transport((hostname, SSH_PORT))
+    transport.connect(username = SSH_LOGIN, password = SSH_PASSWORD)
+    sftp = paramiko.SFTPClient.from_transport(transport)
+    print "Copying file '%s', remote host is '%s'" % (remote_path, hostname)
+    sftp.get(remote_path, local_path)
+    sftp.close()
+    transport.close()
+    client.close()
+
+    # TODO: return exit code
+
 def exec_command(cmd, hostname):
 
     known_hosts = os.path.expanduser(os.path.join("~", ".ssh", "known_hosts"))
@@ -83,10 +96,13 @@ def exec_command(cmd, hostname):
        print 'Timed Out', e
        sys.exit(1)
 
-    stdin, stdout, stderr = client.exec_command(cmd)
-    print stdout.read() + stderr.read()
+    chan = client.get_transport().open_session()
+    print "Executing '%s' on '%s'" % (cmd, hostname)
+    chan.exec_command(cmd)
+    retcode = chan.recv_exit_status()
     client.close()
 
+    return retcode
 
 #######################################################################
 # Program body
@@ -208,11 +224,27 @@ def main():
     print ansible_cmd
     call(ansible_cmd.split(' '))
 
-    cmd = 'pwd'
-    print "Exec %s on %s" % (domipaddress, cmd)
-    exec_command(cmd, domipaddress)
+    cmd = 'cd pg-tests && pytest --self-contained-html --html=report-$(date "+%Y%m%d-%H%M.%S").html/ \
+				 --failed-first --strict --junit-xml=report-$(date "+%Y%m%d-%H%M.%S").xml'
 
-    #dom.destroy()
+    if DEBUG:
+       cmd = cmd + "--verbose --tb=long --full-trace"
+
+    retcode = exec_command(cmd, domipaddress)
+
+    exec_command("tar cvzf /home/test/archive.tgz /home/test/pg-tests", domipaddress)
+    #copy_file("/home/test/archive.tgz", "/root/archive.tgz", domipaddress)
+    save_image = os.path.join(WORK_DIR, dom.name() + ".img")
+
+    if retcode <> 0:
+       print "Return code is not zero."
+       if dom.save(save_image) < 0:
+          print('Unable to save state of %s to %s' % (dom.name(), save_image))
+       print('Domain %s state saved to %s' % (dom.name(), save_image))
+    else:
+       dom.destroy()
+
+    conn.close()
 
 if __name__ == "__main__":
     exit(main())
