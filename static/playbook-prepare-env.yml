@@ -17,10 +17,11 @@
         - python-devel
         - postgresql-devel
         - libselinux-python
+        - python-psycopg2
     when: ansible_pkg_mgr == "yum"
     become_method: su
     become: true
-
+ 
   - name: add remote repository
     apt_repository: repo="deb http://webdav.l.postgrespro.ru/DIST/pool/astra-1.4-smolensk-{{ item }} smolensk main non-free contrib" state=present
     with_items:
@@ -46,6 +47,7 @@
     with_items:
         - /etc/apt/sources.list_astra
         - /etc/apt/sources.list
+    when: ansible_pkg_mgr == "apt" and ansible_lsb.id == "AstraLinuxSE"
     become_method: su
     become: true
 
@@ -56,6 +58,7 @@
         - gcc-4.7-base
 #        - python-dev
         - python-selinux
+        - python-psycopg2
 #        - libpq-dev
     when: ansible_pkg_mgr == "apt" and ansible_lsb.id == "AstraLinuxSE"
     become_method: su
@@ -70,6 +73,7 @@
         - gcc
         - python-dev
         - python-selinux
+        - python-psycopg2
         - libpq-dev
     when: ansible_pkg_mgr == "apt" and (ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu')
     become_method: su
@@ -125,28 +129,28 @@
 
 #   yum install -y python-psycopg2
 #   apt-get install -y python-psycopg2
-  - name: install psycopg2 (PostgreSQL adapter for the Python programming language)
-    pip: name=psycopg2 version=2.6.2
-    environment:
-      PATH: "{{ ansible_env.PATH }}:/usr/pgsql-9.6/bin/"
-    become_method: su
-    become: true
+#  - name: install psycopg2
+#    pip: name=psycopg2 version=2.6.2
+#    environment:
+#      PATH: "{{ ansible_env.PATH }}:/usr/pgsql-9.6/bin/"
+#    become_method: su
+#    become: true
 
-  - name: remove postgresql-devel (YUM)
-    yum: name={{ item }} state=absent
-    with_items:
-      - postgresql-devel
-      - postgresql-libs
-      - postgresql
-    when: ansible_pkg_mgr == "yum"
-    become_method: su
-    become: true
+#  - name: remove postgresql-devel (YUM)
+#    yum: name={{ item }} state=absent
+#    with_items:
+#      - postgresql-devel
+#      - postgresql-libs
+#      - postgresql
+#    when: ansible_pkg_mgr == "yum"
+#    become_method: su
+#    become: true
 
-  - name: remove libpq-dev (APT)
-    apt: name=libpq-dev state=absent
-    when: ansible_pkg_mgr == "apt"
-    become_method: su
-    become: true
+#  - name: remove libpq-dev (APT)
+#    apt: name=libpq-dev state=absent
+#    when: ansible_pkg_mgr == "apt"
+#    become_method: su
+#    become: true
 
   - name: set selinux to permissive
     selinux: policy=targeted state=permissive
@@ -190,6 +194,15 @@
 
   - name: make a directory for coredumps
     file: path="/home/test/coredumps" state=directory
+
+  - name: change coredump filename pattern
+    sysctl: name={{ item }} state=absent
+    with_items:
+        - net.bridge.bridge-nf-call-arptables
+        - net.bridge.bridge-nf-call-iptables
+    become_method: su
+    become: true
+    when: ansible_os_family == "GosLinux"
 
   - name: change coredump filename pattern
     sysctl: name="kernel.core_pattern" value="/home/test/coredumps/core-%e-%p-%t" sysctl_set=yes state=present
