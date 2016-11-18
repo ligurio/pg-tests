@@ -215,16 +215,6 @@
     become: true
     when: ansible_distribution == "RedHat"
 
-  - name: copy PostgreSQL installation script
-    copy: src=pginstall-rpm.py dest=/tmp/pginstall-rpm.py mode="a+rwx"
-    become_method: su
-    become: true
-
-  - name: exec PostgreSQL installation script
-    command: /usr/bin/python /tmp/pginstall-rpm.py
-    become_method: su
-    become: true
-
   - name: checkout latest version of tests
     git: repo=https://git.postgrespro.ru/pgpro-dev/pg-tests.git dest=/home/test/pg-tests
 
