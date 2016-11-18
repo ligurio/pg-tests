@@ -209,8 +209,14 @@ def fix_version(major, minor, milestone, edition, repo_file):
            line = re.sub(find, replace, line.rstrip())
            print(line)
 
-def install_product(name, edition, version, milestone, build):
 
+def install_product():
+
+    version = "9.6"
+    milestone = "beta"
+    name = "postgrespro"
+    edition = "opensource"
+    build = "1"
     major = version.split(".")[0]
     minor = version.split(".")[1]
 
@@ -219,14 +225,8 @@ def install_product(name, edition, version, milestone, build):
     setup_repo(d, major, minor, name, edition, milestone, build)
     package_mgmt(major, minor, milestone, edition, d['distro'], "install")
     setup_psql(major, minor, d['distro'])
-
-if __name__ == '__main__':
-
-    version = "9.6"
-    milestone = "beta"
-    name = "postgrespro"
-    edition = "opensource"
-    build = "1"
-
-    print "PARAMETERS:", name, edition, version, milestone
-    install_product(name, edition, version, milestone, build)
+    return {'version': version,
+            'milestone': milestone,
+            'name': name,
+            'edition': edition,
+            'build': build}
