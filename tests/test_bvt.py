@@ -17,8 +17,8 @@ def test_bvt(install_postgres):
     cursor = conn.cursor()
     cursor.execute("select pgpro_version()")
     pgpro_info = get_pgpro_info(cursor.fetchall()[0][0])
-    print("What must be installed", install_product)
+    print("What must be installed", install_postgres)
     print("Information about installed PostgresPro ", pgpro_info)
-    assert install_product['name'] == pgpro_info['name'].lower()
-    assert install_product['version'] == pgpro_info['version']
-    assert install_product['build'] == pgpro_info['build']
+    assert install_postgres['name'] == pgpro_info['name'].lower()
+    assert install_postgres['version'] == pgpro_info['version']
+    assert install_postgres['build'] == pgpro_info['build']
