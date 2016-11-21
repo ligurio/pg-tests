@@ -26,6 +26,7 @@ WORK_DIR = '/pgpro/test-envs/'
 ANSIBLE_PLAYBOOK = 'static/playbook-prepare-env.yml'
 
 SSH_LOGIN = 'test'
+SSH_ROOT = 'root'
 SSH_PASSWORD = 'TestPass1'
 SSH_ROOT_PASSWORD = 'TestRoot1'
 SSH_PORT = 22
@@ -66,17 +67,20 @@ def mac_address_generator():
 def copy_file(local_path, remote_path, hostname):
 
     transport = paramiko.Transport((hostname, SSH_PORT))
-    transport.connect(username = SSH_LOGIN, password = SSH_PASSWORD)
+    transport.connect(username = SSH_ROOT, password = SSH_ROOT_PASSWORD)
     sftp = paramiko.SFTPClient.from_transport(transport)
     print "Copying file '%s', remote host is '%s'" % (remote_path, hostname)
     sftp.get(remote_path, local_path)
     sftp.close()
     transport.close()
-    client.close()
 
     # TODO: return exit code
 
 def exec_command(cmd, hostname):
+
+    buff_size = 1024
+    stdout = ""
+    stderr = ""
 
     known_hosts = os.path.expanduser(os.path.join("~", ".ssh", "known_hosts"))
     try:
@@ -84,8 +88,8 @@ def exec_command(cmd, hostname):
        if os.path.isfile(known_hosts):
           client.load_system_host_keys(known_hosts)
        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-       client.connect(hostname=hostname, username=SSH_LOGIN, \
-		      password=SSH_PASSWORD, port=SSH_PORT, look_for_keys=False)
+       client.connect(hostname=hostname, username=SSH_ROOT, \
+		      password=SSH_ROOT_PASSWORD, port=SSH_PORT, look_for_keys=False)
     except paramiko.AuthenticationException, e:
        print 'Auth Error: ', e
        sys.exit(1)
@@ -100,9 +104,15 @@ def exec_command(cmd, hostname):
     print "Executing '%s' on '%s'" % (cmd, hostname)
     chan.exec_command(cmd)
     retcode = chan.recv_exit_status()
+    while chan.recv_ready():
+        stdout += chan.recv(buff_size)
+
+    while chan.recv_stderr_ready():
+        stderr += chan.recv_stderr(buff_size)
+
     client.close()
 
-    return retcode
+    return retcode, stdout, stderr
 
 #######################################################################
 # Program body
@@ -111,13 +121,13 @@ def exec_command(cmd, hostname):
 def main():
 
     names = list_images()
-    actions = ['suspend', 'nothing', 'undefine']
+    actions = ['keep']
     parser = argparse.ArgumentParser(description='PostgreSQL regression tests run script.')
     parser.add_argument('--target', dest = "target", choices=names, \
 		        help='System under test (image)')
     parser.add_argument('--test', dest = "run_tests", help='Tests to run (default: all)')
     parser.add_argument('--action', dest = "action", choices=actions, \
-                        help='What to do with instance in case of test fail (default: suspend)')
+                        help='What to do with instance in case of test fail')
 
     args = parser.parse_args()
 
@@ -225,33 +235,36 @@ def main():
     if DEBUG:
        ansible_cmd = ansible_cmd + " -vvv"
     print ansible_cmd
-    call(ansible_cmd.split(' '))
+    if not call(ansible_cmd.split(' ')):
+       print "Setup of the test environment %s is failed." % domname
+       sys.exit(1)
 
-    cmd = 'cd pg-tests && pytest --self-contained-html --html=report-$(date "+%Y%m%d-%H%M.%S").html/ \
-				 --failed-first --strict --junit-xml=report-$(date "+%Y%m%d-%H%M.%S").xml'
+    date = time.strftime('%Y-%b-%d-%H-%M-%S')
+    cmd = 'cd /home/test/pg-tests && pytest --self-contained-html \
+           --html=report-%s.html --junit-xml=report-%s.xml --failed-first' % (date, date)
 
     if DEBUG:
        cmd = cmd + "--verbose --tb=long --full-trace"
 
-    retcode = exec_command(cmd, domipaddress)
+    retcode, stdout, stderr = exec_command(cmd, domipaddress)
 
-    exec_command("tar cvzf /home/test/archive.tgz /home/test/pg-tests", domipaddress)
-    #copy_file("/home/test/archive.tgz", "/root/archive.tgz", domipaddress)
+    copy_file("/root/report-%s.html" % date, "/home/test/pg-tests/report-%s.html" % date, domipaddress)
+    copy_file("/root/report-%s.xml" % date, "/home/test/pg-tests/report-%s.xml" % date, domipaddress)
     save_image = os.path.join(WORK_DIR, dom.name() + ".img")
 
-    if retcode <> 0:
-       print "Return code is not zero."
-       if (args.action == None) or (args.action == 'suspend'):
+    if args.action == None:
+       if retcode <> 0:
+          print "Return code is not zero - %s." % retcode
+          print stdout, stderr
           if dom.save(save_image) < 0:
              print('Unable to save state of %s to %s' % (dom.name(), save_image))
           print('Domain %s state saved to %s' % (dom.name(), save_image))
-       elif args.action == 'undefine':
-          if dom.undefine() < 0:
-             print('Unable to undefine of %s' % dom.name())
-       elif args.action == 'nothing':
-          print('Domain %s (IP address %s)' % (dom.name(), domipaddress))
-    else:
-       dom.undefine()
+       else:
+          if dom.destroy() < 0:
+             print('Unable to destroy of %s' % dom.name())
+          os.remove(domimage)
+    elif args.action == 'keep':
+       print('Domain %s (IP address %s)' % (dom.name(), domipaddress))
 
     conn.close()
 
