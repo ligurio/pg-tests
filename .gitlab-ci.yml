@@ -1,0 +1,20 @@
+image: debian
+
+stages:
+  - test
+
+before_script:
+  - uname -a
+  - df -h
+  - export DEBIAN_FRONTEND=noninteractive
+
+test:
+  stage: test
+  before_script:
+    - apt-get -yqq update
+    - apt-get install -yqq python python-dev libyaml-dev python-pip libssl-dev libffi-dev
+    - pip install --upgrade cffi
+    - pip install ansible-lint
+  script:
+    - ansible-lint static/playbook-prepare-env.yml
+  when: always

@@ -21,7 +21,7 @@
     when: ansible_pkg_mgr == "yum"
     become_method: su
     become: true
- 
+
   - name: add remote repository
     apt_repository: repo="deb http://webdav.l.postgrespro.ru/DIST/pool/astra-1.4-smolensk-{{ item }} smolensk main non-free contrib" state=present
     with_items:
@@ -118,6 +118,8 @@
     command: "python /tmp/get-pip.py"
     become_method: su
     become: true
+    tags:
+    - skip_ansible_lint
 
   - name: delete get-pip.py
     file: state=absent path=/tmp/get-pip.py
@@ -220,6 +222,8 @@
 
   - name: checkout latest version of tests
     git: repo=https://git.postgrespro.ru/automation/pg-tests.git dest=/home/test/pg-tests
+    tags:
+    - skip_ansible_lint
 
   #- name: psycopg2 test script
   #  command: /usr/bin/python -c "import psycopg2; conn = psycopg2.connect(\"host='localhost' dbname='postgres' user='postgres' password='password'\") "
