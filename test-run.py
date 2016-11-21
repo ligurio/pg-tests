@@ -239,8 +239,9 @@ def main():
        print "Setup of the test environment %s is failed." % domname
        sys.exit(1)
 
-    cmd = 'cd pg-tests && pytest --self-contained-html --html=report-$(date "+%Y%m%d-%H%M.%S").html/ \
-				 --failed-first --strict --junit-xml=report-$(date "+%Y%m%d-%H%M.%S").xml'
+    date = time.strftime('%Y-%b-%d-%H-%M-%S')
+    cmd = 'cd /home/test/pg-tests && pytest --self-contained-html \
+           --html=report-%s.html --junit-xml=report-%s.xml --failed-first' % (date, date)
 
     if DEBUG:
        cmd = cmd + "--verbose --tb=long --full-trace"
