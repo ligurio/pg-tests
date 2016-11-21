@@ -79,6 +79,10 @@ def copy_file(local_path, remote_path, hostname):
 
 def exec_command(cmd, hostname):
 
+    buff_size = 1024
+    stdout = ""
+    stderr = ""
+
     known_hosts = os.path.expanduser(os.path.join("~", ".ssh", "known_hosts"))
     try:
        client = paramiko.SSHClient()
@@ -101,9 +105,15 @@ def exec_command(cmd, hostname):
     print "Executing '%s' on '%s'" % (cmd, hostname)
     chan.exec_command(cmd)
     retcode = chan.recv_exit_status()
+    while chan.recv_ready():
+        stdout += chan.recv(buff_size)
+
+    while chan.recv_stderr_ready():
+        stderr += chan.recv_stderr(buff_size)
+
     client.close()
 
-    return retcode
+    return retcode, stdout, stderr
 
 #######################################################################
 # Program body
@@ -234,7 +244,7 @@ def main():
     if DEBUG:
        cmd = cmd + "--verbose --tb=long --full-trace"
 
-    retcode = exec_command(cmd, domipaddress)
+    retcode, stdout, stderr = exec_command(cmd, domipaddress)
 
     exec_command("tar cvzf /home/test/archive.tgz /home/test/pg-tests", domipaddress)
     #copy_file("/home/test/archive.tgz", "/root/archive.tgz", domipaddress)
