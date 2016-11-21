@@ -73,7 +73,6 @@ def copy_file(local_path, remote_path, hostname):
     sftp.get(remote_path, local_path)
     sftp.close()
     transport.close()
-    client.close()
 
     # TODO: return exit code
 
