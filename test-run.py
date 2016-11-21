@@ -121,13 +121,13 @@ def exec_command(cmd, hostname):
 def main():
 
     names = list_images()
-    actions = ['suspend', 'nothing', 'undefine']
+    actions = ['keep']
     parser = argparse.ArgumentParser(description='PostgreSQL regression tests run script.')
     parser.add_argument('--target', dest = "target", choices=names, \
 		        help='System under test (image)')
     parser.add_argument('--test', dest = "run_tests", help='Tests to run (default: all)')
     parser.add_argument('--action', dest = "action", choices=actions, \
-                        help='What to do with instance in case of test fail (default: suspend)')
+                        help='What to do with instance in case of test fail')
 
     args = parser.parse_args()
 
@@ -251,19 +251,19 @@ def main():
     #copy_file("/home/test/archive.tgz", "/root/archive.tgz", domipaddress)
     save_image = os.path.join(WORK_DIR, dom.name() + ".img")
 
-    if retcode <> 0:
-       print "Return code is not zero."
-       if (args.action == None) or (args.action == 'suspend'):
+    if args.action == None:
+       if retcode <> 0:
+          print "Return code is not zero - %s." % retcode
+          print stdout, stderr
           if dom.save(save_image) < 0:
              print('Unable to save state of %s to %s' % (dom.name(), save_image))
           print('Domain %s state saved to %s' % (dom.name(), save_image))
-       elif args.action == 'undefine':
-          if dom.undefine() < 0:
-             print('Unable to undefine of %s' % dom.name())
-       elif args.action == 'nothing':
-          print('Domain %s (IP address %s)' % (dom.name(), domipaddress))
-    else:
-       dom.undefine()
+       else:
+          if dom.destroy() < 0:
+             print('Unable to destroy of %s' % dom.name())
+          os.remove(domimage)
+    elif args.action == 'keep':
+       print('Domain %s (IP address %s)' % (dom.name(), domipaddress))
 
     conn.close()
 
