@@ -26,6 +26,7 @@ WORK_DIR = '/pgpro/test-envs/'
 ANSIBLE_PLAYBOOK = 'static/playbook-prepare-env.yml'
 
 SSH_LOGIN = 'test'
+SSH_ROOT = 'root'
 SSH_PASSWORD = 'TestPass1'
 SSH_ROOT_PASSWORD = 'TestRoot1'
 SSH_PORT = 22
@@ -66,7 +67,7 @@ def mac_address_generator():
 def copy_file(local_path, remote_path, hostname):
 
     transport = paramiko.Transport((hostname, SSH_PORT))
-    transport.connect(username = SSH_LOGIN, password = SSH_PASSWORD)
+    transport.connect(username = SSH_ROOT, password = SSH_ROOT_PASSWORD)
     sftp = paramiko.SFTPClient.from_transport(transport)
     print "Copying file '%s', remote host is '%s'" % (remote_path, hostname)
     sftp.get(remote_path, local_path)
@@ -84,8 +85,8 @@ def exec_command(cmd, hostname):
        if os.path.isfile(known_hosts):
           client.load_system_host_keys(known_hosts)
        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-       client.connect(hostname=hostname, username=SSH_LOGIN, \
-		      password=SSH_PASSWORD, port=SSH_PORT, look_for_keys=False)
+       client.connect(hostname=hostname, username=SSH_ROOT, \
+		      password=SSH_ROOT_PASSWORD, port=SSH_PORT, look_for_keys=False)
     except paramiko.AuthenticationException, e:
        print 'Auth Error: ', e
        sys.exit(1)
