@@ -248,8 +248,8 @@ def main():
 
     retcode, stdout, stderr = exec_command(cmd, domipaddress)
 
-    exec_command("tar cvzf /home/test/archive.tgz /home/test/pg-tests", domipaddress)
-    #copy_file("/home/test/archive.tgz", "/root/archive.tgz", domipaddress)
+    copy_file("/root/report-%s.html" % date, "/home/test/pg-tests/report-%s.html" % date, domipaddress)
+    copy_file("/root/report-%s.xml" % date, "/home/test/pg-tests/report-%s.xml" % date, domipaddress)
     save_image = os.path.join(WORK_DIR, dom.name() + ".img")
 
     if args.action == None:
