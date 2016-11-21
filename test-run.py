@@ -235,7 +235,9 @@ def main():
     if DEBUG:
        ansible_cmd = ansible_cmd + " -vvv"
     print ansible_cmd
-    call(ansible_cmd.split(' '))
+    if not call(ansible_cmd.split(' ')):
+       print "Setup of the test environment %s is failed." % domname
+       sys.exit(1)
 
     cmd = 'cd pg-tests && pytest --self-contained-html --html=report-$(date "+%Y%m%d-%H%M.%S").html/ \
 				 --failed-first --strict --junit-xml=report-$(date "+%Y%m%d-%H%M.%S").xml'
