@@ -21,8 +21,8 @@ import urllib
 from subprocess import call
 
 IMAGE_BASE_URL = 'http://webdav.l.postgrespro.ru/DIST/vm-images/test/'
-TEMPLATE_DIR = '/home/sergeyb/original_vms/'
-WORK_DIR = '/vz/working_vms/'
+TEMPLATE_DIR = '/pgpro/templates/'
+WORK_DIR = '/pgpro/test-envs/'
 ANSIBLE_PLAYBOOK = 'static/playbook-prepare-env.yml'
 
 SSH_LOGIN = 'test'
