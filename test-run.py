@@ -235,7 +235,8 @@ def main():
     if DEBUG:
        ansible_cmd = ansible_cmd + " -vvv"
     print ansible_cmd
-    if not call(ansible_cmd.split(' ')):
+    retcode = call(ansible_cmd.split(' '))
+    if retcode <> 0:
        print "Setup of the test environment %s is failed." % domname
        sys.exit(1)
 
