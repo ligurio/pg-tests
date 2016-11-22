@@ -249,8 +249,10 @@ def main():
 
     retcode, stdout, stderr = exec_command(cmd, domipaddress)
 
-    copy_file("/root/report-%s.html" % date, "/home/test/pg-tests/report-%s.html" % date, domipaddress)
-    copy_file("/root/report-%s.xml" % date, "/home/test/pg-tests/report-%s.xml" % date, domipaddress)
+    if not os.path.exists('reports'):
+       os.makedirs('reports')
+    copy_file("reports/report-%s.html" % date, "/home/test/pg-tests/report-%s.html" % date, domipaddress)
+    copy_file("reports/report-%s.xml" % date, "/home/test/pg-tests/report-%s.xml" % date, domipaddress)
     save_image = os.path.join(WORK_DIR, dom.name() + ".img")
 
     if args.action == None:
