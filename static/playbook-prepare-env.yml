@@ -15,29 +15,29 @@
         - git
         - gcc
         - python-devel
-        - postgresql-devel
         - libselinux-python
         - python-psycopg2
     when: ansible_pkg_mgr == "yum"
     become_method: su
     become: true
 
-  - name: add remote repository
+  # TODO: move this to Packer post-install script
+  - name: add Astra Linux 1.4 remote repository
     apt_repository: repo="deb http://webdav.l.postgrespro.ru/DIST/pool/astra-1.4-smolensk-{{ item }} smolensk main non-free contrib" state=present
     with_items:
         - install
         - developer
-    when: ansible_pkg_mgr == "apt" and ansible_lsb.id == "AstraLinuxSE" and ansible_lsb.release == "1.4"
+    when: ansible_distribution == "\"astra linux se\"" and ansible_distribution_version == "1.4"
     become_method: su
     become: true
 
   # TODO: move this to Packer post-install script
-  - name: add remote repository
+  - name: add Astra Linux 1.5 remote repository
     apt_repository: repo="deb http://webdav.l.postgrespro.ru/DIST/pool/astra-1.5-smolensk-{{ item }} smolensk main non-free contrib" state=present
     with_items:
         - install
         - developer
-    when: ansible_pkg_mgr == "apt" and ansible_lsb.id == "AstraLinuxSE" and ansible_lsb.release == "1.5"
+    when: ansible_distribution == "\"astralinuxse\"" and ansible_distribution_version == "1.5"
     become_method: su
     become: true
 
@@ -47,7 +47,7 @@
     with_items:
         - /etc/apt/sources.list_astra
         - /etc/apt/sources.list
-    when: ansible_pkg_mgr == "apt" and ansible_lsb.id == "AstraLinuxSE"
+    when: ansible_distribution == "\"astra linux se\"" or ansible_distribution == "\"astralinuxse\""
     become_method: su
     become: true
 
@@ -60,7 +60,7 @@
         - python-selinux
         - python-psycopg2
 #        - libpq-dev
-    when: ansible_pkg_mgr == "apt" and ansible_lsb.id == "AstraLinuxSE"
+    when: ansible_distribution == "\"astra linux se\"" or ansible_distribution == "\"astralinuxse\""
     become_method: su
     become: true
 
@@ -75,7 +75,7 @@
         - python-selinux
         - python-psycopg2
         - libpq-dev
-    when: ansible_pkg_mgr == "apt" and (ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu')
+    when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
     become_method: su
     become: true
 
@@ -145,7 +145,6 @@
     yum: name={{ item }} state=absent
     with_items:
       - postgresql-devel
-      - postgresql-libs
       - postgresql
     when: ansible_pkg_mgr == "yum"
     become_method: su
@@ -178,6 +177,17 @@
       state: present
       regexp: '^%wheel'
       line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+    become_method: su
+    become: true
+
+  # see https://bugzilla.redhat.com/show_bug.cgi?id=1020147
+  - name: comment out requiretty option in /etc/sudoers
+    lineinfile:
+      dest: /etc/sudoers
+      regexp: '^Defaults    requiretty'
+      line: '#Defaults    requiretty'
+      state: present
+    when: ansible_os_family == "RedHat"
     become_method: su
     become: true
 
@@ -219,6 +229,10 @@
     become_method: su
     become: true
     when: ansible_distribution == "RedHat"
+
+  - name: set http.sslVerify to false in a git config
+    git_config: name=http.sslVerify scope=global value="false"
+    when: ansible_distribution == "\"astra linux se\"" or ansible_distribution == "\"astralinuxse\""
 
   - name: checkout latest version of tests
     git: repo=https://git.postgrespro.ru/automation/pg-tests.git dest=/home/test/pg-tests
