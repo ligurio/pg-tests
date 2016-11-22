@@ -6,7 +6,6 @@ import platform
 import re
 import shutil
 import subprocess
-from subprocess import check_output
 import sys
 from subprocess import Popen, PIPE, STDOUT
 import urllib2
@@ -172,8 +171,12 @@ local   all             all                                     peer
 host    all             all             0.0.0.0/0               trust
 host    all             all             ::0/0                   trust"""
 
-    hba_file = subprocess.check_output(["sudo", "-u", "postgres", \
-		"psql", "-t", "-P", "format=unaligned", "-c", "SHOW hba_file;"]).rstrip()
+    cmd = ["sudo", "-u", "postgres", "psql", "-t", "-P", "format=unaligned", "-c", "SHOW hba_file;"]
+    p = Popen(cmd, stdin=stdin, stderr=stderr, shell=shell, stdout=subprocess.PIPE)
+    if p.returncode <> 0:
+       print "Failed to find hba_file", err
+
+    hba_file = p.communicate()[0].rstrip()
     print "Path to hba_file is", hba_file
     hba = fileinput.FileInput(hba_file, inplace=True)
     for line in hba:
