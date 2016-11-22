@@ -172,7 +172,7 @@ host    all             all             0.0.0.0/0               trust
 host    all             all             ::0/0                   trust"""
 
     cmd = ["sudo", "-u", "postgres", "psql", "-t", "-P", "format=unaligned", "-c", "SHOW hba_file;"]
-    p = Popen(cmd, stdin=stdin, stderr=stderr, shell=shell, stdout=subprocess.PIPE)
+    p = Popen(cmd, stderr=stderr, shell=shell, stdout=subprocess.PIPE)
     if p.returncode <> 0:
        print "Failed to find hba_file", err
 
