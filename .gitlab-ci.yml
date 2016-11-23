@@ -15,29 +15,25 @@ before_script:
   - df -h
   - export DEBIAN_FRONTEND=noninteractive
   - apt-get -yqq update
-  - apt-get install -yqq python python-dev libyaml-dev python-pip libssl-dev libffi-dev
+  - apt-get install -yqq python python-dev libyaml-dev python-pip libssl-dev libffi-dev pylint
   - pip install --upgrade cffi
+  - pip install ansible-lint
+  - pip install pep8
 
 ansible-lint:
   stage: test
-  before_script:
-    - pip install ansible-lint
   script:
     - ansible-lint static/playbook-prepare-env.yml
   when: always
 
 pep8-check:
   stage: test
-  before_script:
-    - pip install pep8
   script:
     - pep8 --filename=*.py --ignore=W293,E201,E202,E501 --count .
   when: always
 
 pylint-check:
   stage: test
-  before_script:
-    - apt-get install pylint
   script:
     - pylint -E pg-tests
   when: always
