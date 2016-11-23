@@ -1,39 +1,40 @@
-#!/usr/bin/env python
-
 import fileinput
 import os
 import platform
 import re
-import shutil
 import subprocess
 import sys
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen
 import urllib2
 
-rpm = [ 'server', 'contrib', 'perl', 'python', 'tcl', 'devel', 'docs', 'docs-ru' ]
-deb = [ 'server', 'contrib', 'plperl', 'plpython', 'pltcl', 'libs', 'devel', 'doc', 'doc-ru' ]
+rpm = ['server', 'contrib', 'perl', 'python',
+       'tcl', 'devel', 'docs', 'docs-ru']
+deb = ['server', 'contrib', 'plperl', 'plpython',
+       'pltcl', 'libs', 'devel', 'doc', 'doc-ru']
 
 repohost = "http://repo.postgrespro.ru"
 
-dist = { 'oracle': "Oracle Linux Server", 		\
-         'centos': "CentOS Linux",         		\
-         'centos6': "CentOS",               		\
-         'rhel': "RHEL",                   		\
-         'rhel7': "Red Hat Enterprise Linux Server",   	\
-         'debian': "debian",               		\
-         'ubuntu': "Ubuntu",               		\
-         'sles': "SLES",                   		\
-         'alt-centaur': "AltLinux",       		\
-         'alt-spt6': "AltLinux",           		\
-         'alt-spt7': "AltLinux",           		\
-         'rosa': "ROSA",                   		\
-         'rosa-sx': "ROSA SX",             		\
-         'rosa-dx': "ROSA DX",             		\
-         'rosa-marathon': "ROSA Marathon", 		\
-         'astra': "Astra Linux" }
+dist = {'oracle': "Oracle Linux Server",
+        'centos': "CentOS Linux",
+        'centos6': "CentOS",
+        'rhel': "RHEL",
+        'rhel7': "Red Hat Enterprise Linux Server",
+        'debian': "debian",
+        'ubuntu': "Ubuntu",
+        'sles': "SLES",
+        'alt-centaur': "AltLinux",
+        'alt-spt6': "AltLinux",
+        'alt-spt7': "AltLinux",
+        'rosa': "ROSA",
+        'rosa-sx': "ROSA SX",
+        'rosa-dx': "ROSA DX",
+        'rosa-marathon': "ROSA Marathon",
+        'astra': "Astra Linux"}
 
-rpm_based = [dist['centos'], dist['rhel'], dist['centos6'], dist['rhel7'], dist['oracle']]
+rpm_based = [dist['centos'], dist['rhel'],
+             dist['centos6'], dist['rhel7'], dist['oracle']]
 deb_based = [dist['debian'], dist['ubuntu']]
+
 
 def get_distro():
     """
@@ -45,19 +46,21 @@ def get_distro():
         'distro': platform.linux_distribution()[0],
         'version': platform.linux_distribution()[1].split(".")[0],
         'arch': platform.architecture()[0]
-    }	
-    
+    }
+
     return os
+
 
 def product_name(name, edition, major, minor, milestone):
 
     product_dir = "pgpro-%s.%s" % (major, minor)
     if edition == "ee":
-       product_dir = "pgproee-%s.%s" % (major, minor)
+        product_dir = "pgproee-%s.%s" % (major, minor)
     if milestone:
-       product_dir = product_dir + "-" + milestone
+        product_dir = product_dir + "-" + milestone
 
     return product_dir
+
 
 def get_gpg_key(repohost, product_dir):
 
@@ -70,10 +73,10 @@ def get_gpg_key(repohost, product_dir):
 
     filename = keyurl.rsplit('/', 1)[1]
     if not os.access(filename, os.F_OK):
-       with open(filename, "a") as f:
+        with open(filename, "a") as f:
             f.write(key)
-
     return filename
+
 
 def setup_repo(d, major, minor, name, edition, milestone, build):
 
@@ -126,6 +129,7 @@ def setup_repo(d, major, minor, name, edition, milestone, build):
           sys.exit(1)
        fix_version(major, minor, milestone, edition, repo_file)
 
+
 def package_mgmt(major, minor, milestone, edition, distro, action):
 
     if distro in rpm_based:
@@ -150,6 +154,7 @@ def package_mgmt(major, minor, milestone, edition, distro, action):
           print "Remove PostgreSQL packages with mask", pkg_mask
           subprocess.call(["service", "postgresql-%s.%s" % (major, minor), "stop"])
           subprocess.call(["apt-get", "remove", "-y", pkg_mask])
+
 
 def setup_psql(major, minor, distro):
 
@@ -198,21 +203,21 @@ host    all             all             ::0/0                   trust"""
        subprocess.call(["service", "postgresql", "restart"]) # Ubuntu 14.04
        #subprocess.call(["systemctl", "restart", "postgresql"]) # Debian 8
 
+
 def fix_version(major, minor, milestone, edition, repo_file):
 
     if milestone:
-       print "Fix product version in", repo_file
-       product = "pgpro"
-       if edition == "ee":
-          product = "pgproee"
-       find = product + "-" + major + "." + minor
-       replace = find + "-" + milestone + "/"
-       find = product + "-" + major + "." + minor + "/"
-
-       repo = fileinput.FileInput(repo_file, inplace=True)
-       for line in repo:
-           line = re.sub(find, replace, line.rstrip())
-           print(line)
+        print "Fix product version in", repo_file
+        product = "pgpro"
+        if edition == "ee":
+            product = "pgproee"
+        find = product + "-" + major + "." + minor
+        replace = find + "-" + milestone + "/"
+        find = product + "-" + major + "." + minor + "/"
+        repo = fileinput.FileInput(repo_file, inplace=True)
+        for line in repo:
+            line = re.sub(find, replace, line.rstrip())
+            print(line)
 
 
 def install_product():

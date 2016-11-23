@@ -5,6 +5,7 @@ cache:
     paths:
     - binaries/
     - .config
+    - /var/cache/apt/archives
 
 stages:
   - test
