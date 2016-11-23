@@ -1,5 +1,11 @@
 image: debian
 
+cache:
+    untracked: true
+    paths:
+    - binaries/
+    - .config
+
 stages:
   - test
 
@@ -8,7 +14,7 @@ before_script:
   - df -h
   - export DEBIAN_FRONTEND=noninteractive
 
-test:
+ansible-lint:
   stage: test
   before_script:
     - apt-get -yqq update
@@ -17,4 +23,20 @@ test:
     - pip install ansible-lint
   script:
     - ansible-lint static/playbook-prepare-env.yml
+  when: always
+
+pep8-check:
+  stage: test
+  before_script:
+    - pip install pep8
+  script:
+    - pep8 --filename=*.py --ignore=W293,E201,E202,E501 --count .
+  when: always
+
+pylint-check:
+  stage: test
+  before_script:
+    - apt-get install pylint
+  script:
+    - pylint -E pg-tests
   when: always
