@@ -15,7 +15,7 @@ import urllib2
 def getDistribution():
 
     if sys.platform == "win32":
-        return win32_version()
+        return platform.win32_ver()
     elif sys.platform == "linux" or sys.platform == "linux2":
         distname, version, id = platform.linux_distribution()
         return "%s %s" % (distname, version)

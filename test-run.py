@@ -231,10 +231,10 @@ def main():
         hosts.write("{}	{}\n".format(domipaddress, dom.name()))
 
     with open("static/inventory", "a") as hosts:
-	 inv = "%s ansible_host=%s ansible_become_pass=%s ansible_ssh_pass=%s \
-		ansible_user=%s ansible_become_user=root\n" % \
-		(dom.name(), domipaddress, SSH_ROOT_PASSWORD, SSH_PASSWORD, SSH_LOGIN)
-         hosts.write(inv)
+        inv = "%s ansible_host=%s ansible_become_pass=%s ansible_ssh_pass=%s " \
+              "ansible_user=%s ansible_become_user=root\n" % \
+              (dom.name(), domipaddress, SSH_ROOT_PASSWORD, SSH_PASSWORD, SSH_LOGIN)
+        hosts.write(inv)
 
     os.environ['ANSIBLE_HOST_KEY_CHECKING'] = 'False'
     ansible_cmd = "ansible-playbook %s -i static/inventory -c paramiko --limit %s" % (ANSIBLE_PLAYBOOK, dom.name())
