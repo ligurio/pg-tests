@@ -219,13 +219,8 @@ def fix_version(major, minor, milestone, edition, repo_file):
             print(line)
 
 
-def install_product():
+def install_product(version, milestone, name, edition, build):
 
-    version = "9.6"
-    milestone = "beta"
-    name = "postgrespro"
-    edition = "opensource"
-    build = "1"
     major = version.split(".")[0]
     minor = version.split(".")[1]
 
