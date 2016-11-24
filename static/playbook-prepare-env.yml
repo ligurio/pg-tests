@@ -210,11 +210,12 @@
   - name: make a directory for coredumps
     file: path="/home/test/coredumps" state=directory
 
-  - name: change coredump filename pattern
-    sysctl: name={{ item }} state=absent
+  - name: remove unknown keys from sysctl.conf
+    sysctl: name={{ item }} state=absent reload=no
     with_items:
         - net.bridge.bridge-nf-call-arptables
         - net.bridge.bridge-nf-call-iptables
+        - net.bridge.bridge-nf-call-ip6tables
     become_method: su
     become: true
     when: ansible_os_family == "GosLinux"
