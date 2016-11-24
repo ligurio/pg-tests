@@ -241,7 +241,7 @@ def main():
     if DEBUG:
         ansible_cmd += " -vvv"
     print ansible_cmd
-    time.sleep(5) # GosLinux starts a bit slowly than other distros
+    time.sleep(5)  # GosLinux starts a bit slowly than other distros
     retcode = call(ansible_cmd.split(' '))
     if retcode != 0:
         print "Setup of the test environment %s is failed." % domname
