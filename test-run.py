@@ -133,6 +133,21 @@ def main():
                         help='Tests to run (default: all)')
     parser.add_argument('--action', dest="action", choices=actions,
                         help='What to do with instance in case of test fail')
+    parser.add_argument("--product_name", dest="product_name",
+                        action="store", default='postgrespro',
+                        help="Specify product name (default: postgrespro)")
+    parser.add_argument("--product_version", dest="product_version",
+                        action="store", default='9.6',
+                        help="Specify product version (default: 9.6)")
+    parser.add_argument("--product_edition", dest="product_edition",
+                        action="store", default='ee',
+                        help="Specify product edition (default: ee)")
+    parser.add_argument("--product_milestone", dest="product_milestone",
+                        action="store", default='beta',
+                        help="Specify target milestone (default: beta)")
+    parser.add_argument("--product_build", dest="product_build",
+                        action="store", default='1',
+                        help="Specify product build (default: 1)")
 
     args = parser.parse_args()
 
@@ -247,9 +262,21 @@ def main():
         print "Setup of the test environment %s is failed." % domname
         sys.exit(1)
 
+    product_cmd = ""
+    if args.product_name:
+       product_cmd = product_cmd + "--product_name %s " % args.product_name
+    if args.product_version:
+       product_cmd = product_cmd + "--product_version %s " % args.product_version
+    if args.product_edition:
+       product_cmd = product_cmd + "--product_edition %s " % args.product_edition
+    if args.product_milestone:
+       product_cmd = product_cmd + "--product_milestone %s " % args.product_milestone
+    if args.product_build:
+       product_cmd = product_cmd + "--product_build %s " % args.product_build
+
     date = time.strftime('%Y-%b-%d-%H-%M-%S')
     cmd = 'cd /home/test/pg-tests && sudo pytest --self-contained-html \
-           --html=report-%s.html --junit-xml=report-%s.xml --failed-first' % (date, date)
+           --html=report-%s.html --junit-xml=report-%s.xml --failed-first %s' % (date, date, product_cmd)
 
     if DEBUG:
         cmd = cmd + "--verbose --tb=long --full-trace"
