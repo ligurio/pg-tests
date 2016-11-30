@@ -7,6 +7,7 @@ import random
 import re
 import socket
 import shutil
+import subprocess
 import sys
 import time
 import urllib
@@ -20,6 +21,7 @@ IMAGE_BASE_URL = 'http://webdav.l.postgrespro.ru/DIST/vm-images/test/'
 TEMPLATE_DIR = '/pgpro/templates/'
 WORK_DIR = '/pgpro/test-envs/'
 ANSIBLE_PLAYBOOK = 'static/playbook-prepare-env.yml'
+REPORT_SERVER_URL = 'http://testrep.l.postgrespro.ru/'
 
 SSH_LOGIN = 'test'
 SSH_ROOT = 'root'
@@ -124,15 +126,31 @@ def exec_command(cmd, hostname):
 def main():
 
     names = list_images()
-    actions = ['keep']
     parser = argparse.ArgumentParser(
         description='PostgreSQL regression tests run script.')
     parser.add_argument('--target', dest="target", choices=names,
                         help='System under test (image)')
+    parser.add_argument('--export', dest="export",
+                        help='Export results', action='store_true')
     parser.add_argument('--test', dest="run_tests",
                         help='Tests to run (default: all)')
-    parser.add_argument('--action', dest="action", choices=actions,
+    parser.add_argument('--keep', dest="keep", action='store_true',
                         help='What to do with instance in case of test fail')
+    parser.add_argument("--product_name", dest="product_name",
+                        action="store", default='postgrespro',
+                        help="Specify product name (default: postgrespro)")
+    parser.add_argument("--product_version", dest="product_version",
+                        action="store", default='9.6',
+                        help="Specify product version (default: 9.6)")
+    parser.add_argument("--product_edition", dest="product_edition",
+                        action="store", default='ee',
+                        help="Specify product edition (default: ee)")
+    parser.add_argument("--product_milestone", dest="product_milestone",
+                        action="store", default='beta',
+                        help="Specify target milestone (default: beta)")
+    parser.add_argument("--product_build", dest="product_build",
+                        action="store", default='1',
+                        help="Specify product build (default: 1)")
 
     args = parser.parse_args()
 
@@ -247,9 +265,21 @@ def main():
         print "Setup of the test environment %s is failed." % domname
         sys.exit(1)
 
+    product_cmd = ""
+    if args.product_name:
+        product_cmd = product_cmd + "--product_name %s " % args.product_name
+    if args.product_version:
+        product_cmd = product_cmd + "--product_version %s " % args.product_version
+    if args.product_edition:
+        product_cmd = product_cmd + "--product_edition %s " % args.product_edition
+    if args.product_milestone:
+        product_cmd = product_cmd + "--product_milestone %s " % args.product_milestone
+    if args.product_build:
+        product_cmd = product_cmd + "--product_build %s " % args.product_build
+
     date = time.strftime('%Y-%b-%d-%H-%M-%S')
     cmd = 'cd /home/test/pg-tests && sudo pytest --self-contained-html \
-           --html=report-%s.html --junit-xml=report-%s.xml --failed-first' % (date, date)
+           --html=report-%s.html --junit-xml=report-%s.xml --failed-first %s' % (date, date, product_cmd)
 
     if DEBUG:
         cmd = cmd + "--verbose --tb=long --full-trace"
@@ -262,9 +292,15 @@ def main():
               "/home/test/pg-tests/report-%s.html" % date, domipaddress)
     copy_file("reports/report-%s.xml" % date,
               "/home/test/pg-tests/report-%s.xml" % date, domipaddress)
+
+    if args.export:
+        subprocess.Popen([ 'curl', '-T', 'reports/report-%s.html' % date, REPORT_SERVER_URL ])
+
     save_image = os.path.join(WORK_DIR, dom.name() + ".img")
 
-    if args.action is None:
+    if args.keep:
+        print('Domain %s (IP address %s)' % (dom.name(), domipaddress))
+    else:
         if retcode != 0:
             print "Return code is not zero - %s." % retcode
             print stdout, stderr
@@ -276,8 +312,6 @@ def main():
             if dom.destroy() < 0:
                 print('Unable to destroy of %s' % dom.name())
             os.remove(domimage)
-    elif args.action == 'keep':
-        print('Domain %s (IP address %s)' % (dom.name(), domipaddress))
 
     conn.close()
 

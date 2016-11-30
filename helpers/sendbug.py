@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# https://www.postgresql.org/docs/9.6/static/bug-reporting.html
+# https://www.postgresql.org/docs/current/static/bug-reporting.html
 # https://wiki.postgresql.org/wiki/Guide_to_reporting_problems
 
 import argparse
