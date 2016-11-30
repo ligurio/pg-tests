@@ -3,9 +3,11 @@ import pytest
 
 from helpers.sql_helpers import get_pgpro_info
 
+
 @pytest.mark.usefixtures('install_postgres')
 def test_bvt(install_postgres):
-    # TODO add additional checks for test: pgpro edition check, system default settings and other
+    # TODO add additional checks for test: pgpro edition check,
+    #  system default settings and other
     """ This is BVT test for all PostgreSQL version
     Scenario:
     1. Check PGPRO version
