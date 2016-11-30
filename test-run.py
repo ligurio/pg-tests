@@ -124,14 +124,13 @@ def exec_command(cmd, hostname):
 def main():
 
     names = list_images()
-    actions = ['keep']
     parser = argparse.ArgumentParser(
         description='PostgreSQL regression tests run script.')
     parser.add_argument('--target', dest="target", choices=names,
                         help='System under test (image)')
     parser.add_argument('--test', dest="run_tests",
                         help='Tests to run (default: all)')
-    parser.add_argument('--action', dest="action", choices=actions,
+    parser.add_argument('--keep', dest="keep", action='store_true',
                         help='What to do with instance in case of test fail')
     parser.add_argument("--product_name", dest="product_name",
                         action="store", default='postgrespro',
@@ -291,7 +290,9 @@ def main():
               "/home/test/pg-tests/report-%s.xml" % date, domipaddress)
     save_image = os.path.join(WORK_DIR, dom.name() + ".img")
 
-    if args.action is None:
+    if args.keep:
+        print('Domain %s (IP address %s)' % (dom.name(), domipaddress))
+    else:
         if retcode != 0:
             print "Return code is not zero - %s." % retcode
             print stdout, stderr
@@ -303,8 +304,6 @@ def main():
             if dom.destroy() < 0:
                 print('Unable to destroy of %s' % dom.name())
             os.remove(domimage)
-    elif args.action == 'keep':
-        print('Domain %s (IP address %s)' % (dom.name(), domipaddress))
 
     conn.close()
 
