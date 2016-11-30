@@ -267,15 +267,15 @@ def main():
 
     product_cmd = ""
     if args.product_name:
-       product_cmd = product_cmd + "--product_name %s " % args.product_name
+        product_cmd = product_cmd + "--product_name %s " % args.product_name
     if args.product_version:
-       product_cmd = product_cmd + "--product_version %s " % args.product_version
+        product_cmd = product_cmd + "--product_version %s " % args.product_version
     if args.product_edition:
-       product_cmd = product_cmd + "--product_edition %s " % args.product_edition
+        product_cmd = product_cmd + "--product_edition %s " % args.product_edition
     if args.product_milestone:
-       product_cmd = product_cmd + "--product_milestone %s " % args.product_milestone
+        product_cmd = product_cmd + "--product_milestone %s " % args.product_milestone
     if args.product_build:
-       product_cmd = product_cmd + "--product_build %s " % args.product_build
+        product_cmd = product_cmd + "--product_build %s " % args.product_build
 
     date = time.strftime('%Y-%b-%d-%H-%M-%S')
     cmd = 'cd /home/test/pg-tests && sudo pytest --self-contained-html \
@@ -294,7 +294,7 @@ def main():
               "/home/test/pg-tests/report-%s.xml" % date, domipaddress)
 
     if args.export:
-       subprocess.Popen([ 'curl', '-T', 'reports/report-%s.html' % date, REPORT_SERVER_URL ])
+        subprocess.Popen([ 'curl', '-T', 'reports/report-%s.html' % date, REPORT_SERVER_URL ])
 
     save_image = os.path.join(WORK_DIR, dom.name() + ".img")
 
