@@ -7,6 +7,7 @@ import random
 import re
 import socket
 import shutil
+import subprocess
 import sys
 import time
 import urllib
@@ -20,6 +21,7 @@ IMAGE_BASE_URL = 'http://webdav.l.postgrespro.ru/DIST/vm-images/test/'
 TEMPLATE_DIR = '/pgpro/templates/'
 WORK_DIR = '/pgpro/test-envs/'
 ANSIBLE_PLAYBOOK = 'static/playbook-prepare-env.yml'
+REPORT_SERVER_URL = 'http://testrep.l.postgrespro.ru/'
 
 SSH_LOGIN = 'test'
 SSH_ROOT = 'root'
@@ -128,6 +130,8 @@ def main():
         description='PostgreSQL regression tests run script.')
     parser.add_argument('--target', dest="target", choices=names,
                         help='System under test (image)')
+    parser.add_argument('--export', dest="export",
+                        help='Export results', action='store_true')
     parser.add_argument('--test', dest="run_tests",
                         help='Tests to run (default: all)')
     parser.add_argument('--keep', dest="keep", action='store_true',
@@ -288,6 +292,10 @@ def main():
               "/home/test/pg-tests/report-%s.html" % date, domipaddress)
     copy_file("reports/report-%s.xml" % date,
               "/home/test/pg-tests/report-%s.xml" % date, domipaddress)
+
+    if args.export:
+       subprocess.Popen([ 'curl', '-T', 'reports/report-%s.html' % date, REPORT_SERVER_URL ])
+
     save_image = os.path.join(WORK_DIR, dom.name() + ".img")
 
     if args.keep:
