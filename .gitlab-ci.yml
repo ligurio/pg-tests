@@ -35,5 +35,5 @@ pep8-check:
 pylint-check:
   stage: test
   script:
-    - pylint --ignore=pg-tests/helpers/datafiller.py -E pg-tests
+    - pylint --ignore=datafiller.py -E pg-tests
   when: always
