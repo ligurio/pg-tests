@@ -53,9 +53,9 @@ def create_table(schema="mixed", size=10000):
     """
 
     if schema == "mixed":
-        sqlschema = mixed_schema
+        sqlschema = settings.MIXED_SCHEMA
     elif schema == "pgbench":
-        sqlschema = pgbench_schema
+        sqlschema = settings.PGBENCH_SCHEMA
     else:
         sqlschema = schema
 
