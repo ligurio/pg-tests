@@ -61,8 +61,6 @@ def create_table(schema="mixed", size=10000):
 
     datagen_cmd = ["python", "../helpers/datafiller.py", "-f", "--transaction",
                    "--drop", "--size=%s" % size, "-"]
-    if config.getoption("verbose"):
-        datagen_cmd.append("--debug")
 
     p = subprocess.Popen(datagen_cmd, stdin=subprocess.PIPE,
                          stdout=subprocess.PIPE)
