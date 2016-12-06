@@ -16,7 +16,7 @@ MIXED_SCHEMA = """
 -- df addr_po: pattern='[0-9]{5}' null=0.0 share=CITY
 -- df addr_ct: pattern='[A-Z][a-z]+' null=0.0 share=CITY
 -- df addr_tuple: tuple=addr_nb,addr_rd,addr_po,addr_ct
-CREATE TABLE warehouse ( -- df: mult=1.0
+CREATE TABLE mixed ( -- df: mult=1.0
   id SERIAL PRIMARY KEY
   -- *** INTEGER ***
 , i0 INTEGER CHECK(i0 IS NULL) -- df: null=1.0 size=1
