@@ -61,7 +61,7 @@ def create_table(request):
     else:
         sqlschema = schema
 
-    datagen_cmd = ["python", "../helpers/datafiller.py", "--filter",
+    datagen_cmd = ["python", "../helpers/datafiller.py", "--filter", \
                    "--transaction", "--drop", "--size=%s" % size]
 
     p = subprocess.Popen(datagen_cmd, stdin=subprocess.PIPE,
