@@ -42,7 +42,7 @@ def install_postgres(request):
 
 
 @pytest.fixture(scope="session")
-def create_table(schema="mixed", size=10000):
+def create_table(request):
     """ This method needed for creating table with fake data.
 
     :param schema - SQL schema, the default schema includes almost all available data types:
@@ -52,6 +52,8 @@ def create_table(schema="mixed", size=10000):
     https://www.cri.ensmp.fr/people/coelho/datafiller.html#directives_and_data_generators
     """
 
+    schema, size = request.param
+
     if schema == "mixed":
         sqlschema = settings.MIXED_SCHEMA
     elif schema == "pgbench":
@@ -59,8 +61,8 @@ def create_table(schema="mixed", size=10000):
     else:
         sqlschema = schema
 
-    datagen_cmd = ["python", "../helpers/datafiller.py", "-f", "--transaction",
-                   "--drop", "--size=%s" % size, "-"]
+    datagen_cmd = ["python", "../helpers/datafiller.py", "--filter",
+                   "--transaction", "--drop", "--size=%s" % size]
 
     p = subprocess.Popen(datagen_cmd, stdin=subprocess.PIPE,
                          stdout=subprocess.PIPE)
