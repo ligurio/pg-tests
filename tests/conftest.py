@@ -1,4 +1,7 @@
+import psycopg2
 import pytest
+import settings
+import subprocess
 
 from helpers.pginstall import install_product
 
@@ -36,3 +39,37 @@ def install_postgres(request):
                            name=request.config.getoption('--product_name'),
                            edition=request.config.getoption('--product_edition'),
                            build=request.config.getoption('--product_build'))
+
+
+@pytest.fixture(scope="session")
+def create_table(request):
+    """ This method needed for creating table with fake data.
+
+    :param schema - SQL schema, the default schema includes almost all available data types:
+    :param size - number of rows to insert, default value is 10000:
+    :return:
+
+    https://www.cri.ensmp.fr/people/coelho/datafiller.html#directives_and_data_generators
+    """
+
+    schema, size = request.param
+
+    if schema == "mixed":
+        sqlschema = settings.MIXED_SCHEMA
+    elif schema == "pgbench":
+        sqlschema = settings.PGBENCH_SCHEMA
+    else:
+        sqlschema = schema
+
+    datagen_cmd = ["python", "../helpers/datafiller.py", "--filter",
+                   "--transaction", "--drop", "--size=%s" % size]
+
+    p = subprocess.Popen(datagen_cmd, stdin=subprocess.PIPE,
+                         stdout=subprocess.PIPE)
+    p.stdin.write(sqlschema)
+    p.stdin.close()
+
+    psql = subprocess.Popen(["sudo", "-u", "postgres", "psql"], stdin=p.stdout)
+    psql.wait()
+
+    return psql.returncode

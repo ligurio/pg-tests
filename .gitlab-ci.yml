@@ -29,11 +29,11 @@ ansible-lint:
 pep8-check:
   stage: test
   script:
-    - pep8 --filename=*.py --ignore=W293,E201,E202,E501 --count .
+    - pep8 --exclude helpers/datafiller.py --filename=*.py --ignore=W293,E201,E202,E501 --count .
   when: always
 
 pylint-check:
   stage: test
   script:
-    - pylint -E pg-tests
+    - pylint --ignore=datafiller.py -E pg-tests
   when: always
