@@ -1,0 +1,146 @@
+import fnmatch
+import grp
+import os
+import pwd
+import random
+import subprocess
+
+import psycopg2
+import pytest
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+
+from helpers.sql_helpers import create_test_database
+from helpers.sql_helpers import get_data_directory
+
+
+#  TODO create class for test
+class TestCompression():
+
+    @staticmethod
+    def set_default_tablespace(db_name, tbs_name):
+        """
+
+        :param tbs_name: string - tablespace name
+        :param db_name: database name as string
+        :return:
+        """
+        conn_string = "host='localhost' user='postgres' "
+        conn = psycopg2.connect(conn_string)
+        conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+        cursor = conn.cursor()
+        cursor.execute("ALTER DATABASE {} SET default_tablespace TO {}".format(db_name, tbs_name))
+
+    @staticmethod
+    def get_directory_size(start_path):
+        """ Get directory size recursively
+
+        :param start_path: directory for start
+        :return: total size of directory in bytes
+        """
+        total_size = 0
+        for dirpath, dirnames, filenames in os.walk(start_path):
+            for f in filenames:
+                fp = os.path.join(dirpath, f)
+                total_size += os.path.getsize(fp)
+        #  TODO return in Mb
+        return total_size
+
+    @staticmethod
+    def get_filenames(directory):
+        """
+        This function will return the file names in a directory
+        tree by walking the tree either top-down or bottom-up. For each
+        directory in the tree rooted at directory top (including top itself),
+        it yields a 3-tuple (dirpath, dirnames, filenames).
+        """
+        file_names = []
+        for root, directories, files in os.walk(directory):
+            for filename in files:
+                file_names.append(filename)
+        return file_names
+
+    @staticmethod
+    def create_tablespace_directory():
+        """Create new  directory for tablespace
+        :return: str path to tablespace
+        """
+        tablespace_catalog = 'tablespace-' + str(random.randint(0, 100))
+        tablespace_path = '/tmp/' + tablespace_catalog
+        os.mkdir(tablespace_path)
+        os.chown(tablespace_path,
+                 pwd.getpwnam("postgres").pw_uid,
+                 grp.getgrnam("postgres").gr_gid)
+        return tablespace_path
+
+    def create_tablespace(self, tablespace_name, compression=False):
+        """ Create tablespace
+
+        :return:
+        """
+        tablespace_location = create_tablespace_directory()
+        conn_string = "host='localhost' user='postgres' "
+        conn = psycopg2.connect(conn_string)
+        conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+        cursor = conn.cursor()
+        # TODO add check that PGPRO edition is enterprise
+        if compression:
+            cursor.execute('CREATE TABLESPACE {} LOCATION \'{}\' WITH (compression=true);'.format(tablespace_name,
+                                                                                                  tablespace_location))
+        else:
+            cursor.execute('CREATE TABLESPACE {} LOCATION \'{}\';'.format(tablespace_name, tablespace_location))
+
+@pytest.mark.test_compression
+def test_compression_standalone_positive():
+    #  TODO add check from step 6
+    #  TODO add logging for checks and actions
+    """ Test for compression feature.
+    Scenario:
+    1. Create tablespace without compression
+    2. Run data generator for tablespace without compression
+    3. Save size of created table in file system (count and size of files)
+    4. Create tablespace with compression
+    5. Run data generator for tablespace with compression
+    6. Check tablespace folder for files with *.shm extension
+    7. Save count of files in directory with table
+    8. Save size of table with compression
+    9. Check that files for table in tablespace without compression > that files in tablespace with compression
+    """
+    create_tablespace('compression', compression=True)
+    create_test_database('test')
+    generate_test_data_pgbench('test', scale='200')
+    data_directory = get_data_directory()
+    print(data_directory)
+    #  Save db files size
+    data_size_without_compression = get_directory_size(data_directory)
+    print(data_size_without_compression)
+    set_default_tablespace('test', 'compression')
+    generate_test_data_pgbench('test', scale='200', tbs_name='compression')
+    compression_data_directory = get_data_directory()
+    print(compression_data_directory)
+    data_size_with_compression = get_directory_size(compression_data_directory)
+    print(data_size_with_compression)
+    compression_files = get_filenames(compression_data_directory)
+    assert data_size_with_compression < data_size_without_compression
+
+
+def generate_test_data_pgbench(db_name, scale=None, tbs_name=None):
+    """Run pgbench
+
+    :param db_name:
+    :param scale:
+    :param tbs_name:
+    :return:
+    """
+    rootPath = '/'
+    pattern = 'pgbench'
+    pgbench_locations = []
+    for root, dirs, files in os.walk(rootPath):
+        for filename in fnmatch.filter(files, pattern):
+            pgbench_locations.append(os.path.join(root, filename))
+
+    if tbs_name is not None:
+        subprocess.call(["sudo", "-u", "postgres", '{}'.format(pgbench_locations[0]), '-i', '-s {}'.format(scale),
+                        '--tablespace={}'.format(tbs_name), '{}'.format(db_name)])
+    else:
+        subprocess.call(["sudo", "-u", "postgres", '{}'.format(pgbench_locations[0]), '-i', '-s {}'.format(scale),
+                         '{}'.format(db_name)])
