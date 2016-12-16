@@ -1,6 +1,9 @@
 import psycopg2
+import subprocess
+
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
+from tests import  settings
 
 # TODO Change to class  all methods
 
@@ -42,3 +45,31 @@ def create_test_database(db_name):
     conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
     cursor = conn.cursor()
     cursor.execute("CREATE DATABASE {}".format(db_name))
+
+
+def create_test_table(size, schema):
+    """ This method needed for creating table with fake data.
+    :param schema - SQL schema, the default schema includes almost all available data types:
+    :param size - number of rows to insert, default value is 10000:
+    :return: string as exit code
+    """
+
+    if schema == "mixed":
+        sqlschema = settings.MIXED_SCHEMA
+    elif schema == "pgbench":
+        sqlschema = settings.PGBENCH_SCHEMA
+    else:
+        sqlschema = schema
+
+    datagen_cmd = ["python", "/home/test/pg-tests/helpers/datafiller.py", "--filter",
+                   "--transaction", "--drop", "--size=%s" % size]
+
+    p = subprocess.Popen(datagen_cmd, stdin=subprocess.PIPE,
+                         stdout=subprocess.PIPE)
+    p.stdin.write(sqlschema)
+    p.stdin.close()
+
+    psql = subprocess.Popen(["sudo", "-u", "postgres", "psql"], stdin=p.stdout)
+    psql.wait()
+
+    return psql.returncode

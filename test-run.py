@@ -296,8 +296,8 @@ def main():
               "/home/test/pg-tests/report-%s.xml" % date, domipaddress)
 
     if args.export:
-        subprocess.Popen([ 'curl', '-T', 'reports/report-%s.html' % date, REPORT_SERVER_URL ])
-        subprocess.Popen([ 'curl', '-T', 'reports/report-%s.xml' % date, REPORT_SERVER_URL ])
+        subprocess.Popen(['curl', '-T', 'reports/report-%s.html' % date, REPORT_SERVER_URL])
+        subprocess.Popen(['curl', '-T', 'reports/report-%s.xml' % date, REPORT_SERVER_URL])
 
     save_image = os.path.join(WORK_DIR, dom.name() + ".img")
 
