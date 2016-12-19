@@ -16,8 +16,7 @@ before_script:
   - export DEBIAN_FRONTEND=noninteractive
   - apt-get -yqq update
   - apt-get install -yqq python python-dev libyaml-dev python-pip libssl-dev libffi-dev pylint
-  - pip freeze --local | grep -v '^\-e' | cut -d = -f 1  | xargs pip install -U
-  - pip install --upgrade cffi
+  - pip install -U $(pip freeze | awk '{split($0, a, "=="); print a[1]}')
   - pip install ansible-lint
   - pip install pep8
 
