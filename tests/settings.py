@@ -1,6 +1,12 @@
 
 COREDUMP_DIR = "/home/test/coredumps/"
 
+EXTENSIONS_EE = [ "pg_pathman", "pg_trgm", "pg_variables", "sr_plan",     \
+                   "pgpro_scheduler", "jsquery", "pg_query_state", "rum", \
+                   "fulleq", "fasttrun" ]
+
+EXTENSIONS_OS = [ "pg_pathman", "pg_trgm", "pg_variables", "sr_plan" ]
+
 MIXED_SCHEMA = """
 -- df: size=2000 null=0.0
 -- df name: chars='a-z' length=6 lenvar=2
