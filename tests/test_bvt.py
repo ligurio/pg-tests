@@ -35,20 +35,20 @@ def test_extensions(install_postgres):
     cursor = conn.cursor()
 
     try:
-       cursor.execute("SELECT pgpro_edition()")
+        cursor.execute("SELECT pgpro_edition()")
     except psycopg2.ProgrammingError:
-       pytest.skip("pgpro_version() is not available in PostgreSQL")
+        pytest.skip("pgpro_version() is not available in PostgreSQL")
 
     edition = cursor.fetchall()[0][0]
     cursor.execute("SELECT name FROM pg_catalog.pg_available_extensions")
     available_extensions = [e[0] for e in cursor]
 
     if edition == "opensource":
-       extensions = settings.EXTENSIONS_OS
+        extensions = settings.EXTENSIONS_OS
     elif edition == "enterprise":
-       extensions = settings.EXTENSIONS_EE
+        extensions = settings.EXTENSIONS_EE
     else:
-       pytest.fail("Unknown PostgresPro edition")
+        pytest.fail("Unknown PostgresPro edition")
 
     for e in extensions:
-       assert e in available_extensions
+        assert e in available_extensions
