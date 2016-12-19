@@ -1,10 +1,8 @@
-import psycopg2
 import pytest
-import settings
-import subprocess
 
 from helpers.pginstall import install_product
 from helpers.sql_helpers import create_test_table
+
 
 def pytest_addoption(parser):
     """This method needed for running pytest test with options

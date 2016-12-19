@@ -90,19 +90,18 @@ class TestCompression():
     @pytest.mark.usefixtures('create_table')
     @pytest.mark.parametrize('create_table', [('pgbench', '20')], indirect=True)
     def test_compression_standalone_positive(self):
-        #  TODO add check from step 6
+        #  TODO add check from step 5
         #  TODO add logging for checks and actions
         """ Test for compression feature.
         Scenario:
-        1. Create tablespace without compression
-        2. Run data generator for tablespace without compression
-        3. Save size of created table in file system (count and size of files)
-        4. Create tablespace with compression
-        5. Run data generator for tablespace with compression
-        6. Check tablespace folder for files with *.shm extension
-        7. Save count of files in directory with table
-        8. Save size of table with compression
-        9. Check that files for table in tablespace without compression > that files in tablespace with compression
+        1. Create tablespace with compression
+        2. Save size of created table by fixture in file system (count and size of files)
+        3. Create tablespace with compression
+        4. Run data generator for tablespace with compression
+        5. Check tablespace folder for files with *.shm extension (not implemented yet)
+        6. Save count of files in directory with table
+        7. Save size of table with compression
+        8. Check that files for table in tablespace without compression > that files in tablespace with compression
         """
         self.create_tablespace('compression', compression=True)
         data_directory = get_data_directory()

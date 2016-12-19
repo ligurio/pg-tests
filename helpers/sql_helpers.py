@@ -3,7 +3,7 @@ import subprocess
 
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
-from tests import  settings
+from tests import settings
 
 # TODO Change to class  all methods
 
@@ -61,7 +61,7 @@ def create_test_table(size, schema):
     else:
         sqlschema = schema
 
-    datagen_cmd = ["python", "/home/test/pg-tests/helpers/datafiller.py", "--filter",
+    datagen_cmd = ["python", "./helpers/datafiller.py", "--filter",
                    "--transaction", "--drop", "--size=%s" % size]
 
     p = subprocess.Popen(datagen_cmd, stdin=subprocess.PIPE,
