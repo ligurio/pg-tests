@@ -16,6 +16,8 @@ before_script:
   - export DEBIAN_FRONTEND=noninteractive
   - apt-get -yqq update
   - apt-get install -yqq python python-dev libyaml-dev python-pip libssl-dev libffi-dev pylint
+  - pip install --upgrade setuptools
+  - pip install --upgrade pyasn1
   - pip install --upgrade cffi
   - pip install ansible-lint
   - pip install pep8
