@@ -15,7 +15,8 @@ before_script:
   - df -h
   - export DEBIAN_FRONTEND=noninteractive
   - apt-get -yqq update
-  - apt-get install -yqq python python-dev libyaml-dev python-pip libssl-dev libffi-dev pylint
+  - apt-get install -yqq python python-dev libyaml-dev libssl-dev libffi-dev pylint
+  - easy_install pip
   - pip install -U $(pip freeze | awk '{split($0, a, "=="); print a[1]}')
   - pip install ansible-lint
   - pip install pep8
