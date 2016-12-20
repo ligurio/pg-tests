@@ -129,6 +129,7 @@
     with_items:
       - { name: 'pytest', version: '3.0.3' }
       - { name: 'pytest-html', version: '1.11.0' }
+      - { name: 'netaddr', version: '0.7.18' }
     become_method: su
     become: true
 
