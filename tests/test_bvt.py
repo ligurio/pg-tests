@@ -1,13 +1,12 @@
 import psycopg2
 import pytest
+import settings
 
 from helpers.sql_helpers import get_pgpro_info
 
 
 @pytest.mark.usefixtures('install_postgres')
-def test_bvt(install_postgres):
-    # TODO add additional checks for test: pgpro edition check,
-    #  system default settings and other
+def test_version(install_postgres):
     """ This is BVT test for all PostgreSQL version
     Scenario:
     1. Check PGPRO version
@@ -24,3 +23,32 @@ def test_bvt(install_postgres):
     assert install_postgres['name'] == pgpro_info['name'].lower()
     assert install_postgres['version'] == pgpro_info['version']
     assert install_postgres['build'] == pgpro_info['build']
+
+
+@pytest.mark.usefixtures('install_postgres')
+def test_extensions(install_postgres):
+    """ Make sure all our extensions are available
+    """
+
+    conn_string = "host='localhost' user='postgres' "
+    conn = psycopg2.connect(conn_string)
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("SELECT pgpro_edition()")
+    except psycopg2.ProgrammingError:
+        pytest.skip("pgpro_version() is not available in PostgreSQL")
+
+    edition = cursor.fetchall()[0][0]
+    cursor.execute("SELECT name FROM pg_catalog.pg_available_extensions")
+    available_extensions = [e[0] for e in cursor]
+
+    if edition == "opensource":
+        extensions = settings.EXTENSIONS_OS
+    elif edition == "enterprise":
+        extensions = settings.EXTENSIONS_EE
+    else:
+        pytest.fail("Unknown PostgresPro edition")
+
+    for e in extensions:
+        assert e in available_extensions
