@@ -1,9 +1,7 @@
-import psycopg2
 import pytest
-import settings
-import subprocess
 
 from helpers.pginstall import install_product
+from helpers.sql_helpers import create_test_table
 
 
 def pytest_addoption(parser):
@@ -51,25 +49,6 @@ def create_table(request):
 
     https://www.cri.ensmp.fr/people/coelho/datafiller.html#directives_and_data_generators
     """
-
     schema, size = request.param
 
-    if schema == "mixed":
-        sqlschema = settings.MIXED_SCHEMA
-    elif schema == "pgbench":
-        sqlschema = settings.PGBENCH_SCHEMA
-    else:
-        sqlschema = schema
-
-    datagen_cmd = ["python", "../helpers/datafiller.py", "--filter",
-                   "--transaction", "--drop", "--size=%s" % size]
-
-    p = subprocess.Popen(datagen_cmd, stdin=subprocess.PIPE,
-                         stdout=subprocess.PIPE)
-    p.stdin.write(sqlschema)
-    p.stdin.close()
-
-    psql = subprocess.Popen(["sudo", "-u", "postgres", "psql"], stdin=p.stdout)
-    psql.wait()
-
-    return psql.returncode
+    return create_test_table(size, schema)
