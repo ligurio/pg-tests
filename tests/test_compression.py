@@ -9,6 +9,7 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 from helpers.sql_helpers import create_test_table
 from helpers.sql_helpers import get_data_directory
+from tests.settings import TMP_DIR
 
 
 class TestCompression():
@@ -62,7 +63,7 @@ class TestCompression():
         :return: str path to tablespace
         """
         tablespace_catalog = 'tablespace-' + str(random.randint(0, 100))
-        tablespace_path = '/tmp/' + tablespace_catalog
+        tablespace_path = TMP_DIR + tablespace_catalog
         os.mkdir(tablespace_path)
         os.chown(tablespace_path,
                  pwd.getpwnam("postgres").pw_uid,

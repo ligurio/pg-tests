@@ -204,3 +204,5 @@ CREATE TABLE pgbench_history(  -- df: nogen
   -- UNIQUE (tid, bid, aid, mtime)
 );
 """
+
+TMP_DIR = '/tmp'

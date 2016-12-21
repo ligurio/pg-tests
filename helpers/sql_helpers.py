@@ -30,7 +30,7 @@ def get_data_directory():
     conn_string = "host='localhost' user='postgres' "
     conn = psycopg2.connect(conn_string)
     cursor = conn.cursor()
-    cursor.execute('show data_directory')
+    cursor.execute('SHOW data_directory')
     return cursor.fetchall()[0][0]
 
 
