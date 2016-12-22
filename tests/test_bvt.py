@@ -16,7 +16,7 @@ def test_version(install_postgres):
     conn_string = "host='localhost' user='postgres' "
     conn = psycopg2.connect(conn_string)
     cursor = conn.cursor()
-    cursor.execute("select pgpro_version()")
+    cursor.execute("SELECT pgpro_version()")
     pgpro_info = get_pgpro_info(cursor.fetchall()[0][0])
     print("What must be installed", install_postgres)
     print("Information about installed PostgresPro ", pgpro_info)
