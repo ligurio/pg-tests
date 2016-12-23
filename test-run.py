@@ -276,7 +276,7 @@ def main():
 
     date = time.strftime('%Y-%b-%d-%H-%M-%S')
     cmd = 'cd /home/test/pg-tests && sudo pytest --self-contained-html \
-           --html=report-%s.html --junit-xml=report-%s.xml --failed-first %s' % (date, date, product_cmd)
+           --html=report-%s.html --junit-xml=report-%s.xml --maxfail=1 %s' % (date, date, product_cmd)
 
     if DEBUG:
         cmd = cmd + "--verbose --tb=long --full-trace"
