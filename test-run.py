@@ -139,20 +139,15 @@ def main():
     parser.add_argument('--keep', dest="keep", action='store_true',
                         help='What to do with instance in case of test fail')
     parser.add_argument("--product_name", dest="product_name",
-                        action="store", default='postgrespro',
-                        help="Specify product name (default: postgrespro)")
+                        action="store", help="Specify product name")
     parser.add_argument("--product_version", dest="product_version",
-                        action="store", default='9.6',
-                        help="Specify product version (default: 9.6)")
+                        action="store", help="Specify product version")
     parser.add_argument("--product_edition", dest="product_edition",
-                        action="store", default='ee',
-                        help="Specify product edition (default: ee)")
+                        action="store", help="Specify product edition")
     parser.add_argument("--product_milestone", dest="product_milestone",
-                        action="store", default='beta',
-                        help="Specify target milestone (default: beta)")
+                        action="store", help="Specify target milestone")
     parser.add_argument("--product_build", dest="product_build",
-                        action="store", default='1',
-                        help="Specify product build (default: 1)")
+                        action="store", help="Specify product build")
 
     args = parser.parse_args()
 
