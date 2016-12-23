@@ -16,13 +16,12 @@ def test_version(install_postgres):
     conn_string = "host='localhost' user='postgres' "
     conn = psycopg2.connect(conn_string)
     cursor = conn.cursor()
-    cursor.execute("select pgpro_version()")
+    cursor.execute("SELECT pgpro_version()")
     pgpro_info = get_pgpro_info(cursor.fetchall()[0][0])
     print("What must be installed", install_postgres)
     print("Information about installed PostgresPro ", pgpro_info)
     assert install_postgres['name'] == pgpro_info['name'].lower()
     assert install_postgres['version'] == pgpro_info['version']
-    assert install_postgres['build'] == pgpro_info['build']
 
 
 @pytest.mark.usefixtures('install_postgres')
@@ -43,7 +42,7 @@ def test_extensions(install_postgres):
     cursor.execute("SELECT name FROM pg_catalog.pg_available_extensions")
     available_extensions = [e[0] for e in cursor]
 
-    if edition == "opensource":
+    if edition == "standard":
         extensions = settings.EXTENSIONS_OS
     elif edition == "enterprise":
         extensions = settings.EXTENSIONS_EE

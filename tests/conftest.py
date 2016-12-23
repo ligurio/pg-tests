@@ -6,8 +6,8 @@ from helpers.sql_helpers import create_test_table
 
 def pytest_addoption(parser):
     """This method needed for running pytest test with options
-    Example: command "pytest --product_edition=opensource" will install
-    postgrespro with opensource(standard) edition
+    Example: command "pytest --product_edition=standard" will install
+    postgrespro with standard edition
 
     :param parser pytest default param for command line args:
     :return:
@@ -17,11 +17,11 @@ def pytest_addoption(parser):
     parser.addoption("--product_name", action="store", default='postgrespro',
                      help="Specify product name. Available values: postgrespro, postresql")
     parser.addoption("--product_edition", action="store", default='ee',
-                     help="Specify product edition. Available values: ee, opensource")
-    parser.addoption("--product_milestone", action="store", default='beta',
-                     help="Specify product milestone. Available values: beta, production")
-    parser.addoption("--product_build", action="store", default='1',
-                     help="Specify product build. Available values: 1, ")
+                     help="Specify product edition. Available values: ee, standard")
+    parser.addoption("--product_milestone", action="store",
+                     help="Specify product milestone. Available values: beta")
+    parser.addoption("--product_build", action="store",
+                     help="Specify product build.")
 
 
 @pytest.fixture(scope='session')
@@ -33,9 +33,11 @@ def install_postgres(request):
     :return:
     """
     return install_product(version=request.config.getoption('--product_version'),
-                           milestone=request.config.getoption('--product_milestone'),
+                           milestone=request.config.getoption(
+                               '--product_milestone'),
                            name=request.config.getoption('--product_name'),
-                           edition=request.config.getoption('--product_edition'),
+                           edition=request.config.getoption(
+                               '--product_edition'),
                            build=request.config.getoption('--product_build'))
 
 
