@@ -64,6 +64,12 @@
     become_method: su
     become: true
 
+  - name: Wait for automatic system updates
+    shell: while sudo fuser /var/lib/dpkg/lock >/dev/null 2>&1; do sleep 1; done;
+    when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+    become_method: su
+    become: true
+
 # FIXME: [ubuntu1604]"/bin/sh: 1: /usr/bin/python: not found\r\n"
 # FIXME: [ubuntu1510]"/bin/sh: 1: /usr/bin/python: not found\r\n"
   - name: install required packages (APT)
