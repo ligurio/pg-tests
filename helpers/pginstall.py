@@ -98,7 +98,8 @@ def package_mgmt(name, version, edition, milestone, build):
     if dist[distro] in RPM_BASED:
         if edition == "ee":
             pkg_name = "%s-enterprise%s%s" % (name, major, minor)
-        pkg_name = name + major + minor
+        else:
+            pkg_name = name + major + minor
 
         for p in PACKAGES:
             subprocess.call(["yum", "install", "-y", "%s-%s" % (pkg_name, p)])
