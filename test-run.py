@@ -252,7 +252,8 @@ def main():
         hosts.write(inv)
 
     os.environ['ANSIBLE_HOST_KEY_CHECKING'] = 'False'
-    ansible_cmd = "ansible-playbook %s -i static/inventory -c paramiko --limit %s" % (ANSIBLE_PLAYBOOK, dom.name())
+    ansible_cmd = "ansible-playbook %s -i static/inventory -c paramiko --limit %s" % (
+        ANSIBLE_PLAYBOOK, dom.name())
     if DEBUG:
         ansible_cmd += " -vvv"
     print ansible_cmd
@@ -284,8 +285,8 @@ def main():
     retcode, stdout, stderr = exec_command(cmd, domipaddress)
 
     if retcode != 0:
-       print "Return code is not zero - %s." % retcode
-       print retcode, stdout, stderr
+        print "Return code is not zero - %s." % retcode
+        print retcode, stdout, stderr
 
     if not os.path.exists('reports'):
         os.makedirs('reports')
@@ -295,8 +296,10 @@ def main():
               "/home/test/pg-tests/report-%s.xml" % date, domipaddress)
 
     if args.export:
-        subprocess.Popen(['curl', '-T', 'reports/report-%s.html' % date, REPORT_SERVER_URL])
-        subprocess.Popen(['curl', '-T', 'reports/report-%s.xml' % date, REPORT_SERVER_URL])
+        subprocess.Popen(
+            ['curl', '-T', 'reports/report-%s.html' % date, REPORT_SERVER_URL])
+        subprocess.Popen(['curl', '-T', 'reports/report-%s.xml' %
+                          date, REPORT_SERVER_URL])
 
     save_image = os.path.join(WORK_DIR, dom.name() + ".img")
 
