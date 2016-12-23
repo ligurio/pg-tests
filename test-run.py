@@ -288,6 +288,10 @@ def main():
 
     retcode, stdout, stderr = exec_command(cmd, domipaddress)
 
+    if retcode != 0:
+       print "Return code is not zero - %s." % retcode
+       print retcode, stdout, stderr
+
     if not os.path.exists('reports'):
         os.makedirs('reports')
     copy_file("reports/report-%s.html" % date,
@@ -305,8 +309,6 @@ def main():
         print('Domain %s (IP address %s)' % (dom.name(), domipaddress))
     else:
         if retcode != 0:
-            print "Return code is not zero - %s." % retcode
-            print stdout, stderr
             if dom.save(save_image) < 0:
                 print('Unable to save state of %s to %s' % (dom.name(),
                                                             save_image))
