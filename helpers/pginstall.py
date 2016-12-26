@@ -109,6 +109,32 @@ def package_mgmt(name, version, edition, milestone, build):
                          "%s-%s" % (name, version)])
 
 
+def manage_psql(version, action, init=False):
+    """ Manage Postgres instance
+    :param version 9.5, 9.6 etc
+    :param action: start, restart, stop etc
+    :param init: Initialization before a first start
+    :return:
+    """
+
+    distro = platform.linux_distribution()[0]
+    major = version.split(".")[0]
+    minor = version.split(".")[1]
+
+    if dist[distro] in RPM_BASED:
+        service_name = "postgresql-%s.%s" % (major, minor)
+    elif dist[distro] in DEB_BASED:
+        service_name = "postgresql"
+
+    if init:
+        if dist[distro] in RPM_BASED:
+            subprocess.call(["service", service_name, "initdb"])
+            # subprocess.call(["chkconfig", service_name, "on"])
+            # subprocess.call(["systemctl", "enable", "postgresql"])
+
+    return subprocess.call(["service", service_name, action])
+
+
 def setup_psql(name, version, edition, milestone, build):
 
     distro = platform.linux_distribution()[0]
@@ -116,16 +142,7 @@ def setup_psql(name, version, edition, milestone, build):
     minor = version.split(".")[1]
 
     print "Setup PostgreSQL service"
-    if dist[distro] in RPM_BASED:
-        subprocess.call(["service", "postgresql-%s.%s" %
-                         (major, minor), "initdb"])
-        subprocess.call(["service", "postgresql-%s.%s" %
-                         (major, minor), "start"])
-        subprocess.call(["chkconfig", "postgresql-%s.%s" %
-                         (major, minor), "on"])
-    elif dist[distro] in DEB_BASED:
-        subprocess.call(["service", "postgresql", "start"])
-        # subprocess.call(["chkconfig", "postgresql", "on"])
+    manage_psql(version, "start", True)
 
     os.environ['PATH'] += ":/usr/pgsql-%s.%s/bin/" % (major, minor)
     subprocess.call(["sudo", "-u", "postgres", "psql", "-c",
@@ -158,12 +175,7 @@ host    all             all             ::0/0                   trust"""
     subprocess.call(["chown", "postgres:postgres", hba_file])
     subprocess.call(["sudo", "-u", "postgres", "psql", "-c",
                      "ALTER SYSTEM SET listen_addresses to '*';"])
-    if dist[distro] in RPM_BASED:
-        subprocess.call(["service", "postgresql-%s.%s" %
-                         (major, minor), "restart"])
-    elif dist[distro] in DEB_BASED:
-        subprocess.call(["service", "postgresql", "restart"])  # Ubuntu 14.04
-        #  subprocess.call(["systemctl", "restart", "postgresql"]) # Debian 8
+    manage_psql(version, "restart")
 
 
 def install_product(name, version, edition, milestone, build):
