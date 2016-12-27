@@ -1,0 +1,125 @@
+import fileinput
+import fnmatch
+import os
+import platform
+import re
+import subprocess
+from subprocess import Popen
+
+
+from helpers.pginstall import package_mgmt
+from helpers.pginstall import setup_repo
+
+
+class PgInstance:
+    PG_PASSWORD = 'password'
+    RPM_BASED = ['CentOS Linux', 'RHEL', 'CentOS', 'Red Hat Enterprise Linux Server', 'Oracle Linux Server', 'SLES']
+    DEB_BASED = ['debian', 'Ubuntu']
+
+    def __init__(self, version, milestone, name, edition, build):
+        self.version = version
+        self.milestone = milestone
+        self.name = name
+        self.edition = edition
+        self.build = build
+        self.install_product(name, version, edition, milestone, build)
+
+    def install_product(self, name, version, edition, milestone, build):
+        """ Install product
+        Parameter: Product name: postgrespro, postgresql
+        Parameter: Product version: 9.5, 9.6 etc
+        Parameter: Product editions (postgrespro only): standard, ee
+        Parameter: Product milestone (postgrespro only): beta
+        """
+
+        setup_repo(name, version, edition, milestone, build)
+        package_mgmt(name, version, edition, milestone, build)
+        self.setup_psql(name, version, edition, milestone, build)
+
+        return {'name': name,
+                'version': version,
+                'edition': edition,
+                'milestone': milestone}
+
+    def find(self, pattern, path):
+        result = []
+        for root, dirs, files in os.walk(path):
+            for name in files:
+                if fnmatch.fnmatch(name, pattern):
+                    result.append(os.path.join(root, name))
+        return result
+
+    def status(self):
+        """Search any postgres installed postgres package and their process status process in system
+         return their status
+
+        :return:
+        """
+        pass
+
+    def manage_psql(self, version, action, init=False):
+        """ Manage Postgres instance
+        :param version 9.5, 9.6 etc
+        :param action: start, restart, stop etc
+        :param init: Initialization before a first start
+        :return:
+        """
+
+        distro = platform.linux_distribution()[0]
+        major = version.split(".")[0]
+        minor = version.split(".")[1]
+
+        if distro in self.RPM_BASED:
+            service_name = "postgresql-%s.%s" % (major, minor)
+        elif distro in self.DEB_BASED:
+            service_name = "postgresql"
+
+        if init:
+            if distro in self.RPM_BASED:
+                subprocess.call(["service", service_name, "initdb"])
+                # subprocess.call(["chkconfig", service_name, "on"])
+                # subprocess.call(["systemctl", "enable", "postgresql"])
+
+        return subprocess.call(["service", service_name, action])
+
+    def setup_psql(self, name, version, edition, milestone, build):
+
+        distro = platform.linux_distribution()[0]
+        major = version.split(".")[0]
+        minor = version.split(".")[1]
+
+        print "Setup PostgreSQL service"
+        self.manage_psql(version, "start", True)
+
+        os.environ['PATH'] += ":/usr/pgsql-%s.%s/bin/" % (major, minor)
+        subprocess.call(["sudo", "-u", "postgres", "psql", "-c",
+                         "ALTER USER postgres WITH PASSWORD '%s';" % self.PG_PASSWORD])
+
+        hba_auth = """
+    local   all             all                                     peer
+    host    all             all             0.0.0.0/0               trust
+    host    all             all             ::0/0                   trust"""
+
+        cmd = ["sudo", "-u", "postgres", "psql", "-t", "-P",
+               "format=unaligned", "-c", "SHOW hba_file;"]
+        p = Popen(cmd, stdout=subprocess.PIPE)
+        response = p.communicate()
+        if p.returncode != 0:
+            print "Failed to find hba_file %s" % response[1]
+            return 1
+
+        hba_file = response[0].rstrip()
+        print "Path to hba_file is", hba_file
+        hba = fileinput.FileInput(hba_file, inplace=True)
+        for line in hba:
+            if line[0] != '#':
+                line = re.sub('^', '#', line.rstrip())
+            print line.rstrip()
+
+        with open(hba_file, 'a') as hba:
+            hba.write(hba_auth)
+
+        subprocess.call(["chown", "postgres:postgres", hba_file])
+        subprocess.call(["sudo", "-u", "postgres", "psql", "-c",
+                         "ALTER SYSTEM SET listen_addresses to '*';"])
+        self.manage_psql(version, "restart")
