@@ -6,15 +6,14 @@ import re
 import subprocess
 from subprocess import Popen
 
-
+from helpers.pginstall import DEB_BASED
 from helpers.pginstall import package_mgmt
+from helpers.pginstall import RPM_BASED
 from helpers.pginstall import setup_repo
 
 
 class PgInstance:
     PG_PASSWORD = 'password'
-    RPM_BASED = ['CentOS Linux', 'RHEL', 'CentOS', 'Red Hat Enterprise Linux Server', 'Oracle Linux Server', 'SLES']
-    DEB_BASED = ['debian', 'Ubuntu']
 
     def __init__(self, version, milestone, name, edition, build):
         self.version = version
@@ -69,13 +68,13 @@ class PgInstance:
         major = version.split(".")[0]
         minor = version.split(".")[1]
 
-        if distro in self.RPM_BASED:
+        if distro in RPM_BASED:
             service_name = "postgresql-%s.%s" % (major, minor)
-        elif distro in self.DEB_BASED:
+        elif distro in DEB_BASED:
             service_name = "postgresql"
 
         if init:
-            if distro in self.RPM_BASED:
+            if distro in RPM_BASED:
                 subprocess.call(["service", service_name, "initdb"])
                 # subprocess.call(["chkconfig", service_name, "on"])
                 # subprocess.call(["systemctl", "enable", "postgresql"])
