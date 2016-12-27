@@ -20,8 +20,8 @@ def test_version(install_postgres):
     pgpro_info = get_pgpro_info(cursor.fetchall()[0][0])
     print("What must be installed", install_postgres)
     print("Information about installed PostgresPro ", pgpro_info)
-    assert install_postgres['name'] == pgpro_info['name'].lower()
-    assert install_postgres['version'] == pgpro_info['version']
+    assert install_postgres.name == pgpro_info['name'].lower()
+    assert install_postgres.version == pgpro_info['version']
 
 
 @pytest.mark.usefixtures('install_postgres')
