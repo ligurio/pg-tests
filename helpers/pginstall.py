@@ -5,9 +5,8 @@ import subprocess
 PGPRO_HOST = "http://repo.postgrespro.ru/"
 PSQL_HOST = "https://download.postgresql.org/pub"
 PACKAGES = ['server', 'contrib', 'libs']
-# Change to key names from dist
-RPM_BASED = ['centos', 'rhel', 'centos6', 'rhel7', 'oraclelinux']
-DEB_BASED = ['debian', 'ubuntu']
+RPM_BASED = ['CentOS Linux', 'RHEL', 'CentOS', 'Red Hat Enterprise Linux Server', 'Oracle Linux Server', 'SLES']
+DEB_BASED = ['debian', 'Ubuntu']
 
 dist = {"Oracle Linux Server": 'oraclelinux',
         "CentOS Linux": 'centos',
@@ -41,7 +40,7 @@ def setup_repo(name, version, edition, milestone, build):
         gpg_key_url = "https://repo.postgrespro.ru/pgpro-%s/keys/GPG-KEY-POSTGRESPRO" % version
         baseurl = os.path.join(PGPRO_HOST, product_dir, dist[distro].lower())
 
-    if dist[distro] in RPM_BASED:
+    if distro in RPM_BASED:
         # Example:
         # http://repo.postgrespro.ru/pgproee-9.6-beta/centos/$releasever/os/$basearch/rpms
         if name == "postgrespro":
@@ -59,7 +58,7 @@ enabled=1
             print >> f, repo
         subprocess.call(["rpm", "--import", gpg_key_url])
 
-    elif dist[distro] in DEB_BASED:
+    elif distro in DEB_BASED:
         subprocess.call(["apt-get", "install", "-y", "lsb-release"])
         lsb = subprocess.Popen(
             (["lsb_release", "-cs"]), stdout=subprocess.PIPE)
@@ -90,8 +89,7 @@ def package_mgmt(name, version, edition, milestone, build):
     distro = platform.linux_distribution()[0]
     major = version.split(".")[0]
     minor = version.split(".")[1]
-# Change dist[distro] to distro
-    if dist[distro] in RPM_BASED:
+    if distro in RPM_BASED:
         if edition == "ee":
             pkg_name = "%s-enterprise%s%s" % (name, major, minor)
         else:
@@ -100,6 +98,6 @@ def package_mgmt(name, version, edition, milestone, build):
         for p in PACKAGES:
             subprocess.call(["yum", "install", "-y", "%s-%s" % (pkg_name, p)])
 
-    elif dist[distro] in DEB_BASED:
+    elif distro in DEB_BASED:
         subprocess.call(["apt-get", "install", "-y",
                          "%s-%s" % (name, version)])
