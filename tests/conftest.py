@@ -1,6 +1,6 @@
 import pytest
 
-from helpers.pginstall import install_product
+from helpers.pginstance import PgInstance
 from helpers.sql_helpers import create_test_table
 
 
@@ -32,13 +32,12 @@ def install_postgres(request):
     command line variables from pytest_addoption() method
     :return:
     """
-    return install_product(version=request.config.getoption('--product_version'),
-                           milestone=request.config.getoption(
-                               '--product_milestone'),
-                           name=request.config.getoption('--product_name'),
-                           edition=request.config.getoption(
-                               '--product_edition'),
-                           build=request.config.getoption('--product_build'))
+    pginstance = PgInstance(version=request.config.getoption('--product_version'),
+                            milestone=request.config.getoption('--product_milestone'),
+                            name=request.config.getoption('--product_name'),
+                            edition=request.config.getoption('--product_edition'),
+                            build=request.config.getoption('--product_build'))
+    return pginstance
 
 
 @pytest.fixture(scope="session")
