@@ -41,22 +41,6 @@ class PgInstance:
                 'edition': edition,
                 'milestone': milestone}
 
-    def find(self, pattern, path):
-        result = []
-        for root, dirs, files in os.walk(path):
-            for name in files:
-                if fnmatch.fnmatch(name, pattern):
-                    result.append(os.path.join(root, name))
-        return result
-
-    def status(self):
-        """Search any postgres installed postgres package and their process status process in system
-         return their status
-
-        :return:
-        """
-        pass
-
     def manage_psql(self, version, action, init=False):
         """ Manage Postgres instance
         :param version 9.5, 9.6 etc
