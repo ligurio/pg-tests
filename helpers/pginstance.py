@@ -2,6 +2,7 @@ import fileinput
 import fnmatch
 import os
 import platform
+import psycopg2
 import re
 import subprocess
 from subprocess import Popen
@@ -122,3 +123,75 @@ class PgInstance:
         subprocess.call(["sudo", "-u", "postgres", "psql", "-c",
                          "ALTER SYSTEM SET listen_addresses to '*';"])
         self.manage_psql(version, "restart")
+
+    def get_option(option):
+        """ Get current value of a PostgreSQL option
+        :param: option name
+        :return:
+        """
+
+        conn_string = "host='localhost' user='postgres' "
+        conn = psycopg2.connect(conn_string)
+        cursor = conn.cursor()
+        if not check_option(option):
+            return None
+
+        cursor.execute("SELECT setting FROM pg_settings WHERE name = '%s'" % option)
+        value = cursor.fetchall()[0][0]
+
+        cursor.close()
+        conn.close()
+
+        return value
+
+    def check_option(option):
+        """ Check existence of a PostgreSQL option
+        :param: option name
+        :return: False or True
+        """
+
+        conn_string = "host='localhost' user='postgres' "
+        conn = psycopg2.connect(conn_string)
+        cursor = conn.cursor()
+        cursor.execute("SELECT exists (SELECT 1 FROM pg_settings WHERE name = '%s' LIMIT 1)" % option)
+
+        if not cursor.fetchall()[0][0]:
+            return False
+
+        cursor.close()
+        conn.close()
+
+        return True
+
+    def set_option(option, value):
+        """ Set a new value to a PostgreSQL option
+        :param: option name and new value
+        :return: False or True
+        """
+
+        conn_string = "host='localhost' user='postgres' "
+        conn = psycopg2.connect(conn_string)
+        cursor = conn.cursor()
+        conn.set_session(autocommit=True)
+
+        if not check_option(option):
+            return False
+
+        cursor.execute("SELECT context FROM pg_settings WHERE name = '%s'" % option)
+        context = cursor.fetchall()[0][0]
+
+        restart_contexts = ['superuser-backend', 'backend', 'user', 'postmaster', 'superuser']
+        reload_contexts = ['sighup']
+
+        if context in reload_contexts:
+            cursor.execute("ALTER SYSTEM SET %s = '%s'" % (option, value))
+            cursor.close()
+            conn.close()
+            return self.manage_psql(version, "reload")
+        elif context in restart_contexts:
+            cursor.execute("ALTER SYSTEM SET %s = '%s'" % (option, value))
+            cursor.close()
+            conn.close()
+            return self.manage_psql(version, "restart")
+        else:
+            return False
