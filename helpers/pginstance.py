@@ -1,7 +1,8 @@
 import fileinput
-import fnmatch
 import os
 import platform
+import psutil
+import psycopg2
 import re
 import subprocess
 from subprocess import Popen
@@ -67,7 +68,6 @@ class PgInstance:
 
     def setup_psql(self, name, version, edition, milestone, build):
 
-        distro = platform.linux_distribution()[0]
         major = version.split(".")[0]
         minor = version.split(".")[1]
 
@@ -76,7 +76,8 @@ class PgInstance:
 
         os.environ['PATH'] += ":/usr/pgsql-%s.%s/bin/" % (major, minor)
         subprocess.call(["sudo", "-u", "postgres", "psql", "-c",
-                         "ALTER USER postgres WITH PASSWORD '%s';" % self.PG_PASSWORD])
+                         "ALTER USER postgres WITH PASSWORD '%s';"
+                         % self.PG_PASSWORD])
 
         hba_auth = """
     local   all             all                                     peer
@@ -106,3 +107,19 @@ class PgInstance:
         subprocess.call(["sudo", "-u", "postgres", "psql", "-c",
                          "ALTER SYSTEM SET listen_addresses to '*';"])
         self.manage_psql(version, "restart")
+
+    def get_postmaster_pid(self):
+        """
+        Method returns PID of the postmaster process.
+
+        :returns: number with process identificator
+        """
+        conn_string = "host='localhost' user='postgres' "
+        conn = psycopg2.connect(conn_string)
+        cursor = conn.cursor()
+        cursor.execute("SELECT pg_backend_pid()")
+        pid = cursor.fetchall()[0][0]
+        ppid = psutil.Process(pid).ppid()
+        cursor.close()
+        conn.close()
+        return ppid
