@@ -124,7 +124,7 @@ class PgInstance:
                          "ALTER SYSTEM SET listen_addresses to '*';"])
         self.manage_psql(version, "restart")
 
-    def get_option(option):
+    def get_option(self, option):
         """ Get current value of a PostgreSQL option
         :param: option name
         :return:
@@ -133,7 +133,7 @@ class PgInstance:
         conn_string = "host='localhost' user='postgres' "
         conn = psycopg2.connect(conn_string)
         cursor = conn.cursor()
-        if not check_option(option):
+        if not self.check_option(option):
             return None
 
         cursor.execute("SELECT setting FROM pg_settings WHERE name = '%s'" % option)
@@ -144,7 +144,7 @@ class PgInstance:
 
         return value
 
-    def check_option(option):
+    def check_option(self, option):
         """ Check existence of a PostgreSQL option
         :param: option name
         :return: False or True
@@ -163,7 +163,7 @@ class PgInstance:
 
         return True
 
-    def set_option(option, value):
+    def set_option(self, option, value):
         """ Set a new value to a PostgreSQL option
         :param: option name and new value
         :return: False or True
@@ -187,11 +187,11 @@ class PgInstance:
             cursor.execute("ALTER SYSTEM SET %s = '%s'" % (option, value))
             cursor.close()
             conn.close()
-            return self.manage_psql(version, "reload")
+            return manage_psql(self.version, "reload")
         elif context in restart_contexts:
             cursor.execute("ALTER SYSTEM SET %s = '%s'" % (option, value))
             cursor.close()
             conn.close()
-            return self.manage_psql(version, "restart")
+            return manage_psql(self.version, "restart")
         else:
             return False
