@@ -158,7 +158,7 @@ class PgInstance:
         cursor = conn.cursor()
         conn.set_session(autocommit=True)
 
-        if not check_option(option):
+        if not self.check_option(option):
             return False
 
         cursor.execute("SELECT context FROM pg_settings WHERE name = '%s'" % option)
@@ -171,11 +171,11 @@ class PgInstance:
             cursor.execute("ALTER SYSTEM SET %s = '%s'" % (option, value))
             cursor.close()
             conn.close()
-            return manage_psql(self.version, "reload")
+            return self.manage_psql(self.version, "reload")
         elif context in restart_contexts:
             cursor.execute("ALTER SYSTEM SET %s = '%s'" % (option, value))
             cursor.close()
             conn.close()
-            return manage_psql(self.version, "restart")
+            return self.manage_psql(self.version, "restart")
         else:
             return False
