@@ -18,7 +18,7 @@ dist = {"Oracle Linux Server": 'oraclelinux',
         "SLES": 'sles'}
 
 
-def setup_repo(name, version, edition, milestone, build):
+def setup_repo(name, version, edition=None, milestone=None, build=None):
 
     distro = platform.linux_distribution()[0]
     major = version.split(".")[0]
@@ -84,7 +84,7 @@ enabled=1
         return 1
 
 
-def package_mgmt(name, version, edition, milestone, build):
+def package_mgmt(name, version, edition=None, milestone=None, build=None):
 
     distro = platform.linux_distribution()[0]
     major = version.split(".")[0]
