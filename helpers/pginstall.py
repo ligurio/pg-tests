@@ -25,9 +25,11 @@ def setup_repo(name, version, edition=None, milestone=None, build=None):
     minor = version.split(".")[1]
 
     if name == "postgresql":
-        gpg_key_url = "https://download.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG-%s%s" % (
-            major, minor)
-        # gpg_key_url = "https://www.postgresql.org/media/keys/ACCC4CF8.asc"
+        if distro in RPM_BASED:
+            gpg_key_url = "https://download.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG-%s%s" % (
+                major, minor)
+        elif distro in DEB_BASED:
+            gpg_key_url = "https://www.postgresql.org/media/keys/ACCC4CF8.asc"
         product_dir = "/repos/yum/%s/redhat/rhel-$releasever-$basearch" % version
         baseurl = PSQL_HOST + product_dir
     elif name == "postgrespro":
