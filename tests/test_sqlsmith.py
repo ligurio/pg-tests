@@ -4,7 +4,7 @@ import subprocess
 
 from helpers.pginstall import setup_repo
 
-NUM_QUERIES = 1000000
+NUM_QUERIES = 10000
 
 
 @pytest.fixture(scope="session")
