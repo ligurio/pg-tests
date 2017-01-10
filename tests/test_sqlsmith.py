@@ -4,8 +4,6 @@ import subprocess
 
 from helpers.pginstall import setup_repo
 
-NUM_QUERIES = 10000
-
 
 @pytest.fixture(scope="session")
 def install_sqlsmith(request):
@@ -20,9 +18,10 @@ def install_sqlsmith(request):
 @pytest.mark.skipif('platform.linux_distribution()[0] != "Ubuntu"')
 @pytest.mark.usefixtures('install_postgres')
 @pytest.mark.usefixtures('install_sqlsmith')
-def test_sqlsmith(install_sqlsmith):
+@pytest.mark.usefixtures('sqlsmth_queries')
+def test_sqlsmith(install_sqlsmith, sqlsmith_queries):
 
     sqlsmith_cmd = ["sudo", "-u", "postgres",
-                    "sqlsmith", "--max-queries=%s" % NUM_QUERIES]
+                    "sqlsmith", "--max-queries=%s" % sqlsmith_queries]
     sqlsmith = subprocess.Popen(sqlsmith_cmd)
     assert sqlsmith.wait() == 0
