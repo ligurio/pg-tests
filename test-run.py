@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import argparse
-import libvirt
 import os
 import os.path
 import paramiko
@@ -129,8 +128,9 @@ def main():
 
     names = list_images()
     parser = argparse.ArgumentParser(
-        description='PostgreSQL regression tests run script.')
-    parser.add_argument('--target', dest="target", choices=names,
+        description='PostgreSQL regression tests run script.',
+        epilog='Possible operating systems: %s' % ' '.join(names))
+    parser.add_argument('--target', dest="target",
                         help='System under test (image)')
     parser.add_argument('--export', dest="export",
                         help='Export results', action='store_true')
@@ -161,8 +161,12 @@ def main():
         if args.run_tests is None:
             tests = '*'
         tests = args.run_tests
+    else:
+        print "No target name"
+        sys.exit(1)
 
     try:
+        import libvirt
         conn = libvirt.open(None)
     except libvirt.libvirtError, e:
         print 'LibVirt connect error: ', e
