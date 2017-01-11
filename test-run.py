@@ -275,15 +275,6 @@ def make_test_cmd(date, tests=None,
     return cmd
 
 
-def exec_test(domipaddress, cmd):
-
-    retcode, stdout, stderr = exec_command(cmd, domipaddress)
-
-    if retcode != 0:
-        print "Return code is not zero - %s." % retcode
-        print retcode, stdout, stderr
-
-
 def export_results(domipaddress, date):
     if not os.path.exists('reports'):
         os.makedirs('reports')
@@ -376,7 +367,11 @@ def main():
                             args.product_edition,
                             args.product_milestone,
                             args.product_build)
-        retcode = exec_test(domipaddress, cmd)
+        retcode, stdout, stderr = exec_command(cmd, domipaddress)
+        if retcode != 0:
+            print "Test return code is not zero - %s." % retcode
+            print retcode, stdout, stderr
+
         if args.export:
             export_results(domipaddress, date)
 
