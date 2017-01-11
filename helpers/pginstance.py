@@ -1,7 +1,7 @@
 import fileinput
-import fnmatch
 import os
 import platform
+import psutil
 import psycopg2
 import re
 import subprocess
@@ -68,7 +68,6 @@ class PgInstance:
 
     def setup_psql(self, name, version, edition, milestone, build):
 
-        distro = platform.linux_distribution()[0]
         major = version.split(".")[0]
         minor = version.split(".")[1]
 
@@ -77,7 +76,8 @@ class PgInstance:
 
         os.environ['PATH'] += ":/usr/pgsql-%s.%s/bin/" % (major, minor)
         subprocess.call(["sudo", "-u", "postgres", "psql", "-c",
-                         "ALTER USER postgres WITH PASSWORD '%s';" % self.PG_PASSWORD])
+                         "ALTER USER postgres WITH PASSWORD '%s';"
+                         % self.PG_PASSWORD])
 
         hba_auth = """
     local   all             all                                     peer
@@ -108,6 +108,22 @@ class PgInstance:
                          "ALTER SYSTEM SET listen_addresses to '*';"])
         self.manage_psql(version, "restart")
 
+    def get_postmaster_pid(self):
+        """
+        Method returns PID of the postmaster process.
+
+        :returns: number with process identificator
+        """
+        conn_string = "host='localhost' user='postgres' "
+        conn = psycopg2.connect(conn_string)
+        cursor = conn.cursor()
+        cursor.execute("SELECT pg_backend_pid()")
+        pid = cursor.fetchall()[0][0]
+        ppid = psutil.Process(pid).ppid()
+        cursor.close()
+        conn.close()
+        return ppid
+
     def get_option(self, option):
         """ Get current value of a PostgreSQL option
         :param: option name
@@ -120,7 +136,8 @@ class PgInstance:
         if not self.check_option(option):
             return None
 
-        cursor.execute("SELECT setting FROM pg_settings WHERE name = '%s'" % option)
+        cursor.execute(
+            "SELECT setting FROM pg_settings WHERE name = '%s'" % option)
         value = cursor.fetchall()[0][0]
 
         cursor.close()
@@ -137,7 +154,8 @@ class PgInstance:
         conn_string = "host='localhost' user='postgres' "
         conn = psycopg2.connect(conn_string)
         cursor = conn.cursor()
-        cursor.execute("SELECT exists (SELECT 1 FROM pg_settings WHERE name = '%s' LIMIT 1)" % option)
+        cursor.execute(
+            "SELECT exists (SELECT 1 FROM pg_settings WHERE name = '%s' LIMIT 1)" % option)
 
         if not cursor.fetchall()[0][0]:
             return False
@@ -161,10 +179,12 @@ class PgInstance:
         if not self.check_option(option):
             return False
 
-        cursor.execute("SELECT context FROM pg_settings WHERE name = '%s'" % option)
+        cursor.execute(
+            "SELECT context FROM pg_settings WHERE name = '%s'" % option)
         context = cursor.fetchall()[0][0]
 
-        restart_contexts = ['superuser-backend', 'backend', 'user', 'postmaster', 'superuser']
+        restart_contexts = ['superuser-backend',
+                            'backend', 'user', 'postmaster', 'superuser']
         reload_contexts = ['sighup']
 
         if context in reload_contexts:

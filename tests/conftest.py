@@ -22,6 +22,13 @@ def pytest_addoption(parser):
                      help="Specify product milestone. Available values: beta")
     parser.addoption("--product_build", action="store",
                      help="Specify product build.")
+    parser.addoption("--sqlsmith-queries", action="store", default=10000,
+                     help="Number of sqlsmith queries.")
+
+
+@pytest.fixture
+def sqlsmith_queries(request):
+    return request.config.getoption("--sqlsmith-queries")
 
 
 @pytest.fixture(scope='session')
