@@ -21,7 +21,13 @@ __author__ = "Sergey Bronnikov <sergeyb@postgrespro.ru>"
 IMAGE_BASE_URL = 'http://webdav.l.postgrespro.ru/DIST/vm-images/test/'
 TEMPLATE_DIR = '/pgpro/templates/'
 WORK_DIR = '/pgpro/test-envs/'
+ANSIBLE_CMD = "ansible-playbook %s -i static/inventory -c paramiko --limit %s"
 ANSIBLE_PLAYBOOK = 'static/playbook-prepare-env.yml'
+ANSIBLE_INVENTORY = "%s ansible_host=%s \
+                    ansible_become_pass=%s \
+                    ansible_ssh_pass=%s \
+                    ansible_user=%s \
+                    ansible_become_user=root\n"
 REPORT_SERVER_URL = 'http://testrep.l.postgrespro.ru/'
 
 SSH_LOGIN = 'test'
@@ -119,62 +125,11 @@ def exec_command(cmd, hostname):
 
     return retcode, stdout, stderr
 
-#######################################################################
-# Program body
-#######################################################################
 
+def create_image(domname, name):
 
-def main():
-
-    names = list_images()
-    parser = argparse.ArgumentParser(
-        description='PostgreSQL regression tests run script.',
-        epilog='Possible operating systems: %s' % ' '.join(names))
-    parser.add_argument('--target', dest="target",
-                        help='System under test (image)')
-    parser.add_argument('--export', dest="export",
-                        help='Export results', action='store_true')
-    parser.add_argument('--test', dest="run_tests",
-                        help='Tests to run (default: all)')
-    parser.add_argument('--keep', dest="keep", action='store_true',
-                        help='What to do with instance in case of test fail')
-    parser.add_argument("--product_name", dest="product_name",
-                        action="store", help="Specify product name")
-    parser.add_argument("--product_version", dest="product_version",
-                        action="store", help="Specify product version")
-    parser.add_argument("--product_edition", dest="product_edition",
-                        action="store", help="Specify product edition")
-    parser.add_argument("--product_milestone", dest="product_milestone",
-                        action="store", help="Specify target milestone")
-    parser.add_argument("--product_build", dest="product_build",
-                        action="store", help="Specify product build")
-
-    args = parser.parse_args()
-
-    if len(sys.argv) == 1:
-        parser.print_help()
-        sys.exit(0)
-
-    name = None
-    if args.target is not None:
-        name = args.target
-        if args.run_tests is None:
-            tests = '*'
-        tests = args.run_tests
-    else:
-        print "No target name"
-        sys.exit(1)
-
-    try:
-        import libvirt
-        conn = libvirt.open(None)
-    except libvirt.libvirtError, e:
-        print 'LibVirt connect error: ', e
-        sys.exit(1)
-
-    domname = name + '-' + str(random.getrandbits(15))
     domimage = WORK_DIR + domname + '.qcow2'
-    image_url = IMAGE_BASE_URL + name + '.qcow2'
+    image_url = IMAGE_BASE_URL + domname + '.qcow2'
     image_original = TEMPLATE_DIR + name + '.qcow2'
 
     if not os.path.isfile(image_original):
@@ -194,6 +149,22 @@ def main():
     # FIXME: use linked clone
     #  qemu-img create -f qcow2 -b winxp.qcow2 winxp-clone.qcow2
 
+    return domimage
+
+
+def gen_domname(name):
+    return name + '-' + str(random.getrandbits(15))
+
+
+def create_env(name, domname):
+    try:
+        import libvirt
+        conn = libvirt.open(None)
+    except libvirt.libvirtError, e:
+        print 'LibVirt connect error: ', e
+        sys.exit(1)
+
+    domimage = create_image(domname, name)
     dommac = mac_address_generator()
     xmldesc = """<domain type='kvm'>
   <name>%s</name>
@@ -245,53 +216,66 @@ def main():
             sys.exit(1)
 
     print "Domain name: %s\nIP address: %s" % (dom.name(), domipaddress)
+    conn.close()
 
+    return domipaddress
+
+
+def setup_env(domipaddress, domname):
+    host_record = domipaddress + ' ' + domname + '\n'
     with open("/etc/hosts", "a") as hosts:
-        hosts.write("{}	{}\n".format(domipaddress, dom.name()))
+        hosts.write(host_record)
 
+    inv = ANSIBLE_INVENTORY % (domname, domipaddress, SSH_ROOT_PASSWORD, SSH_PASSWORD, SSH_LOGIN)
     with open("static/inventory", "a") as hosts:
-        inv = "%s ansible_host=%s ansible_become_pass=%s ansible_ssh_pass=%s " \
-              "ansible_user=%s ansible_become_user=root\n" % \
-              (dom.name(), domipaddress, SSH_ROOT_PASSWORD, SSH_PASSWORD, SSH_LOGIN)
         hosts.write(inv)
 
     os.environ['ANSIBLE_HOST_KEY_CHECKING'] = 'False'
-    ansible_cmd = "ansible-playbook %s -i static/inventory -c paramiko --limit %s" % (
-        ANSIBLE_PLAYBOOK, dom.name())
+    ansible_cmd = ANSIBLE_CMD % (ANSIBLE_PLAYBOOK, domname)
     if DEBUG:
         ansible_cmd += " -vvv"
     print ansible_cmd
-    time.sleep(5)  # GosLinux starts a bit slowly than other distros
+    time.sleep(5)    # GosLinux starts a bit slowly than other distros
     retcode = call(ansible_cmd.split(' '))
     if retcode != 0:
         print "Setup of the test environment %s is failed." % domname
-        sys.exit(1)
+        return 1
+    return 0
 
-    product_cmd = ""
-    if args.product_name:
-        product_cmd = product_cmd + "--product_name %s " % args.product_name
-    if args.product_version:
-        product_cmd = product_cmd + "--product_version %s " % args.product_version
-    if args.product_edition:
-        product_cmd = product_cmd + "--product_edition %s " % args.product_edition
-    if args.product_milestone:
-        product_cmd = product_cmd + "--product_milestone %s " % args.product_milestone
-    if args.product_build:
-        product_cmd = product_cmd + "--product_build %s " % args.product_build
 
-    date = time.strftime('%Y-%b-%d-%H-%M-%S')
-    cmd = 'cd /home/test/pg-tests && sudo pytest --self-contained-html \
-           --html=report-%s.html --junit-xml=report-%s.xml --maxfail=1 %s' % (date, date, product_cmd)
+def make_test_cmd(date, tests=None,
+                  product_name=None,
+                  product_version=None,
+                  product_edition=None,
+                  product_milestone=None,
+                  product_build=None):
+
+    pcmd = ""
+    if product_name:
+        pcmd = "%s --product_name %s " % (pcmd, product_name)
+    if product_version:
+        pcmd = "%s --product_version %s " % (pcmd, product_version)
+    if product_edition:
+        pcmd = "%s --product_edition %s " % (pcmd, product_edition)
+    if product_milestone:
+        pcmd = "%s --product_milestone %s " % (pcmd, product_milestone)
+    if product_build:
+        pcmd = "%s --product_build %s " % (pcmd, product_build)
+
+    cmd = 'cd /home/test/pg-tests && sudo pytest \
+                                    --self-contained-html \
+                                    --html=report-%s.html \
+                                    --junit-xml=report-%s.xml \
+                                    --maxfail=1 %s %s' \
+                                    % (date, date, pcmd, tests)
 
     if DEBUG:
         cmd = cmd + "--verbose --tb=long --full-trace"
 
-    retcode, stdout, stderr = exec_command(cmd, domipaddress)
+    return cmd
 
-    if retcode != 0:
-        print "Return code is not zero - %s." % retcode
-        print retcode, stdout, stderr
 
+def export_results(domipaddress, date):
     if not os.path.exists('reports'):
         os.makedirs('reports')
     copy_file("reports/report-%s.html" % date,
@@ -299,28 +283,105 @@ def main():
     copy_file("reports/report-%s.xml" % date,
               "/home/test/pg-tests/report-%s.xml" % date, domipaddress)
 
-    if args.export:
-        subprocess.Popen(
-            ['curl', '-T', 'reports/report-%s.html' % date, REPORT_SERVER_URL])
-        subprocess.Popen(['curl', '-T', 'reports/report-%s.xml' %
-                          date, REPORT_SERVER_URL])
+    subprocess.Popen(
+        ['curl', '-T', 'reports/report-%s.html' % date, REPORT_SERVER_URL])
+    subprocess.Popen(['curl', '-T', 'reports/report-%s.xml' %
+                      date, REPORT_SERVER_URL])
 
-    save_image = os.path.join(WORK_DIR, dom.name() + ".img")
 
-    if args.keep:
-        print('Domain %s (IP address %s)' % (dom.name(), domipaddress))
-    else:
-        if retcode != 0:
-            if dom.save(save_image) < 0:
-                print('Unable to save state of %s to %s' % (dom.name(),
-                                                            save_image))
-            print('Domain %s state saved to %s' % (dom.name(), save_image))
+def keep_env(domname, keep):
+    try:
+        import libvirt
+        conn = libvirt.open(None)
+    except libvirt.libvirtError, e:
+        print 'LibVirt connect error: ', e
+        sys.exit(1)
+
+    try:
+        dom = conn.lookupByName(domname)
+    except:
+        print 'Failed to find the domain %s' % domname
+
+    if keep:
+        save_image = os.path.join(WORK_DIR, domname + ".img")
+        if dom.save(save_image) < 0:
+            print('Unable to save state of %s to %s' % (domname, save_image))
         else:
-            if dom.destroy() < 0:
-                print('Unable to destroy of %s' % dom.name())
+            print('Domain %s state saved to %s' % (domname, save_image))
+    else:
+        if dom.destroy() < 0:
+            print('Unable to destroy of %s' % domname)
+        domimage = WORK_DIR + domname + '.qcow2'
+        if os.path.exists(domimage):
             os.remove(domimage)
 
     conn.close()
+
+
+def main():
+
+    names = list_images()
+    parser = argparse.ArgumentParser(
+        description='PostgreSQL regression tests run script.',
+        epilog='Possible operating systems (images): %s' % ' '.join(names))
+    parser.add_argument('--target', dest="target",
+                        help='system(s) under test (image(s))')
+    parser.add_argument('--test', dest="run_tests", default="",
+                        help='tests to run (default: all)')
+    parser.add_argument("--product_name", dest="product_name",
+                        help="specify product name", action="store")
+    parser.add_argument("--product_version", dest="product_version",
+                        help="specify product version", action="store")
+    parser.add_argument("--product_edition", dest="product_edition",
+                        help="specify product edition", action="store")
+    parser.add_argument("--product_milestone", dest="product_milestone",
+                        help="specify target milestone", action="store")
+    parser.add_argument("--product_build", dest="product_build",
+                        help="specify product build", action="store")
+    parser.add_argument('--keep', dest="keep", action='store_true',
+                        help='what to do with env after testing')
+    parser.add_argument('--export', dest="export",
+                        help='export results', action='store_true')
+
+    args = parser.parse_args()
+
+    if len(sys.argv) == 1:
+        parser.print_help()
+        sys.exit(0)
+
+    if args.target is not None:
+        target = args.target
+    else:
+        print "No target name"
+        sys.exit(1)
+
+    targets = target.split(',')
+    for t in targets:
+        domname = gen_domname(t)
+        date = time.strftime('%Y-%b-%d-%H-%M-%S')
+        domipaddress = create_env(t, domname)
+        setup_env(domipaddress, domname)
+        cmd = make_test_cmd(date, args.run_tests,
+                            args.product_name,
+                            args.product_version,
+                            args.product_edition,
+                            args.product_milestone,
+                            args.product_build)
+        retcode, stdout, stderr = exec_command(cmd, domipaddress)
+        if retcode != 0:
+            print "Test return code is not zero - %s." % retcode
+            print retcode, stdout, stderr
+
+        if args.export:
+            export_results(domipaddress, date)
+
+        if args.keep:
+            print('Domain %s (IP address %s)' % (domname, domipaddress))
+        else:
+            if retcode != 0:
+                keep_env(domname, True)
+            else:
+                keep_env(domname, False)
 
 if __name__ == "__main__":
     exit(main())
