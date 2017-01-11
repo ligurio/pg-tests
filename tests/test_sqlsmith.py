@@ -18,7 +18,7 @@ def install_sqlsmith(request):
 @pytest.mark.skipif('platform.linux_distribution()[0] != "Ubuntu"')
 @pytest.mark.usefixtures('install_postgres')
 @pytest.mark.usefixtures('install_sqlsmith')
-@pytest.mark.usefixtures('sqlsmth_queries')
+@pytest.mark.usefixtures('sqlsmith_queries')
 def test_sqlsmith(install_sqlsmith, sqlsmith_queries):
 
     sqlsmith_cmd = ["sudo", "-u", "postgres",
