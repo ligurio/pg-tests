@@ -24,6 +24,7 @@ def setup_repo(name, version, edition=None, milestone=None, build=None):
     major = version.split(".")[0]
     minor = version.split(".")[1]
 
+    product_dir = ""
     if name == "postgresql":
         if distro in RPM_BASED:
             gpg_key_url = "https://download.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG-%s%s" % (
