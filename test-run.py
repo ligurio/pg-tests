@@ -243,7 +243,7 @@ def setup_env(domipaddress, domname):
     return 0
 
 
-def make_test_cmd(date, tests=None,
+def make_test_cmd(reportname, tests=None,
                   product_name=None,
                   product_version=None,
                   product_edition=None,
@@ -264,10 +264,10 @@ def make_test_cmd(date, tests=None,
 
     cmd = 'cd /home/test/pg-tests && sudo pytest \
                                     --self-contained-html \
-                                    --html=report-%s.html \
-                                    --junit-xml=report-%s.xml \
+                                    --html=%s.html \
+                                    --junit-xml=%s.xml \
                                     --maxfail=1 %s %s' \
-                                    % (date, date, pcmd, tests)
+                                    % (reportname, reportname, pcmd, tests)
 
     if DEBUG:
         cmd = cmd + "--verbose --tb=long --full-trace"
@@ -275,18 +275,18 @@ def make_test_cmd(date, tests=None,
     return cmd
 
 
-def export_results(domipaddress, date):
+def export_results(domipaddress, reportname):
     if not os.path.exists('reports'):
         os.makedirs('reports')
-    copy_file("reports/report-%s.html" % date,
-              "/home/test/pg-tests/report-%s.html" % date, domipaddress)
-    copy_file("reports/report-%s.xml" % date,
-              "/home/test/pg-tests/report-%s.xml" % date, domipaddress)
+    copy_file("reports/%s.html" % reportname,
+              "/home/test/pg-tests/%s.html" % reportname, domipaddress)
+    copy_file("reports/%s.xml" % reportname,
+              "/home/test/pg-tests/%s.xml" % reportname, domipaddress)
 
     subprocess.Popen(
-        ['curl', '-T', 'reports/report-%s.html' % date, REPORT_SERVER_URL])
-    subprocess.Popen(['curl', '-T', 'reports/report-%s.xml' %
-                      date, REPORT_SERVER_URL])
+        ['curl', '-T', 'reports/%s.html' % reportname, REPORT_SERVER_URL])
+    subprocess.Popen(
+        ['curl', '-T', 'reports/%s.xml' % reportname, REPORT_SERVER_URL])
 
 
 def keep_env(domname, keep):
@@ -358,10 +358,10 @@ def main():
     targets = target.split(',')
     for t in targets:
         domname = gen_domname(t)
-        date = time.strftime('%Y-%b-%d-%H-%M-%S')
+        reportname = "report-" + time.strftime('%Y-%b-%d-%H-%M-%S')
         domipaddress = create_env(t, domname)
         setup_env(domipaddress, domname)
-        cmd = make_test_cmd(date, args.run_tests,
+        cmd = make_test_cmd(reportname, args.run_tests,
                             args.product_name,
                             args.product_version,
                             args.product_edition,
@@ -373,7 +373,7 @@ def main():
             print retcode, stdout, stderr
 
         if args.export:
-            export_results(domipaddress, date)
+            export_results(domipaddress, reportname)
 
         if args.keep:
             print('Domain %s (IP address %s)' % (domname, domipaddress))
