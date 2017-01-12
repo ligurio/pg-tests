@@ -129,7 +129,7 @@ def exec_command(cmd, hostname):
 def create_image(domname, name):
 
     domimage = WORK_DIR + domname + '.qcow2'
-    image_url = IMAGE_BASE_URL + domname + '.qcow2'
+    image_url = IMAGE_BASE_URL + name + '.qcow2'
     image_original = TEMPLATE_DIR + name + '.qcow2'
 
     if not os.path.isfile(image_original):
