@@ -50,7 +50,7 @@ python get-pip.py
 ### Настройки ОС для тестирования
 
 Все необходимые настройки выполняются сценарием для Ansible в static/playbooks_prep_env.yml,
-который запускается скриптом test-run.py перед запуском теста. Но можно запустить и вручную:
+который запускается скриптом testrun.py перед запуском теста. Но можно запустить и вручную:
 ```
 $ cat static/inventory
 ubuntu1604 ansible_host=127.0.0.1 ansible_become_pass=TestRoot1 ansible_ssh_pass=TestPass1 ansible_user=test ansible_become_user=root
