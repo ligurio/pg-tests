@@ -1,13 +1,33 @@
+import hashlib
 import pytest
 import psycopg2
+import random
+import string
 
 
 class TestScram():
     """
     Only Enterprise Edition Feature
     """
+    @staticmethod
+    def random_password():
+        return ''.join(random.choice(string.lowercase) for i in range(16))
 
-    @pytest.mark.test_configuring
+    @staticmethod
+    def create_hash_password(hash_type, password):
+        if hash_type == 'md5':
+            hash = hashlib.md5()
+            hash.update(password)
+            return 'md5' + hash.hexdigest()
+        elif hash_type == 'sha256':
+            hash = hashlib.sha256()
+            hash.update(password)
+            return 'AAAAAAAAAAAAAA==:4096:' + hash.hexdigest()
+        else:
+            print("Error. Bad hash type. Use md5 or sha256")
+            return None
+
+    @pytest.mark.test_scram_configuring
     def test_scram_configuring(self):
         """Check that we can set GUC variables via SET command,
          they saved and in pg_authid password saved in right format
@@ -82,3 +102,78 @@ class TestScram():
         assert cursor.fetchall()[0][0] == 'test_off_password'
         cursor.close()
         conn.close()
+
+    @pytest.mark.test_authentication
+    def test_authentication(self, install_postgres):
+        """Check that we can authenticate user with different password types
+        Scenario:
+        1. Edit pg_hba conf for test and restart postgres
+        2. Create roles for test
+        3. Try to connect to db with hashed password
+        4. Try to connect to db with password that stored in md5 hash
+        5. Try to connect to db with password in scram format
+        6. Try to connect with password in scram hash
+        """
+        # Step 1
+        hba_auth = """
+            local   all             test_md5_hash_user                      md5
+            local   all             test_md5_user_auth                      md5
+            local   all             test_scram_hash_user                    scram
+            local   all             test_scram_user_auth                    scram
+            local   all             all                                     peer
+            host    all             all             0.0.0.0/0               trust
+            host    all             all             ::0/0                   trust"""
+        install_postgres.edit_pg_hba_conf(hba_auth)
+        install_postgres.manage_psql(install_postgres.version, "restart")
+        # Step 2
+        conn_string = "host='localhost' user='postgres' dbname='postgres'"
+        conn = psycopg2.connect(conn_string)
+        cursor = conn.cursor()
+        md5_password = self.create_hash_password('md5', self.random_password())
+        cursor.execute("CREATE ROLE test_md5_user_auth WITH PASSWORD 'test_md5_password' LOGIN")
+        cursor.execute("CREATE ROLE test_md5_hash_user WITH PASSWORD '%s' LOGIN" % md5_password)
+        scram_password = self.create_hash_password('sha256', self.random_password())
+        conn.commit()
+        cursor.close()
+        conn.close()
+        install_postgres.set_option('password_encryption', 'scram')
+        conn = psycopg2.connect(conn_string)
+        cursor = conn.cursor()
+        cursor.execute("CREATE ROLE test_scram_user_auth WITH PASSWORD 'test_scram_password' LOGIN")
+        cursor.execute("CREATE ROLE test_scram_hash_user WITH PASSWORD ('%s' USING \'plain\') LOGIN" % scram_password)
+        conn.commit()
+        cursor.close()
+        conn.close()
+        # Step 3
+        conn_string_md5_user =\
+            "host='localhost' user='test_md5_user_auth' password='test_md5_password' dbname='postgres'"
+        conn_md5_user = psycopg2.connect(conn_string_md5_user)
+        assert conn_md5_user.status == 1
+        conn_md5_user.close()
+        # Step 4
+        conn_string_test_md5_hash_user =\
+            "host='localhost' user='test_md5_hash_user' password='%s' dbname='postgres'" % md5_password
+        conn_md5_hash_user = psycopg2.connect(conn_string_test_md5_hash_user)
+        assert conn_md5_hash_user.status == 1
+        cursor = conn_md5_hash_user.cursor()
+        cursor.execute("SELECT 1")
+        cursor.close()
+        conn_md5_hash_user.close()
+        # Step 5
+        conn_test_scram_user_auth = \
+            "host='localhost' user='test_scram_user_auth' password='test_scram_password' dbname='postgres'"
+        conn_test_scram_user_auth = psycopg2.connect(conn_test_scram_user_auth)
+        assert conn_test_scram_user_auth.status == 1
+        cursor = conn_test_scram_user_auth.cursor()
+        cursor.execute("SELECT 1")
+        cursor.close()
+        conn_test_scram_user_auth.close()
+        # Step 6
+        conn_scram_hash_user = \
+            "host='localhost' user='test_scram_hash_user' password=%s dbname='postgres'" % scram_password
+        conn_scram_hash_user = psycopg2.connect(conn_scram_hash_user)
+        assert conn_scram_hash_user.status == 1
+        cursor = conn_scram_hash_user.cursor()
+        cursor.execute("SELECT 1")
+        cursor.close()
+        conn_scram_hash_user.close()

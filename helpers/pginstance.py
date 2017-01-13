@@ -1,9 +1,7 @@
-import fileinput
 import os
 import platform
 import psutil
 import psycopg2
-import re
 import subprocess
 from subprocess import Popen
 
@@ -53,18 +51,38 @@ class PgInstance:
         major = version.split(".")[0]
         minor = version.split(".")[1]
 
-        if distro in RPM_BASED or distro == "ALT Linux ":
+        if distro in RPM_BASED:
             service_name = "postgresql-%s.%s" % (major, minor)
         elif distro in DEB_BASED:
             service_name = "postgresql"
 
         if init:
-            if distro in RPM_BASED or distro == "ALT Linux ":
+            if distro in RPM_BASED:
                 subprocess.call(["service", service_name, "initdb"])
                 # subprocess.call(["chkconfig", service_name, "on"])
                 # subprocess.call(["systemctl", "enable", "postgresql"])
 
         return subprocess.call(["service", service_name, action])
+
+    def edit_pg_hba_conf(self, pg_hba_config):
+        """Rewrite pg_hba.conf
+
+        :param pg_hba_config: string with pg_hba.conf content
+        """
+        cmd = ["sudo", "-u", "postgres", "psql", "-t", "-P",
+               "format=unaligned", "-c", "SHOW hba_file;"]
+        p = Popen(cmd, stdout=subprocess.PIPE)
+        response = p.communicate()
+        if p.returncode != 0:
+            print "Failed to find hba_file %s" % response[1]
+            return 1
+
+        hba_file = response[0].rstrip()
+        print "Path to hba_file is", hba_file
+        with open(hba_file, 'w') as hba:
+            hba.write(pg_hba_config)
+
+        subprocess.call(["chown", "postgres:postgres", hba_file])
 
     def setup_psql(self, name, version, edition, milestone, build):
 
@@ -83,27 +101,8 @@ class PgInstance:
     local   all             all                                     peer
     host    all             all             0.0.0.0/0               trust
     host    all             all             ::0/0                   trust"""
+        self.edit_pg_hba_conf(hba_auth)
 
-        cmd = ["sudo", "-u", "postgres", "psql", "-t", "-P",
-               "format=unaligned", "-c", "SHOW hba_file;"]
-        p = Popen(cmd, stdout=subprocess.PIPE)
-        response = p.communicate()
-        if p.returncode != 0:
-            print "Failed to find hba_file %s" % response[1]
-            return 1
-
-        hba_file = response[0].rstrip()
-        print "Path to hba_file is", hba_file
-        hba = fileinput.FileInput(hba_file, inplace=True)
-        for line in hba:
-            if line[0] != '#':
-                line = re.sub('^', '#', line.rstrip())
-            print line.rstrip()
-
-        with open(hba_file, 'a') as hba:
-            hba.write(hba_auth)
-
-        subprocess.call(["chown", "postgres:postgres", hba_file])
         subprocess.call(["sudo", "-u", "postgres", "psql", "-c",
                          "ALTER SYSTEM SET listen_addresses to '*';"])
         self.manage_psql(version, "restart")
