@@ -64,6 +64,12 @@
     become_method: su
     become: true
 
+  - name: install python module with APT support (ALTLinux)
+    command: apt-get install -y python-module-apt
+    when: ansible_os_family == "Altlinux"
+    become_method: su
+    become: true
+
   - name: Wait for automatic system updates
     shell: while sudo fuser /var/lib/dpkg/lock >/dev/null 2>&1; do sleep 2; done;
     when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
@@ -160,7 +166,7 @@
 
   - name: remove libpq-dev (APT)
     apt: name=libpq-dev state=absent
-    when: ansible_pkg_mgr == "apt"
+    when: ansible_pkg_mgr == "apt" and ansible_distribution != "Altlinux"
     become_method: su
     become: true
 

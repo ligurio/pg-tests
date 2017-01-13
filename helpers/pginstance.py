@@ -53,13 +53,13 @@ class PgInstance:
         major = version.split(".")[0]
         minor = version.split(".")[1]
 
-        if distro in RPM_BASED:
+        if distro in RPM_BASED or distro == "ALT Linux ":
             service_name = "postgresql-%s.%s" % (major, minor)
         elif distro in DEB_BASED:
             service_name = "postgresql"
 
         if init:
-            if distro in RPM_BASED:
+            if distro in RPM_BASED or distro == "ALT Linux ":
                 subprocess.call(["service", service_name, "initdb"])
                 # subprocess.call(["chkconfig", service_name, "on"])
                 # subprocess.call(["systemctl", "enable", "postgresql"])
