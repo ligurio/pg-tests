@@ -5,8 +5,10 @@ import subprocess
 PGPRO_HOST = "http://repo.postgrespro.ru/"
 PSQL_HOST = "https://download.postgresql.org/pub"
 PACKAGES = ['server', 'contrib', 'libs']
-RPM_BASED = ['CentOS Linux', 'RHEL', 'CentOS', 'Red Hat Enterprise Linux Server', 'Oracle Linux Server', 'SLES']
-DEB_BASED = ['debian', 'Ubuntu']
+ALT_PACKAGES = ['server', 'contrib', 'devel']
+RPM_BASED = ['CentOS Linux', 'RHEL', 'CentOS',
+             'Red Hat Enterprise Linux Server', 'Oracle Linux Server', 'SLES']
+DEB_BASED = ['debian', 'Ubuntu', 'ALT Linux ']
 
 dist = {"Oracle Linux Server": 'oraclelinux',
         "CentOS Linux": 'centos',
@@ -21,6 +23,7 @@ dist = {"Oracle Linux Server": 'oraclelinux',
 def setup_repo(name, version, edition=None, milestone=None, build=None):
 
     distro = platform.linux_distribution()[0]
+    osversion = platform.linux_distribution()[1]
     major = version.split(".")[0]
     minor = version.split(".")[1]
 
@@ -41,7 +44,11 @@ def setup_repo(name, version, edition=None, milestone=None, build=None):
         if milestone:
             product_dir = product_dir + "-" + milestone
         gpg_key_url = "https://repo.postgrespro.ru/pgpro-%s/keys/GPG-KEY-POSTGRESPRO" % version
-        baseurl = os.path.join(PGPRO_HOST, product_dir, dist[distro].lower())
+        if distro == "ALT Linux " and osversion == "7.0.4":
+            distname = "altlinux-spt"
+        else:
+            distname = dist[distro].lower()
+        baseurl = os.path.join(PGPRO_HOST, product_dir, distname)
 
     if distro in RPM_BASED:
         # Example:
@@ -72,15 +79,22 @@ enabled=1
             repo = "deb http://apt.postgresql.org/pub/repos/apt/ %s-pgdg main" % codename
         elif name == "postgrespro":
             repo = "deb %s %s main" % (baseurl, codename)
+            if distro == "ALT Linux " and osversion == "7.0.4":
+                repo = "rpm %s/7 x86_64 pgpro" % baseurl
         if not os.access(repofile, os.F_OK):
             with open(repofile, "w+") as f:
                 print >> f, repo
 
-        subprocess.call(["apt-get", "install", "-y",
-                         "wget", "ca-certificates"])
-        gpg_key = subprocess.Popen(
-            ["wget", "--quiet", "-O", "-", gpg_key_url], stdout=subprocess.PIPE)
-        subprocess.call(["apt-key", "add", "-"], stdin=gpg_key.stdout)
+        if distro == "ALT Linux " and osversion == "7.0.4":
+            # subprocess.call(["rpm", "--import", gpg_key_url])
+            pass
+        else:
+            subprocess.call(["apt-get", "install", "-y",
+                             "wget", "ca-certificates"])
+            gpg_key = subprocess.Popen(
+                ["wget", "--quiet", "-O", "-", gpg_key_url], stdout=subprocess.PIPE)
+            subprocess.call(["apt-key", "add", "-"], stdin=gpg_key.stdout)
+
         subprocess.call(["apt-get", "update", "-y"])
     else:
         print "Unsupported distro %s" % distro
@@ -92,6 +106,7 @@ def package_mgmt(name, version, edition=None, milestone=None, build=None):
     distro = platform.linux_distribution()[0]
     major = version.split(".")[0]
     minor = version.split(".")[1]
+    pkg_name = ""
     if distro in RPM_BASED:
         if edition == "ee":
             pkg_name = "%s-enterprise%s%s" % (name, major, minor)
@@ -104,3 +119,14 @@ def package_mgmt(name, version, edition=None, milestone=None, build=None):
     elif distro in DEB_BASED:
         subprocess.call(["apt-get", "install", "-y",
                          "%s-%s" % (name, version)])
+
+    if distro == "ALT Linux ":
+        if edition == "ee":
+            pkg_name = "%s-enterprise%s.%s" % (name, major, minor)
+        else:
+            pkg_name = name + major + minor
+
+        for p in ALT_PACKAGES:
+            subprocess.call(
+                ["apt-get", "install", "-y", "%s-%s" % (pkg_name, p)])
+            # postgrespro-enterprise9.6-devel
