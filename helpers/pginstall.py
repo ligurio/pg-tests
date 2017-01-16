@@ -7,7 +7,8 @@ PSQL_HOST = "https://download.postgresql.org/pub"
 PACKAGES = ['server', 'contrib', 'libs']
 ALT_PACKAGES = ['server', 'contrib', 'devel']
 RPM_BASED = ['CentOS Linux', 'RHEL', 'CentOS',
-             'Red Hat Enterprise Linux Server', 'Oracle Linux Server', 'SLES']
+             'Red Hat Enterprise Linux Server', 'Oracle Linux Server', 'SLES',
+             'ROSA Enterprise Linux Server', 'ROSA SX \"COBALT\" ']
 DEB_BASED = ['debian', 'Ubuntu', 'ALT Linux ']
 
 dist = {"Oracle Linux Server": 'oraclelinux',
@@ -46,6 +47,10 @@ def setup_repo(name, version, edition=None, milestone=None, build=None):
         gpg_key_url = "https://repo.postgrespro.ru/pgpro-%s/keys/GPG-KEY-POSTGRESPRO" % version
         if distro == "ALT Linux " and osversion == "7.0.4":
             distname = "altlinux-spt"
+        elif distro == "ROSA Enterprise Linux Server":
+            distname = "rosa-el"
+        elif distro == "ROSA SX \"COBALT\" ":
+            distname = "rosa-sx"
         else:
             distname = dist[distro].lower()
         baseurl = os.path.join(PGPRO_HOST, product_dir, distname)
