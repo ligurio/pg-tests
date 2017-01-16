@@ -1,8 +1,7 @@
-import fileinput
-import fnmatch
 import os
 import platform
-import re
+import psutil
+import psycopg2
 import subprocess
 from subprocess import Popen
 
@@ -65,24 +64,11 @@ class PgInstance:
 
         return subprocess.call(["service", service_name, action])
 
-    def setup_psql(self, name, version, edition, milestone, build):
+    def edit_pg_hba_conf(self, pg_hba_config):
+        """Rewrite pg_hba.conf
 
-        distro = platform.linux_distribution()[0]
-        major = version.split(".")[0]
-        minor = version.split(".")[1]
-
-        print "Setup PostgreSQL service"
-        self.manage_psql(version, "start", True)
-
-        os.environ['PATH'] += ":/usr/pgsql-%s.%s/bin/" % (major, minor)
-        subprocess.call(["sudo", "-u", "postgres", "psql", "-c",
-                         "ALTER USER postgres WITH PASSWORD '%s';" % self.PG_PASSWORD])
-
-        hba_auth = """
-    local   all             all                                     peer
-    host    all             all             0.0.0.0/0               trust
-    host    all             all             ::0/0                   trust"""
-
+        :param pg_hba_config: string with pg_hba.conf content
+        """
         cmd = ["sudo", "-u", "postgres", "psql", "-t", "-P",
                "format=unaligned", "-c", "SHOW hba_file;"]
         p = Popen(cmd, stdout=subprocess.PIPE)
@@ -93,16 +79,122 @@ class PgInstance:
 
         hba_file = response[0].rstrip()
         print "Path to hba_file is", hba_file
-        hba = fileinput.FileInput(hba_file, inplace=True)
-        for line in hba:
-            if line[0] != '#':
-                line = re.sub('^', '#', line.rstrip())
-            print line.rstrip()
-
-        with open(hba_file, 'a') as hba:
-            hba.write(hba_auth)
+        with open(hba_file, 'w') as hba:
+            hba.write(pg_hba_config)
 
         subprocess.call(["chown", "postgres:postgres", hba_file])
+
+    def setup_psql(self, name, version, edition, milestone, build):
+
+        major = version.split(".")[0]
+        minor = version.split(".")[1]
+
+        print "Setup PostgreSQL service"
+        self.manage_psql(version, "start", True)
+
+        os.environ['PATH'] += ":/usr/pgsql-%s.%s/bin/" % (major, minor)
+        subprocess.call(["sudo", "-u", "postgres", "psql", "-c",
+                         "ALTER USER postgres WITH PASSWORD '%s';"
+                         % self.PG_PASSWORD])
+
+        hba_auth = """
+    local   all             all                                     peer
+    host    all             all             0.0.0.0/0               trust
+    host    all             all             ::0/0                   trust"""
+        self.edit_pg_hba_conf(hba_auth)
+
         subprocess.call(["sudo", "-u", "postgres", "psql", "-c",
                          "ALTER SYSTEM SET listen_addresses to '*';"])
         self.manage_psql(version, "restart")
+
+    def get_postmaster_pid(self):
+        """
+        Method returns PID of the postmaster process.
+
+        :returns: number with process identificator
+        """
+        conn_string = "host='localhost' user='postgres' "
+        conn = psycopg2.connect(conn_string)
+        cursor = conn.cursor()
+        cursor.execute("SELECT pg_backend_pid()")
+        pid = cursor.fetchall()[0][0]
+        ppid = psutil.Process(pid).ppid()
+        cursor.close()
+        conn.close()
+        return ppid
+
+    def get_option(self, option):
+        """ Get current value of a PostgreSQL option
+        :param: option name
+        :return:
+        """
+
+        conn_string = "host='localhost' user='postgres' "
+        conn = psycopg2.connect(conn_string)
+        cursor = conn.cursor()
+        if not self.check_option(option):
+            return None
+
+        cursor.execute(
+            "SELECT setting FROM pg_settings WHERE name = '%s'" % option)
+        value = cursor.fetchall()[0][0]
+
+        cursor.close()
+        conn.close()
+
+        return value
+
+    def check_option(self, option):
+        """ Check existence of a PostgreSQL option
+        :param: option name
+        :return: False or True
+        """
+
+        conn_string = "host='localhost' user='postgres' "
+        conn = psycopg2.connect(conn_string)
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT exists (SELECT 1 FROM pg_settings WHERE name = '%s' LIMIT 1)" % option)
+
+        if not cursor.fetchall()[0][0]:
+            return False
+
+        cursor.close()
+        conn.close()
+
+        return True
+
+    def set_option(self, option, value):
+        """ Set a new value to a PostgreSQL option
+        :param: option name and new value
+        :return: False or True
+        """
+
+        conn_string = "host='localhost' user='postgres' "
+        conn = psycopg2.connect(conn_string)
+        cursor = conn.cursor()
+        conn.set_session(autocommit=True)
+
+        if not self.check_option(option):
+            return False
+
+        cursor.execute(
+            "SELECT context FROM pg_settings WHERE name = '%s'" % option)
+        context = cursor.fetchall()[0][0]
+
+        restart_contexts = ['superuser-backend',
+                            'backend', 'user', 'postmaster', 'superuser']
+        reload_contexts = ['sighup']
+
+        if context in reload_contexts:
+            cursor.execute("ALTER SYSTEM SET %s = '%s'" % (option, value))
+            cursor.close()
+            conn.close()
+            return self.manage_psql(self.version, "reload")
+        elif context in restart_contexts:
+            cursor.execute("ALTER SYSTEM SET %s = '%s'" % (option, value))
+            cursor.close()
+            conn.close()
+            return self.manage_psql(self.version, "restart")
+        else:
+            return False

@@ -64,8 +64,16 @@
     become_method: su
     become: true
 
+  - name: install python module with APT support (ALTLinux)
+    command: apt-get install -y python-module-apt
+    when: ansible_os_family == "Altlinux"
+    become_method: su
+    become: true
+    tags:
+    - skip_ansible_lint
+
   - name: Wait for automatic system updates
-    shell: while sudo fuser /var/lib/dpkg/lock >/dev/null 2>&1; do sleep 1; done;
+    shell: while sudo fuser /var/lib/dpkg/lock >/dev/null 2>&1; do sleep 2; done;
     when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
     become_method: su
     become: true
@@ -133,6 +141,7 @@
   - name: install pytest framework and plugins
     pip: name={{ item.name }} version={{ item.version }}
     with_items:
+      - { name: 'psutil', version: '5.0.1' }
       - { name: 'pytest', version: '3.0.3' }
       - { name: 'pytest-html', version: '1.11.0' }
       - { name: 'netaddr', version: '0.7.18' }
@@ -159,7 +168,7 @@
 
   - name: remove libpq-dev (APT)
     apt: name=libpq-dev state=absent
-    when: ansible_pkg_mgr == "apt"
+    when: ansible_pkg_mgr == "apt" and ansible_distribution != "Altlinux"
     become_method: su
     become: true
 

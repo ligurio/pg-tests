@@ -86,8 +86,8 @@ def createTask(server_base_url, user, password,
         request.add_header("Authorization", "Basic %s" % base64string)
         response = urllib2.urlopen(request)
 
-    except urllib2.HTTPError, e:
-        print "EXCEPTION: %s " % e.code
+    except urllib2.HTTPError, ex:
+        print "EXCEPTION: %s " % ex.msg
         return None
 
     if response.code / 100 != 2:

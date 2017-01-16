@@ -63,7 +63,7 @@ class TestCompression():
         :return: str path to tablespace
         """
         tablespace_catalog = 'tablespace-' + str(random.randint(0, 100))
-        tablespace_path = TMP_DIR + tablespace_catalog
+        tablespace_path = os.path.join(TMP_DIR, tablespace_catalog)
         os.mkdir(tablespace_path)
         os.chown(tablespace_path,
                  pwd.getpwnam("postgres").pw_uid,
