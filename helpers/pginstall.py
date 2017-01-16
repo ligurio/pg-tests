@@ -49,6 +49,10 @@ def setup_repo(name, version, edition=None, milestone=None, build=None):
         gpg_key_url = "https://repo.postgrespro.ru/pgpro-%s/keys/GPG-KEY-POSTGRESPRO" % version
         if distro == "ALT Linux " and osversion == "7.0.4":
             distname = "altlinux-spt"
+        elif distro == "ROSA Enterprise Linux Server":
+            distname = "rosa-el"
+        elif distro == "ROSA SX \"COBALT\" ":
+            distname = "rosa-sx"
         else:
             distname = dist[distro].lower()
         baseurl = os.path.join(PGPRO_HOST, product_dir, distname)
