@@ -234,7 +234,7 @@
         - net.bridge.bridge-nf-call-ip6tables
     become_method: su
     become: true
-    when: ansible_os_family == "GosLinux"
+    when: ansible_os_family == "GosLinux" or ansible_os_family == "ROSA"
 
   - name: change coredump filename pattern
     sysctl: name="kernel.core_pattern" value="/home/test/coredumps/core-%e-%p-%t" sysctl_set=yes state=present
