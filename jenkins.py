@@ -18,7 +18,7 @@ GITLAB_TOKEN = "8BZ5DaaLycAe5AGGTERb"
 JENKINS_LOGIN = "jenkins"
 JENKINS_PWORD = "jenkins"
 JENKINS_URL = "http://bldfrm0.l.postgrespro.ru:8080/view/%s/job/%s-hub/lastBuild/api/json"
-TESTRUN_CMD = "./test-run.py --target %s --product_name postgrespro --product_version %s --product_edition %s --product_milestone beta --export"
+TESTRUN_CMD = "./testrun.py --target %s --product_name postgrespro --product_version %s --product_edition %s --product_milestone beta --export"
 DEBUG = False
 
 if len(sys.argv) > 1:
