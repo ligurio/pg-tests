@@ -33,7 +33,7 @@ hubUrl = JENKINS_URL % (branch, branch)
 def send_mail(text, subject):
     server = smtplib.SMTP(MAIL_HOST)
     server.ehlo()
-    text = "Subject: %s\n" % subject + text
+    text = "Subject: %s\n%s" % (subject, text)
     if DEBUG:
         server.set_debuglevel(1)
 
