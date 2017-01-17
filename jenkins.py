@@ -46,12 +46,11 @@ def send_mail(text, subject):
 def get_build_images(build_status):
     images = []
     for b in build_status["subBuilds"]:
-        if b["result"] == "SUCCESS":
-            jobname = b["jobName"]
-            if re.search('win', jobname):
-                continue    # see PGPRO-153
-            name = re.findall('%s-(.*)-amd64' % branch, jobname)[0]
-            images.append(name)
+        jobname = b["jobName"]
+        if re.search('win', jobname):
+            continue    # see PGPRO-153
+        name = re.findall('%s-(.*)-amd64' % branch, jobname)[0]
+        images.append(name)
     return images
 
 
