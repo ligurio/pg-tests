@@ -124,16 +124,16 @@ def package_mgmt(name, version, edition=None, milestone=None, build=None):
             subprocess.call(["yum", "install", "-y", "%s-%s" % (pkg_name, p)])
 
     elif distro in DEB_BASED:
-        if distro == "ALT Linux ":
-            if edition == "ee":
-                pkg_name = "%s-enterprise%s.%s" % (name, major, minor)
-            else:
-                pkg_name = name + major + minor
+        subprocess.call(["apt-get", "install", "-y",
+                         "%s-%s" % (name, version)])
 
-            for p in ALT_PACKAGES:
-                subprocess.call(
-                    ["apt-get", "install", "-y", "%s-%s" % (pkg_name, p)])
-                # postgrespro-enterprise9.6-devel
+    elif distro == "ALT Linux ":
+        if edition == "ee":
+            pkg_name = "%s-enterprise%s.%s" % (name, major, minor)
         else:
-            subprocess.call(["apt-get", "install", "-y",
-                             "%s-%s" % (name, version)])
+            pkg_name = name + major + minor
+
+        for p in ALT_PACKAGES:
+            subprocess.call(
+                ["apt-get", "install", "-y", "%s-%s" % (pkg_name, p)])
+            # postgrespro-enterprise9.6-devel
