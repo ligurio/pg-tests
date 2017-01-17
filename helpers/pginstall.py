@@ -8,7 +8,7 @@ PACKAGES = ['server', 'contrib', 'libs']
 ALT_PACKAGES = ['server', 'contrib', 'devel']
 RPM_BASED = ['CentOS Linux', 'RHEL', 'CentOS',
              'Red Hat Enterprise Linux Server', 'Oracle Linux Server', 'SLES']
-DEB_BASED = ['debian', 'Ubuntu', 'ALT Linux ']
+DEB_BASED = ['debian', 'Ubuntu']
 
 dist = {"Oracle Linux Server": 'oraclelinux',
         "CentOS Linux": 'centos',
@@ -32,7 +32,7 @@ def setup_repo(name, version, edition=None, milestone=None, build=None):
         if distro in RPM_BASED:
             gpg_key_url = "https://download.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG-%s%s" % (
                 major, minor)
-        elif distro in DEB_BASED:
+        elif distro in DEB_BASED or distro == "ALT Linux ":
             gpg_key_url = "https://www.postgresql.org/media/keys/ACCC4CF8.asc"
         product_dir = "/repos/yum/%s/redhat/rhel-$releasever-$basearch" % version
         baseurl = PSQL_HOST + product_dir
@@ -68,7 +68,7 @@ enabled=1
             print >> f, repo
         subprocess.call(["rpm", "--import", gpg_key_url])
 
-    elif distro in DEB_BASED:
+    elif distro in DEB_BASED or distro == "ALT Linux ":
         subprocess.call(["apt-get", "install", "-y", "lsb-release"])
         lsb = subprocess.Popen(
             (["lsb_release", "-cs"]), stdout=subprocess.PIPE)
@@ -117,16 +117,16 @@ def package_mgmt(name, version, edition=None, milestone=None, build=None):
             subprocess.call(["yum", "install", "-y", "%s-%s" % (pkg_name, p)])
 
     elif distro in DEB_BASED:
-        subprocess.call(["apt-get", "install", "-y",
-                         "%s-%s" % (name, version)])
+        if distro == "ALT Linux ":
+            if edition == "ee":
+                pkg_name = "%s-enterprise%s.%s" % (name, major, minor)
+            else:
+                pkg_name = name + major + minor
 
-    if distro == "ALT Linux ":
-        if edition == "ee":
-            pkg_name = "%s-enterprise%s.%s" % (name, major, minor)
+            for p in ALT_PACKAGES:
+                subprocess.call(
+                    ["apt-get", "install", "-y", "%s-%s" % (pkg_name, p)])
+                # postgrespro-enterprise9.6-devel
         else:
-            pkg_name = name + major + minor
-
-        for p in ALT_PACKAGES:
-            subprocess.call(
-                ["apt-get", "install", "-y", "%s-%s" % (pkg_name, p)])
-            # postgrespro-enterprise9.6-devel
+            subprocess.call(["apt-get", "install", "-y",
+                             "%s-%s" % (name, version)])
