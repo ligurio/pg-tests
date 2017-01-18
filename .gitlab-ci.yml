@@ -11,6 +11,9 @@ stages:
   - test
 
 before_script:
+  - uname -a
+  - df -h
+  - echo $CI_RUNNER_ID $CI_RUNNER_DESCRIPTION $CI_RUNNER_TAGS
   - export DEBIAN_FRONTEND=noninteractive
   - apt-get -yqq update
   - apt-get install -yqq python python-dev libyaml-dev python-pip libssl-dev libffi-dev pylint
@@ -23,29 +26,17 @@ before_script:
 ansible-lint:
   stage: test
   script:
-    - echo $CI_RUNNER_ID $CI_RUNNER_DESCRIPTION $CI_RUNNER_TAGS
-    - echo $CI_SERVER $CI_SERVER_NAME $CI_SERVER_REVISION $CI_SERVER_VERSION
-    - uname -a
-    - df -h
     - ansible-lint static/playbook-prepare-env.yml
   when: always
 
 pep8-check:
   stage: test
   script:
-    - echo $CI_RUNNER_ID $CI_RUNNER_DESCRIPTION $CI_RUNNER_TAGS
-    - echo $CI_SERVER $CI_SERVER_NAME $CI_SERVER_REVISION $CI_SERVER_VERSION
-    - uname -a
-    - df -h
     - pep8 --exclude helpers/datafiller.py --filename=*.py --ignore=W293,E201,E202,E501 --count .
   when: always
 
 pylint-check:
   stage: test
   script:
-    - echo $CI_RUNNER_ID $CI_RUNNER_DESCRIPTION $CI_RUNNER_TAGS
-    - echo $CI_SERVER $CI_SERVER_NAME $CI_SERVER_REVISION $CI_SERVER_VERSION
-    - uname -a
-    - df -h
     - pylint --ignore=datafiller.py -E pg-tests
   when: always
