@@ -1,3 +1,4 @@
+import logging
 import os
 import platform
 import subprocess
@@ -23,30 +24,28 @@ dist = {"Oracle Linux Server": 'oraclelinux',
         "SLES": 'sles'}
 
 
-def setup_repo(name, version, edition=None, milestone=None, build=None):
+def generate_repo_info(distro, osversion, **kwargs):
 
-    distro = platform.linux_distribution()[0]
-    osversion = platform.linux_distribution()[1]
-    major = version.split(".")[0]
-    minor = version.split(".")[1]
+    major = kwargs['version'].split(".")[0]
+    minor = kwargs['version'].split(".")[1]
 
     product_dir = ""
-    if name == "postgresql":
+    if kwargs['name'] == "postgresql":
         if distro in RPM_BASED:
             gpg_key_url = "https://download.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG-%s%s" % (
                 major, minor)
         elif distro in DEB_BASED or distro == "ALT Linux ":
             gpg_key_url = "https://www.postgresql.org/media/keys/ACCC4CF8.asc"
-        product_dir = "/repos/yum/%s/redhat/rhel-$releasever-$basearch" % version
+        product_dir = "/repos/yum/%s/redhat/rhel-$releasever-$basearch" % kwargs['version']
         baseurl = PSQL_HOST + product_dir
-    elif name == "postgrespro":
-        if edition == "ee":
-            product_dir = "pgproee-%s" % version
-        elif edition == "standard":
-            product_dir = "pgpro-%s" % version
-        if milestone:
-            product_dir = product_dir + "-" + milestone
-        gpg_key_url = "https://repo.postgrespro.ru/pgpro-%s/keys/GPG-KEY-POSTGRESPRO" % version
+    elif kwargs['name'] == "postgrespro":
+        if kwargs['edition'] == "ee":
+            product_dir = "pgproee-%s" % kwargs['version']
+        elif kwargs['edition'] == "standard":
+            product_dir = "pgpro-%s" % kwargs['version']
+        if kwargs['milestone']:
+            product_dir = product_dir + "-" + kwargs['milestone']
+        gpg_key_url = "https://repo.postgrespro.ru/pgpro-%s/keys/GPG-KEY-POSTGRESPRO" % kwargs['version']
         if distro == "ALT Linux " and osversion == "7.0.4":
             distname = "altlinux-spt"
         elif distro == "ROSA Enterprise Linux Server":
@@ -56,6 +55,20 @@ def setup_repo(name, version, edition=None, milestone=None, build=None):
         else:
             distname = dist[distro].lower()
         baseurl = os.path.join(PGPRO_HOST, product_dir, distname)
+    logging.debug("Installation repo path: %s" % baseurl)
+    logging.debug("GPG key url for installation: %s" % gpg_key_url)
+    return baseurl, gpg_key_url
+
+
+def setup_repo(name, version, edition=None, milestone=None, build=None):
+
+    distro = platform.linux_distribution()[0]
+    osversion = platform.linux_distribution()[1]
+    repo_info = generate_repo_info(distro, osversion, version=version,
+                                   name=name, edition=edition, milestone=milestone,
+                                   build=build)
+    baseurl = repo_info[0]
+    gpg_key_url = repo_info[1]
 
     if distro in RPM_BASED:
         # Example:
