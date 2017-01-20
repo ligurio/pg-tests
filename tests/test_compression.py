@@ -26,7 +26,7 @@ class TestCompression():
         conn = psycopg2.connect(conn_string)
         conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
         cursor = conn.cursor()
-        cursor.execute("ALTER DATABASE {} SET default_tablespace TO {}".format(db_name, tbs_name))
+        cursor.execute("ALTER DATABASE {0} SET default_tablespace TO {1}".format(db_name, tbs_name))
 
     @staticmethod
     def get_directory_size(start_path):
@@ -82,12 +82,13 @@ class TestCompression():
         cursor = conn.cursor()
         # TODO add check that PGPRO edition is enterprise
         if compression:
-            cursor.execute('CREATE TABLESPACE {} LOCATION \'{}\' WITH (compression=true);'.format(tablespace_name,
-                                                                                                  tablespace_location))
+            cursor.execute('CREATE TABLESPACE {0} LOCATION \'{1}\' WITH (compression=true);'.format(
+                tablespace_name,
+                tablespace_location))
         else:
-            cursor.execute('CREATE TABLESPACE {} LOCATION \'{}\';'.format(tablespace_name, tablespace_location))
+            cursor.execute('CREATE TABLESPACE {0} LOCATION \'{1}\';'.format(tablespace_name, tablespace_location))
 
-    @pytest.mark.test_compression
+    @pytest.mark.test_compression_standalone_positive
     @pytest.mark.usefixtures('create_table')
     @pytest.mark.parametrize('create_table', [('pgbench', '20')], indirect=True)
     def test_compression_standalone_positive(self):
