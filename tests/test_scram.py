@@ -103,6 +103,7 @@ class TestScram():
         cursor.close()
         conn.close()
 
+    @pytest.mark.xfail
     @pytest.mark.test_authentication
     def test_authentication(self, install_postgres):
         """Check that we can authenticate user with different password types
