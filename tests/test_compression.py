@@ -8,7 +8,6 @@ import pytest
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 from helpers.sql_helpers import create_test_table
-from helpers.sql_helpers import get_data_directory
 from tests.settings import TMP_DIR
 
 
@@ -106,14 +105,14 @@ class TestCompression():
         8. Check that files for table in tablespace without compression > that files in tablespace with compression
         """
         self.create_tablespace('compression', compression=True)
-        data_directory = get_data_directory()
+        data_directory = install_postgres.get_option('data_directory')
         print(data_directory)
         #  Save db files size
         data_size_without_compression = self.get_directory_size(data_directory)
         print(data_size_without_compression)
         self.set_default_tablespace('postgres', 'compression')
         create_test_table(size='20', schema='pgbench')
-        compression_data_directory = get_data_directory()
+        compression_data_directory = install_postgres.get_option('data_directory')
         print(compression_data_directory)
         data_size_with_compression = self.get_directory_size(compression_data_directory)
         print(data_size_with_compression)
