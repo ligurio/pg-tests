@@ -90,7 +90,8 @@ class TestCompression():
     @pytest.mark.test_compression_standalone_positive
     @pytest.mark.usefixtures('create_table')
     @pytest.mark.parametrize('create_table', [('pgbench', '20')], indirect=True)
-    def test_compression_standalone_positive(self):
+    @pytest.mark.usefixtures('install_postgres')
+    def test_compression_standalone_positive(self, install_postgres):
         #  TODO add check from step 5
         #  TODO add logging for checks and actions
         """ Test for compression feature.
