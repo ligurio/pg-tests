@@ -1,9 +1,6 @@
 ---
 - hosts: all
   gather_facts: true
-  vars:
-   win_path: C:\Users\test\Downloads\
-
   tasks:
 
   - name: subscribe to RHSM
@@ -20,7 +17,7 @@
         - python-devel
         - libselinux-python
         - python-psycopg2
-    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "yum"
+    when: ansible_pkg_mgr == "yum"
     become_method: su
     become: true
 
@@ -104,7 +101,7 @@
         - gcc
         - python-dev
         - python-selinux
-    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "urpmi"
+    when: ansible_pkg_mgr == "urpmi"
     become_method: su
     become: true
 
@@ -116,25 +113,22 @@
         - gcc
         - python-dev
         - python-selinux
-    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "zypper"
+    when: ansible_pkg_mgr == "zypper"
     become_method: su
     become: true
 
   - name: set up ssh authorized_keys
     authorized_key: user=test key="{{ item }}" state=present exclusive=yes
-    when: ansible_os_family != "Windows"
     with_file:
     - authorized_keys
 
   - name: download pip
-    when: ansible_os_family != "Windows"
     get_url:
       url: https://bootstrap.pypa.io/get-pip.py
       dest: /tmp
       validate_certs: no
 
   - name: install pip
-    when: ansible_os_family != "Windows"
     command: "python /tmp/get-pip.py"
     become_method: su
     become: true
@@ -142,11 +136,9 @@
     - skip_ansible_lint
 
   - name: delete get-pip.py
-    when: ansible_os_family != "Windows"
     file: state=absent path=/tmp/get-pip.py
 
   - name: install pytest framework and plugins
-    when: ansible_os_family != "Windows"
     pip: name={{ item.name }} version={{ item.version }}
     with_items:
       - { name: 'psutil', version: '5.0.1' }
@@ -170,26 +162,25 @@
     with_items:
       - postgresql-devel
       - postgresql
-    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "yum"
+    when: ansible_pkg_mgr == "yum"
     become_method: su
     become: true
 
   - name: remove libpq-dev (APT)
     apt: name=libpq-dev state=absent
-    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "apt" and ansible_distribution != "Altlinux"
+    when: ansible_pkg_mgr == "apt" and ansible_distribution != "Altlinux"
     become_method: su
     become: true
 
   - name: set selinux to permissive
     selinux: policy=targeted state=permissive
-    when: ansible_os_family != "Windows" and ansible_selinux == "Enabled"
+    when: ansible_selinux == "Enabled"
     #when: (ansible_distribution == "Ubuntu" and ansible_distribution_major_version == "15") or
     #      (ansible_distribution == "Debian" and ansible_distribution_major_version == "7")
     become_method: su
     become: true
 
   - name: make sure we have a 'wheel' group
-    when: ansible_os_family != "Windows"
     group:
       name: wheel
       state: present
@@ -197,7 +188,6 @@
     become: true
 
   - name: allow 'wheel' group to have passwordless become_method
-    when: ansible_os_family != "Windows"
     lineinfile:
       dest: /etc/sudoers
       state: present
@@ -218,7 +208,6 @@
     become: true
 
   - name: add user 'test' to the 'wheel' group
-    when: ansible_os_family != "Windows"
     user:
       name: "test"
       groups: wheel
@@ -227,7 +216,6 @@
     become: true
 
   - name: coredump handling
-    when: ansible_os_family != "Windows"
     pam_limits: domain={{ item }} limit_type=soft limit_item=core value=unlimited backup=yes
     with_items:
       - test
@@ -236,7 +224,6 @@
     become: true
 
   - name: make a directory for coredumps
-    when: ansible_os_family != "Windows"
     file: path="/home/test/coredumps" state=directory
 
   - name: remove unknown keys from sysctl.conf
@@ -250,7 +237,6 @@
     when: ansible_os_family == "GosLinux" or ansible_os_family == "ROSA"
 
   - name: change coredump filename pattern
-    when: ansible_os_family != "Windows"
     sysctl: name="kernel.core_pattern" value="/home/test/coredumps/core-%e-%p-%t" sysctl_set=yes state=present
     become_method: su
     become: true
@@ -266,59 +252,9 @@
     when: ansible_distribution == "\"astra linux se\"" or ansible_distribution == "\"astralinuxse\""
 
   - name: checkout latest version of tests
-    when: ansible_os_family != "Windows"
     git: repo=https://git.postgrespro.ru/automation/pg-tests.git dest=/home/test/pg-tests
     tags:
     - skip_ansible_lint
 
   #- name: psycopg2 test script
   #  command: /usr/bin/python -c "import psycopg2; conn = psycopg2.connect(\"host='localhost' dbname='postgres' user='postgres' password='password'\") "
-
-  - name: windows download git
-    when: ansible_os_family == "Windows"
-    with_items:
-        - { win_url: "https://github.com/git-for-windows/git/releases/download/v2.11.0.windows.3/Git-2.11.0.3-64-bit.exe", win_dest: 'Git-2.11.0.3-64-bit.exe' }
-        - { win_url: "https://www.python.org/ftp/python/2.7.13/python-2.7.13.amd64.msi", win_dest: 'python2-7-13.amd64.msi' }
-        - { win_url: "https://bootstrap.pypa.io/get-pip.py", win_dest: 'get-pip.py' }
-    win_get_url:
-      url: '{{ item.win_url }}'
-      dest: '{{ win_path }}{{ item.win_dest }}'
-
-  - name: windows install git
-    when: ansible_os_family == "Windows"
-    win_shell: '{{ win_path }}Git-2.11.0.3-64-bit.exe /VERYSILENT'
-
-  - name: windows install python
-    when: ansible_os_family == "Windows"
-    win_msi:
-      path: '{{ win_path }}python2-7-13.amd64.msi'
-      wait: true
-
-  - name: windows install pip
-    when: ansible_os_family == "Windows"
-    win_shell: 'C:\Python27\python.exe {{ win_path }}get-pip.py'
-
-  - name: windows install libraries
-    when: ansible_os_family == "Windows"
-    with_items:
-        - pytest
-        - pytest-html
-        - psycopg2
-        - netaddr
-        - paramiko
-        - psutil
-    win_shell: 'C:\Python27\Scripts\pip.exe install {{ item }}'
-
-  - name: windows install pg-tests with git
-    when: ansible_os_family == "Windows"
-    win_shell: 'git clone https://git.postgrespro.ru/automation/pg-tests.git'
-
-  - name: windows remove pip, git, python installers
-    when: ansible_os_family == "Windows"
-    with_items:
-        - { win_dest: "Git-2.11.0.3-64-bit.exe" }
-        - { win_dest: "python2-7-13.amd64.msi" }
-        - { win_dest: "get-pip.py" }
-    win_file:
-      path: '{{ win_path }}{{ item.win_dest }}'
-      state: absent
