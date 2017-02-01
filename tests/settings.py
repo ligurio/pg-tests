@@ -205,4 +205,33 @@ CREATE TABLE pgbench_history(  -- df: nogen
 );
 """
 
+PGBENCH_SCHEMA_UNLOGGED = """
+CREATE TABLE pgbench_branches(
+  bid SERIAL PRIMARY KEY,
+  bbalance INTEGER NOT NULL,
+  filler CHAR(88) NOT NULL
+);
+CREATE TABLE pgbench_tellers(
+  tid SERIAL PRIMARY KEY,
+  bid INTEGER NOT NULL REFERENCES pgbench_branches,
+  tbalance INTEGER NOT NULL,
+  filler CHAR(84) NOT NULL
+);
+CREATE TABLE pgbench_accounts(
+  aid BIGSERIAL PRIMARY KEY,
+  bid INTEGER NOT NULL REFERENCES pgbench_branches,
+  abalance INTEGER NOT NULL,
+  filler CHAR(84) NOT NULL
+);
+CREATE TABLE pgbench_history(
+  tid INTEGER NOT NULL REFERENCES pgbench_tellers,
+  bid INTEGER NOT NULL REFERENCES pgbench_branches,
+  aid BIGINT NOT NULL REFERENCES pgbench_accounts,
+  delta INTEGER NOT NULL,
+  mtime TIMESTAMP NOT NULL,
+  filler CHAR(22)
+  -- UNIQUE (tid, bid, aid, mtime)
+);
+"""
+
 TMP_DIR = '/tmp'
