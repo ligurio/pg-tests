@@ -4,7 +4,6 @@ import argparse
 import os
 import os.path
 import paramiko
-import platform
 import random
 import re
 import socket
@@ -13,8 +12,6 @@ import subprocess
 import sys
 import time
 import urllib
-import winrm
-
 from subprocess import call
 """PostgresPro regression tests run script."""
 
@@ -31,18 +28,12 @@ ANSIBLE_INVENTORY = "%s ansible_host=%s \
                     ansible_ssh_pass=%s \
                     ansible_user=%s \
                     ansible_become_user=root\n"
-ANSIBLE_INVENTORY_WIN = "%s ansible_host=%s \
-                    ansible_user=%s  \
-                    ansible_password=%s \
-                    ansible_winrm_server_cert_validation=ignore  \
-                    ansible_port=5985  \
-                    ansible_connection=winrm \n"
 REPORT_SERVER_URL = 'http://testrep.l.postgrespro.ru/'
 
-REMOTE_LOGIN = 'test'
-REMOTE_ROOT = 'root'
-REMOTE_PASSWORD = 'TestPass1'
-REMOTE_ROOT_PASSWORD = 'TestRoot1'
+SSH_LOGIN = 'test'
+SSH_ROOT = 'root'
+SSH_PASSWORD = 'TestPass1'
+SSH_ROOT_PASSWORD = 'TestRoot1'
 SSH_PORT = 22
 DEBUG = False
 
@@ -82,16 +73,10 @@ def mac_address_generator():
     return ':'.join(map(lambda x: "%02x" % x, mac))
 
 
-def get_virt_ip():
-    out, err = subprocess.Popen('ifconfig virbr0|grep "inet addr"',
-                                shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-    return out[20:33]
-
-
 def copy_file(local_path, remote_path, hostname):
 
     transport = paramiko.Transport((hostname, SSH_PORT))
-    transport.connect(username=REMOTE_LOGIN, password=REMOTE_PASSWORD)
+    transport.connect(username=SSH_LOGIN, password=SSH_PASSWORD)
     sftp = paramiko.SFTPClient.from_transport(transport)
     print "Copying file '%s', remote host is '%s'" % (remote_path, hostname)
     sftp.get(remote_path, local_path)
@@ -99,16 +84,6 @@ def copy_file(local_path, remote_path, hostname):
     transport.close()
 
     # TODO: return exit code
-
-
-def copy_file_win(reportname, domipaddress):
-
-    cmd = r'net use f: "\\%s\reports" &&xcopy .\pg-tests\*.html f:\ /Y' % get_virt_ip()
-    exec_command_win(cmd, domipaddress)
-    cmd = r'net use f: "\\%s\reports" &&xcopy .\pg-tests\*.xml f:\ /Y' % get_virt_ip()
-    exec_command_win(cmd, domipaddress)
-    shutil.copy(r'/reports/%s.html' % reportname, r'reports')
-    shutil.copy(r'/reports/%s.xml' % reportname, r'reports')
 
 
 def exec_command(cmd, hostname):
@@ -123,8 +98,8 @@ def exec_command(cmd, hostname):
         if os.path.isfile(known_hosts):
             client.load_system_host_keys(known_hosts)
             client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            client.connect(hostname=hostname, username=REMOTE_LOGIN,
-                           password=REMOTE_PASSWORD, port=SSH_PORT,
+            client.connect(hostname=hostname, username=SSH_LOGIN,
+                           password=SSH_PASSWORD, port=SSH_PORT,
                            look_for_keys=False)
     except paramiko.AuthenticationException, e:
         print 'Auth Error: ', e
@@ -147,20 +122,6 @@ def exec_command(cmd, hostname):
         stderr += chan.recv_stderr(buff_size)
 
     client.close()
-
-    return retcode, stdout, stderr
-
-
-def exec_command_win(cmd, hostname):
-
-    p = winrm.Protocol(endpoint='http://' + hostname + ':5985/wsman', transport='plaintext',
-                       username=REMOTE_LOGIN,
-                       password=REMOTE_ROOT_PASSWORD)
-    shell_id = p.open_shell()
-    command_id = p.run_command(shell_id, cmd)
-    stdout, stderr, retcode = p.get_command_output(shell_id, command_id)
-    p.cleanup_command(shell_id, command_id)
-    p.close_shell(shell_id)
 
     return retcode, stdout, stderr
 
@@ -205,43 +166,39 @@ def create_env(name, domname):
 
     domimage = create_image(domname, name)
     dommac = mac_address_generator()
-    if platform.linux_distribution()[0] == 'Ubuntu':
-        qemu_path = """/usr/bin/qemu-system-x86_64"""
-    elif platform.linux_distribution()[0] == 'CentOS Linux':
-        qemu_path = """/usr/libexec/qemu-kvm"""
     xmldesc = """<domain type='kvm'>
-              <name>%s</name>
-              <memory unit='GB'>1</memory>
-              <vcpu>1</vcpu>
-              <os>
-                <type>hvm</type>
-                <boot dev='hd'/>
-              </os>
-              <features>
-                <acpi/>
-              </features>
-              <clock offset='utc'/>
-              <on_poweroff>destroy</on_poweroff>
-              <on_reboot>restart</on_reboot>
-              <on_crash>destroy</on_crash>
-              <devices>
-                <emulator>%s</emulator>
-                <disk type='file' device='disk'>
-                  <driver name='qemu' type='qcow2' cache='none'/>
-                  <source file='%s'/>
-                  <target dev='vda' bus='virtio'/>
-                </disk>
-                <interface type='bridge'>
-                  <mac address='%s'/>
-                  <source bridge='virbr0'/>
-                  <model type='virtio'/>
-                </interface>
-                <input type='tablet' bus='usb'/>
-                <input type='mouse' bus='ps2'/>
-                <graphics type='vnc' port='-1' listen='0.0.0.0'/>
-              </devices>
-            </domain>
-            """ % (domname, qemu_path, domimage, dommac)
+  <name>%s</name>
+  <memory unit='GB'>1</memory>
+  <vcpu>1</vcpu>
+  <os>
+    <type>hvm</type>
+    <boot dev='hd'/>
+  </os>
+  <features>
+    <acpi/>
+  </features>
+  <clock offset='utc'/>
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>destroy</on_crash>
+  <devices>
+    <emulator>/usr/libexec/qemu-kvm</emulator>
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='qcow2' cache='none'/>
+      <source file='%s'/>
+      <target dev='vda' bus='virtio'/>
+    </disk>
+    <interface type='bridge'>
+      <mac address='%s'/>
+      <source bridge='virbr0'/>
+      <model type='virtio'/>
+    </interface>
+    <input type='tablet' bus='usb'/>
+    <input type='mouse' bus='ps2'/>
+    <graphics type='vnc' port='-1' listen='0.0.0.0'/>
+  </devices>
+</domain>
+""" % (domname, domimage, dommac)
 
     dom = conn.createLinux(xmldesc, 0)
     if dom is None:
@@ -269,10 +226,7 @@ def setup_env(domipaddress, domname):
     with open("/etc/hosts", "a") as hosts:
         hosts.write(host_record)
 
-    if domname[0:3] != 'win':
-        inv = ANSIBLE_INVENTORY % (domname, domipaddress, REMOTE_ROOT_PASSWORD, REMOTE_PASSWORD, REMOTE_LOGIN)
-    else:
-        inv = ANSIBLE_INVENTORY_WIN % (domname, domipaddress, REMOTE_LOGIN, REMOTE_ROOT_PASSWORD)
+    inv = ANSIBLE_INVENTORY % (domname, domipaddress, SSH_ROOT_PASSWORD, SSH_PASSWORD, SSH_LOGIN)
     with open("static/inventory", "a") as hosts:
         hosts.write(inv)
 
@@ -289,12 +243,13 @@ def setup_env(domipaddress, domname):
     return 0
 
 
-def make_test_cmd(domname, reportname, tests=None,
+def make_test_cmd(reportname, tests=None,
                   product_name=None,
                   product_version=None,
                   product_edition=None,
                   product_milestone=None,
                   product_build=None):
+
     pcmd = ""
     if product_name:
         pcmd = "%s --product_name %s " % (pcmd, product_name)
@@ -306,33 +261,32 @@ def make_test_cmd(domname, reportname, tests=None,
         pcmd = "%s --product_milestone %s " % (pcmd, product_milestone)
     if product_build:
         pcmd = "%s --product_build %s " % (pcmd, product_build)
+
     cmd = 'cd /home/test/pg-tests && sudo pytest \
                                     --self-contained-html \
                                     --html=%s.html \
                                     --junit-xml=%s.xml \
                                     --maxfail=1 %s %s' \
                                     % (reportname, reportname, pcmd, tests)
-    if domname[0:3] == 'win':
-        cmd = r'cd C:\Users\test\pg-tests && pytest --self-contained-html --html=%s.html --junit-xml=%s.xml \
-              --maxfail=1 %s %s' % (reportname, reportname, pcmd, tests)
+
     if DEBUG:
-        cmd = cmd + r'--verbose --tb=long --full-trace'
+        cmd = cmd + "--verbose --tb=long --full-trace"
+
     return cmd
 
 
-def export_results(domname, domipaddress, reportname):
+def export_results(domipaddress, reportname):
     if not os.path.exists('reports'):
         os.makedirs('reports')
+    copy_file("reports/%s.html" % reportname,
+              "/home/test/pg-tests/%s.html" % reportname, domipaddress)
+    copy_file("reports/%s.xml" % reportname,
+              "/home/test/pg-tests/%s.xml" % reportname, domipaddress)
 
-    if domname[0:3] == 'win':
-        copy_file_win(reportname, domipaddress)
-    else:
-        copy_file("reports/%s.html" % reportname,
-                  "/home/test/pg-tests/%s.html" % reportname, domipaddress)
-        copy_file("reports/%s.xml" % reportname,
-                  "/home/test/pg-tests/%s.xml" % reportname, domipaddress)
-    subprocess.Popen(['/usr/bin/curl', '-T', 'reports/%s.html' % reportname, REPORT_SERVER_URL])
-    subprocess.Popen(['/usr/bin/curl', '-T', 'reports/%s.xml' % reportname, REPORT_SERVER_URL])
+    subprocess.Popen(
+        ['curl', '-T', 'reports/%s.html' % reportname, REPORT_SERVER_URL])
+    subprocess.Popen(
+        ['curl', '-T', 'reports/%s.xml' % reportname, REPORT_SERVER_URL])
 
 
 def keep_env(domname, keep):
@@ -365,6 +319,7 @@ def keep_env(domname, keep):
 
 
 def main():
+
     names = list_images()
     parser = argparse.ArgumentParser(
         description='PostgreSQL regression tests run script.',
@@ -406,36 +361,19 @@ def main():
         reportname = "report-" + time.strftime('%Y-%b-%d-%H-%M-%S')
         domipaddress = create_env(t, domname)
         setup_env(domipaddress, domname)
-
-        cmd = make_test_cmd(domname, reportname, args.run_tests,
+        cmd = make_test_cmd(reportname, args.run_tests,
                             args.product_name,
                             args.product_version,
                             args.product_edition,
                             args.product_milestone,
                             args.product_build)
-
-        if domname[0:3] == 'win':
-            s = winrm.Session(domipaddress, auth=(REMOTE_LOGIN, REMOTE_ROOT_PASSWORD))
-            ps_script = """
-                Set-ExecutionPolicy Unrestricted
-                [Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Python27",
-                [EnvironmentVariableTarget]::Machine)
-                [Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Python27\Scripts",
-                [EnvironmentVariableTarget]::Machine)
-                """
-            s.run_ps(ps_script)
-            print "Added path for python and python scripts. \n"
-            retcode, stdout, stderr = exec_command_win(cmd, domipaddress)
-            export_results(domname, domipaddress, reportname)
-        else:
-            retcode, stdout, stderr = exec_command(cmd, domipaddress)
-
+        retcode, stdout, stderr = exec_command(cmd, domipaddress)
         if retcode != 0:
             print "Test return code is not zero - %s." % retcode
             print retcode, stdout, stderr
 
         if args.export:
-            export_results(domname, domipaddress, reportname)
+            export_results(domipaddress, reportname)
             reporturl = os.path.join(REPORT_SERVER_URL, reportname)
             print "Link to the report - %s" % reporturl
 
