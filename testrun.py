@@ -381,7 +381,8 @@ def main():
         if args.export:
             export_results(domipaddress, reportname)
             reporturl = os.path.join(REPORT_SERVER_URL, reportname)
-            print "Link to the report - %s" % reporturl
+            print "Link to the html report - %s.html" % reporturl
+            print "Link to the xml report - %s.xml" % reporturl
 
         if args.keep:
             print('Domain %s (IP address %s)' % (domname, domipaddress))
