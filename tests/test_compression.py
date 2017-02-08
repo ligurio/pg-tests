@@ -17,6 +17,35 @@ from tests.settings import TMP_DIR
 
 class TestCompression():
 
+    PGBENCH_SCHEMA_UNLOGGED = """
+    CREATE UNLOGGED TABLE pgbench_branches_unlogged(
+      bid SERIAL PRIMARY KEY,
+      bbalance INTEGER NOT NULL,
+      filler CHAR(88) NOT NULL
+    );
+    CREATE UNLOGGED TABLE pgbench_tellers_unlogged(
+      tid SERIAL PRIMARY KEY,
+      bid INTEGER NOT NULL REFERENCES pgbench_branches,
+      tbalance INTEGER NOT NULL,
+      filler CHAR(84) NOT NULL
+    );
+    CREATE UNLOGGED TABLE pgbench_accounts_unlogged(
+      aid BIGSERIAL PRIMARY KEY,
+      bid INTEGER NOT NULL REFERENCES pgbench_branches,
+      abalance INTEGER NOT NULL,
+      filler CHAR(84) NOT NULL
+    );
+    CREATE UNLOGGED TABLE pgbench_history_unlogged(
+      tid INTEGER NOT NULL REFERENCES pgbench_tellers,
+      bid INTEGER NOT NULL REFERENCES pgbench_branches,
+      aid BIGINT NOT NULL REFERENCES pgbench_accounts,
+      delta INTEGER NOT NULL,
+      mtime TIMESTAMP NOT NULL,
+      filler CHAR(22)
+      -- UNIQUE (tid, bid, aid, mtime)
+    );
+    """
+
     @staticmethod
     def set_default_tablespace(db_name, tbs_name):
         """
@@ -137,7 +166,7 @@ class TestCompression():
         # Step 2
         self.set_default_tablespace('postgres', 'compression_unlogged_tables')
         install_postgres.manage_psql(install_postgres.version, 'restart')
-        create_test_table(size='20', schema='pgbench_unlogged')
+        create_test_table(size='20', schema=self.PGBENCH_SCHEMA_UNLOGGED)
         # Step 3
         compression_files = self.get_filenames(compression_files_directory)
         assert '.cfm' in compression_files
