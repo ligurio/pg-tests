@@ -46,8 +46,6 @@ def create_test_table(size, schema):
         sqlschema = settings.MIXED_SCHEMA
     elif schema == "pgbench":
         sqlschema = settings.PGBENCH_SCHEMA
-    elif schema == "pgbench_unlogged":
-        sqlschema = settings.PGBENCH_SCHEMA_UNLOGGED
     else:
         sqlschema = schema
 
