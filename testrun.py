@@ -4,6 +4,7 @@ import argparse
 import os
 import os.path
 import paramiko
+import platform
 import random
 import re
 import socket
@@ -166,39 +167,44 @@ def create_env(name, domname):
 
     domimage = create_image(domname, name)
     dommac = mac_address_generator()
+    qemu_path = ""
+    if platform.linux_distribution()[0] == 'Ubuntu' or platform.linux_distribution()[0] == 'debian':
+        qemu_path = """/usr/bin/qemu-system-x86_64"""
+    elif platform.linux_distribution()[0] == 'CentOS Linux':
+        qemu_path = """/usr/libexec/qemu-kvm"""
     xmldesc = """<domain type='kvm'>
-  <name>%s</name>
-  <memory unit='GB'>1</memory>
-  <vcpu>1</vcpu>
-  <os>
-    <type>hvm</type>
-    <boot dev='hd'/>
-  </os>
-  <features>
-    <acpi/>
-  </features>
-  <clock offset='utc'/>
-  <on_poweroff>destroy</on_poweroff>
-  <on_reboot>restart</on_reboot>
-  <on_crash>destroy</on_crash>
-  <devices>
-    <emulator>/usr/libexec/qemu-kvm</emulator>
-    <disk type='file' device='disk'>
-      <driver name='qemu' type='qcow2' cache='none'/>
-      <source file='%s'/>
-      <target dev='vda' bus='virtio'/>
-    </disk>
-    <interface type='bridge'>
-      <mac address='%s'/>
-      <source bridge='virbr0'/>
-      <model type='virtio'/>
-    </interface>
-    <input type='tablet' bus='usb'/>
-    <input type='mouse' bus='ps2'/>
-    <graphics type='vnc' port='-1' listen='0.0.0.0'/>
-  </devices>
-</domain>
-""" % (domname, domimage, dommac)
+                  <name>%s</name>
+                  <memory unit='GB'>1</memory>
+                  <vcpu>1</vcpu>
+                  <os>
+                    <type>hvm</type>
+                    <boot dev='hd'/>
+                  </os>
+                  <features>
+                    <acpi/>
+                  </features>
+                  <clock offset='utc'/>
+                  <on_poweroff>destroy</on_poweroff>
+                  <on_reboot>restart</on_reboot>
+                  <on_crash>destroy</on_crash>
+                  <devices>
+                    <emulator>%s</emulator>
+                    <disk type='file' device='disk'>
+                      <driver name='qemu' type='qcow2' cache='none'/>
+                      <source file='%s'/>
+                      <target dev='vda' bus='virtio'/>
+                    </disk>
+                    <interface type='bridge'>
+                      <mac address='%s'/>
+                      <source bridge='virbr0'/>
+                      <model type='virtio'/>
+                    </interface>
+                    <input type='tablet' bus='usb'/>
+                    <input type='mouse' bus='ps2'/>
+                    <graphics type='vnc' port='-1' listen='0.0.0.0'/>
+                  </devices>
+                </domain>
+                """ % (domname, qemu_path, domimage, dommac)
 
     dom = conn.createLinux(xmldesc, 0)
     if dom is None:
@@ -374,6 +380,9 @@ def main():
 
         if args.export:
             export_results(domipaddress, reportname)
+            reporturl = os.path.join(REPORT_SERVER_URL, reportname)
+            print "Link to the html report - %s.html" % reporturl
+            print "Link to the xml report - %s.xml" % reporturl
 
         if args.keep:
             print('Domain %s (IP address %s)' % (domname, domipaddress))
