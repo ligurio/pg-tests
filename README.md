@@ -8,9 +8,9 @@
 
 ## Настройка сервера для запуска тестов:
 
-- установить зависимости:
+- пакеты для RPM-based дистрибутивов:
 ```
-yum install -y git libvirt libvirt-python qemu-kvm gcc openssl-devel python-devel vim
+yum install -y git libvirt libvirt-python qemu-kvm gcc openssl-devel python-devel python-cffi vim
 ```
 - установить PyPA:
 ```
