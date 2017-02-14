@@ -62,7 +62,7 @@ def install_postgres(request):
     return pginstance
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def create_table(request):
     """ This method needed for creating table with fake data.
 

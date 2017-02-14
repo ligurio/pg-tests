@@ -6,7 +6,7 @@ from helpers.sql_helpers import get_pgpro_info
 
 
 @pytest.mark.usefixtures('install_postgres')
-def test_version(install_postgres):
+def test_version(request, install_postgres):
     """ This is BVT test for all PostgreSQL version
     Scenario:
     1. Check PGPRO version
@@ -18,7 +18,8 @@ def test_version(install_postgres):
     cursor = conn.cursor()
     cursor.execute("SELECT pgpro_version()")
     pgpro_info = get_pgpro_info(cursor.fetchall()[0][0])
-    print("What must be installed", install_postgres)
+    print("What must be installed:", request.config.getoption('--product_name'),
+          request.config.getoption('--product_version'))
     print("Information about installed PostgresPro ", pgpro_info)
     assert install_postgres.name == pgpro_info['name'].lower()
     assert install_postgres.version == pgpro_info['version']
