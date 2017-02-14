@@ -24,6 +24,7 @@ def pytest_addoption(parser):
                      help="Specify product build.")
     parser.addoption("--sqlsmith-queries", action="store", default=10000,
                      help="Number of sqlsmith queries.")
+    parser.addoption("--skip_install", action="store_true")
 
 
 @pytest.fixture
@@ -39,11 +40,25 @@ def install_postgres(request):
     command line variables from pytest_addoption() method
     :return:
     """
-    pginstance = PgInstance(version=request.config.getoption('--product_version'),
-                            milestone=request.config.getoption('--product_milestone'),
-                            name=request.config.getoption('--product_name'),
-                            edition=request.config.getoption('--product_edition'),
-                            build=request.config.getoption('--product_build'))
+    skip_install = request.config.getoption("--skip_install")
+
+    if skip_install:
+        version = None
+        milestone = None
+        name = None
+        edition = None
+        build = None
+        local = True
+    else:
+        version = request.config.getoption('--product_version')
+        milestone = request.config.getoption('--product_milestone')
+        name = request.config.getoption('--product_name')
+        edition = request.config.getoption('--product_edition')
+        build = request.config.getoption('--product_build')
+        local = False
+
+    pginstance = PgInstance(version, milestone, name, edition, build, local)
+
     return pginstance
 
 

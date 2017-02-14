@@ -14,13 +14,16 @@ from helpers.pginstall import setup_repo
 class PgInstance:
     PG_PASSWORD = 'password'
 
-    def __init__(self, version, milestone, name, edition, build):
+    def __init__(self, version, milestone, name, edition, build, skip_install):
         self.version = version
         self.milestone = milestone
         self.name = name
         self.edition = edition
         self.build = build
-        self.install_product(name, version, edition, milestone, build)
+        self.connstring = "host='localhost' user='postgres'"
+
+        if not skip_install:
+            self.install_product(name, version, edition, milestone, build)
 
     def install_product(self, name, version, edition, milestone, build):
         """ Install product
