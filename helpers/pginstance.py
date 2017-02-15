@@ -39,7 +39,7 @@ class PgInstance:
                 'edition': edition,
                 'milestone': milestone}
 
-    def manage_psql(self, version, action, init=False):
+    def manage_psql(self, name, edition, version, action, init=False):
         """ Manage Postgres instance
         :param version 9.5, 9.6 etc
         :param action: start, restart, stop etc
@@ -51,8 +51,14 @@ class PgInstance:
         major = version.split(".")[0]
         minor = version.split(".")[1]
 
+        service_name = ""
         if distro in RPM_BASED or distro == "ALT Linux ":
-            service_name = "postgresql-%s.%s" % (major, minor)
+            if name == 'postgresql':
+                service_name = "postgresql-%s.%s" % (major, minor)
+            elif name == 'postgrespro' and edition == 'ee':
+                service_name = "postgrespro-enterprise-%s.%s" % (major, minor)
+            elif name == 'postgrespro' and edition == 'standard':
+                service_name = "postgrespro-%s.%s" % (major, minor)
         elif distro in DEB_BASED:
             service_name = "postgresql"
 
@@ -90,7 +96,7 @@ class PgInstance:
         minor = version.split(".")[1]
 
         print "Setup PostgreSQL service"
-        self.manage_psql(version, "start", True)
+        self.manage_psql(name, edition, version, "start", True)
 
         os.environ['PATH'] += ":/usr/pgsql-%s.%s/bin/" % (major, minor)
         subprocess.call(["sudo", "-u", "postgres", "psql", "-c",
@@ -105,7 +111,7 @@ class PgInstance:
 
         subprocess.call(["sudo", "-u", "postgres", "psql", "-c",
                          "ALTER SYSTEM SET listen_addresses to '*';"])
-        self.manage_psql(version, "restart")
+        self.manage_psql(name, edition, version, "restart")
 
     def get_postmaster_pid(self):
         """
@@ -190,11 +196,11 @@ class PgInstance:
             cursor.execute("ALTER SYSTEM SET %s = '%s'" % (option, value))
             cursor.close()
             conn.close()
-            return self.manage_psql(self.version, "reload")
+            return self.manage_psql(self.name, self.edition, self.version, "reload")
         elif context in restart_contexts:
             cursor.execute("ALTER SYSTEM SET %s = '%s'" % (option, value))
             cursor.close()
             conn.close()
-            return self.manage_psql(self.version, "restart")
+            return self.manage_psql(self.name, self.edition, self.version, "restart")
         else:
             return False
