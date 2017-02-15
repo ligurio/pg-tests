@@ -22,18 +22,6 @@ def get_pgpro_info(pgpgro_version):
             'build': build}
 
 
-def get_data_directory():
-    """
-    Get data directory
-    :return: string with path to data directory
-    """
-    conn_string = "host='localhost' user='postgres' "
-    conn = psycopg2.connect(conn_string)
-    cursor = conn.cursor()
-    cursor.execute('SHOW data_directory')
-    return cursor.fetchall()[0][0]
-
-
 def create_test_database(db_name):
     """
     Create database
@@ -58,6 +46,8 @@ def create_test_table(size, schema):
         sqlschema = settings.MIXED_SCHEMA
     elif schema == "pgbench":
         sqlschema = settings.PGBENCH_SCHEMA
+    elif schema == "pgbench_unlogged":
+        sqlschema = settings.PGBENCH_SCHEMA_UNLOGGED
     else:
         sqlschema = schema
 
