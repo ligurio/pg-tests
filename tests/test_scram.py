@@ -125,7 +125,8 @@ class TestScram():
             host    all             all             0.0.0.0/0               trust
             host    all             all             ::0/0                   trust"""
         install_postgres.edit_pg_hba_conf(hba_auth)
-        install_postgres.manage_psql(install_postgres.version, "restart")
+        install_postgres.manage_psql(install_postgres.name, install_postgres.edition,
+                                     install_postgres.version, 'restart')
         # Step 2
         conn_string = "host='localhost' user='postgres' dbname='postgres'"
         conn = psycopg2.connect(conn_string)
