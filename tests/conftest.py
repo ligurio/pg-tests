@@ -132,42 +132,42 @@ def populate_imdb(request):
             execute(conn, file.read())
     conn.close()
 
-    # CANONICAL METHOD OF DATABASE SETUP
-
-    # imdb_gz_files = ["actors", "actresses", "aka-names", "aka-titles",
-    #                  "alternate-versions", "biographies", "business",
-    #                  "certificates", "cinematographers", "color-info",
-    #                  "complete-cast", "complete-crew", "composers",
-    #                  "costume-designers", "countries", "crazy-credits",
-    #                  "directors", "distributors", "editors", "genres",
-    #                  "german-aka-titles", "goofs", "iso-aka-titles",
-    #                  "italian-aka-titles", "keywords", "language",
-    #                  "laserdisc", "literature", "locations",
-    #                  "miscellaneous-companies", "miscellaneous",
-    #                  "movie-links", "movies", "mpaa-ratings-reasons",
-    #                  "plot", "producers", "production-companies",
-    #                  "production-designers", "quotes", "ratings",
-    #                  "release-dates", "running-times", "sound-mix",
-    #                  "soundtracks", "special-effects-companies",
-    #                  "taglines", "technical", "trivia", "writers"]
-
-    # IMDB_BASE = "ftp://ftp.fu-berlin.de/pub/misc/movies/database/"
-    # imdb_gz_dir = os.path.join(TMP_DIR, "imdb_gz")
-    # if not os.path.exists(imdb_gz_dir):
-    #     os.mkdir(imdb_gz_dir)
-
-    # for a in imdb_gz_files:
-    #     archive_path = os.path.join(imdb_gz_dir, a + ".list.gz")
-    #     plain_path = os.path.join(imdb_gz_dir, a + ".list")
-    #     url = os.path.join(IMDB_BASE, a + ".list.gz")
-    #     if not os.path.exists(plain_path):
-    #         if not os.path.exists(archive_path):
-    #             download_file(url, archive_path)
-    #         subprocess.check_output(['gunzip', archive_path])
-
-    # psql_url = "postgres://postgres@localhost/imdbload"
-    # subprocess.check_output(["/usr/local/bin/imdbpy2sql.py",
-    #                         "-d", imdb_gz_dir, "-u", psql_url])
+# CANONICAL METHOD OF DATABASE SETUP
+#
+# imdb_gz_files = ["actors", "actresses", "aka-names", "aka-titles",
+#                  "alternate-versions", "biographies", "business",
+#                  "certificates", "cinematographers", "color-info",
+#                  "complete-cast", "complete-crew", "composers",
+#                  "costume-designers", "countries", "crazy-credits",
+#                  "directors", "distributors", "editors", "genres",
+#                  "german-aka-titles", "goofs", "iso-aka-titles",
+#                  "italian-aka-titles", "keywords", "language",
+#                  "laserdisc", "literature", "locations",
+#                  "miscellaneous-companies", "miscellaneous",
+#                  "movie-links", "movies", "mpaa-ratings-reasons",
+#                  "plot", "producers", "production-companies",
+#                  "production-designers", "quotes", "ratings",
+#                  "release-dates", "running-times", "sound-mix",
+#                  "soundtracks", "special-effects-companies",
+#                  "taglines", "technical", "trivia", "writers"]
+#
+# IMDB_BASE = "ftp://ftp.fu-berlin.de/pub/misc/movies/database/"
+# imdb_gz_dir = os.path.join(TMP_DIR, "imdb_gz")
+# if not os.path.exists(imdb_gz_dir):
+#     os.mkdir(imdb_gz_dir)
+#
+# for a in imdb_gz_files:
+#     archive_path = os.path.join(imdb_gz_dir, a + ".list.gz")
+#     plain_path = os.path.join(imdb_gz_dir, a + ".list")
+#     url = os.path.join(IMDB_BASE, a + ".list.gz")
+#     if not os.path.exists(plain_path):
+#         if not os.path.exists(archive_path):
+#             download_file(url, archive_path)
+#         subprocess.check_output(['gunzip', archive_path])
+#
+# psql_url = "postgres://postgres@localhost/imdbload"
+# subprocess.check_output(["/usr/local/bin/imdbpy2sql.py",
+#                         "-d", imdb_gz_dir, "-u", psql_url])
 
 
 @pytest.fixture(scope="module")
