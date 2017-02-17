@@ -85,7 +85,7 @@ def create_table(request):
     return create_test_table(size, schema)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def populate_imdb(request):
     """ This method needed for creating tables and populate them with IMDb dataset.
 
@@ -170,7 +170,7 @@ def populate_imdb(request):
     #                         "-d", imdb_gz_dir, "-u", psql_url])
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def populate_tpch(request):
     """ This method setup tables for TPC-H benchmark.
     """
