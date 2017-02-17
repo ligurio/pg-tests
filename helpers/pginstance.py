@@ -21,8 +21,10 @@ class PgInstance:
         self.edition = edition
         self.build = build
         self.connstring = "host='localhost' user='postgres'"
+        self.skip_install = True
 
         if not skip_install:
+            self.skip_install = False
             self.install_product(name, version, edition, milestone, build)
 
     def install_product(self, name, version, edition, milestone, build):
@@ -49,6 +51,10 @@ class PgInstance:
         :param init: Initialization before a first start
         :return:
         """
+
+        if self.skip_install:
+            data_dir = self.get_option('data_directory')
+            return subprocess.check_output("pg_ctl", "-D", data_dir, action)
 
         distro = platform.linux_distribution()[0]
         major = version.split(".")[0]
