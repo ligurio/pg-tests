@@ -61,3 +61,22 @@ def create_test_table(size, schema):
     psql.wait()
 
     return psql.returncode
+
+
+def execute(conn, sql_query):
+
+    conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+    cursor = conn.cursor()
+    try:
+        cursor.execute(sql_query)
+    except psycopg2.Error as e:
+        print e.pgerror
+        raise Exception("SQL execution failed")
+    conn.commit()
+
+    response = None
+    if cursor.description is not None:
+        response = cursor.fetchall()
+    cursor.close()
+
+    return response
