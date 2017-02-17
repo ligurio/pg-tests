@@ -85,7 +85,7 @@ def create_table(request):
     return create_test_table(size, schema)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def populate_imdb(request):
     """ This method needed for creating tables and populate them with IMDb dataset.
 
