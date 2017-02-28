@@ -168,3 +168,51 @@ def populate_imdb(request):
 # psql_url = "postgres://postgres@localhost/imdbload"
 # subprocess.check_output(["/usr/local/bin/imdbpy2sql.py",
 #                         "-d", imdb_gz_dir, "-u", psql_url])
+
+
+@pytest.fixture(scope="module")
+def populate_tpch(request):
+    """ This method setup tables for TPC-H benchmark.
+    """
+
+    CONN_STRING = "host='localhost' user='postgres'"
+
+    # GETTING A BENCHMARK
+
+    TPCH_SCALE = "1"    # 1, 10, 100, 300, 1000, 3000, 10000, 30000, 100000
+    COMMIT_HASH = "c5cd7711cc35"
+    TPCH_BENCHMARK = "https://bitbucket.org/tigvarts/tpch-dbgen/get/%s.zip" % COMMIT_HASH
+    tbls = ["region.tbl", "nation.tbl", "customer.tbl", "supplier.tbl",
+            "part.tbl", "partsupp.tbl", "orders.tbl", "lineitem.tbl"]
+    sqls = ["postgres_dll.sql", "postgres_load.sql", "postgres_ri.sql"]
+
+    tpch_archive = os.path.join(TMP_DIR, "tpch-benchmark-%s.zip" % COMMIT_HASH)
+    if not os.path.exists(tpch_archive):
+        download_file(TPCH_BENCHMARK, tpch_archive)
+
+    tpch_dir = os.path.join(TMP_DIR, "tigvarts-tpch-dbgen-%s" % COMMIT_HASH)
+    if not os.path.exists(tpch_dir):
+        os.mkdir(tpch_dir)
+        subprocess.check_output(["unzip", tpch_archive, "-d", TMP_DIR])
+    os.chdir(tpch_dir)
+
+    # SETUP DATABASE (see ./install.sh)
+    subprocess.check_output(["make"])
+    # TODO: run multiple parallel streams when generating large amounts of data
+    subprocess.check_output(["./dbgen", "-s", TPCH_SCALE, "-vf"])
+
+    assert TMP_DIR == '/tmp'
+    for t in tbls:
+        if os.path.exists(os.path.join(TMP_DIR, t)):
+            os.remove(os.path.join(TMP_DIR, t))
+        shutil.move(os.path.join(tpch_dir, t), TMP_DIR)
+
+    conn = psycopg2.connect(CONN_STRING)
+    for sql_file in sqls:
+        execute(conn, open(os.path.join(tpch_dir, sql_file)).read())
+    conn.close()
+
+    for t in tbls:
+        tbl_path = os.path.join(TMP_DIR, t)
+        if os.path.exists(tbl_path):
+            os.remove(tbl_path)
