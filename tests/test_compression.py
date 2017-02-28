@@ -140,8 +140,7 @@ class TestCompression():
         # Step 3
         print(data_size_without_compression)
         self.set_default_tablespace('postgres', 'compression')
-        install_postgres.manage_psql(install_postgres.name, install_postgres.edition,
-                                     install_postgres.version, 'restart')
+        install_postgres.manage_psql('restart')
         create_test_table(size='20', schema='pgbench')
         # Step 4
         data_size_with_compression = self.get_directory_size(install_postgres.get_option('data_directory'))
@@ -166,8 +165,7 @@ class TestCompression():
         print compression_files_directory
         # Step 2
         self.set_default_tablespace('postgres', 'compression_unlogged_tables')
-        install_postgres.manage_psql(install_postgres.name, install_postgres.edition,
-                                     install_postgres.version, 'restart')
+        install_postgres.manage_psql('restart')
         create_test_table(size='20', schema=self.PGBENCH_SCHEMA_UNLOGGED)
         # Step 3
         compression_files = self.get_filenames(compression_files_directory)
@@ -201,8 +199,7 @@ class TestCompression():
         # Step 4
         # Files for tables created but no any table was created because transaction was corruped
         assert '.cfm' in compression_files
-        install_postgres.manage_psql(install_postgres.name, install_postgres.edition,
-                                     install_postgres.version, 'start')
+        install_postgres.manage_psql('start')
         # Step 5
         conn_string = "host='localhost' user='postgres' "
         conn = psycopg2.connect(conn_string)
