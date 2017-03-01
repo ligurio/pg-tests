@@ -210,7 +210,6 @@ class PgInstance:
         else:
             return False
 
-
     def load_extension(self, extension_name):
         """ Load PostgreSQL extension
         """
