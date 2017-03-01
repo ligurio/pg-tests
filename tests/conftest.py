@@ -1,11 +1,12 @@
+import psycopg2
 import glob
 import pytest
 import os
-import psycopg2
 import shutil
 import subprocess
 
 from helpers.pginstance import PgInstance
+from helpers.sql_helpers import drop_test_table
 from helpers.sql_helpers import create_test_table
 from helpers.sql_helpers import execute
 from helpers.os_helpers import download_file
@@ -72,7 +73,7 @@ def install_postgres(request):
 
 @pytest.fixture
 def create_table(request):
-    """ This method needed for creating table with fake data.
+    """ This method needed for creating table with fake data. After test execution all test data will be droped
 
     :param schema - SQL schema, the default schema includes almost all available data types:
     :param size - number of rows to insert, default value is 10000:
@@ -81,6 +82,11 @@ def create_table(request):
     https://www.cri.ensmp.fr/people/coelho/datafiller.html#directives_and_data_generators
     """
     schema, size = request.param
+
+    def delete_tables():
+        drop_test_table()
+
+    request.addfinalizer(delete_tables)
 
     return create_test_table(size, schema)
 
