@@ -129,11 +129,8 @@ class PgInstance:
         """
 
         conn = psycopg2.connect(self.connstring)
-        cursor = conn.cursor()
-        cursor.execute("SELECT pg_backend_pid()")
-        pid = cursor.fetchall()[0][0]
+        pid = conn.get_backend_pid()
         ppid = psutil.Process(pid).ppid()
-        cursor.close()
         conn.close()
         return ppid
 
