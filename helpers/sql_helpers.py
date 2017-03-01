@@ -80,3 +80,19 @@ def execute(conn, sql_query):
     cursor.close()
 
     return response
+
+
+def drop_test_table():
+    """Drop tables from schema public
+    :return:
+    """
+    conn_string = "host='localhost' user='postgres' "
+    conn = psycopg2.connect(conn_string)
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT 'DROP TABLE IF EXISTS \"\' || tablename ||"
+        " \'\" CASCADE;\' FROM pg_tables WHERE schemaname = 'public';")
+    for req in cursor.fetchall():
+        cursor.execute("\n".join(req))
+    conn.commit()
+    conn.close()
