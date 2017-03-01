@@ -127,8 +127,8 @@ class PgInstance:
 
         :returns: number with process identificator
         """
-        conn_string = "host='localhost' user='postgres' "
-        conn = psycopg2.connect(conn_string)
+
+        conn = psycopg2.connect(self.connstring)
         cursor = conn.cursor()
         cursor.execute("SELECT pg_backend_pid()")
         pid = cursor.fetchall()[0][0]
@@ -143,8 +143,7 @@ class PgInstance:
         :return:
         """
 
-        conn_string = "host='localhost' user='postgres' "
-        conn = psycopg2.connect(conn_string)
+        conn = psycopg2.connect(self.connstring)
         cursor = conn.cursor()
         if not self.check_option(option):
             return None
@@ -164,8 +163,7 @@ class PgInstance:
         :return: False or True
         """
 
-        conn_string = "host='localhost' user='postgres' "
-        conn = psycopg2.connect(conn_string)
+        conn = psycopg2.connect(self.connstring)
         cursor = conn.cursor()
         cursor.execute(
             "SELECT exists (SELECT 1 FROM pg_settings WHERE name = '%s' LIMIT 1)" % option)
@@ -184,8 +182,7 @@ class PgInstance:
         :return: False or True
         """
 
-        conn_string = "host='localhost' user='postgres' "
-        conn = psycopg2.connect(conn_string)
+        conn = psycopg2.connect(self.connstring)
         cursor = conn.cursor()
         conn.set_session(autocommit=True)
 
