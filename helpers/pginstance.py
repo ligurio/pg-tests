@@ -212,8 +212,7 @@ class PgInstance:
 
 
     def load_extension(self, extension_name):
-        """
-        Load PostgreSQL extension
+        """ Load PostgreSQL extension
         """
 
         loaded_extensions = self.get_option('shared_libraries')
