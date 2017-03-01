@@ -8,7 +8,7 @@ import subprocess
 from helpers.pginstance import PgInstance
 from helpers.sql_helpers import create_test_table
 from helpers.sql_helpers import execute
-from helpers.os import download_file
+from helpers.os_helpers import download_file
 from tests.settings import TMP_DIR
 
 
