@@ -179,6 +179,10 @@ class PgInstance:
         :return: False or True
         """
 
+        restart_contexts = ['superuser-backend',
+                            'backend', 'user', 'postmaster', 'superuser']
+        reload_contexts = ['sighup']
+
         conn = psycopg2.connect(self.connstring)
         cursor = conn.cursor()
         conn.set_session(autocommit=True)
@@ -190,22 +194,16 @@ class PgInstance:
             "SELECT context FROM pg_settings WHERE name = '%s'" % option)
         context = cursor.fetchall()[0][0]
 
-        restart_contexts = ['superuser-backend',
-                            'backend', 'user', 'postmaster', 'superuser']
-        reload_contexts = ['sighup']
-
         if context in reload_contexts:
-            cursor.execute("ALTER SYSTEM SET %s = '%s'" % (option, value))
-            cursor.close()
-            conn.close()
-            return self.manage_psql("reload")
+            action = "reload"
         elif context in restart_contexts:
-            cursor.execute("ALTER SYSTEM SET %s = '%s'" % (option, value))
-            cursor.close()
-            conn.close()
-            return self.manage_psql("restart")
-        else:
-            return False
+            action = "restart"
+
+        cursor.execute("ALTER SYSTEM SET %s = '%s'" % (option, value))
+        cursor.close()
+        conn.close()
+
+        return self.manage_psql(action)
 
     def load_extension(self, extension_name):
         """ Load PostgreSQL extension
