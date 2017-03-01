@@ -212,3 +212,22 @@ class PgInstance:
             return self.manage_psql("restart")
         else:
             return False
+
+
+    def load_extension(self, extension_name):
+        """
+        Load PostgreSQL extension
+        """
+
+        loaded_extensions = self.get_option('shared_libraries')
+        if loaded_extensions is None:
+            extensions = extension_name
+        else:
+            extensions = loaded_extensions + ',' + extension_name
+        self.set_option('shared_preload_libraries', extensions)
+
+        conn = psycopg2.connect(self.connstring)
+        cursor = conn.cursor()
+        cursor.execute("CREATE EXTENSION IF NOT EXISTS %s" % extension_name)
+        cursor.close()
+        conn.close()
