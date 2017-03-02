@@ -27,6 +27,6 @@ def pg_bindir():
     pg_config_bin = os.environ['PG_CONFIG']
     if pg_config_bin is None:
         sys.exit()
-    pg_bindir = subprocess.check_output([pg_config_bin, "--bindir"])
+    pg_bindir = subprocess.check_output([pg_config_bin, "pg_config", "--bindir"])
 
     return pg_bindir.strip()
