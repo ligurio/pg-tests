@@ -1,18 +1,16 @@
 import os
-import platform
 import psutil
 import psycopg2
 import subprocess
 from subprocess import Popen
 
-from helpers.pginstall import DEB_BASED
 from helpers.pginstall import package_mgmt
-from helpers.pginstall import RPM_BASED
 from helpers.pginstall import setup_repo
 from helpers.sql_helpers import pg_get_option
 from helpers.sql_helpers import pg_set_option
 from helpers.sql_helpers import pg_check_option
 from helpers.sql_helpers import pg_manage_psql
+from helpers.sql_helpers import pg_start_script_name
 
 
 class PgInstance:
@@ -49,38 +47,21 @@ class PgInstance:
                 'edition': edition,
                 'milestone': milestone}
 
-    def start_script_name(self, action):
+    def start_script_name(self):
 
-        distro = platform.linux_distribution()[0]
-        major = self.version.split(".")[0]
-        minor = self.version.split(".")[1]
+        return pg_start_script_name(self.name, self.edition, self.version)
 
-        service_name = ""
-        if distro in RPM_BASED or distro == "ALT Linux ":
-            if self.name == 'postgresql':
-                service_name = "postgresql-%s.%s" % (major, minor)
-            elif self.name == 'postgrespro' and self.edition == 'ee':
-                service_name = "postgrespro-enterprise-%s.%s" % (major, minor)
-            elif self.name == 'postgrespro' and self.edition == 'standard':
-                service_name = "postgrespro-%s.%s" % (major, minor)
-        elif distro in DEB_BASED:
-            service_name = "postgresql"
-
-        return service_name
-
-
-    def manage_psql(self, action, init=False):
+    def manage_psql(self, action):
         """ Manage Postgres instance
         :param action: start, restart, stop etc
         :param init: Initialization before a first start
         :return:
         """
 
-        data_dir = self.get_option('data_directory')
         if self.skip_install:
-            ret = pg_manage_psql(action, data_dir)
+            ret = pg_manage_psql(self.connstring, action)
         else:
-            ret = pg_manage_psql(action, None, self.start_script_name, init)
+            ret = pg_manage_psql(self.connstring, action, self.start_script_name())
             
         return ret
 
@@ -110,7 +91,8 @@ class PgInstance:
         minor = version.split(".")[1]
 
         print "Setup PostgreSQL service"
-        self.manage_psql("start", True)
+        self.manage_psql("start")
+        # FIXME: initdb
 
         os.environ['PATH'] += ":/usr/pgsql-%s.%s/bin/" % (major, minor)
         subprocess.call(["sudo", "-u", "postgres", "psql", "-c",

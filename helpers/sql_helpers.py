@@ -1,8 +1,10 @@
+import platform
 import psycopg2
 import subprocess
 
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
-
+from helpers.pginstall import DEB_BASED
+from helpers.pginstall import RPM_BASED
 from tests import settings
 
 # TODO Change to class  all methods
@@ -106,7 +108,7 @@ def pg_get_option(connstring, option):
 
     conn = psycopg2.connect(connstring)
     cursor = conn.cursor()
-    if not check_option(connstring, option):
+    if not pg_check_option(connstring, option):
         return None
 
     cursor.execute(
@@ -147,7 +149,7 @@ def pg_set_option(connstring, option, value):
     cursor = conn.cursor()
     conn.set_session(autocommit=True)
 
-    if not pg_check_option(option):
+    if not pg_check_option(connstring, option):
         return False
 
     cursor.execute(
@@ -162,22 +164,42 @@ def pg_set_option(connstring, option, value):
         cursor.execute("ALTER SYSTEM SET %s = '%s'" % (option, value))
         cursor.close()
         conn.close()
-        return pg_manage_psql("reload")
+        return pg_manage_psql(connstring, "reload")
     elif context in restart_contexts:
         cursor.execute("ALTER SYSTEM SET %s = '%s'" % (option, value))
         cursor.close()
         conn.close()
-        return pg_manage_psql("restart")
+        return pg_manage_psql(connstring, "restart")
 
-def pg_manage_psql(action, data_dir=None, start_script=None, init=False):
+def pg_manage_psql(connstring, action, start_script=None):
         """ Manage Postgres instance
         :param action: start, restart, stop etc
         :param init: Initialization before a first start
         :return:
         """
 
-        if start_script is not None:
-            return subprocess.call(["pg_ctl", "-D", data_dir, action])
+        if start_script is None:
+            data_dir = pg_get_option(connstring, 'data_directory')
+            assert data_dir is not None
+            return subprocess.call(["/usr/local/pgsql/bin/pg_ctl", "-D", data_dir, action])
         else:
-            subprocess.call(["service", start_script, "initdb"])
             return subprocess.call(["service", start_script, action])
+
+def pg_start_script_name(name, edition, version):
+
+        distro = platform.linux_distribution()[0]
+        major = version.split(".")[0]
+        minor = version.split(".")[1]
+
+        if distro in RPM_BASED or distro == "ALT Linux ":
+            if name == 'postgresql':
+                service_name = "postgresql-%s.%s" % (major, minor)
+            elif name == 'postgrespro' and edition == 'ee':
+                service_name = "postgrespro-enterprise-%s.%s" % (major, minor)
+            elif name == 'postgrespro' and edition == 'standard':
+                service_name = "postgrespro-%s.%s" % (major, minor)
+        elif distro in DEB_BASED:
+            service_name = "postgresql"
+
+        assert service_name is not None
+        return service_name
