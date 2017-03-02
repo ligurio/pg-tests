@@ -27,7 +27,6 @@ class PgInstance:
         self.build = build
         self.connstring = "host='localhost' user='postgres'"
         self.skip_install = True
-        self.data_dir = self.get_option('data_directory')
 
         if not skip_install:
             self.skip_install = False
