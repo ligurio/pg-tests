@@ -1,6 +1,7 @@
 import platform
 import psycopg2
 import subprocess
+import shutil
 
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from helpers.pginstall import DEB_BASED
@@ -120,6 +121,7 @@ def pg_get_option(connstring, option):
 
     return value
 
+
 def pg_check_option(connstring, option):
     """ Check existence of a PostgreSQL option
     :param: option name
@@ -138,6 +140,7 @@ def pg_check_option(connstring, option):
     conn.close()
 
     return True
+
 
 def pg_set_option(connstring, option, value):
     """ Set a new value to a PostgreSQL option
@@ -171,6 +174,7 @@ def pg_set_option(connstring, option, value):
         conn.close()
         return pg_manage_psql(connstring, "restart")
 
+
 def pg_manage_psql(connstring, action, start_script=None):
         """ Manage Postgres instance
         :param action: start, restart, stop etc
@@ -185,21 +189,33 @@ def pg_manage_psql(connstring, action, start_script=None):
         else:
             return subprocess.call(["service", start_script, action])
 
+
 def pg_start_script_name(name, edition, version):
 
-        distro = platform.linux_distribution()[0]
-        major = version.split(".")[0]
-        minor = version.split(".")[1]
+    distro = platform.linux_distribution()[0]
+    major = version.split(".")[0]
+    minor = version.split(".")[1]
 
-        if distro in RPM_BASED or distro == "ALT Linux ":
-            if name == 'postgresql':
-                service_name = "postgresql-%s.%s" % (major, minor)
-            elif name == 'postgrespro' and edition == 'ee':
-                service_name = "postgrespro-enterprise-%s.%s" % (major, minor)
-            elif name == 'postgrespro' and edition == 'standard':
-                service_name = "postgrespro-%s.%s" % (major, minor)
-        elif distro in DEB_BASED:
-            service_name = "postgresql"
+    if distro in RPM_BASED or distro == "ALT Linux ":
+        if name == 'postgresql':
+            service_name = "postgresql-%s.%s" % (major, minor)
+        elif name == 'postgrespro' and edition == 'ee':
+            service_name = "postgrespro-enterprise-%s.%s" % (major, minor)
+        elif name == 'postgrespro' and edition == 'standard':
+            service_name = "postgrespro-%s.%s" % (major, minor)
+    elif distro in DEB_BASED:
+        service_name = "postgresql"
 
-        assert service_name is not None
-        return service_name
+    assert service_name is not None
+    return service_name
+
+
+def pg_initdb(connstring, params=None):
+
+    data_dir = pg_get_option(connstring, "data_directory")
+    pg_manage_psql(connstring, "stop")
+    shutil.rmtree(data_dir)
+    initdb_cmd = ["/usr/local/pgsql/bin/initdb", "-D", data_dir]
+    initdb_cmd.append(params)
+    subprocess.check_output(initdb_cmd)
+    pg_manage_psql(connstring, "start")

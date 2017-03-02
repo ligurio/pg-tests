@@ -1,5 +1,6 @@
 import os
 import psutil
+import platform
 import psycopg2
 import subprocess
 from subprocess import Popen
@@ -11,6 +12,8 @@ from helpers.sql_helpers import pg_set_option
 from helpers.sql_helpers import pg_check_option
 from helpers.sql_helpers import pg_manage_psql
 from helpers.sql_helpers import pg_start_script_name
+from helpers.sql_helpers import pg_initdb
+from helpers.pginstall import RPM_BASED
 
 
 class PgInstance:
@@ -91,8 +94,11 @@ class PgInstance:
         minor = version.split(".")[1]
 
         print "Setup PostgreSQL service"
+
+        distro = platform.linux_distribution()[0]
+        if distro in RPM_BASED or distro == "ALT Linux ":
+            self.manage_psql("initdb")
         self.manage_psql("start")
-        # FIXME: initdb
 
         os.environ['PATH'] += ":/usr/pgsql-%s.%s/bin/" % (major, minor)
         subprocess.call(["sudo", "-u", "postgres", "psql", "-c",
