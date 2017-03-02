@@ -7,8 +7,8 @@ import shutil
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from helpers.pginstall import DEB_BASED
 from helpers.pginstall import RPM_BASED
+from helpers.os_helpers import pg_bindir
 from tests import settings
-from helpers.sql_helpers import pg_bindir
 
 # TODO Change to class  all methods
 
