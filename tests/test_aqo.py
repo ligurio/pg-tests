@@ -1,6 +1,64 @@
+import numpy
 import psycopg2
 import pytest
+import re
 from helpers.sql_helpers import execute
+
+
+def parse_explain_stat(explain_output):
+
+    dict = {'planning_time': '', 'execution_time': '', 'cardinality': ''}
+    plan = explain_output[0][0][0]["Plan"]
+    dict['cardinality'] = plan["Plan Rows"]
+
+    return dict
+
+
+def parse_explain_analyze_stat(explain_output):
+
+    dict = {'planning_time': '',
+            'execution_time': '',
+            'planning_cardinality': '',
+            'actual_cardinality': '',
+            'cardinality_error': ''}
+
+    # Like 'Seq Scan on pg_class  (cost=0.00..14.56 rows=356 width=228)
+    #       (actual time=0.013..0.077 rows=356 loops=1)'
+    REGEX_CARDINALITY = '.*\(cost.*rows=([0-9]*).*\)\s{1}\(actual\s{1}time.*rows=([0-9]*).*\)'
+    REGEX_TIME = '\w+\s{1}time:\s{1}([0-9]+\.[0-9]+)\s{1}ms'
+
+    try:
+        dict['execution_time'] = re.search(REGEX_TIME, explain_output[-2][0]).group(1)
+        dict['execution_time'] = float(dict['execution_time'])/1000
+    except AttributeError:
+        print 'Failed to extract numbers in %s' % dict['execution_time']
+    except IndexError:
+        print explain_output[-2][0]
+
+    try:
+        dict['planning_time'] = re.search(REGEX_TIME, explain_output[-1][0]).group(1)
+        dict['planning_time'] = float(dict['planning_time'])/1000
+    except AttributeError:
+        print 'Failed to extract numbers in %s' % dict['planning_time']
+    except IndexError:
+        print explain_output[-2][0]
+
+    log_rows_predicted = []
+    log_rows_actual = []
+
+    for line in explain_output:
+        rows = re.search(REGEX_CARDINALITY, str(line))
+        if rows is not None:
+            predicted_rows = int(rows.group(1))
+            actual_rows = int(rows.group(2))
+            log_rows_predicted.append(numpy.log(predicted_rows))
+            log_rows_actual.append(numpy.log(actual_rows))
+
+    assert len(log_rows_predicted) == len(log_rows_actual)
+
+    dict['cardinality_error'] = abs(numpy.mean(log_rows_predicted) - numpy.mean(log_rows_actual))
+
+    return dict
 
 
 def query_to_hash(sql_query, connstring):
