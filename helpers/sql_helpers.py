@@ -1,3 +1,4 @@
+import os
 import platform
 import psycopg2
 import subprocess
@@ -6,6 +7,7 @@ import shutil
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from helpers.pginstall import DEB_BASED
 from helpers.pginstall import RPM_BASED
+from helpers.os_helpers import pg_bindir
 from tests import settings
 
 # TODO Change to class  all methods
@@ -183,7 +185,8 @@ def pg_manage_psql(action, data_dir, start_script=None):
         """
 
         if start_script is None:
-            return subprocess.call(["/usr/local/pgsql/bin/pg_ctl", "-D", data_dir, action])
+            pg_ctl = os.path.join(pg_bindir(), "pg_ctl")
+            return subprocess.call(["sudo", "-u", "postgres", pg_ctl, "-D", data_dir, action])
         else:
             return subprocess.call(["service", start_script, action])
 
@@ -213,7 +216,8 @@ def pg_initdb(connstring, params=None):
     data_dir = pg_get_option(connstring, "data_directory")
     pg_manage_psql("stop", data_dir)
     shutil.rmtree(data_dir)
-    initdb_cmd = ["/usr/local/pgsql/bin/initdb", "-D", data_dir]
+    initdb = os.path.join(pg_bindir(), "initdb")
+    initdb_cmd = ["sudo", "-u", "postgres", initdb, "-D", data_dir]
     initdb_cmd.append(params)
     subprocess.check_output(initdb_cmd)
     pg_manage_psql("start", data_dir)
