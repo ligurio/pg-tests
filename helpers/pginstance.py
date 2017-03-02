@@ -53,7 +53,7 @@ class PgInstance:
 
         return pg_start_script_name(self.name, self.edition, self.version)
 
-    def manage_psql(self, action):
+    def manage_psql(self, action, data_dir=None):
         """ Manage Postgres instance
         :param action: start, restart, stop etc
         :param init: Initialization before a first start
@@ -61,9 +61,9 @@ class PgInstance:
         """
 
         if self.skip_install:
-            ret = pg_manage_psql(self.connstring, action)
+            ret = pg_manage_psql(action, data_dir)
         else:
-            ret = pg_manage_psql(self.connstring, action, self.start_script_name())
+            ret = pg_manage_psql(action, data_dir, self.start_script_name())
             
         return ret
 
