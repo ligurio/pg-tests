@@ -96,3 +96,88 @@ def drop_test_table():
         cursor.execute("\n".join(req))
     conn.commit()
     conn.close()
+
+
+def pg_get_option(connstring, option):
+    """ Get current value of a PostgreSQL option
+    :param: option name
+    :return:
+    """
+
+    conn = psycopg2.connect(connstring)
+    cursor = conn.cursor()
+    if not check_option(connstring, option):
+        return None
+
+    cursor.execute(
+        "SELECT setting FROM pg_settings WHERE name = '%s'" % option)
+    value = cursor.fetchall()[0][0]
+
+    cursor.close()
+    conn.close()
+
+    return value
+
+def pg_check_option(connstring, option):
+    """ Check existence of a PostgreSQL option
+    :param: option name
+    :return: False or True
+    """
+
+    conn = psycopg2.connect(connstring)
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT exists (SELECT 1 FROM pg_settings WHERE name = '%s' LIMIT 1)" % option)
+
+    if not cursor.fetchall()[0][0]:
+        return False
+
+    cursor.close()
+    conn.close()
+
+    return True
+
+def pg_set_option(connstring, option, value):
+    """ Set a new value to a PostgreSQL option
+    :param: option name and new value
+    :return: False or True
+    """
+
+    conn = psycopg2.connect(connstring)
+    cursor = conn.cursor()
+    conn.set_session(autocommit=True)
+
+    if not pg_check_option(option):
+        return False
+
+    cursor.execute(
+        "SELECT context FROM pg_settings WHERE name = '%s'" % option)
+    context = cursor.fetchall()[0][0]
+
+    restart_contexts = ['superuser-backend',
+                        'backend', 'user', 'postmaster', 'superuser']
+    reload_contexts = ['sighup']
+
+    if context in reload_contexts:
+        cursor.execute("ALTER SYSTEM SET %s = '%s'" % (option, value))
+        cursor.close()
+        conn.close()
+        return pg_manage_psql("reload")
+    elif context in restart_contexts:
+        cursor.execute("ALTER SYSTEM SET %s = '%s'" % (option, value))
+        cursor.close()
+        conn.close()
+        return pg_manage_psql("restart")
+
+def pg_manage_psql(action, data_dir=None, start_script=None, init=False):
+        """ Manage Postgres instance
+        :param action: start, restart, stop etc
+        :param init: Initialization before a first start
+        :return:
+        """
+
+        if start_script is not None:
+            return subprocess.call(["pg_ctl", "-D", data_dir, action])
+        else:
+            subprocess.call(["service", start_script, "initdb"])
+            return subprocess.call(["service", start_script, action])

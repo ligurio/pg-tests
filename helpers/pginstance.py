@@ -9,6 +9,10 @@ from helpers.pginstall import DEB_BASED
 from helpers.pginstall import package_mgmt
 from helpers.pginstall import RPM_BASED
 from helpers.pginstall import setup_repo
+from helpers.sql_helpers import pg_get_option
+from helpers.sql_helpers import pg_set_option
+from helpers.sql_helpers import pg_check_option
+from helpers.sql_helpers import pg_manage_psql
 
 
 class PgInstance:
@@ -45,15 +49,7 @@ class PgInstance:
                 'edition': edition,
                 'milestone': milestone}
 
-    def manage_psql(self, action, init=False):
-        """ Manage Postgres instance
-        :param action: start, restart, stop etc
-        :param init: Initialization before a first start
-        :return:
-        """
-
-        if self.skip_install:
-            return subprocess.call(["pg_ctl", "-D", self.data_dir, action])
+    def start_script_name(self, action):
 
         distro = platform.linux_distribution()[0]
         major = self.version.split(".")[0]
@@ -70,13 +66,23 @@ class PgInstance:
         elif distro in DEB_BASED:
             service_name = "postgresql"
 
-        if init:
-            if distro in RPM_BASED or distro == "ALT Linux ":
-                subprocess.call(["service", service_name, "initdb"])
-                # subprocess.call(["chkconfig", service_name, "on"])
-                # subprocess.call(["systemctl", "enable", "postgresql"])
+        return service_name
 
-        return subprocess.call(["service", service_name, action])
+
+    def manage_psql(self, action, init=False):
+        """ Manage Postgres instance
+        :param action: start, restart, stop etc
+        :param init: Initialization before a first start
+        :return:
+        """
+
+        data_dir = self.get_option('data_directory')
+        if self.skip_install:
+            ret = pg_manage_psql(action, data_dir)
+        else:
+            ret = pg_manage_psql(action, None, self.start_script_name, init)
+            
+        return ret
 
     def edit_pg_hba_conf(self, pg_hba_config):
         """Rewrite pg_hba.conf
@@ -143,19 +149,7 @@ class PgInstance:
         :return:
         """
 
-        conn = psycopg2.connect(self.connstring)
-        cursor = conn.cursor()
-        if not self.check_option(option):
-            return None
-
-        cursor.execute(
-            "SELECT setting FROM pg_settings WHERE name = '%s'" % option)
-        value = cursor.fetchall()[0][0]
-
-        cursor.close()
-        conn.close()
-
-        return value
+        return pg_get_option(self.connstring, option)
 
     def check_option(self, option):
         """ Check existence of a PostgreSQL option
@@ -163,18 +157,7 @@ class PgInstance:
         :return: False or True
         """
 
-        conn = psycopg2.connect(self.connstring)
-        cursor = conn.cursor()
-        cursor.execute(
-            "SELECT exists (SELECT 1 FROM pg_settings WHERE name = '%s' LIMIT 1)" % option)
-
-        if not cursor.fetchall()[0][0]:
-            return False
-
-        cursor.close()
-        conn.close()
-
-        return True
+        return pg_check_option(self.connstring, option)
 
     def set_option(self, option, value):
         """ Set a new value to a PostgreSQL option
@@ -182,33 +165,7 @@ class PgInstance:
         :return: False or True
         """
 
-        conn = psycopg2.connect(self.connstring)
-        cursor = conn.cursor()
-        conn.set_session(autocommit=True)
-
-        if not self.check_option(option):
-            return False
-
-        cursor.execute(
-            "SELECT context FROM pg_settings WHERE name = '%s'" % option)
-        context = cursor.fetchall()[0][0]
-
-        restart_contexts = ['superuser-backend',
-                            'backend', 'user', 'postmaster', 'superuser']
-        reload_contexts = ['sighup']
-
-        if context in reload_contexts:
-            cursor.execute("ALTER SYSTEM SET %s = '%s'" % (option, value))
-            cursor.close()
-            conn.close()
-            return self.manage_psql("reload")
-        elif context in restart_contexts:
-            cursor.execute("ALTER SYSTEM SET %s = '%s'" % (option, value))
-            cursor.close()
-            conn.close()
-            return self.manage_psql("restart")
-        else:
-            return False
+        return pg_set_option(self.connstring, option, value)
 
     def load_extension(self, extension_name):
         """ Load PostgreSQL extension
