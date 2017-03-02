@@ -22,7 +22,6 @@ class PgInstance:
         self.build = build
         self.connstring = "host='localhost' user='postgres'"
         self.skip_install = True
-        self.data_dir = self.get_option('data_directory')
 
         if not skip_install:
             self.skip_install = False
@@ -53,7 +52,7 @@ class PgInstance:
         """
 
         if self.skip_install:
-            return subprocess.call(["pg_ctl", "-D", self.data_dir, action])
+            return subprocess.call(["pg_ctl", "-D", self.get_option('data_directory'), action])
 
         distro = platform.linux_distribution()[0]
         major = self.version.split(".")[0]
