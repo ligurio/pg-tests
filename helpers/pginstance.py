@@ -1,14 +1,19 @@
 import os
-import platform
 import psutil
+import platform
 import psycopg2
 import subprocess
 from subprocess import Popen
 
-from helpers.pginstall import DEB_BASED
 from helpers.pginstall import package_mgmt
-from helpers.pginstall import RPM_BASED
 from helpers.pginstall import setup_repo
+from helpers.sql_helpers import pg_get_option
+from helpers.sql_helpers import pg_set_option
+from helpers.sql_helpers import pg_check_option
+from helpers.sql_helpers import pg_manage_psql
+from helpers.sql_helpers import pg_start_script_name
+from helpers.sql_helpers import pg_initdb
+from helpers.pginstall import RPM_BASED
 
 
 class PgInstance:
@@ -44,7 +49,11 @@ class PgInstance:
                 'edition': edition,
                 'milestone': milestone}
 
-    def manage_psql(self, action, init=False):
+    def start_script_name(self):
+
+        return pg_start_script_name(self.name, self.edition, self.version)
+
+    def manage_psql(self, action):
         """ Manage Postgres instance
         :param action: start, restart, stop etc
         :param init: Initialization before a first start
@@ -52,30 +61,11 @@ class PgInstance:
         """
 
         if self.skip_install:
-            return subprocess.call(["pg_ctl", "-D", self.get_option('data_directory'), action])
-
-        distro = platform.linux_distribution()[0]
-        major = self.version.split(".")[0]
-        minor = self.version.split(".")[1]
-
-        service_name = ""
-        if distro in RPM_BASED or distro == "ALT Linux ":
-            if self.name == 'postgresql':
-                service_name = "postgresql-%s.%s" % (major, minor)
-            elif self.name == 'postgrespro' and self.edition == 'ee':
-                service_name = "postgrespro-enterprise-%s.%s" % (major, minor)
-            elif self.name == 'postgrespro' and self.edition == 'standard':
-                service_name = "postgrespro-%s.%s" % (major, minor)
-        elif distro in DEB_BASED:
-            service_name = "postgresql"
-
-        if init:
-            if distro in RPM_BASED or distro == "ALT Linux ":
-                subprocess.call(["service", service_name, "initdb"])
-                # subprocess.call(["chkconfig", service_name, "on"])
-                # subprocess.call(["systemctl", "enable", "postgresql"])
-
-        return subprocess.call(["service", service_name, action])
+            ret = pg_manage_psql(self.connstring, action)
+        else:
+            ret = pg_manage_psql(self.connstring, action, self.start_script_name())
+            
+        return ret
 
     def edit_pg_hba_conf(self, pg_hba_config):
         """Rewrite pg_hba.conf
@@ -103,7 +93,11 @@ class PgInstance:
         minor = version.split(".")[1]
 
         print "Setup PostgreSQL service"
-        self.manage_psql("start", True)
+
+        distro = platform.linux_distribution()[0]
+        if distro in RPM_BASED or distro == "ALT Linux ":
+            self.manage_psql("initdb")
+        self.manage_psql("start")
 
         os.environ['PATH'] += ":/usr/pgsql-%s.%s/bin/" % (major, minor)
         subprocess.call(["sudo", "-u", "postgres", "psql", "-c",
@@ -139,19 +133,7 @@ class PgInstance:
         :return:
         """
 
-        conn = psycopg2.connect(self.connstring)
-        cursor = conn.cursor()
-        if not self.check_option(option):
-            return None
-
-        cursor.execute(
-            "SELECT setting FROM pg_settings WHERE name = '%s'" % option)
-        value = cursor.fetchall()[0][0]
-
-        cursor.close()
-        conn.close()
-
-        return value
+        return pg_get_option(self.connstring, option)
 
     def check_option(self, option):
         """ Check existence of a PostgreSQL option
@@ -159,18 +141,7 @@ class PgInstance:
         :return: False or True
         """
 
-        conn = psycopg2.connect(self.connstring)
-        cursor = conn.cursor()
-        cursor.execute(
-            "SELECT exists (SELECT 1 FROM pg_settings WHERE name = '%s' LIMIT 1)" % option)
-
-        if not cursor.fetchall()[0][0]:
-            return False
-
-        cursor.close()
-        conn.close()
-
-        return True
+        return pg_check_option(self.connstring, option)
 
     def set_option(self, option, value):
         """ Set a new value to a PostgreSQL option
@@ -178,31 +149,7 @@ class PgInstance:
         :return: False or True
         """
 
-        restart_contexts = ['superuser-backend',
-                            'backend', 'user', 'postmaster', 'superuser']
-        reload_contexts = ['sighup']
-
-        conn = psycopg2.connect(self.connstring)
-        cursor = conn.cursor()
-        conn.set_session(autocommit=True)
-
-        if not self.check_option(option):
-            return False
-
-        cursor.execute(
-            "SELECT context FROM pg_settings WHERE name = '%s'" % option)
-        context = cursor.fetchall()[0][0]
-
-        if context in reload_contexts:
-            action = "reload"
-        elif context in restart_contexts:
-            action = "restart"
-
-        cursor.execute("ALTER SYSTEM SET %s = '%s'" % (option, value))
-        cursor.close()
-        conn.close()
-
-        return self.manage_psql(action)
+        return pg_set_option(self.connstring, option, value)
 
     def load_extension(self, extension_name):
         """ Load PostgreSQL extension

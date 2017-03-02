@@ -1,8 +1,11 @@
+import platform
 import psycopg2
 import subprocess
+import shutil
 
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
-
+from helpers.pginstall import DEB_BASED
+from helpers.pginstall import RPM_BASED
 from tests import settings
 
 # TODO Change to class  all methods
@@ -96,3 +99,123 @@ def drop_test_table():
         cursor.execute("\n".join(req))
     conn.commit()
     conn.close()
+
+
+def pg_get_option(connstring, option):
+    """ Get current value of a PostgreSQL option
+    :param: option name
+    :return:
+    """
+
+    conn = psycopg2.connect(connstring)
+    cursor = conn.cursor()
+    if not pg_check_option(connstring, option):
+        return None
+
+    cursor.execute(
+        "SELECT setting FROM pg_settings WHERE name = '%s'" % option)
+    value = cursor.fetchall()[0][0]
+
+    cursor.close()
+    conn.close()
+
+    return value
+
+
+def pg_check_option(connstring, option):
+    """ Check existence of a PostgreSQL option
+    :param: option name
+    :return: False or True
+    """
+
+    conn = psycopg2.connect(connstring)
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT exists (SELECT 1 FROM pg_settings WHERE name = '%s' LIMIT 1)" % option)
+
+    if not cursor.fetchall()[0][0]:
+        return False
+
+    cursor.close()
+    conn.close()
+
+    return True
+
+
+def pg_set_option(connstring, option, value):
+    """ Set a new value to a PostgreSQL option
+    :param: option name and new value
+    :return: False or True
+    """
+
+    conn = psycopg2.connect(connstring)
+    cursor = conn.cursor()
+    conn.set_session(autocommit=True)
+
+    if not pg_check_option(connstring, option):
+        return False
+
+    cursor.execute(
+        "SELECT context FROM pg_settings WHERE name = '%s'" % option)
+    context = cursor.fetchall()[0][0]
+
+    restart_contexts = ['superuser-backend',
+                        'backend', 'user', 'postmaster', 'superuser']
+    reload_contexts = ['sighup']
+
+    if context in reload_contexts:
+        cursor.execute("ALTER SYSTEM SET %s = '%s'" % (option, value))
+        cursor.close()
+        conn.close()
+        return pg_manage_psql(connstring, "reload")
+    elif context in restart_contexts:
+        cursor.execute("ALTER SYSTEM SET %s = '%s'" % (option, value))
+        cursor.close()
+        conn.close()
+        return pg_manage_psql(connstring, "restart")
+
+
+def pg_manage_psql(connstring, action, start_script=None):
+        """ Manage Postgres instance
+        :param action: start, restart, stop etc
+        :param init: Initialization before a first start
+        :return:
+        """
+
+        if start_script is None:
+            data_dir = pg_get_option(connstring, 'data_directory')
+            assert data_dir is not None
+            return subprocess.call(["/usr/local/pgsql/bin/pg_ctl", "-D", data_dir, action])
+        else:
+            return subprocess.call(["service", start_script, action])
+
+
+def pg_start_script_name(name, edition, version):
+
+    distro = platform.linux_distribution()[0]
+    major = version.split(".")[0]
+    minor = version.split(".")[1]
+
+    if distro in RPM_BASED or distro == "ALT Linux ":
+        if name == 'postgresql':
+            service_name = "postgresql-%s.%s" % (major, minor)
+        elif name == 'postgrespro' and edition == 'ee':
+            service_name = "postgrespro-enterprise-%s.%s" % (major, minor)
+        elif name == 'postgrespro' and edition == 'standard':
+            service_name = "postgrespro-%s.%s" % (major, minor)
+    elif distro in DEB_BASED:
+        service_name = "postgresql"
+
+    assert service_name is not None
+    return service_name
+
+
+def pg_initdb(connstring, params=None):
+
+    data_dir = pg_get_option(connstring, "data_directory")
+    pg_manage_psql(connstring, "stop")
+    shutil.rmtree(data_dir)
+    initdb_cmd = ["/usr/local/pgsql/bin/initdb", "-D", data_dir]
+    initdb_cmd.append(params)
+    subprocess.check_output(initdb_cmd)
+    pg_manage_psql(connstring, "start")
