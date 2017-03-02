@@ -167,15 +167,15 @@ def pg_set_option(connstring, option, value):
         cursor.execute("ALTER SYSTEM SET %s = '%s'" % (option, value))
         cursor.close()
         conn.close()
-        return pg_manage_psql(connstring, "reload")
+        return pg_manage_psql("reload", pg_get_option(connstring, 'data_directory'))
     elif context in restart_contexts:
         cursor.execute("ALTER SYSTEM SET %s = '%s'" % (option, value))
         cursor.close()
         conn.close()
-        return pg_manage_psql(connstring, "restart")
+        return pg_manage_psql("restart", pg_get_option(connstring, 'data_directory'))
 
 
-def pg_manage_psql(connstring, action, start_script=None):
+def pg_manage_psql(action, data_dir, start_script=None):
         """ Manage Postgres instance
         :param action: start, restart, stop etc
         :param init: Initialization before a first start
@@ -183,8 +183,6 @@ def pg_manage_psql(connstring, action, start_script=None):
         """
 
         if start_script is None:
-            data_dir = pg_get_option(connstring, 'data_directory')
-            assert data_dir is not None
             return subprocess.call(["/usr/local/pgsql/bin/pg_ctl", "-D", data_dir, action])
         else:
             return subprocess.call(["service", start_script, action])
@@ -213,9 +211,9 @@ def pg_start_script_name(name, edition, version):
 def pg_initdb(connstring, params=None):
 
     data_dir = pg_get_option(connstring, "data_directory")
-    pg_manage_psql(connstring, "stop")
+    pg_manage_psql("stop", data_dir)
     shutil.rmtree(data_dir)
     initdb_cmd = ["/usr/local/pgsql/bin/initdb", "-D", data_dir]
     initdb_cmd.append(params)
     subprocess.check_output(initdb_cmd)
-    pg_manage_psql(connstring, "start")
+    pg_manage_psql("start", data_dir)
