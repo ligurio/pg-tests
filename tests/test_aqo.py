@@ -29,7 +29,7 @@ def parse_explain_analyze_stat(explain_output):
 
     try:
         dict['execution_time'] = re.search(REGEX_TIME, explain_output[-2][0]).group(1)
-        dict['execution_time'] = float(dict['execution_time'])/1000
+        dict['execution_time'] = float(dict['execution_time']) / 1000
     except AttributeError:
         print 'Failed to extract numbers in %s' % dict['execution_time']
     except IndexError:
@@ -37,7 +37,7 @@ def parse_explain_analyze_stat(explain_output):
 
     try:
         dict['planning_time'] = re.search(REGEX_TIME, explain_output[-1][0]).group(1)
-        dict['planning_time'] = float(dict['planning_time'])/1000
+        dict['planning_time'] = float(dict['planning_time']) / 1000
     except AttributeError:
         print 'Failed to extract numbers in %s' % dict['planning_time']
     except IndexError:
