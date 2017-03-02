@@ -1,5 +1,8 @@
 import urllib2
+import os
 import re
+import sys
+import subprocess
 
 
 def download_file(url, path):
@@ -18,3 +21,12 @@ def parse_connstring(connstring):
     """
 
     return dict(re.findall(r'(\S+)=(".*?"|\S+)', connstring))
+
+
+def pg_bindir():
+    pg_config_bin = os.environ['PG_CONFIG']
+    if pg_config_bin is None:
+        sys.exit()
+    pg_bindir = subprocess.check_output([pg_config_bin, "--bindir"])
+
+    return pg_bindir.strip()
