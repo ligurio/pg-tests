@@ -17,7 +17,7 @@ def test_xid_boundary_values(install_postgres):
 
     connstring = install_postgres.connstring
     offset = random.randrange(START_XID, END_XID)
-    pg_initdb(connstring, ["-x", str(offset), "-m", str(offset)])
+    pg_initdb(connstring, "-x", str(offset), "-m", str(offset))
     load_pgbench(connstring, ["-i", "-n", "-s", "100"])
 
 
@@ -45,7 +45,7 @@ def test_guc_boundary_values(guc, min, max, install_postgres):
     """
 
     connstring = install_postgres.connstring
-    pg_initdb(connstring, ["-x", str(START_XID), "-m", str(START_XID)])
+    pg_initdb(connstring, "-x", str(START_XID), "-m", str(START_XID))
     load_pgbench(connstring, ["--initialize", "--scale=100"])
 
     for value in [min, max, random.randrange(min, max)]:
