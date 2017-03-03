@@ -216,12 +216,12 @@ def pg_start_script_name(name, edition, version):
     return service_name
 
 
-def pg_initdb(connstring, params=[]):
+def pg_initdb(connstring, *params):
 
     data_dir = pg_get_option(connstring, "data_directory")
     pg_manage_psql("stop", data_dir)
     shutil.rmtree(data_dir)
     initdb = os.path.join(pg_bindir(), "initdb")
     initdb_cmd = ["sudo", "-u", "postgres", initdb, "-D", data_dir]
-    subprocess.check_output(initdb_cmd + params)
+    subprocess.check_output(initdb_cmd + list(params))
     pg_manage_psql("start", data_dir)
