@@ -36,8 +36,7 @@ def pg_bindir():
 def load_pgbench(connstring, params):
 
     conn_dict = parse_connstring(connstring)
-    conn_params = ["--host", conn_dict['host'],
-                    "--username", conn_dict['user']]
+    conn_params = ["--host", conn_dict['host'], "--username", conn_dict['user']]
     pgbench = os.path.join(pg_bindir(), "pgbench")
     cmd = ["sudo", "-u", "postgres", pgbench]
 
