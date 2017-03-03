@@ -3,6 +3,76 @@ import psycopg2
 import pytest
 import re
 from helpers.sql_helpers import execute
+from helpers.sql_helpers import pg_set_option
+
+AQO_AUTO_TUNING_MAX_ITERATIONS = 50  # auto_tuning_max_iterations in aqo.c
+
+
+def learn_aqo(sql_query, connstring, number=AQO_AUTO_TUNING_MAX_ITERATIONS):
+    """
+    This function is intended to learn AQO with a specific function
+    with exact number of iterations equal to AQO_AUTO_TUNING_MAX_ITERATIONS
+    """
+
+    conn = psycopg2.connect(connstring)
+
+    stats = {'default': [], 'aqo': [], 'aqo_stat': [],
+            'learn_aqo_true': '', 'learn_aqo_false': '',
+            'use_aqo_true': '', 'use_aqo_false': '', 'query': sql_query}
+
+    sql_query_analyze = 'EXPLAIN ANALYZE ' + sql_query
+
+    aqo_mode = execute(conn, 'SHOW aqo.mode')[0][0]
+    pg_set_option(connstring, 'aqo.mode', 'disabled')
+    for i in range(0, number):
+        dict = parse_explain_analyze_stat(execute(conn, sql_query_analyze))
+        stats['default'].append(dict)
+
+    pg_set_option(connstring, 'aqo.mode', aqo_mode)
+    aqo_stat = []
+    for i in range(0, number):
+        use_aqo = get_query_aqo_param(sql_query_analyze, 'use_aqo')
+        learn_aqo = get_query_aqo_param(sql_query_analyze, 'learn_aqo')
+        auto_tuning = get_query_aqo_param(sql_query_analyze, 'auto_tuning')
+
+        dict = parse_explain_analyze_stat(execute(conn, sql_query_analyze))
+        stats['aqo'].append(dict)
+
+        if learn_aqo:
+            if stats['learn_aqo_true'] == '':
+                stats['learn_aqo_true'] = i
+            if use_aqo:
+                cardinality_error = get_query_aqo_stat(sql_query_analyze, 'cardinality_error_with_aqo')[0][0][-1]
+            else:
+                cardinality_error = get_query_aqo_stat(sql_query_analyze, 'cardinality_error_without_aqo')[0][0][-1]
+        else:
+            if stats['learn_aqo_false']:
+                stats['learn_aqo_false'] = i
+            cardinality_error = 0
+
+        if use_aqo:
+            if stats['use_aqo_true'] == '':
+                stats['use_aqo_true'] = i
+            execution_time = get_query_aqo_stat(sql_query_analyze, 'execution_time_with_aqo')[0][0][-1]
+            planning_time = get_query_aqo_stat(sql_query_analyze, 'planning_time_with_aqo')[0][0][-1]
+        elif learn_aqo or auto_tuning:
+            execution_time = get_query_aqo_stat(sql_query_analyze, 'execution_time_without_aqo')[0][0][-1]
+            planning_time = get_query_aqo_stat(sql_query_analyze, 'planning_time_without_aqo')[0][0][-1]
+        else:
+            if stats['use_aqo_false'] == '':
+                stats['use_aqo_false'] = i
+            execution_time = 0
+            planning_time = 0
+
+        dict = {'execution_time': execution_time,
+                'planning_time': planning_time,
+                'cardinality_error': cardinality_error}
+        aqo_stat.append(dict)
+
+    stats['aqo_stat'] = aqo_stat
+    conn.close()
+
+    return stats
 
 
 def parse_explain_stat(explain_output):
