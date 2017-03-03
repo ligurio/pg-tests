@@ -4,13 +4,13 @@ import psutil
 import pwd
 import random
 import time
-
-
 import psycopg2
 import pytest
+
 from multiprocessing import Process
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
+from helpers.sql_helpers import drop_test_table
 from helpers.sql_helpers import create_test_table
 from tests.settings import TMP_DIR
 
@@ -18,6 +18,7 @@ from tests.settings import TMP_DIR
 class TestCompression():
 
     PGBENCH_SCHEMA_UNLOGGED = """
+
     CREATE UNLOGGED TABLE pgbench_branches_unlogged(
       bid SERIAL PRIMARY KEY,
       bbalance INTEGER NOT NULL,
@@ -25,40 +26,26 @@ class TestCompression():
     );
     CREATE UNLOGGED TABLE pgbench_tellers_unlogged(
       tid SERIAL PRIMARY KEY,
-      bid INTEGER NOT NULL REFERENCES pgbench_branches,
+      bid INTEGER NOT NULL REFERENCES pgbench_branches_unlogged,
       tbalance INTEGER NOT NULL,
       filler CHAR(84) NOT NULL
     );
     CREATE UNLOGGED TABLE pgbench_accounts_unlogged(
       aid BIGSERIAL PRIMARY KEY,
-      bid INTEGER NOT NULL REFERENCES pgbench_branches,
+      bid INTEGER NOT NULL REFERENCES pgbench_branches_unlogged,
       abalance INTEGER NOT NULL,
       filler CHAR(84) NOT NULL
     );
     CREATE UNLOGGED TABLE pgbench_history_unlogged(
-      tid INTEGER NOT NULL REFERENCES pgbench_tellers,
-      bid INTEGER NOT NULL REFERENCES pgbench_branches,
-      aid BIGINT NOT NULL REFERENCES pgbench_accounts,
+      tid INTEGER NOT NULL REFERENCES pgbench_tellers_unlogged,
+      bid INTEGER NOT NULL REFERENCES pgbench_branches_unlogged,
+      aid BIGINT NOT NULL REFERENCES pgbench_accounts_unlogged,
       delta INTEGER NOT NULL,
       mtime TIMESTAMP NOT NULL,
       filler CHAR(22)
       -- UNIQUE (tid, bid, aid, mtime)
     );
     """
-
-    @staticmethod
-    def set_default_tablespace(db_name, tbs_name):
-        """
-
-        :param tbs_name: string - tablespace name
-        :param db_name: database name as string
-        :return:
-        """
-        conn_string = "host='localhost' user='postgres' "
-        conn = psycopg2.connect(conn_string)
-        conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-        cursor = conn.cursor()
-        cursor.execute("ALTER DATABASE {0} SET default_tablespace TO {1}".format(db_name, tbs_name))
 
     @staticmethod
     def get_directory_size(start_path):
@@ -121,36 +108,47 @@ class TestCompression():
         return tablespace_location
 
     @pytest.mark.test_compression_standalone_positive
-    @pytest.mark.usefixtures('create_table')
-    @pytest.mark.parametrize('create_table', [('pgbench', '20')], indirect=True)
     def test_compression_standalone_positive(self, install_postgres):
         """ Test for compression feature.
         Scenario:
+        1. Create test tables
         1. Create tablespace with compression
         2. Save size of created tables by fixture in file system (count and size of files)
         3. Run data generator for tablespace with compression
         4. Save size of table with compression
         5. Check that files for table in tablespace without compression > that files in tablespace with compression
         6. Check tablespace folder for files with *.cfm extension
+        7. Check that tables has some data
         """
         # Step 1
-        compression_files_directory = self.create_tablespace('compression', compression=True)
+        create_test_table('20', 'pgbench')
         # Step 2
-        data_size_without_compression = self.get_directory_size(install_postgres.get_option('data_directory'))
+        compression_files_directory = self.create_tablespace('compression', compression=True)
         # Step 3
-        print(data_size_without_compression)
-        self.set_default_tablespace('postgres', 'compression')
-        install_postgres.manage_psql('restart')
-        create_test_table(size='20', schema='pgbench')
+        data_size_without_compression = self.get_directory_size(install_postgres.get_option('data_directory'))
         # Step 4
+        print(data_size_without_compression)
+        install_postgres.set_option('default_tablespace', 'compression')
+        create_test_table(size='20', schema='pgbench')
+        # Step 5
         data_size_with_compression = self.get_directory_size(install_postgres.get_option('data_directory'))
         print(data_size_with_compression)
         print(compression_files_directory)
-        # Step 5
-        assert data_size_with_compression < data_size_without_compression
         # Step 6
+        assert data_size_with_compression < data_size_without_compression
+        # Step 7
         compression_files = self.get_filenames(compression_files_directory)
         assert '.cfm' in compression_files
+        # Step 8
+        conn_string = "host='localhost' user='postgres' "
+        conn = psycopg2.connect(conn_string)
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM pgbench_tellers LIMIT 10;")
+        result = cursor.fetchall()
+        print(result)
+        assert result != 0
+        conn.close()
+        drop_test_table()
 
     @pytest.mark.test_compression_unlogged_tables
     def test_compression_unlogged_tables(self, install_postgres):
@@ -164,12 +162,19 @@ class TestCompression():
         compression_files_directory = self.create_tablespace('compression_unlogged_tables', compression=True)
         print compression_files_directory
         # Step 2
-        self.set_default_tablespace('postgres', 'compression_unlogged_tables')
-        install_postgres.manage_psql('restart')
+        install_postgres.set_option('default_tablespace', 'compression_unlogged_tables')
         create_test_table(size='20', schema=self.PGBENCH_SCHEMA_UNLOGGED)
         # Step 3
         compression_files = self.get_filenames(compression_files_directory)
         assert '.cfm' in compression_files
+        conn_string = "host='localhost' user='postgres' "
+        conn = psycopg2.connect(conn_string)
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM pgbench_tellers_unlogged LIMIT 10;")
+        result = cursor.fetchall()
+        print(result)
+        assert result != 0
+        conn.close()
 
     @pytest.mark.test_compression_negative
     def test_compression_negative(self, install_postgres):
@@ -184,7 +189,7 @@ class TestCompression():
         # Step 1
         compression_files_directory = self.create_tablespace('compression_negative', compression=True)
         print(compression_files_directory)
-        self.set_default_tablespace('postgres', 'compression_negative')
+        install_postgres.set_option('default_tablespace', 'compression_negative')
         postgres_pid = install_postgres.get_postmaster_pid()
         print(postgres_pid)
         # Step 2
@@ -206,3 +211,47 @@ class TestCompression():
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM pg_tables WHERE tablespace=\'compression_negative\';")
         assert len(cursor.fetchall()) == 0
+        drop_test_table()
+
+    @pytest.mark.test_compression_unlogged_tables_negative
+    def test_compression_unlogged_tables_negative(self, install_postgres):
+        """ Test for compression feature.
+        Scenario:
+        1. Create tablespace with compression for test
+        2. Run pgbench (unlogged schema) for tablespace with compression
+        3. Kill postgres process
+        4. Start postgres process
+        5. Check that tables was created and readable
+        6. Check tablespace folder for files with *.cfm extension
+        """
+        # Step 1
+        compression_files_directory = self.create_tablespace('compression_unlogged_tables_negative', compression=True)
+        # Step 2
+        install_postgres.set_option('default_tablespace', 'compression_unlogged_tables_negative')
+        create_test_table(size='20', schema=self.PGBENCH_SCHEMA_UNLOGGED)
+        # Step 3
+        conn_string = "host='localhost' user='postgres' "
+        conn = psycopg2.connect(conn_string)
+        cursor = conn.cursor()
+        cursor.execute("select * from pgbench_tellers_unlogged limit 10;")
+        conn.close()
+        process = psutil.Process(install_postgres.get_postmaster_pid())
+        process.kill()
+        # Step 4
+        install_postgres.manage_psql('start')
+        # Step 5
+        conn_string = "host='localhost' user='postgres' "
+        conn = psycopg2.connect(conn_string)
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM pg_tables WHERE tablespace=\'compression_unlogged_tables_negative\';")
+        assert len(cursor.fetchall()) != 0
+        conn_string = "host='localhost' user='postgres' "
+        conn = psycopg2.connect(conn_string)
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM pgbench_tellers_unlogged LIMIT 10;")
+        result = cursor.fetchall()
+        assert result != 0
+        conn.close()
+        # Step 6
+        compression_files = self.get_filenames(compression_files_directory)
+        assert '.cfm' in compression_files
