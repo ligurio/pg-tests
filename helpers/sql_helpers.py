@@ -3,6 +3,7 @@ import platform
 import psycopg2
 import subprocess
 import shutil
+import time
 
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from helpers.pginstall import DEB_BASED
@@ -186,9 +187,13 @@ def pg_manage_psql(action, data_dir, start_script=None):
 
         if start_script is None:
             pg_ctl = os.path.join(pg_bindir(), "pg_ctl")
-            return subprocess.check_call(["sudo", "-u", "postgres", pg_ctl, "-D", data_dir, action])
+            cmd = ["sudo", "-u", "postgres", pg_ctl, "-D", data_dir, action]
         else:
-            return subprocess.check_call(["service", start_script, action])
+            cmd = ["service", start_script, action]
+
+        retcode = subprocess.check_call(cmd)
+        time.sleep(2)
+        return retcode
 
 
 def pg_start_script_name(name, edition, version):
@@ -211,13 +216,12 @@ def pg_start_script_name(name, edition, version):
     return service_name
 
 
-def pg_initdb(connstring, params=None):
+def pg_initdb(connstring, *params):
 
     data_dir = pg_get_option(connstring, "data_directory")
     pg_manage_psql("stop", data_dir)
     shutil.rmtree(data_dir)
     initdb = os.path.join(pg_bindir(), "initdb")
     initdb_cmd = ["sudo", "-u", "postgres", initdb, "-D", data_dir]
-    initdb_cmd.append(params)
-    subprocess.check_output(initdb_cmd)
+    subprocess.check_output(initdb_cmd + list(params))
     pg_manage_psql("start", data_dir)
