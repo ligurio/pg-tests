@@ -25,7 +25,7 @@ class PgInstance:
         self.name = name
         self.edition = edition
         self.build = build
-        self.connstring = "host='localhost' user='postgres'"
+        self.connstring = "host=localhost user=postgres"
         self.skip_install = True
 
         if not skip_install:
