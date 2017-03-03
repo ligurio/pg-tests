@@ -186,9 +186,9 @@ def pg_manage_psql(action, data_dir, start_script=None):
 
         if start_script is None:
             pg_ctl = os.path.join(pg_bindir(), "pg_ctl")
-            return subprocess.call(["sudo", "-u", "postgres", pg_ctl, "-D", data_dir, action])
+            return subprocess.check_call(["sudo", "-u", "postgres", pg_ctl, "-D", data_dir, action])
         else:
-            return subprocess.call(["service", start_script, action])
+            return subprocess.check_call(["service", start_script, action])
 
 
 def pg_start_script_name(name, edition, version):
