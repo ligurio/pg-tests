@@ -12,7 +12,6 @@ END_XID = 9223372036854775808           # 2^63
 
 
 @pytest.skip(reason="PGPRO-501")
-@pytest.mark.usefixtures('install_postgres')
 def test_xid_boundary_values(install_postgres):
 
     connstring = install_postgres.connstring
@@ -37,7 +36,6 @@ gucs = [("autovacuum_freeze_max_age"),
 
 
 @pytest.skip(reason="PGPRO-501")
-@pytest.mark.usefixtures('install_postgres')
 @pytest.mark.parametrize("guc, min, max", testdata, ids=gucs)
 def test_guc_boundary_values(guc, min, max, install_postgres):
     """
