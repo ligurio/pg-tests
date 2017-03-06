@@ -234,6 +234,20 @@ def reset_aqo_stats(connstring, sql_query=None):
     conn.close()
 
 
+def keep_aqo_tables(connstring):
+
+    conn = psycopg2.connect(connstring)
+    DBNAME = 'postgres'
+    cursor = conn.cursor()
+    aqo_tables = ['aqo_query_stat',
+                  'aqo_query_texts', 'aqo_data', 'aqo_queries']
+    for t in aqo_tables:
+        with open('%s-%s.sql' % (t, DBNAME), 'w') as outfile:
+            cursor.copy_to(outfile, t, sep="|")
+    cursor.close()
+    conn.close()
+
+
 @pytest.mark.usefixtures('install_postgres')
 def test_available_modes(install_postgres):
     """
