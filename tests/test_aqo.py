@@ -3,6 +3,84 @@ import psycopg2
 import pytest
 import re
 from helpers.sql_helpers import execute
+from helpers.sql_helpers import pg_set_option
+
+AQO_AUTO_TUNING_MAX_ITERATIONS = 50  # auto_tuning_max_iterations in aqo.c
+
+
+def learn_aqo(sql_query, connstring, number=AQO_AUTO_TUNING_MAX_ITERATIONS):
+    """
+    This function is intended to learn AQO with a specific function
+    with exact number of iterations equal to AQO_AUTO_TUNING_MAX_ITERATIONS
+    """
+
+    conn = psycopg2.connect(connstring)
+
+    stats = {'default': [], 'aqo': [], 'aqo_stat': [],
+             'learn_aqo_true': '', 'learn_aqo_false': '',
+             'use_aqo_true': '', 'use_aqo_false': '', 'query': sql_query}
+
+    sql_query_analyze = 'EXPLAIN ANALYZE ' + sql_query
+
+    aqo_mode = execute(conn, 'SHOW aqo.mode')[0][0]
+    pg_set_option(connstring, 'aqo.mode', 'disabled')
+    for i in range(0, number):
+        dict = parse_explain_analyze_stat(execute(conn, sql_query_analyze))
+        stats['default'].append(dict)
+
+    pg_set_option(connstring, 'aqo.mode', aqo_mode)
+    aqo_stat = []
+    for i in range(0, number):
+        use_aqo = get_query_aqo_param(sql_query_analyze, 'use_aqo', connstring)
+        learn_aqo = get_query_aqo_param(
+            sql_query_analyze, 'learn_aqo', connstring)
+        auto_tuning = get_query_aqo_param(
+            sql_query_analyze, 'auto_tuning', connstring)
+
+        dict = parse_explain_analyze_stat(execute(conn, sql_query_analyze))
+        stats['aqo'].append(dict)
+
+        if learn_aqo:
+            if stats['learn_aqo_true'] == '':
+                stats['learn_aqo_true'] = i
+            if use_aqo:
+                cardinality_error = get_query_aqo_stat(
+                    sql_query_analyze, 'cardinality_error_with_aqo', connstring)[0][0][-1]
+            else:
+                cardinality_error = get_query_aqo_stat(
+                    sql_query_analyze, 'cardinality_error_without_aqo', connstring)[0][0][-1]
+        else:
+            if stats['learn_aqo_false']:
+                stats['learn_aqo_false'] = i
+            cardinality_error = 0
+
+        if use_aqo:
+            if stats['use_aqo_true'] == '':
+                stats['use_aqo_true'] = i
+            execution_time = get_query_aqo_stat(
+                sql_query_analyze, 'execution_time_with_aqo', connstring)[0][0][-1]
+            planning_time = get_query_aqo_stat(
+                sql_query_analyze, 'planning_time_with_aqo', connstring)[0][0][-1]
+        elif learn_aqo or auto_tuning:
+            execution_time = get_query_aqo_stat(
+                sql_query_analyze, 'execution_time_without_aqo', connstring)[0][0][-1]
+            planning_time = get_query_aqo_stat(
+                sql_query_analyze, 'planning_time_without_aqo', connstring)[0][0][-1]
+        else:
+            if stats['use_aqo_false'] == '':
+                stats['use_aqo_false'] = i
+            execution_time = 0
+            planning_time = 0
+
+        dict = {'execution_time': execution_time,
+                'planning_time': planning_time,
+                'cardinality_error': cardinality_error}
+        aqo_stat.append(dict)
+
+    stats['aqo_stat'] = aqo_stat
+    conn.close()
+
+    return stats
 
 
 def parse_explain_stat(explain_output):
@@ -28,7 +106,8 @@ def parse_explain_analyze_stat(explain_output):
     REGEX_TIME = '\w+\s{1}time:\s{1}([0-9]+\.[0-9]+)\s{1}ms'
 
     try:
-        dict['execution_time'] = re.search(REGEX_TIME, explain_output[-2][0]).group(1)
+        dict['execution_time'] = re.search(
+            REGEX_TIME, explain_output[-2][0]).group(1)
         dict['execution_time'] = float(dict['execution_time']) / 1000
     except AttributeError:
         print 'Failed to extract numbers in %s' % dict['execution_time']
@@ -36,7 +115,8 @@ def parse_explain_analyze_stat(explain_output):
         print explain_output[-2][0]
 
     try:
-        dict['planning_time'] = re.search(REGEX_TIME, explain_output[-1][0]).group(1)
+        dict['planning_time'] = re.search(
+            REGEX_TIME, explain_output[-1][0]).group(1)
         dict['planning_time'] = float(dict['planning_time']) / 1000
     except AttributeError:
         print 'Failed to extract numbers in %s' % dict['planning_time']
@@ -56,7 +136,8 @@ def parse_explain_analyze_stat(explain_output):
 
     assert len(log_rows_predicted) == len(log_rows_actual)
 
-    dict['cardinality_error'] = abs(numpy.mean(log_rows_predicted) - numpy.mean(log_rows_actual))
+    dict['cardinality_error'] = abs(numpy.mean(
+        log_rows_predicted) - numpy.mean(log_rows_actual))
 
     return dict
 
@@ -197,9 +278,11 @@ def test_similar_queries(install_postgres):
 
     conn = psycopg2.connect(install_postgres.connstring)
     execute(conn, 'SELECT 1')
-    num1 = execute(conn, "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = 'SELECT 1'")[0][0]
+    num1 = execute(
+        conn, "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = 'SELECT 1'")[0][0]
     execute(conn, 'SELECT 2')
-    num2 = execute(conn, "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = 'SELECT 2'")[0][0]
+    num2 = execute(
+        conn, "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = 'SELECT 2'")[0][0]
     conn.close()
 
     assert num1 == 1
