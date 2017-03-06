@@ -241,7 +241,7 @@ def test_available_modes(install_postgres):
     """
 
     install_postgres.load_extension('aqo')
-    known_modes = ['intelligent', 'forced', 'manual', 'disabled']
+    known_modes = ['intelligent', 'forced', 'controlled', 'disabled']
 
     conn = psycopg2.connect(install_postgres.connstring)
     SQL_QUERY = "SELECT enumvals FROM pg_settings WHERE name='aqo.mode';"
@@ -263,7 +263,7 @@ def test_default_aqo_mode(install_postgres):
     mode = execute(conn, SQL_QUERY)[0][0]
     conn.close()
 
-    assert mode == "manual"
+    assert mode == "controlled"
 
 
 @pytest.mark.usefixtures('install_postgres')
