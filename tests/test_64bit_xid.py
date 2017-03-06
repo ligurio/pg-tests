@@ -49,4 +49,4 @@ def test_guc_boundary_values(guc, min, max, install_postgres):
     for value in [min, max, random.randrange(min, max)]:
         install_postgres.set_option(guc, value)
         load_pgbench(connstring, ["--progress=5", "--transactions=1000",
-                                    "--jobs=5", "--client=5"])
+                                  "--jobs=5", "--client=5"])
