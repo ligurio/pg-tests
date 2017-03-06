@@ -31,9 +31,11 @@ def learn_aqo(sql_query, connstring, number=AQO_AUTO_TUNING_MAX_ITERATIONS):
     pg_set_option(connstring, 'aqo.mode', aqo_mode)
     aqo_stat = []
     for i in range(0, number):
-        use_aqo = get_query_aqo_param(sql_query_analyze, 'use_aqo')
-        learn_aqo = get_query_aqo_param(sql_query_analyze, 'learn_aqo')
-        auto_tuning = get_query_aqo_param(sql_query_analyze, 'auto_tuning')
+        use_aqo = get_query_aqo_param(sql_query_analyze, 'use_aqo', connstring)
+        learn_aqo = get_query_aqo_param(
+            sql_query_analyze, 'learn_aqo', connstring)
+        auto_tuning = get_query_aqo_param(
+            sql_query_analyze, 'auto_tuning', connstring)
 
         dict = parse_explain_analyze_stat(execute(conn, sql_query_analyze))
         stats['aqo'].append(dict)
@@ -43,10 +45,10 @@ def learn_aqo(sql_query, connstring, number=AQO_AUTO_TUNING_MAX_ITERATIONS):
                 stats['learn_aqo_true'] = i
             if use_aqo:
                 cardinality_error = get_query_aqo_stat(
-                    sql_query_analyze, 'cardinality_error_with_aqo')[0][0][-1]
+                    sql_query_analyze, 'cardinality_error_with_aqo', connstring)[0][0][-1]
             else:
                 cardinality_error = get_query_aqo_stat(
-                    sql_query_analyze, 'cardinality_error_without_aqo')[0][0][-1]
+                    sql_query_analyze, 'cardinality_error_without_aqo', connstring)[0][0][-1]
         else:
             if stats['learn_aqo_false']:
                 stats['learn_aqo_false'] = i
@@ -56,14 +58,14 @@ def learn_aqo(sql_query, connstring, number=AQO_AUTO_TUNING_MAX_ITERATIONS):
             if stats['use_aqo_true'] == '':
                 stats['use_aqo_true'] = i
             execution_time = get_query_aqo_stat(
-                sql_query_analyze, 'execution_time_with_aqo')[0][0][-1]
+                sql_query_analyze, 'execution_time_with_aqo', connstring)[0][0][-1]
             planning_time = get_query_aqo_stat(
-                sql_query_analyze, 'planning_time_with_aqo')[0][0][-1]
+                sql_query_analyze, 'planning_time_with_aqo', connstring)[0][0][-1]
         elif learn_aqo or auto_tuning:
             execution_time = get_query_aqo_stat(
-                sql_query_analyze, 'execution_time_without_aqo')[0][0][-1]
+                sql_query_analyze, 'execution_time_without_aqo', connstring)[0][0][-1]
             planning_time = get_query_aqo_stat(
-                sql_query_analyze, 'planning_time_without_aqo')[0][0][-1]
+                sql_query_analyze, 'planning_time_without_aqo', connstring)[0][0][-1]
         else:
             if stats['use_aqo_false'] == '':
                 stats['use_aqo_false'] = i
