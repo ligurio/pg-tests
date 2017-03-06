@@ -2,9 +2,6 @@ import pytest
 import random
 
 from helpers.sql_helpers import pg_initdb
-from helpers.sql_helpers import execute
-from helpers.os_helpers import pg_bindir
-from helpers.os_helpers import parse_connstring
 from helpers.os_helpers import load_pgbench
 
 START_XID = 4294967296                  # 2^32
