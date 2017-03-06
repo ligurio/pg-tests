@@ -5,7 +5,7 @@ from helpers.sql_helpers import pg_initdb
 from helpers.os_helpers import load_pgbench
 
 START_XID = 4294967296                  # 2^32
-END_XID = 9223372036854775808           # 2^63
+END_XID = 4611686018427387904           # 2^62
 
 
 @pytest.mark.skip(reason="PGPRO-501")
