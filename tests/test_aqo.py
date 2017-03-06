@@ -265,6 +265,55 @@ def test_available_modes(install_postgres):
     assert known_modes == actual_modes
 
 
+def evaluate_aqo(stats):
+    """
+    This function is intended to validate aqo with specific query.
+
+    Criterias:
+
+        - planning time + execution time with aqo
+            is not bigger than time of default planner
+        - cardinality error is less than 0.5
+        - there are no spikes on total_time with enabled aqo after
+    """
+
+    IGNORE_ITER = 10
+    dict = {'aqo': {'total_time': '', 'cardinality_error': ''},
+            'aqo_stat': {'total_time': '', 'cardinality_error': ''},
+            'default': {'total_time': '', 'cardinality_error': ''}}
+
+    for k in dict.keys():
+        execution_time = [float(x['execution_time']) for x in stats[k]]
+        planning_time = [float(x['planning_time']) for x in stats[k]]
+        dict[k]['total_time'] = [x + y for x,
+                                 y in zip(execution_time[-IGNORE_ITER:], planning_time[-IGNORE_ITER:])]
+        dict[k]['cardinality_error'] = [
+            float(x['cardinality_error']) for x in stats[k]]
+
+    assert len(dict['aqo']) == len(dict['aqo_stat'])
+    # FIXME:
+    # assert (numpy.mean(dict['default']['total_time']) < numpy.mean(dict['aqo_stat']['total_time']))
+    assert (numpy.mean(dict['aqo']['total_time']) /
+            numpy.mean(dict['aqo_stat']['total_time'])) < 0.15
+    diff = numpy.mean(dict['default']['cardinality_error']) - \
+        numpy.mean(dict['aqo_stat']['cardinality_error'])
+    assert diff < 0.5 and diff > 0
+
+    IGNORE_ITER = 65
+    FACTOR_SPIKE = 3
+    if len(dict['aqo']) > IGNORE_ITER:
+        for k in dict.keys():
+            execution_time = [float(x['execution_time']) for x in stats[k]]
+            planning_time = [float(x['planning_time']) for x in stats[k]]
+            dict[k]['total_time'] = [
+                x + y for x, y in zip(execution_time[-IGNORE_ITER:], planning_time[-IGNORE_ITER:])]
+            dict[k]['cardinality_error'] = [
+                float(x['cardinality_error']) for x in stats[k]]
+
+        assert numpy.max(dict['aqo']['total_time']) < numpy.mean(
+            ['aqo']['total_time']) * FACTOR_SPIKE
+
+
 @pytest.mark.usefixtures('install_postgres')
 def test_default_aqo_mode(install_postgres):
     """
