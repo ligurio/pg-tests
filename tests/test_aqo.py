@@ -17,8 +17,8 @@ def learn_aqo(sql_query, connstring, number=AQO_AUTO_TUNING_MAX_ITERATIONS):
     conn = psycopg2.connect(connstring)
 
     stats = {'default': [], 'aqo': [], 'aqo_stat': [],
-            'learn_aqo_true': '', 'learn_aqo_false': '',
-            'use_aqo_true': '', 'use_aqo_false': '', 'query': sql_query}
+             'learn_aqo_true': '', 'learn_aqo_false': '',
+             'use_aqo_true': '', 'use_aqo_false': '', 'query': sql_query}
 
     sql_query_analyze = 'EXPLAIN ANALYZE ' + sql_query
 
@@ -42,9 +42,11 @@ def learn_aqo(sql_query, connstring, number=AQO_AUTO_TUNING_MAX_ITERATIONS):
             if stats['learn_aqo_true'] == '':
                 stats['learn_aqo_true'] = i
             if use_aqo:
-                cardinality_error = get_query_aqo_stat(sql_query_analyze, 'cardinality_error_with_aqo')[0][0][-1]
+                cardinality_error = get_query_aqo_stat(
+                    sql_query_analyze, 'cardinality_error_with_aqo')[0][0][-1]
             else:
-                cardinality_error = get_query_aqo_stat(sql_query_analyze, 'cardinality_error_without_aqo')[0][0][-1]
+                cardinality_error = get_query_aqo_stat(
+                    sql_query_analyze, 'cardinality_error_without_aqo')[0][0][-1]
         else:
             if stats['learn_aqo_false']:
                 stats['learn_aqo_false'] = i
@@ -53,11 +55,15 @@ def learn_aqo(sql_query, connstring, number=AQO_AUTO_TUNING_MAX_ITERATIONS):
         if use_aqo:
             if stats['use_aqo_true'] == '':
                 stats['use_aqo_true'] = i
-            execution_time = get_query_aqo_stat(sql_query_analyze, 'execution_time_with_aqo')[0][0][-1]
-            planning_time = get_query_aqo_stat(sql_query_analyze, 'planning_time_with_aqo')[0][0][-1]
+            execution_time = get_query_aqo_stat(
+                sql_query_analyze, 'execution_time_with_aqo')[0][0][-1]
+            planning_time = get_query_aqo_stat(
+                sql_query_analyze, 'planning_time_with_aqo')[0][0][-1]
         elif learn_aqo or auto_tuning:
-            execution_time = get_query_aqo_stat(sql_query_analyze, 'execution_time_without_aqo')[0][0][-1]
-            planning_time = get_query_aqo_stat(sql_query_analyze, 'planning_time_without_aqo')[0][0][-1]
+            execution_time = get_query_aqo_stat(
+                sql_query_analyze, 'execution_time_without_aqo')[0][0][-1]
+            planning_time = get_query_aqo_stat(
+                sql_query_analyze, 'planning_time_without_aqo')[0][0][-1]
         else:
             if stats['use_aqo_false'] == '':
                 stats['use_aqo_false'] = i
@@ -98,7 +104,8 @@ def parse_explain_analyze_stat(explain_output):
     REGEX_TIME = '\w+\s{1}time:\s{1}([0-9]+\.[0-9]+)\s{1}ms'
 
     try:
-        dict['execution_time'] = re.search(REGEX_TIME, explain_output[-2][0]).group(1)
+        dict['execution_time'] = re.search(
+            REGEX_TIME, explain_output[-2][0]).group(1)
         dict['execution_time'] = float(dict['execution_time']) / 1000
     except AttributeError:
         print 'Failed to extract numbers in %s' % dict['execution_time']
@@ -106,7 +113,8 @@ def parse_explain_analyze_stat(explain_output):
         print explain_output[-2][0]
 
     try:
-        dict['planning_time'] = re.search(REGEX_TIME, explain_output[-1][0]).group(1)
+        dict['planning_time'] = re.search(
+            REGEX_TIME, explain_output[-1][0]).group(1)
         dict['planning_time'] = float(dict['planning_time']) / 1000
     except AttributeError:
         print 'Failed to extract numbers in %s' % dict['planning_time']
@@ -126,7 +134,8 @@ def parse_explain_analyze_stat(explain_output):
 
     assert len(log_rows_predicted) == len(log_rows_actual)
 
-    dict['cardinality_error'] = abs(numpy.mean(log_rows_predicted) - numpy.mean(log_rows_actual))
+    dict['cardinality_error'] = abs(numpy.mean(
+        log_rows_predicted) - numpy.mean(log_rows_actual))
 
     return dict
 
@@ -267,9 +276,11 @@ def test_similar_queries(install_postgres):
 
     conn = psycopg2.connect(install_postgres.connstring)
     execute(conn, 'SELECT 1')
-    num1 = execute(conn, "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = 'SELECT 1'")[0][0]
+    num1 = execute(
+        conn, "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = 'SELECT 1'")[0][0]
     execute(conn, 'SELECT 2')
-    num2 = execute(conn, "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = 'SELECT 2'")[0][0]
+    num2 = execute(
+        conn, "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = 'SELECT 2'")[0][0]
     conn.close()
 
     assert num1 == 1
