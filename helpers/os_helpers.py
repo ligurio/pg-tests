@@ -27,7 +27,16 @@ def pg_bindir():
     pg_config_bin = os.environ['PG_CONFIG']
     if pg_config_bin is None:
         sys.exit()
-    pg_config = os.path.join(pg_config_bin, "pg_config")
-    pg_bindir = subprocess.check_output([pg_config, "--bindir"])
+    pg_bindir = subprocess.check_output([pg_config_bin, "--bindir"])
 
     return pg_bindir.strip()
+
+
+def load_pgbench(connstring, params):
+
+    conn_dict = parse_connstring(connstring)
+    conn_params = ["--host", conn_dict['host'], "--username", conn_dict['user']]
+    pgbench = os.path.join(pg_bindir(), "pgbench")
+    cmd = ["sudo", "-u", "postgres", pgbench]
+
+    return subprocess.check_call(cmd + conn_params + params)
