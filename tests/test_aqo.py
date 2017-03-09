@@ -311,7 +311,7 @@ def evaluate_aqo(stats):
                 float(x['cardinality_error']) for x in stats[k]]
 
         assert numpy.max(dict['aqo']['total_time']) < numpy.mean(
-            ['aqo']['total_time']) * FACTOR_SPIKE
+            dict['aqo']['total_time']) * FACTOR_SPIKE
 
 
 @pytest.mark.usefixtures('install_postgres')
