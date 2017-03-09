@@ -139,7 +139,7 @@
     file: state=absent path=/tmp/get-pip.py
 
   - name: checkout latest version of tests
-    git: repo=https://git.l.postgrespro.ru/automation/pg-tests.git dest=/home/test/pg-tests
+    git: repo=https://git.postgrespro.ru/automation/pg-tests.git dest=/home/test/pg-tests
     tags:
     - skip_ansible_lint
 
