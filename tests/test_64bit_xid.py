@@ -102,7 +102,7 @@ def test_integrity(install_postgres):
     """
 
     pgbench_tables = {'pgbench_accounts': 0, 'pgbench_branches': 0,
-                    'pgbench_history': 0, 'pgbench_tellers': 0}
+                      'pgbench_history': 0, 'pgbench_tellers': 0}
 
     connstring = install_postgres.connstring
     load_pgbench(connstring, ["-i", "-s", "100"])
