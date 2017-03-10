@@ -1,3 +1,4 @@
+import glob
 import os
 import platform
 import psycopg2
@@ -9,6 +10,7 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from helpers.pginstall import DEB_BASED
 from helpers.pginstall import RPM_BASED
 from helpers.os_helpers import pg_bindir
+from helpers.os_helpers import rmdir
 from tests import settings
 
 # TODO Change to class  all methods
@@ -220,7 +222,7 @@ def pg_initdb(connstring, *params):
 
     data_dir = pg_get_option(connstring, "data_directory")
     pg_manage_psql("stop", data_dir)
-    shutil.rmtree(data_dir)
+    rmdir(data_dir)
     initdb = os.path.join(pg_bindir(), "initdb")
     initdb_cmd = ["sudo", "-u", "postgres", initdb, "-D", data_dir]
     subprocess.check_output(initdb_cmd + list(params))

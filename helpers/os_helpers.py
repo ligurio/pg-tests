@@ -2,6 +2,7 @@ import urllib2
 import os
 import re
 import sys
+import shutil
 import subprocess
 
 
@@ -30,6 +31,18 @@ def pg_bindir():
     pg_bindir = subprocess.check_output([pg_config_bin, "--bindir"])
 
     return pg_bindir.strip()
+
+
+def rmdir(dirname):
+    for item in os.listdir(dirname):
+        path = os.path.join(dirname, item)
+        try:
+            if os.path.isfile(path):
+                os.unlink(path)
+            elif os.path.isdir(path):
+                shutil.rmtree(path)
+        except Exception as e:
+            print(e)
 
 
 def load_pgbench(connstring, params):
