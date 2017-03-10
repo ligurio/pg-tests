@@ -1,8 +1,10 @@
-import urllib2
 import os
+import platform
 import re
-import sys
 import subprocess
+import urllib2
+
+from helpers.pginstall import DEB_BASED, RPM_BASED
 
 
 def download_file(url, path):
@@ -24,12 +26,18 @@ def parse_connstring(connstring):
 
 
 def pg_bindir():
-    pg_config_bin = os.environ['PG_CONFIG']
-    if pg_config_bin is None:
-        sys.exit()
-    pg_bindir = subprocess.check_output([pg_config_bin, "--bindir"])
-
-    return pg_bindir.strip()
+    distro = platform.linux_distribution()[0]
+    try:
+        pg_config_bin = os.environ['PG_CONFIG']
+    except KeyError as e:
+        print("PG_CONFIG variable not in environment variables\n", e)
+        print("Trying to install pg_config and set PG_CONFIG\n")
+        if distro in RPM_BASED:
+            return subprocess.check_output(['/usr/pgproee-9.6/bin/pg_config', "--bindir"]).strip()
+        elif distro in DEB_BASED:
+            return subprocess.check_output(['/usr/bin/pg_config', "--bindir"]).strip()
+    else:
+        return subprocess.check_output([pg_config_bin, "--bindir"]).strip()
 
 
 def load_pgbench(connstring, params):
