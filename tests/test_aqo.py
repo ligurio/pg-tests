@@ -455,12 +455,13 @@ def test_aqo_mode(aqo_mode, install_postgres):
     new_sql_query_explain = 'EXPLAIN ANALYZE ' + NEW_SQL_QUERY
 
     install_postgres.load_extension('aqo')
-    reset_aqo_stats(install_postgres.connstring)
+    connstring = install_postgres.connstring
+    reset_aqo_stats(connstring)
 
     pg_set_option(install_postgres.connstring, 'aqo.mode', 'intelligent')
-    learn_aqo(OLD_SQL_QUERY)
+    learn_aqo(OLD_SQL_QUERY, connstring)
     pg_set_option(install_postgres.connstring, 'aqo.mode', aqo_mode)
-    learn_aqo(NEW_SQL_QUERY)
+    learn_aqo(NEW_SQL_QUERY, connstring)
 
     conn = psycopg2.connect(install_postgres.connstring)
     num_old_sql_query = execute(conn,
@@ -475,13 +476,13 @@ def test_aqo_mode(aqo_mode, install_postgres):
                                     "SELECT executions_without_aqo FROM aqo_query_stat WHERE query_hash = 0;")
     elif aqo_mode == 'intelligent':
         new_executions_w_aqo = get_query_aqo_stat(new_sql_query_explain,
-                                                  'executions_with_aqo')[0][0]
+                                                  'executions_with_aqo', connstring)[0][0]
         new_executions_wo_aqo = get_query_aqo_stat(new_sql_query_explain,
-                                                   'executions_without_aqo')[0][0]
+                                                   'executions_without_aqo', connstring)[0][0]
         old_executions_w_aqo = get_query_aqo_stat(old_sql_query_explain,
-                                                  'executions_with_aqo')
+                                                  'executions_with_aqo', connstring)
         old_executions_wo_aqo = get_query_aqo_stat(old_sql_query_explain,
-                                                   'executions_without_aqo')
+                                                   'executions_without_aqo', connstring)
     conn.close()
 
     if aqo_mode == 'intelligent':
