@@ -1,3 +1,5 @@
+import json
+import matplotlib.pyplot as plot
 import numpy
 import psycopg2
 import pytest
@@ -246,6 +248,78 @@ def keep_aqo_tables(connstring):
             cursor.copy_to(outfile, t, sep="|")
     cursor.close()
     conn.close()
+
+
+def dump_stats(stats, filename):
+
+    with open('%s.json' % filename, 'w') as outfile:
+        json.dump(stats, outfile, sort_keys=True, indent=4, ensure_ascii=False)
+
+
+def plot_stats(stats, connstring):
+
+    sql_query_analyze = "EXPLAIN ANALYZE " + stats['query']
+    filename = str(query_to_hash(sql_query_analyze, connstring)[0][0])
+    assert filename != ''
+    if filename[0] == '-':
+        filename = filename[1:]
+
+    dump_stats(stats, filename)
+    types = ['default', 'aqo', 'aqo_stat']
+
+    #
+    #   DRAW TOTAL TIME (EXECUTION + PLANNING)
+    #
+
+    plot.figure(figsize=(10, 5))
+    for type in types:
+        x_series = [x for x in range(0, len(stats[type]))]
+
+        execution_time = [float(x['execution_time']) for x in stats[type]]
+        planning_time = [float(x['planning_time']) for x in stats[type]]
+        y_series = [x + y for x, y in zip(execution_time, planning_time)]
+        plot.plot(x_series, y_series, label="%s total time" % type)
+
+    for p in ['learn_aqo_true', 'learn_aqo_false', 'use_aqo_true', 'use_aqo_false']:
+        if stats[p]:
+            plot.axvline(stats[p], label=p, color='r')
+
+    plot.axvline(AQO_AUTO_TUNING_MAX_ITERATIONS, label='auto_tuning_max_iterations', color='k')
+    plot.autoscale(enable=True, axis=u'both', tight=False)
+    plot.xlabel("Iteration")
+    plot.ylabel("Time")
+    plot.grid(True)
+    plot.title("aqo vs default planners")
+
+    plot.legend(loc='best', fancybox=True, framealpha=0.5)
+    plot.savefig("%s.png" % filename, dpi=100)
+    plot.close()
+
+    #
+    #   DRAW CARDINALITY
+    #
+
+    plot.figure(figsize=(10, 5))
+    types = ['default', 'aqo', 'aqo_stat']
+    for type in types:
+        x_series = [x for x in range(0, len(stats[type]))]
+        y_series = [float(x['cardinality_error']) for x in stats[type]]
+        plot.plot(x_series, y_series, label="%s cardinality error" % type)
+
+    for p in ['learn_aqo_true', 'learn_aqo_false', 'use_aqo_true', 'use_aqo_false']:
+        if stats[p]:
+            plot.axvline(stats[p], label=p, color='r')
+
+    plot.axvline(AQO_AUTO_TUNING_MAX_ITERATIONS, label='auto_tuning_max_iterations', color='k')
+    plot.autoscale(enable=True, axis=u'both', tight=False)
+    plot.xlabel("Iteration")
+    plot.ylabel("Cardinality error")
+    plot.grid(True)
+    plot.title("aqo vs default planners")
+
+    plot.legend(loc='best', fancybox=True, framealpha=0.5)
+    plot.savefig("%s-cardinality.png" % filename, dpi=100)
+    plot.close()
 
 
 @pytest.mark.usefixtures('install_postgres')
