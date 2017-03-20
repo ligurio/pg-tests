@@ -464,24 +464,24 @@ def test_aqo_mode(aqo_mode, install_postgres):
 
     conn = psycopg2.connect(install_postgres.connstring)
     num_old_sql_query = execute(conn,
-        "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = '%s'" % old_sql_query_explain)[0][0]
+                                "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = '%s'" % old_sql_query_explain)[0][0]
     num_new_sql_query = execute(conn,
-        "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = '%s'" % new_sql_query_explain)[0][0]
+                                "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = '%s'" % new_sql_query_explain)[0][0]
 
     if aqo_mode == 'forced' or aqo_mode == 'disabled':
         executions_w_aqo = execute(conn,
-            "SELECT executions_with_aqo FROM aqo_query_stat WHERE query_hash = 0;")
+                                   "SELECT executions_with_aqo FROM aqo_query_stat WHERE query_hash = 0;")
         executions_wo_aqo = execute(conn,
-            "SELECT executions_without_aqo FROM aqo_query_stat WHERE query_hash = 0;")
+                                    "SELECT executions_without_aqo FROM aqo_query_stat WHERE query_hash = 0;")
     elif aqo_mode == 'intelligent':
         new_executions_w_aqo = get_query_aqo_stat(new_sql_query_explain,
-                                                'executions_with_aqo')[0][0]
+                                                  'executions_with_aqo')[0][0]
         new_executions_wo_aqo = get_query_aqo_stat(new_sql_query_explain,
-                                                'executions_without_aqo')[0][0]
+                                                   'executions_without_aqo')[0][0]
         old_executions_w_aqo = get_query_aqo_stat(old_sql_query_explain,
-                                                'executions_with_aqo')
+                                                  'executions_with_aqo')
         old_executions_wo_aqo = get_query_aqo_stat(old_sql_query_explain,
-                                                'executions_without_aqo')
+                                                   'executions_without_aqo')
     conn.close()
 
     if aqo_mode == 'intelligent':
