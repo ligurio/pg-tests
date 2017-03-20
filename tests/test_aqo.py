@@ -256,10 +256,10 @@ def dump_stats(stats, filename):
         json.dump(stats, outfile, sort_keys=True, indent=4, ensure_ascii=False)
 
 
-def plot_stats(stats):
+def plot_stats(stats, connstring):
 
     sql_query_analyze = "EXPLAIN ANALYZE " + stats['query']
-    filename = str(query_to_hash(sql_query_analyze)[0][0])
+    filename = str(query_to_hash(sql_query_analyze, connstring)[0][0])
     assert filename != ''
     if filename[0] == '-':
         filename = filename[1:]
