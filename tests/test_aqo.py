@@ -458,9 +458,9 @@ def test_aqo_mode(aqo_mode, install_postgres):
     connstring = install_postgres.connstring
     reset_aqo_stats(connstring)
 
-    pg_set_option(install_postgres.connstring, 'aqo.mode', 'intelligent')
+    install_postgres.set_option('aqo.mode', 'intelligent')
     learn_aqo(OLD_SQL_QUERY, connstring)
-    pg_set_option(install_postgres.connstring, 'aqo.mode', aqo_mode)
+    install_postgres.set_option('aqo.mode', aqo_mode)
     learn_aqo(NEW_SQL_QUERY, connstring)
 
     conn = psycopg2.connect(install_postgres.connstring)
