@@ -424,3 +424,90 @@ def test_similar_queries(install_postgres):
 
     assert num1 == 1
     assert num2 == 0
+
+
+@pytest.mark.parametrize("aqo_mode", [
+                        ("intelligent"),
+                        ("forced"),
+                        ("manual"),
+                        ("disabled"),
+])
+@pytest.mark.usefixtures('install_postgres')
+def test_aqo_mode(aqo_mode, install_postgres):
+    """
+    Testcase validates available aqo modes
+
+    +-------------+-------------+-------------+-----------------+
+    |             | optimize    | optimize    | separate record |
+    |  aqo mode   | new queries | old queries | for each query  |
+    +-----------------------------------------------------------+
+    | intelligent | Yes         | Yes         | Yes             |
+    | manual      | No          | Yes         | Yes             |
+    | forced      | Yes         | Yes         | No              |
+    | disabled    | No          | No          | -               |
+    +-------------+-------------+-------------+-----------------+
+
+    """
+
+    OLD_SQL_QUERY = "SELECT * FROM pg_class WHERE relpages > 455"
+    NEW_SQL_QUERY = "SELECT * FROM pg_class WHERE reltablespace != reltoastrelid"
+    old_sql_query_explain = 'EXPLAIN ANALYZE ' + OLD_SQL_QUERY
+    new_sql_query_explain = 'EXPLAIN ANALYZE ' + NEW_SQL_QUERY
+
+    install_postgres.load_extension('aqo')
+    connstring = install_postgres.connstring
+    reset_aqo_stats(connstring)
+
+    install_postgres.set_option('aqo.mode', 'intelligent')
+    learn_aqo(OLD_SQL_QUERY, connstring)
+    install_postgres.set_option('aqo.mode', aqo_mode)
+    learn_aqo(NEW_SQL_QUERY, connstring)
+
+    conn = psycopg2.connect(install_postgres.connstring)
+    num_old_sql_query = execute(conn,
+                                "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = '%s'" % old_sql_query_explain)[0][0]
+    num_new_sql_query = execute(conn,
+                                "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = '%s'" % new_sql_query_explain)[0][0]
+
+    if aqo_mode == 'forced' or aqo_mode == 'disabled':
+        executions_w_aqo = execute(conn,
+                                   "SELECT executions_with_aqo FROM aqo_query_stat WHERE query_hash = 0;")
+        executions_wo_aqo = execute(conn,
+                                    "SELECT executions_without_aqo FROM aqo_query_stat WHERE query_hash = 0;")
+    elif aqo_mode == 'intelligent':
+        new_executions_w_aqo = get_query_aqo_stat(new_sql_query_explain,
+                                                  'executions_with_aqo', connstring)[0][0]
+        new_executions_wo_aqo = get_query_aqo_stat(new_sql_query_explain,
+                                                   'executions_without_aqo', connstring)[0][0]
+        old_executions_w_aqo = get_query_aqo_stat(old_sql_query_explain,
+                                                  'executions_with_aqo', connstring)
+        old_executions_wo_aqo = get_query_aqo_stat(old_sql_query_explain,
+                                                   'executions_without_aqo', connstring)
+    conn.close()
+
+    if aqo_mode == 'intelligent':
+        assert num_old_sql_query == 1
+        assert num_new_sql_query == 1
+        assert new_executions_w_aqo + new_executions_wo_aqo == AQO_AUTO_TUNING_MAX_ITERATIONS
+        assert old_executions_w_aqo + old_executions_wo_aqo == AQO_AUTO_TUNING_MAX_ITERATIONS
+        # TODO: check optimization of old query
+        # TODO: check optimization of new query
+    elif aqo_mode == 'forced':
+        assert num_old_sql_query == 1
+        assert num_new_sql_query == 0
+        assert executions_w_aqo + executions_wo_aqo == AQO_AUTO_TUNING_MAX_ITERATIONS
+        # TODO: check optimization of old query
+        # TODO: check optimization of new query
+    elif aqo_mode == 'manual':
+        assert num_old_sql_query == 1
+        assert num_new_sql_query == 0
+        # TODO: check optimization of old query
+        # TODO: check optimization of new query
+    elif aqo_mode == 'disabled':
+        assert num_old_sql_query == 1
+        assert num_new_sql_query == 0
+        assert executions_w_aqo + executions_wo_aqo == 0
+        # TODO: check optimization of old queries
+        # TODO: check optimization of new queries
+    else:
+        pytest.fail("Unknown AQO mode - %s" % aqo_mode)
