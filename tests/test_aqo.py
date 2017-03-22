@@ -523,19 +523,20 @@ def test_aqo_stat_numbers(install_postgres):
     SQL_QUERY_ANALYZE = 'EXPLAIN ANALYZE ' + SQL_QUERY
     ITER_NUM = 100
 
+    connstring = install_postgres.connstring
     install_postgres.load_extension('aqo')
-    reset_aqo_stats()
+    reset_aqo_stats(connstring)
     stat = learn_aqo(SQL_QUERY, ITER_NUM)
     plot_stats(stat, connstring)
 
-    executions_w_aqo = get_query_aqo_stat(SQL_QUERY_ANALYZE, 'executions_with_aqo')[0][0]
-    executions_wo_aqo = get_query_aqo_stat(SQL_QUERY_ANALYZE, 'executions_without_aqo')[0][0]
+    executions_w_aqo = get_query_aqo_stat(SQL_QUERY_ANALYZE, 'executions_with_aqo', connstring)[0][0]
+    executions_wo_aqo = get_query_aqo_stat(SQL_QUERY_ANALYZE, 'executions_without_aqo', connstring)[0][0]
 
-    planning_time_w_aqo = get_query_aqo_stat(SQL_QUERY_ANALYZE, 'planning_time_with_aqo')[0][0]
-    planning_time_wo_aqo = get_query_aqo_stat(SQL_QUERY_ANALYZE, 'planning_time_without_aqo')[0][0]
+    planning_time_w_aqo = get_query_aqo_stat(SQL_QUERY_ANALYZE, 'planning_time_with_aqo', connstring)[0][0]
+    planning_time_wo_aqo = get_query_aqo_stat(SQL_QUERY_ANALYZE, 'planning_time_without_aqo', connstring)[0][0]
 
-    execution_time_w_aqo = get_query_aqo_stat(SQL_QUERY_ANALYZE, 'execution_time_with_aqo')[0][0]
-    execution_time_wo_aqo = get_query_aqo_stat(SQL_QUERY_ANALYZE, 'execution_time_without_aqo')[0][0]
+    execution_time_w_aqo = get_query_aqo_stat(SQL_QUERY_ANALYZE, 'execution_time_with_aqo', connstring)[0][0]
+    execution_time_wo_aqo = get_query_aqo_stat(SQL_QUERY_ANALYZE, 'execution_time_without_aqo', connstring)[0][0]
 
     assert executions_w_aqo + executions_wo_aqo == ITER_NUM
     assert len(stat['aqo_stat']) == ITER_NUM
