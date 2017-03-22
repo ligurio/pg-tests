@@ -511,3 +511,57 @@ def test_aqo_mode(aqo_mode, install_postgres):
         # TODO: check optimization of new queries
     else:
         pytest.fail("Unknown AQO mode - %s" % aqo_mode)
+
+
+@pytest.mark.usefixtures('install_postgres')
+def test_aqo_stat_numbers(install_postgres):
+    """
+    Testcase validate numbers in aqo statistics.
+    """
+
+    SQL_QUERY = "SELECT 1"
+    SQL_QUERY_ANALYZE = 'EXPLAIN ANALYZE ' + SQL_QUERY
+    ITER_NUM = 100
+
+    connstring = install_postgres.connstring
+    install_postgres.load_extension('aqo')
+    reset_aqo_stats(connstring)
+    stat = learn_aqo(SQL_QUERY, ITER_NUM)
+    plot_stats(stat, connstring)
+
+    executions_w_aqo = get_query_aqo_stat(SQL_QUERY_ANALYZE, 'executions_with_aqo', connstring)[0][0]
+    executions_wo_aqo = get_query_aqo_stat(SQL_QUERY_ANALYZE, 'executions_without_aqo', connstring)[0][0]
+
+    planning_time_w_aqo = get_query_aqo_stat(SQL_QUERY_ANALYZE, 'planning_time_with_aqo', connstring)[0][0]
+    planning_time_wo_aqo = get_query_aqo_stat(SQL_QUERY_ANALYZE, 'planning_time_without_aqo', connstring)[0][0]
+
+    execution_time_w_aqo = get_query_aqo_stat(SQL_QUERY_ANALYZE, 'execution_time_with_aqo', connstring)[0][0]
+    execution_time_wo_aqo = get_query_aqo_stat(SQL_QUERY_ANALYZE, 'execution_time_without_aqo', connstring)[0][0]
+
+    assert executions_w_aqo + executions_wo_aqo == ITER_NUM
+    assert len(stat['aqo_stat']) == ITER_NUM
+    assert len(planning_time_wo_aqo) == len(execution_time_wo_aqo)
+    assert len(planning_time_w_aqo) == len(execution_time_w_aqo)
+
+
+@pytest.mark.usefixtures('install_postgres')
+def test_tuning_max_iterations(install_postgres):
+    """
+    AQO will disable query optimization after N unsussessful attempts.
+    N is defined in auto_tuning_max_iterations in aqo.c
+    """
+
+    install_postgres.load_extension('aqo')
+    reset_aqo_stats(install_postgres.connstring)
+
+    conn = psycopg2.connect(install_postgres.connstring)
+    execute(conn, 'SELECT 1')
+    num1 = execute(
+        conn, "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = 'SELECT 1'")[0][0]
+    execute(conn, 'SELECT 2')
+    num2 = execute(
+        conn, "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = 'SELECT 2'")[0][0]
+    conn.close()
+
+    assert num1 == 1
+    assert num2 == 0
