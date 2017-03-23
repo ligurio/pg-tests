@@ -701,29 +701,6 @@ COALESCE(_AccRgAT31043._Value3_RRRef,'\\377'::bytea)) AND
     evaluate_aqo(stats)
 
 
-@pytest.mark.usefixtures('install_postgres')
-def test_similar_queries(install_postgres):
-    """
-    Make sure AQO uses common statistic data for queries
-    with the same constants in SQL clauses.
-    """
-
-    install_postgres.load_extension('aqo')
-    reset_aqo_stats(install_postgres.connstring)
-
-    conn = psycopg2.connect(install_postgres.connstring)
-    execute(conn, 'SELECT 1')
-    num1 = execute(
-        conn, "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = 'SELECT 1'")[0][0]
-    execute(conn, 'SELECT 2')
-    num2 = execute(
-        conn, "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = 'SELECT 2'")[0][0]
-    conn.close()
-
-    assert num1 == 1
-    assert num2 == 0
-
-
 @pytest.mark.parametrize("optimizer", [
                         ("geqo"),
                         ("default"),
