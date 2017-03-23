@@ -612,7 +612,8 @@ CREATE INDEX ib ON b (id, v);
         "SELECT * FROM a t1, b t2 WHERE t1.id = t2.id AND t1.v = t2.v;"]
 
     install_postgres.load_extension('aqo')
-    conn = psycopg2.connect(install_postgres.connstring)
+    connstring = install_postgres.connstring
+    conn = psycopg2.connect(connstring)
     execute(conn, PREP_TABLE_QUERY)
     execute(conn, 'VACUUM ANALYZE t')
     execute(conn, 'VACUUM ANALYZE a')
@@ -621,13 +622,13 @@ CREATE INDEX ib ON b (id, v);
 
     time.sleep(10)
 
-    reset_aqo_stats(install_postgres.connstring)
+    reset_aqo_stats(connstring)
 
     install_postgres.set_option('aqo.mode', 'intelligent')
     for q in queries:
         print q
         stats = learn_aqo(q, 100)
-        plot_stats(stats)
+        plot_stats(stats, connstring)
         evaluate_aqo(stats)
 
 
@@ -682,7 +683,8 @@ COALESCE(_AccRgAT31043._Value3_RRRef,'\\377'::bytea)) AND
     #     psql.wait()
     #     assert psql.returncode == 0
 
-    conn = psycopg2.connect(install_postgres.connstring)
+    connstring = install_postgres.connstring
+    conn = psycopg2.connect(connstring)
     execute(conn, open(plain_path, "r").read())
     execute(conn, 'VACUUM ANALYZE _accrgat31043')
     conn.close()
@@ -690,12 +692,12 @@ COALESCE(_AccRgAT31043._Value3_RRRef,'\\377'::bytea)) AND
     time.sleep(10)
 
     install_postgres.load_extension('aqo')
-    reset_aqo_stats(install_postgres.connstring)
+    reset_aqo_stats(connstring)
     # FIXME: execute(conn, 'SET escape_string_warning=off')
     # FIXME: execute(conn, 'SET enable_mergejoin=off')
 
-    stats = learn_aqo(SQL_QUERY)
-    plot_stats(stats)
+    stats = learn_aqo(SQL_QUERY, connstring)
+    plot_stats(stats, connstring)
     evaluate_aqo(stats)
 
 
@@ -756,8 +758,9 @@ def test_join_order_benchmark(optimizer, install_postgres, populate_imdb):
 
     # RUN WORKLOAD
 
+    connstring = install_postgres.connstring
     install_postgres.load_extension('aqo')
-    conn = psycopg2.connect(install_postgres.connstring)
+    conn = psycopg2.connect(connstring)
 
     install_postgres.set_option('shared_buffers', '4Gb')
     install_postgres.set_option('effective_cache_size', '32Gb')
@@ -779,10 +782,10 @@ def test_join_order_benchmark(optimizer, install_postgres, populate_imdb):
     for f in sql_queries_files:
         sql_path = os.path.join(job_dir, f)
         with open(sql_path, 'r') as file:
-            reset_aqo_stats(install_postgres.connstring)
-            stats = learn_aqo(file.read(), 100)
-            keep_aqo_tables()
-            plot_stats(stats)
+            reset_aqo_stats(connstring)
+            stats = learn_aqo(file.read(), connstring, 100)
+            keep_aqo_tables(connstring)
+            plot_stats(stats, connstring)
             evaluate_aqo(stats)
 
 
@@ -812,14 +815,15 @@ def test_tpch_benchmark(install_postgres):
 
     # RUN WORKLOAD (see ./run.sh)
 
+    connstring = install_postgres.connstring
     install_postgres.load_extension('aqo')
-    reset_aqo_stats(install_postgres.connstring)
+    reset_aqo_stats(connstring)
     for q in range(1, 23):
         qgen = subprocess.Popen(["qgen", str(q)], stdout=subprocess.PIPE)
         query_multiline = re.sub('^--.*', '', qgen.stdout.read())
         query = " ".join(query_multiline.splitlines())
 
-        stats = learn_aqo(query, 100)
+        stats = learn_aqo(query, connstring, 100)
         plot_stats(stats)
         evaluate_aqo(stats)
 
