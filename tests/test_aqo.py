@@ -1,11 +1,19 @@
+import glob
 import json
 import matplotlib.pyplot as plot
 import numpy
+import os
+import platform
 import psycopg2
 import pytest
 import re
+import shutil
+import subprocess
+import time
 from helpers.sql_helpers import execute
 from helpers.sql_helpers import pg_set_option
+from helpers.os_helpers import download_file
+from tests.settings import TMP_DIR
 
 AQO_AUTO_TUNING_MAX_ITERATIONS = 50  # auto_tuning_max_iterations in aqo.c
 
@@ -284,7 +292,8 @@ def plot_stats(stats, connstring):
         if stats[p]:
             plot.axvline(stats[p], label=p, color='r')
 
-    plot.axvline(AQO_AUTO_TUNING_MAX_ITERATIONS, label='auto_tuning_max_iterations', color='k')
+    plot.axvline(AQO_AUTO_TUNING_MAX_ITERATIONS,
+                 label='auto_tuning_max_iterations', color='k')
     plot.autoscale(enable=True, axis=u'both', tight=False)
     plot.xlabel("Iteration")
     plot.ylabel("Time")
@@ -310,7 +319,8 @@ def plot_stats(stats, connstring):
         if stats[p]:
             plot.axvline(stats[p], label=p, color='r')
 
-    plot.axvline(AQO_AUTO_TUNING_MAX_ITERATIONS, label='auto_tuning_max_iterations', color='k')
+    plot.axvline(AQO_AUTO_TUNING_MAX_ITERATIONS,
+                 label='auto_tuning_max_iterations', color='k')
     plot.autoscale(enable=True, axis=u'both', tight=False)
     plot.xlabel("Iteration")
     plot.ylabel("Cardinality error")
@@ -529,14 +539,20 @@ def test_aqo_stat_numbers(install_postgres):
     stat = learn_aqo(SQL_QUERY, ITER_NUM)
     plot_stats(stat, connstring)
 
-    executions_w_aqo = get_query_aqo_stat(SQL_QUERY_ANALYZE, 'executions_with_aqo', connstring)[0][0]
-    executions_wo_aqo = get_query_aqo_stat(SQL_QUERY_ANALYZE, 'executions_without_aqo', connstring)[0][0]
+    executions_w_aqo = get_query_aqo_stat(
+        SQL_QUERY_ANALYZE, 'executions_with_aqo', connstring)[0][0]
+    executions_wo_aqo = get_query_aqo_stat(
+        SQL_QUERY_ANALYZE, 'executions_without_aqo', connstring)[0][0]
 
-    planning_time_w_aqo = get_query_aqo_stat(SQL_QUERY_ANALYZE, 'planning_time_with_aqo', connstring)[0][0]
-    planning_time_wo_aqo = get_query_aqo_stat(SQL_QUERY_ANALYZE, 'planning_time_without_aqo', connstring)[0][0]
+    planning_time_w_aqo = get_query_aqo_stat(
+        SQL_QUERY_ANALYZE, 'planning_time_with_aqo', connstring)[0][0]
+    planning_time_wo_aqo = get_query_aqo_stat(
+        SQL_QUERY_ANALYZE, 'planning_time_without_aqo', connstring)[0][0]
 
-    execution_time_w_aqo = get_query_aqo_stat(SQL_QUERY_ANALYZE, 'execution_time_with_aqo', connstring)[0][0]
-    execution_time_wo_aqo = get_query_aqo_stat(SQL_QUERY_ANALYZE, 'execution_time_without_aqo', connstring)[0][0]
+    execution_time_w_aqo = get_query_aqo_stat(
+        SQL_QUERY_ANALYZE, 'execution_time_with_aqo', connstring)[0][0]
+    execution_time_wo_aqo = get_query_aqo_stat(
+        SQL_QUERY_ANALYZE, 'execution_time_without_aqo', connstring)[0][0]
 
     assert executions_w_aqo + executions_wo_aqo == ITER_NUM
     assert len(stat['aqo_stat']) == ITER_NUM
@@ -565,3 +581,358 @@ def test_tuning_max_iterations(install_postgres):
 
     assert num1 == 1
     assert num2 == 0
+
+
+@pytest.mark.usefixtures('install_postgres')
+def test_in_honor_of_teodor(install_postgres):
+
+    PREP_TABLE_QUERY = """
+DROP TABLE IF EXISTS t;
+DROP TABLE IF EXISTS a;
+DROP TABLE IF EXISTS b;
+
+SELECT id::int4, (id/3)::int4 AS v INTO t FROM GENERATE_SERIES(1,10000) AS id;
+CREATE UNIQUE INDEX it ON t (id, v);
+
+SELECT (100.0 * RANDOM())::int4 AS id, (100.0 * RANDOM())::int4 AS v
+INTO a FROM GENERATE_SERIES(1,10000) AS id;
+CREATE INDEX ia ON a (id, v);
+
+SELECT (100000.0 * RANDOM())::int4 AS id, (100000.0 * RANDOM())::int4 AS v
+INTO b FROM GENERATE_SERIES(1,10000) AS id;
+CREATE INDEX ib ON b (id, v);
+"""
+
+    queries = [
+        "SELECT * FROM t t1, t t2 WHERE t1.id = t2.id AND t1.v = t2.v;",
+        "SELECT * FROM a t1, a t2 WHERE t1.id = t2.id AND t1.v = t2.v;",
+        "SELECT * FROM b t1, b t2 WHERE t1.id = t2.id AND t1.v = t2.v;",
+        "SELECT * FROM a t1, t t2 WHERE t1.id = t2.id AND t1.v = t2.v;",
+        "SELECT * FROM b t1, t t2 WHERE t1.id = t2.id AND t1.v = t2.v;",
+        "SELECT * FROM a t1, b t2 WHERE t1.id = t2.id AND t1.v = t2.v;"]
+
+    install_postgres.load_extension('aqo')
+    connstring = install_postgres.connstring
+    conn = psycopg2.connect(connstring)
+    execute(conn, PREP_TABLE_QUERY)
+    execute(conn, 'VACUUM ANALYZE t')
+    execute(conn, 'VACUUM ANALYZE a')
+    execute(conn, 'VACUUM ANALYZE b')
+    conn.close()
+
+    time.sleep(10)
+
+    reset_aqo_stats(connstring)
+
+    install_postgres.set_option('aqo.mode', 'intelligent')
+    for q in queries:
+        print q
+        stats = learn_aqo(q, 100)
+        plot_stats(stats, connstring)
+        evaluate_aqo(stats)
+
+
+@pytest.mark.usefixtures('install_postgres')
+@pytest.mark.slowtest
+def test_1C_sample(install_postgres):
+
+    SQL_QUERY = """
+SELECT * FROM _AccRgAT31043 , _AccRgAT31043_ttgoab153 T2 WHERE
+     (T2._Period = _AccRgAT31043._Period AND
+      T2._AccountRRef = _AccRgAT31043._AccountRRef AND
+      T2._Fld1009RRef = _AccRgAT31043._Fld1009RRef AND
+      (COALESCE(T2._Fld1010RRef,'\\377'::bytea) =
+COALESCE(_AccRgAT31043._Fld1010RRef,'\\377 '::bytea)) AND
+      (COALESCE(T2._Fld1011RRef,'\\377'::bytea) =
+COALESCE(_AccRgAT31043._Fld1011RRef,'\\377'::bytea)) AND
+      T2._Fld995 = _AccRgAT31043._Fld995 AND
+      (COALESCE(T2._Value1_TYPE,'\\377'::bytea) =
+COALESCE(_AccRgAT31043._Value1_TYPE,'\\377'::bytea) AND
+     COALESCE(T2._Value1_RTRef,'\\377'::bytea) =
+COALESCE(_AccRgAT31043._Value1_RTRef,'\\377'::bytea) AND
+     COALESCE(T2._Value1_RRRef,'\\377'::bytea) =
+COALESCE(_AccRgAT31043._Value1_RRRef,'\\377'::bytea)) AND
+      (COALESCE(T2._Value2_TYPE,'\\377'::bytea) =
+COALESCE(_AccRgAT31043._Value2_TYPE,'\\377'::bytea) AND
+       COALESCE(T2._Value2_RTRef,'\\377'::bytea) =
+COALESCE(_AccRgAT31043._Value2_RTRef,'\\377'::bytea) AND
+     COALESCE(T2._Value2_RRRef,'\\377'::bytea) =
+COALESCE(_AccRgAT31043._Value2_RRRef, '\\377'::bytea)) AND
+     (COALESCE(T2._Value3_TYPE,'\\377'::bytea) =
+COALESCE(_AccRgAT31043._Value3_TYPE,'\\377'::bytea) AND
+     COALESCE(T2._Value3_RTRef,'\\377'::bytea) =
+COALESCE(_AccRgAT31043._Value3_RTRef,'\\377'::bytea) AND
+     COALESCE(T2._Value3_RRRef,'\\377'::bytea) =
+COALESCE(_AccRgAT31043._Value3_RRRef,'\\377'::bytea)) AND
+     _AccRgAT31043._Splitter = 0) AND (T2._EDCount = 3) AND
+     (_AccRgAT31043._Fld995 = 271602);
+"""
+
+    DUMP_URL = "http://webdav.l.postgrespro.ru/DIST/vm-images/test/blobs/pg.sql.bz"
+
+    archive_path = os.path.join(TMP_DIR, "pg.sql.gz")
+    plain_path = os.path.join(TMP_DIR, "pg.sql")
+    if not os.path.exists(plain_path):
+        if not os.path.exists(archive_path):
+            download_file(DUMP_URL, archive_path)
+        os.chdir(TMP_DIR)
+        subprocess.check_output(['gunzip', archive_path])
+
+    # with open(plain_path, 'r') as file:
+    #     psql = subprocess.Popen(["psql"], stdin=file)
+    #     psql.wait()
+    #     assert psql.returncode == 0
+
+    connstring = install_postgres.connstring
+    conn = psycopg2.connect(connstring)
+    execute(conn, open(plain_path, "r").read())
+    execute(conn, 'VACUUM ANALYZE _accrgat31043')
+    conn.close()
+
+    time.sleep(10)
+
+    install_postgres.load_extension('aqo')
+    reset_aqo_stats(connstring)
+    # FIXME: execute(conn, 'SET escape_string_warning=off')
+    # FIXME: execute(conn, 'SET enable_mergejoin=off')
+
+    stats = learn_aqo(SQL_QUERY, connstring)
+    plot_stats(stats, connstring)
+    evaluate_aqo(stats)
+
+
+@pytest.mark.parametrize("optimizer", [
+                        ("geqo"),
+                        ("default"),
+])
+@pytest.mark.usefixtures('install_postgres')
+@pytest.mark.usefixtures('populate_imdb')
+@pytest.mark.slowtest
+def test_join_order_benchmark(optimizer, install_postgres, populate_imdb):
+    """
+    Testcase uses the Join Order Benchmark (JOB) queries from:
+
+    "How Good Are Query Optimizers, Really?"
+    by Viktor Leis, Andrey Gubichev, Atans Mirchev,
+    Peter Boncz, Alfons Kemper, Thomas Neumann
+    PVLDB Volume 9, No. 3, 2015
+
+    http://oai.cwi.nl/oai/asset/24379/24379B.pdf
+
+    Source repository with queries:
+    https://github.com/tigvarts/join-order-benchmark
+    """
+
+    # SETUP TEST
+
+    job_file = os.path.join(TMP_DIR, "join-order-benchmark.tar.gz")
+    job_dir = os.path.join(TMP_DIR, "join-order-benchmark-0.1")
+    job_url = "https://codeload.github.com/ligurio/join-order-benchmark/tar.gz/0.1"
+    if not os.path.exists(job_file):
+        download_file(job_url, job_file)
+
+    subprocess.check_output(["tar", "xvzf", job_file, "-C", TMP_DIR])
+
+    # RUN WORKLOAD
+
+    connstring = install_postgres.connstring
+    install_postgres.load_extension('aqo')
+    conn = psycopg2.connect(connstring)
+
+    install_postgres.set_option('shared_buffers', '4Gb')
+    install_postgres.set_option('effective_cache_size', '32Gb')
+    install_postgres.set_option('work_mem', '2Gb')
+
+    GEQO_THRESHOLD = 5
+    if optimizer == 'geqo':
+        # FIXME: install_postgres.set_option('', )
+        install_postgres.set_option('geqo_threshold', GEQO_THRESHOLD)
+    elif optimizer == 'default':
+        # FIXME: install_postgres.set_option('', )
+        install_postgres.set_option('geqo', 'off')
+    conn.close()
+
+    sqlq_files_re = r'[0-9]+[a-z]+\.sql'
+    sql_queries_files = [f for f in os.listdir(job_dir)
+                         if re.match(sqlq_files_re, f)]
+
+    for f in sql_queries_files:
+        sql_path = os.path.join(job_dir, f)
+        with open(sql_path, 'r') as file:
+            reset_aqo_stats(connstring)
+            stats = learn_aqo(file.read(), connstring, 100)
+            keep_aqo_tables(connstring)
+            plot_stats(stats, connstring)
+            evaluate_aqo(stats)
+
+
+@pytest.mark.usefixtures('install_postgres')
+@pytest.mark.usefixtures('populate_tpch')
+def test_tpch_benchmark(install_postgres):
+    """
+    TPC-H benchmark
+
+    http://www.tpc.org/tpch/
+    """
+
+    # GETTING A BENCHMARK
+
+    COMMIT_HASH = "c5cd7711cc35"
+    TPCH_BENCHMARK = "https://bitbucket.org/tigvarts/tpch-dbgen/get/%s.zip" % COMMIT_HASH
+
+    tpch_archive = os.path.join(TMP_DIR, "tpch-benchmark-%s.zip" % COMMIT_HASH)
+    if not os.path.exists(tpch_archive):
+        download_file(TPCH_BENCHMARK, tpch_archive)
+
+    tpch_dir = os.path.join(TMP_DIR, "tigvarts-tpch-dbgen-%s" % COMMIT_HASH)
+    if not os.path.exists(tpch_dir):
+        os.mkdir(tpch_dir)
+        subprocess.check_output(["unzip", tpch_archive, "-d", TMP_DIR])
+    os.chdir(tpch_dir)
+
+    # RUN WORKLOAD (see ./run.sh)
+
+    connstring = install_postgres.connstring
+    install_postgres.load_extension('aqo')
+    reset_aqo_stats(connstring)
+    for q in range(1, 23):
+        qgen = subprocess.Popen(["qgen", str(q)], stdout=subprocess.PIPE)
+        query_multiline = re.sub('^--.*', '', qgen.stdout.read())
+        query = " ".join(query_multiline.splitlines())
+
+        stats = learn_aqo(query, connstring, 100)
+        plot_stats(stats, connstring)
+        evaluate_aqo(stats)
+
+
+@pytest.mark.skip(reason="not implemented")
+@pytest.mark.usefixtures('install_postgres')
+def test_tpcds_benchmark(install_postgres):
+    """
+    TPC-DS benchmark
+    """
+
+    # https://github.com/tigvarts/tpcds-kit
+    # tools/How_To_Guide.doc
+
+    TPCDS_SCALE = "1"   # 100GB, 300GB, 1TB, 3TB, 10TB, 30TB and 100TB.
+    TPCDS_BENCHMARK = "https://github.com/ligurio/tpcds-kit/archive/0.1.zip"
+
+    # GETTING A BENCHMARK
+
+    tpcds_archive = os.path.join(TMP_DIR, "tpcds-kit-0.1.zip")
+    if not os.path.exists(tpcds_archive):
+        download_file(TPCDS_BENCHMARK, tpcds_archive)
+
+    tpcds_dir = os.path.join(TMP_DIR, "tpcds-kit-0.1")
+    if not os.path.exists(tpcds_dir):
+        os.mkdir(tpcds_dir)
+        subprocess.check_output(["unzip", tpcds_archive, "-d", TMP_DIR])
+    tpcds_dir = os.path.join(TMP_DIR, "tpcds-kit-0.1/tools")
+    os.chdir(tpcds_dir)
+
+    # SETUP DATABASE (see ./install.sh)
+
+    if platform.system() == 'Darwin':
+        shutil.copy("Makefile.osx", "Makefile")
+    else:
+        shutil.copy("Makefile.suite", "Makefile")
+    subprocess.check_call(["make"])
+    p = subprocess.Popen(["dsdgen", "-verbose", "-force",
+                          "-dir", TMP_DIR, "-scale", TPCDS_SCALE, "-filter"],
+                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = p.communicate()
+    print stdout, stderr
+    assert p.wait() == 0
+    # FIXME: assert -11 == 0
+
+    connstring = install_postgres.connstring
+    conn = psycopg2.connect(connstring)
+    execute(conn, "DROP DATABASE IF EXISTS tpcds")
+    # create_test_database("tpcds")
+    execute(conn, "CREATE DATABASE tpcds")
+    conn.close()
+
+    sqls = ["tpcds.sql", "tpcds_load.sql", "tpcds_ri.sql"]
+    for sql_file in sqls:
+        sql_path = os.path.join(tpcds_dir, sql_file)
+        sql = subprocess.Popen(["cat", sql_path], subprocess.PIPE)
+        psql = subprocess.Popen(["psql", "-d", "tpcds"], stdin=sql.stdout)
+        assert psql.wait() == 0
+    # os.remove(os.path.join(TMP_DIR, '*.dat'))
+
+    # RUN WORKLOAD
+
+    # relationship between database size (SF) and query streams (N)
+    # see tools/How_To_Guide.doc
+    # query_streams = {"100": "7",
+    #                "300": "9",
+    #                "1000": "11",
+    #                "3000": "13",
+    #                "10000": "15",
+    #                "30000": "17",
+    #                "100000": "15",
+    #                "100000": "19"}
+
+    install_postgres.load_extension('aqo')
+    reset_aqo_stats(connstring)
+    query_templates = os.path.join(tpcds_dir, "query_variants/*.tpl")
+    for template in glob.glob(query_templates):
+
+        stats = learn_aqo(template, connstring, 100)
+        plot_stats(stats, connstring)
+        evaluate_aqo(stats)
+
+
+@pytest.mark.skip(reason="PGPRO-342")
+@pytest.mark.usefixtures('install_postgres')
+def test_broken_aqo_tables(install_postgres):
+    """
+    Learn aqo with specific SQL query, partially remove records
+    for this query from aqo tables and make sure aqo will add it again.
+    """
+
+    SQL_QUERY = "SELECT 1"
+
+    install_postgres.load_extension('aqo')
+    conn = psycopg2.connect(install_postgres.connstring)
+    execute(conn, 'SET aqo.mode TO intelligent')
+    execute(conn, SQL_QUERY)
+
+    num = execute(
+        conn, "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = '%s'" % SQL_QUERY)[0][0]
+    assert num == 1
+
+    execute(conn, "DELETE FROM aqo_query_texts WHERE query_text = '%s'" % SQL_QUERY)
+    execute(conn, SQL_QUERY)
+    num = execute(
+        conn, "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = '%s'" % SQL_QUERY)[0][0]
+
+    assert num == 1
+    # TODO: make sure stats is the same as before deletion
+
+
+@pytest.mark.usefixtures('install_postgres')
+def test_max_query_length(install_postgres):
+    """
+    Maximum SQL query length in PostgreSQL is about 1Gb.
+    AQO extension stores queries in a special table - aqo_query_texts
+    and then uses this column to retrieve query statistics.
+    We should make sure that column can store queries
+    with maximum length there.
+    """
+
+    install_postgres.load_extension('aqo')
+    reset_aqo_stats(install_postgres.connstring)
+    conn = psycopg2.connect(install_postgres.connstring)
+
+    column_name = 'query_text'
+    column_type_query = "SELECT format_type(atttypid, atttypmod) \
+                        AS type FROM pg_attribute \
+                        WHERE attrelid = 'aqo_query_texts'::regclass \
+                        AND attname = '%s';" % column_name
+
+    type = execute(conn, column_type_query)[0][0]
+    conn.close()
+
+    assert type == "character varying"
