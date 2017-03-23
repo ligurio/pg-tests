@@ -824,7 +824,7 @@ def test_tpch_benchmark(install_postgres):
         query = " ".join(query_multiline.splitlines())
 
         stats = learn_aqo(query, connstring, 100)
-        plot_stats(stats)
+        plot_stats(stats, connstring)
         evaluate_aqo(stats)
 
 
@@ -869,7 +869,8 @@ def test_tpcds_benchmark(install_postgres):
     assert p.wait() == 0
     # FIXME: assert -11 == 0
 
-    conn = psycopg2.connect(install_postgres.connstring)
+    connstring = install_postgres.connstring
+    conn = psycopg2.connect(connstring)
     execute(conn, "DROP DATABASE IF EXISTS tpcds")
     # create_test_database("tpcds")
     execute(conn, "CREATE DATABASE tpcds")
@@ -897,12 +898,12 @@ def test_tpcds_benchmark(install_postgres):
     #                "100000": "19"}
 
     install_postgres.load_extension('aqo')
-    reset_aqo_stats(install_postgres.connstring)
+    reset_aqo_stats(connstring)
     query_templates = os.path.join(tpcds_dir, "query_variants/*.tpl")
     for template in glob.glob(query_templates):
 
-        stats = learn_aqo(template, 100)
-        plot_stats(stats)
+        stats = learn_aqo(template, connstring, 100)
+        plot_stats(stats, connstring)
         evaluate_aqo(stats)
 
 
