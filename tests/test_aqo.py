@@ -292,7 +292,8 @@ def plot_stats(stats, connstring):
         if stats[p]:
             plot.axvline(stats[p], label=p, color='r')
 
-    plot.axvline(AQO_AUTO_TUNING_MAX_ITERATIONS, label='auto_tuning_max_iterations', color='k')
+    plot.axvline(AQO_AUTO_TUNING_MAX_ITERATIONS,
+                 label='auto_tuning_max_iterations', color='k')
     plot.autoscale(enable=True, axis=u'both', tight=False)
     plot.xlabel("Iteration")
     plot.ylabel("Time")
@@ -318,7 +319,8 @@ def plot_stats(stats, connstring):
         if stats[p]:
             plot.axvline(stats[p], label=p, color='r')
 
-    plot.axvline(AQO_AUTO_TUNING_MAX_ITERATIONS, label='auto_tuning_max_iterations', color='k')
+    plot.axvline(AQO_AUTO_TUNING_MAX_ITERATIONS,
+                 label='auto_tuning_max_iterations', color='k')
     plot.autoscale(enable=True, axis=u'both', tight=False)
     plot.xlabel("Iteration")
     plot.ylabel("Cardinality error")
@@ -537,14 +539,20 @@ def test_aqo_stat_numbers(install_postgres):
     stat = learn_aqo(SQL_QUERY, ITER_NUM)
     plot_stats(stat, connstring)
 
-    executions_w_aqo = get_query_aqo_stat(SQL_QUERY_ANALYZE, 'executions_with_aqo', connstring)[0][0]
-    executions_wo_aqo = get_query_aqo_stat(SQL_QUERY_ANALYZE, 'executions_without_aqo', connstring)[0][0]
+    executions_w_aqo = get_query_aqo_stat(
+        SQL_QUERY_ANALYZE, 'executions_with_aqo', connstring)[0][0]
+    executions_wo_aqo = get_query_aqo_stat(
+        SQL_QUERY_ANALYZE, 'executions_without_aqo', connstring)[0][0]
 
-    planning_time_w_aqo = get_query_aqo_stat(SQL_QUERY_ANALYZE, 'planning_time_with_aqo', connstring)[0][0]
-    planning_time_wo_aqo = get_query_aqo_stat(SQL_QUERY_ANALYZE, 'planning_time_without_aqo', connstring)[0][0]
+    planning_time_w_aqo = get_query_aqo_stat(
+        SQL_QUERY_ANALYZE, 'planning_time_with_aqo', connstring)[0][0]
+    planning_time_wo_aqo = get_query_aqo_stat(
+        SQL_QUERY_ANALYZE, 'planning_time_without_aqo', connstring)[0][0]
 
-    execution_time_w_aqo = get_query_aqo_stat(SQL_QUERY_ANALYZE, 'execution_time_with_aqo', connstring)[0][0]
-    execution_time_wo_aqo = get_query_aqo_stat(SQL_QUERY_ANALYZE, 'execution_time_without_aqo', connstring)[0][0]
+    execution_time_w_aqo = get_query_aqo_stat(
+        SQL_QUERY_ANALYZE, 'execution_time_with_aqo', connstring)[0][0]
+    execution_time_wo_aqo = get_query_aqo_stat(
+        SQL_QUERY_ANALYZE, 'execution_time_without_aqo', connstring)[0][0]
 
     assert executions_w_aqo + executions_wo_aqo == ITER_NUM
     assert len(stat['aqo_stat']) == ITER_NUM
@@ -703,9 +711,11 @@ def test_similar_queries(install_postgres):
 
     conn = psycopg2.connect(install_postgres.connstring)
     execute(conn, 'SELECT 1')
-    num1 = execute(conn, "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = 'SELECT 1'")[0][0]
+    num1 = execute(
+        conn, "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = 'SELECT 1'")[0][0]
     execute(conn, 'SELECT 2')
-    num2 = execute(conn, "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = 'SELECT 2'")[0][0]
+    num2 = execute(
+        conn, "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = 'SELECT 2'")[0][0]
     conn.close()
 
     assert num1 == 1
@@ -848,8 +858,8 @@ def test_tpcds_benchmark(install_postgres):
         shutil.copy("Makefile.suite", "Makefile")
     subprocess.check_call(["make"])
     p = subprocess.Popen(["dsdgen", "-verbose", "-force",
-                        "-dir", TMP_DIR, "-scale", TPCDS_SCALE, "-filter"],
-                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                          "-dir", TMP_DIR, "-scale", TPCDS_SCALE, "-filter"],
+                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     print stdout, stderr
     assert p.wait() == 0
@@ -907,12 +917,14 @@ def test_broken_aqo_tables(install_postgres):
     execute(conn, 'SET aqo.mode TO intelligent')
     execute(conn, SQL_QUERY)
 
-    num = execute(conn, "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = '%s'" % SQL_QUERY)[0][0]
+    num = execute(
+        conn, "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = '%s'" % SQL_QUERY)[0][0]
     assert num == 1
 
     execute(conn, "DELETE FROM aqo_query_texts WHERE query_text = '%s'" % SQL_QUERY)
     execute(conn, SQL_QUERY)
-    num = execute(conn, "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = '%s'" % SQL_QUERY)[0][0]
+    num = execute(
+        conn, "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = '%s'" % SQL_QUERY)[0][0]
 
     assert num == 1
     # TODO: make sure stats is the same as before deletion
