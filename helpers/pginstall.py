@@ -5,8 +5,8 @@ import subprocess
 
 PGPRO_HOST = "http://repo.postgrespro.ru/"
 PSQL_HOST = "https://download.postgresql.org/pub"
-PACKAGES = ['server', 'contrib', 'libs', 'libpq-dev']
-ALT_PACKAGES = ['server', 'contrib', 'devel', 'libpq-dev']
+PACKAGES = ['server', 'contrib', 'libs']
+ALT_PACKAGES = ['server', 'contrib', 'devel']
 RPM_BASED = ['CentOS Linux', 'RHEL', 'CentOS',
              'Red Hat Enterprise Linux Server', 'Oracle Linux Server', 'SLES',
              'ROSA Enterprise Linux Server', 'ROSA SX \"COBALT\" ']

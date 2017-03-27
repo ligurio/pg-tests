@@ -1,9 +1,11 @@
+import datetime
 import grp
 import os
 import platform
 import psycopg2
 import pytest
 import pwd
+import shlex
 import subprocess
 
 from helpers.pginstall import DEB_BASED
@@ -159,3 +161,59 @@ host    all             all             ::0/0                   trust"""
         assert backup_info['STATUS'] == 'OK'
         # Step 11
         self.execute_pg_probackup("validate", backup_id)
+
+    @pytest.mark.test_pgprobackup_retention_policy_options
+    def test_pgprobackup_retention_policy_options(self):
+        """Scenario
+        1. Create 3 backups
+        2. Set option redundancy to 1 backup and run purge
+        3. Check that only one backup must saved after purge
+        4. Up system date for 3 days
+        5. Create 2 backups
+        6. Set option window to 1 and run purge
+        7. Check that only one backup was saved
+        8. Create 2 backups
+        9. Up time for 2 days
+        10. Run purge with redundancy=2 and window=1
+        11. Check that saved 2 backups
+        """
+        # Step 1
+        for i in range(3):
+            self.execute_pg_probackup("-d", "postgres", "-b", "full", "backup", "-U", "postgres")
+        # Step 2
+        self.execute_pg_probackup("retention", "--redundancy=1", "purge")
+        # Step 3
+        pgprobackup_show = subprocess.Popen(["%s/pg_probackup" % pg_bindir(), "show", "-U", "postgres"],
+                                            stdout=subprocess.PIPE)
+        awk_backup_ids = subprocess.Popen(["awk", "NR > 3 {print $1}"], stdin=pgprobackup_show.stdout,
+                                          stdout=subprocess.PIPE)
+        assert len(awk_backup_ids.communicate()[0].strip().split()) == 1
+        # Step 4
+        for i in range(2):
+            self.execute_pg_probackup("-d", "postgres", "-b", "full", "backup", "-U", "postgres")
+        # Step 5
+        new_time = datetime.datetime.now() + datetime.timedelta(days=3)
+        subprocess.check_output(["sudo", "date", "-s", str(new_time)])
+        # Step 6
+        self.execute_pg_probackup("retention", "--window=1", "purge")
+        # Step 7
+        pgprobackup_show = subprocess.Popen(["%s/pg_probackup" % pg_bindir(), "show", "-U", "postgres"],
+                                            stdout=subprocess.PIPE)
+        awk_backup_ids = subprocess.Popen(["awk", "NR > 3 {print $1}"], stdin=pgprobackup_show.stdout,
+                                          stdout=subprocess.PIPE)
+        assert len(awk_backup_ids.communicate()[0].strip().split()) == 1
+        # Step 8
+        for i in range(2):
+            self.execute_pg_probackup("-d", "postgres", "-b", "full", "backup", "-U", "postgres")
+        # Step 9
+        new_time = datetime.datetime.now() + datetime.timedelta(days=3)
+        subprocess.check_output(["sudo", "date", "-s", str(new_time)])
+
+        # Step 10
+        self.execute_pg_probackup("retention", "--window=1", "--redundancy=2", "purge")
+        # Step 11
+        pgprobackup_show = subprocess.Popen(["%s/pg_probackup" % pg_bindir(), "show", "-U", "postgres"],
+                                            stdout=subprocess.PIPE)
+        awk_backup_ids = subprocess.Popen(["awk", "NR > 3 {print $1}"], stdin=pgprobackup_show.stdout,
+                                          stdout=subprocess.PIPE)
+        assert len(awk_backup_ids.communicate()[0].strip().split()) == 2
