@@ -2,6 +2,7 @@ import glob
 import os
 import platform
 import psycopg2
+import shlex
 import subprocess
 import shutil
 import time
@@ -11,6 +12,7 @@ from helpers.pginstall import DEB_BASED
 from helpers.pginstall import RPM_BASED
 from helpers.os_helpers import pg_bindir
 from helpers.os_helpers import rmdir
+from helpers.utils import command_executor, SSH_ROOT, SSH_ROOT_PASSWORD
 from tests import settings
 
 # TODO Change to class  all methods
@@ -180,27 +182,29 @@ def pg_set_option(connstring, option, value):
         return pg_manage_psql("restart", pg_get_option(connstring, 'data_directory'))
 
 
-def pg_manage_psql(action, data_dir, start_script=None):
+def pg_manage_psql(action, data_dir, start_script=None, remote=False, host=None):
         """ Manage Postgres instance
         :param action: start, restart, stop etc
         :param init: Initialization before a first start
         :return:
         """
-
         if start_script is None:
             pg_ctl = os.path.join(pg_bindir(), "pg_ctl")
-            cmd = ["sudo", "-u", "postgres", pg_ctl, "-D", data_dir, action]
+            # cmd = ["sudo", "-u", "postgres", pg_ctl, "-D", data_dir, action]
+            cmd = "sudo -u postgres %s -D %s %s" % (pg_ctl, data_dir, action)
+            return command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD)
         else:
-            cmd = ["service", start_script, action]
+            # cmd = ["service", start_script, action]
+            cmd = "service %s %s" % (start_script, action)
+            return command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD)
 
-        retcode = subprocess.check_call(cmd)
-        time.sleep(2)
-        return retcode
+        # retcode = subprocess.check_call(cmd)
+        # time.sleep(2)
+        # return retcode
 
 
-def pg_start_script_name(name, edition, version):
+def pg_start_script_name(name, edition, version, distro):
 
-    distro = platform.linux_distribution()[0]
     major = version.split(".")[0]
     minor = version.split(".")[1]
 

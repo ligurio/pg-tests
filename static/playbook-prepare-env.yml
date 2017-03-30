@@ -60,7 +60,7 @@
 #        - python-dev
         - python-selinux
         - python-psycopg2
-        - python3-tk
+        - python-tk
 #        - libpq-dev
     when: ansible_distribution == "\"astra linux se\"" or ansible_distribution == "\"astralinuxse\""
     become_method: su
@@ -91,7 +91,7 @@
         - python-selinux
         - python-psycopg2
         - libpq-dev
-        - python3-tk
+        - python-tk
     when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
     become_method: su
     become: true
