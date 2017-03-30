@@ -1,7 +1,13 @@
 import logging
 import os
-import platform
-import subprocess
+
+from helpers.utils import exec_command
+from helpers.utils import command_executor
+from helpers.utils import get_distro
+from helpers.utils import SSH_ROOT
+from helpers.utils import SSH_ROOT_PASSWORD
+from helpers.utils import write_file
+
 
 PGPRO_HOST = "http://repo.postgrespro.ru/"
 PSQL_HOST = "https://download.postgresql.org/pub"
@@ -10,7 +16,7 @@ ALT_PACKAGES = ['server', 'contrib', 'devel']
 RPM_BASED = ['CentOS Linux', 'RHEL', 'CentOS',
              'Red Hat Enterprise Linux Server', 'Oracle Linux Server', 'SLES',
              'ROSA Enterprise Linux Server', 'ROSA SX \"COBALT\" ']
-DEB_BASED = ['debian', 'Ubuntu']
+DEB_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux']
 
 dist = {"Oracle Linux Server": 'oraclelinux',
         "CentOS Linux": 'centos',
@@ -18,10 +24,22 @@ dist = {"Oracle Linux Server": 'oraclelinux',
         "RHEL": 'rhel',
         "Red Hat Enterprise Linux Server": 'rhel7',
         "debian": 'debian',
+        "Debian GNU/Linux": 'debian',
         "Ubuntu": 'ubuntu',
         "ROSA Enterprise Linux Server": 'rosa-el',
         "ROSA SX \"COBALT\" ": 'rosa-sx',
         "SLES": 'sles'}
+
+
+def get_os_type(ip):
+    cmd = 'cat /etc/*-release'
+    retcode, stdout, stderr = exec_command(cmd, ip, SSH_ROOT, SSH_ROOT_PASSWORD)
+    if retcode == 0:
+        return dict(
+            v.split("=") for v in stdout.replace(
+                '\t', ' ').strip().split('\n') if v.strip() and "=" in v)
+    else:
+        return None
 
 
 def generate_repo_info(distro, osversion, **kwargs):
@@ -60,20 +78,17 @@ def generate_repo_info(distro, osversion, **kwargs):
     return baseurl, gpg_key_url
 
 
-def setup_repo(name, version, edition=None, milestone=None, build=None):
-
-    distro = platform.linux_distribution()[0]
-    osversion = platform.linux_distribution()[1]
-    repo_info = generate_repo_info(distro, osversion, version=version,
-                                   name=name, edition=edition, milestone=milestone,
-                                   build=build)
+def setup_repo(remote=False, host=None, **kwargs):
+    dist_info = get_distro(remote, host)
+    repo_info = generate_repo_info(dist_info[0], dist_info[1], version=kwargs['version'],
+                                   name=kwargs['name'], edition=kwargs['edition'],
+                                   milestone=kwargs['milestone'], build=kwargs['build'])
     baseurl = repo_info[0]
     gpg_key_url = repo_info[1]
-
-    if distro in RPM_BASED:
+    if dist_info[0] in RPM_BASED:
         # Example:
         # http://repo.postgrespro.ru/pgproee-9.6-beta/centos/$releasever/os/$basearch/rpms
-        if name == "postgrespro":
+        if kwargs['name'] == "postgrespro":
             baseurl = os.path.join(baseurl, "$releasever/os/$basearch/rpms")
 
         repo = """
@@ -81,72 +96,68 @@ def setup_repo(name, version, edition=None, milestone=None, build=None):
 name=%s-%s
 baseurl=%s
 enabled=1
-""" % (name, version, name, version, baseurl)
-
-        repofile = "/etc/yum.repos.d/%s-%s.repo" % (name, version)
-        with open(repofile, "w+") as f:
-            print >> f, repo
-        subprocess.call(["rpm", "--import", gpg_key_url])
-
-    elif distro in DEB_BASED or distro == "ALT Linux ":
-        subprocess.call(["apt-get", "install", "-y", "lsb-release"])
-        lsb = subprocess.Popen(
-            (["lsb_release", "-cs"]), stdout=subprocess.PIPE)
-        codename = lsb.stdout.readline().rstrip()
-
-        repofile = "/etc/apt/sources.list.d/%s-%s.list" % (name, version)
-        if name == "postgresql":
+        """ % (kwargs['name'], kwargs['version'], kwargs['name'], kwargs['version'], baseurl)
+        repofile = "/etc/yum.repos.d/%s-%s.repo" % (kwargs['name'], kwargs['version'])
+        write_file(repofile, repo, remote, host)
+        cmd = "rpm --import %s" % gpg_key_url
+        command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD)
+    elif dist_info[0] in DEB_BASED or dist_info[0] == "ALT Linux ":
+        cmd = "apt-get install -y lsb-release"
+        command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD)
+        cmd = "lsb_release -cs"
+        codename = ""
+        if remote:
+            codename = command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD)[1].rstrip()
+        else:
+            codename = command_executor(cmd, remote, stdout=True)
+        repofile = "/etc/apt/sources.list.d/%s-%s.list" % (kwargs['name'],
+                                                           kwargs['version'])
+        if kwargs['name'] == "postgresql":
             repo = "deb http://apt.postgresql.org/pub/repos/apt/ %s-pgdg main" % codename
-        elif name == "postgrespro":
+        elif kwargs['name'] == "postgrespro":
             repo = "deb %s %s main" % (baseurl, codename)
-            if distro == "ALT Linux " and osversion == "7.0.4":
+            if dist_info[0] == "ALT Linux " and dist_info[1] == "7.0.4":
                 repo = "rpm %s/7 x86_64 pgpro" % baseurl
-        if not os.access(repofile, os.F_OK):
-            with open(repofile, "w+") as f:
-                print >> f, repo
+        write_file(repofile, repo, remote, host)
 
-        if distro == "ALT Linux " and osversion == "7.0.4":
-            # subprocess.call(["rpm", "--import", gpg_key_url])
+        if dist_info[0] == "ALT Linux " and dist_info[1] == "7.0.4":
             pass
         else:
-            subprocess.call(["apt-get", "install", "-y",
-                             "wget", "ca-certificates"])
-            gpg_key = subprocess.Popen(
-                ["wget", "--quiet", "-O", "-", gpg_key_url], stdout=subprocess.PIPE)
-            subprocess.call(["apt-key", "add", "-"], stdin=gpg_key.stdout)
-
-        subprocess.call(["apt-get", "update", "-y"])
+            cmd = "apt-get install -y wget ca-certificates"
+            command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD)
+            cmd = "wget --quiet -O - %s | apt-key add -" % gpg_key_url
+            command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD)
+            cmd = "apt-get update -y"
+            command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD)
     else:
-        print "Unsupported distro %s" % distro
+        print "Unsupported distro %s" % dist_info[0]
         return 1
 
 
-def package_mgmt(name, version, edition=None, milestone=None, build=None):
-
-    distro = platform.linux_distribution()[0]
-    major = version.split(".")[0]
-    minor = version.split(".")[1]
+def package_mgmt(remote=False, host=None, **kwargs):
+    dist_info = get_distro(remote, host)
+    major = kwargs['version'].split(".")[0]
+    minor = kwargs['version'].split(".")[1]
     pkg_name = ""
-    if distro in RPM_BASED:
-        if edition == "ee":
-            pkg_name = "%s-enterprise%s%s" % (name, major, minor)
+    if dist_info[0] in RPM_BASED:
+        if kwargs['edition'] == "ee":
+            pkg_name = "%s-enterprise%s%s" % (kwargs['name'], major, minor)
         else:
-            pkg_name = name + major + minor
+            pkg_name = kwargs['name'] + major + minor
 
         for p in PACKAGES:
-            subprocess.call(["yum", "install", "-y", "%s-%s" % (pkg_name, p)])
+            cmd = "yum install -y %s-%s" % (pkg_name, p)
+            command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD)
+    elif dist_info[0] in DEB_BASED:
+        cmd = "apt-get install -y %s-%s" % (kwargs['name'], kwargs['version'])
+        command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD)
 
-    elif distro in DEB_BASED:
-        subprocess.call(["apt-get", "install", "-y",
-                         "%s-%s" % (name, version)])
-
-    elif distro == "ALT Linux ":
-        if edition == "ee":
-            pkg_name = "%s-enterprise%s.%s" % (name, major, minor)
+    elif dist_info[0] == "ALT Linux ":
+        if kwargs['edition'] == "ee":
+            pkg_name = "%s-enterprise%s.%s" % (kwargs['name'], major, minor)
         else:
-            pkg_name = name + major + minor
+            pkg_name = kwargs['name'] + major + minor
 
         for p in ALT_PACKAGES:
-            subprocess.call(
-                ["apt-get", "install", "-y", "%s-%s" % (pkg_name, p)])
-            # postgrespro-enterprise9.6-devel
+            cmd = "apt-get install -y %s-%s" % (pkg_name, p)
+            command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD)

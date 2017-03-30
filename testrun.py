@@ -3,17 +3,22 @@
 import argparse
 import os
 import os.path
-import paramiko
 import platform
 import random
 import re
-import socket
 import shutil
 import subprocess
 import sys
 import time
 import urllib
 from subprocess import call
+
+from helpers.utils import copy_file, SSH_LOGIN, SSH_PASSWORD, SSH_ROOT_PASSWORD
+from helpers.utils import exec_command
+from helpers.utils import gen_name
+
+DEBUG = False
+
 """PostgresPro regression tests run script."""
 
 __author__ = "Sergey Bronnikov <sergeyb@postgrespro.ru>"
@@ -30,13 +35,6 @@ ANSIBLE_INVENTORY = "%s ansible_host=%s \
                     ansible_user=%s \
                     ansible_become_user=root\n"
 REPORT_SERVER_URL = 'http://testrep.l.postgrespro.ru/'
-
-SSH_LOGIN = 'test'
-SSH_ROOT = 'root'
-SSH_PASSWORD = 'TestPass1'
-SSH_ROOT_PASSWORD = 'TestRoot1'
-SSH_PORT = 22
-DEBUG = False
 
 
 def list_images():
@@ -74,59 +72,6 @@ def mac_address_generator():
     return ':'.join(map(lambda x: "%02x" % x, mac))
 
 
-def copy_file(local_path, remote_path, hostname):
-
-    transport = paramiko.Transport((hostname, SSH_PORT))
-    transport.connect(username=SSH_LOGIN, password=SSH_PASSWORD)
-    sftp = paramiko.SFTPClient.from_transport(transport)
-    print "Copying file '%s', remote host is '%s'" % (remote_path, hostname)
-    sftp.get(remote_path, local_path)
-    sftp.close()
-    transport.close()
-
-    # TODO: return exit code
-
-
-def exec_command(cmd, hostname):
-
-    buff_size = 1024
-    stdout = ""
-    stderr = ""
-
-    known_hosts = os.path.expanduser(os.path.join("~", ".ssh", "known_hosts"))
-    try:
-        client = paramiko.SSHClient()
-        if os.path.isfile(known_hosts):
-            client.load_system_host_keys(known_hosts)
-            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            client.connect(hostname=hostname, username=SSH_LOGIN,
-                           password=SSH_PASSWORD, port=SSH_PORT,
-                           look_for_keys=False)
-    except paramiko.AuthenticationException, e:
-        print 'Auth Error: ', e
-        sys.exit(1)
-    except paramiko.SSHException, e:
-        print 'Connection Error: ', e
-        sys.exit(1)
-    except socket.error, e:
-        print 'Timed Out', e
-        sys.exit(1)
-
-    chan = client.get_transport().open_session()
-    print "Executing '%s' on '%s'" % (cmd, hostname)
-    chan.exec_command(cmd)
-    retcode = chan.recv_exit_status()
-    while chan.recv_ready():
-        stdout += chan.recv(buff_size)
-
-    while chan.recv_stderr_ready():
-        stderr += chan.recv_stderr(buff_size)
-
-    client.close()
-
-    return retcode, stdout, stderr
-
-
 def create_image(domname, name):
 
     domimage = WORK_DIR + domname + '.qcow2'
@@ -151,10 +96,6 @@ def create_image(domname, name):
     #  qemu-img create -f qcow2 -b winxp.qcow2 winxp-clone.qcow2
 
     return domimage
-
-
-def gen_domname(name):
-    return name + '-' + str(random.getrandbits(15))
 
 
 def create_env(name, domname):
@@ -224,7 +165,7 @@ def create_env(name, domname):
     print "Domain name: %s\nIP address: %s" % (dom.name(), domipaddress)
     conn.close()
 
-    return domipaddress
+    return domipaddress, domimage, xmldesc
 
 
 def setup_env(domipaddress, domname):
@@ -363,9 +304,9 @@ def main():
 
     targets = target.split(',')
     for t in targets:
-        domname = gen_domname(t)
+        domname = gen_name(t)
         reportname = "report-" + time.strftime('%Y-%b-%d-%H-%M-%S')
-        domipaddress = create_env(t, domname)
+        domipaddress = create_env(t, domname)[0]
         setup_env(domipaddress, domname)
         cmd = make_test_cmd(reportname, args.run_tests,
                             args.product_name,
@@ -373,7 +314,7 @@ def main():
                             args.product_edition,
                             args.product_milestone,
                             args.product_build)
-        retcode, stdout, stderr = exec_command(cmd, domipaddress)
+        retcode, stdout, stderr = exec_command(cmd, domipaddress, SSH_LOGIN, SSH_PASSWORD)
         if retcode != 0:
             print "Test return code is not zero - %s." % retcode
             print retcode, stdout, stderr
