@@ -57,7 +57,7 @@
     with_items:
         - git
         - gcc-4.7-base
-#        - python-dev
+        - python-dev
         - python-selinux
         - python-psycopg2
         - python-tk
@@ -140,6 +140,10 @@
 
   - name: delete get-pip.py
     file: state=absent path=/tmp/get-pip.py
+
+  - name: set http.sslVerify to false in a git config
+    git_config: name=http.sslVerify scope=global value="false"
+    when: ansible_distribution == "\"astra linux se\"" or ansible_distribution == "\"astralinuxse\"" or ansible_distribution == "\"AstraLinuxSE\""
 
   - name: checkout latest version of tests
     git: repo=https://git.postgrespro.ru/automation/pg-tests.git dest=/home/test/pg-tests
@@ -251,9 +255,7 @@
     become: true
     when: ansible_distribution == "RedHat"
 
-  - name: set http.sslVerify to false in a git config
-    git_config: name=http.sslVerify scope=global value="false"
-    when: ansible_distribution == "\"astra linux se\"" or ansible_distribution == "\"astralinuxse\""
+
 
   #- name: psycopg2 test script
   #  command: /usr/bin/python -c "import psycopg2; conn = psycopg2.connect(\"host='localhost' dbname='postgres' user='postgres' password='password'\") "

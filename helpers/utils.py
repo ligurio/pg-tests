@@ -122,7 +122,7 @@ def get_distro(remote=False, ip=None):
             host_info = get_os_type(ip)
         return host_info['NAME'].strip('"'), host_info['VERSION_ID'].strip('"')
     else:
-        return platform.linux_distribution()[0], platform.linux_distribution()[1]
+        return platform.linux_distribution()[0].strip('"'), platform.linux_distribution()[1]
 
 
 def get_os_type(ip):

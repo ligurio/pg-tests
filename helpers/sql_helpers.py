@@ -207,7 +207,7 @@ def pg_start_script_name(name, edition, version, distro):
 
     major = version.split(".")[0]
     minor = version.split(".")[1]
-
+    service_name = ""
     if distro in RPM_BASED or distro == "ALT Linux ":
         if name == 'postgresql':
             service_name = "postgresql-%s.%s" % (major, minor)
@@ -215,11 +215,14 @@ def pg_start_script_name(name, edition, version, distro):
             service_name = "postgrespro-enterprise-%s.%s" % (major, minor)
         elif name == 'postgrespro' and edition == 'standard':
             service_name = "postgrespro-%s.%s" % (major, minor)
+        elif name == 'postgrespro' and edition == 'cert':
+            service_name = "postgresql-%s.%s" % (major, minor)
+        assert service_name is not None
+        return service_name
     elif distro in DEB_BASED:
         service_name = "postgresql"
-
-    assert service_name is not None
-    return service_name
+        assert service_name is not None
+        return service_name
 
 
 def pg_initdb(connstring, *params):
