@@ -16,7 +16,7 @@ ALT_PACKAGES = ['server', 'contrib', 'devel']
 RPM_BASED = ['CentOS Linux', 'RHEL', 'CentOS',
              'Red Hat Enterprise Linux Server', 'Oracle Linux Server', 'SLES',
              'ROSA Enterprise Linux Server', 'ROSA SX \"COBALT\" ']
-DEB_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux']
+DEB_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux', 'AstraLinuxSE']
 
 dist = {"Oracle Linux Server": 'oraclelinux',
         "CentOS Linux": 'centos',
@@ -48,6 +48,7 @@ def generate_repo_info(distro, osversion, **kwargs):
     minor = kwargs['version'].split(".")[1]
 
     product_dir = ""
+    gpg_key_url = ""
     if kwargs['name'] == "postgresql":
         if distro in RPM_BASED:
             gpg_key_url = "https://download.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG-%s%s" % (
@@ -56,11 +57,14 @@ def generate_repo_info(distro, osversion, **kwargs):
             gpg_key_url = "https://www.postgresql.org/media/keys/ACCC4CF8.asc"
         product_dir = "/repos/yum/%s/redhat/rhel-$releasever-$basearch" % kwargs['version']
         baseurl = PSQL_HOST + product_dir
+        return baseurl, gpg_key_url
     elif kwargs['name'] == "postgrespro":
         if kwargs['edition'] == "ee":
             product_dir = "pgproee-%s" % kwargs['version']
         elif kwargs['edition'] == "standard":
             product_dir = "pgpro-%s" % kwargs['version']
+        elif kwargs['edition'] == "cert":
+            product_dir = "pgpro-standard-9.6.2.2-cert/repo"
         if kwargs['milestone']:
             product_dir = product_dir + "-" + kwargs['milestone']
         gpg_key_url = "https://repo.postgrespro.ru/pgpro-%s/keys/GPG-KEY-POSTGRESPRO" % kwargs['version']
@@ -70,12 +74,19 @@ def generate_repo_info(distro, osversion, **kwargs):
             distname = "rosa-el"
         elif distro == "ROSA SX \"COBALT\" ":
             distname = "rosa-sx"
+        elif distro == "AstraLinuxSE":
+            distname = "astra-smolensk"
         else:
             distname = dist[distro].lower()
-        baseurl = os.path.join(PGPRO_HOST, product_dir, distname)
-    logging.debug("Installation repo path: %s" % baseurl)
-    logging.debug("GPG key url for installation: %s" % gpg_key_url)
-    return baseurl, gpg_key_url
+        if kwargs['edition'] == "cert" and distro == "AstraLinuxSE":
+            baseurl = os.path.join("http://localrepo.l.postgrespro.ru", product_dir, distname, "1.5")
+        elif kwargs['edition'] == "cert":
+            baseurl = os.path.join("http://localrepo.l.postgrespro.ru", product_dir, distname)
+        else:
+            baseurl = os.path.join(PGPRO_HOST, product_dir, distname)
+        logging.debug("Installation repo path: %s" % baseurl)
+        logging.debug("GPG key url for installation: %s" % gpg_key_url)
+        return baseurl, gpg_key_url
 
 
 def setup_repo(remote=False, host=None, **kwargs):
@@ -121,7 +132,8 @@ enabled=1
         write_file(repofile, repo, remote, host)
 
         if dist_info[0] == "ALT Linux " and dist_info[1] == "7.0.4":
-            pass
+            cmd = "apt-get update -y"
+            command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD)
         else:
             cmd = "apt-get install -y wget ca-certificates"
             command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD)
@@ -155,6 +167,8 @@ def package_mgmt(remote=False, host=None, **kwargs):
     elif dist_info[0] == "ALT Linux ":
         if kwargs['edition'] == "ee":
             pkg_name = "%s-enterprise%s.%s" % (kwargs['name'], major, minor)
+        elif kwargs['edition'] == "cert":
+            pkg_name = "postgrespro%s.%s" % (major, minor)
         else:
             pkg_name = kwargs['name'] + major + minor
 
