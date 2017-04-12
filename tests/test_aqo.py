@@ -332,6 +332,7 @@ def plot_stats(stats, connstring):
     plot.close()
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 @pytest.mark.usefixtures('install_postgres')
 def test_available_modes(install_postgres):
     """
@@ -398,6 +399,7 @@ def evaluate_aqo(stats):
             dict['aqo']['total_time']) * FACTOR_SPIKE
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 @pytest.mark.usefixtures('install_postgres')
 def test_default_aqo_mode(install_postgres):
     """
@@ -413,6 +415,7 @@ def test_default_aqo_mode(install_postgres):
     assert mode == "controlled"
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 @pytest.mark.usefixtures('install_postgres')
 def test_similar_queries(install_postgres):
     """
@@ -436,6 +439,7 @@ def test_similar_queries(install_postgres):
     assert num2 == 0
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 @pytest.mark.parametrize("aqo_mode", [
                         ("intelligent"),
                         ("forced"),
@@ -523,6 +527,7 @@ def test_aqo_mode(aqo_mode, install_postgres):
         pytest.fail("Unknown AQO mode - %s" % aqo_mode)
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 @pytest.mark.usefixtures('install_postgres')
 def test_aqo_stat_numbers(install_postgres):
     """
@@ -560,6 +565,7 @@ def test_aqo_stat_numbers(install_postgres):
     assert len(planning_time_w_aqo) == len(execution_time_w_aqo)
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 @pytest.mark.usefixtures('install_postgres')
 def test_tuning_max_iterations(install_postgres):
     """
@@ -583,6 +589,7 @@ def test_tuning_max_iterations(install_postgres):
     assert num2 == 0
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 @pytest.mark.usefixtures('install_postgres')
 def test_in_honor_of_teodor(install_postgres):
 
@@ -632,6 +639,7 @@ CREATE INDEX ib ON b (id, v);
         evaluate_aqo(stats)
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 @pytest.mark.usefixtures('install_postgres')
 @pytest.mark.slowtest
 def test_1C_sample(install_postgres):
@@ -701,6 +709,7 @@ COALESCE(_AccRgAT31043._Value3_RRRef,'\\377'::bytea)) AND
     evaluate_aqo(stats)
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 @pytest.mark.parametrize("optimizer", [
                         ("geqo"),
                         ("default"),
@@ -766,6 +775,7 @@ def test_join_order_benchmark(optimizer, install_postgres, populate_imdb):
             evaluate_aqo(stats)
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 @pytest.mark.usefixtures('install_postgres')
 @pytest.mark.usefixtures('populate_tpch')
 def test_tpch_benchmark(install_postgres):
@@ -805,6 +815,7 @@ def test_tpch_benchmark(install_postgres):
         evaluate_aqo(stats)
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 @pytest.mark.skip(reason="not implemented")
 @pytest.mark.usefixtures('install_postgres')
 def test_tpcds_benchmark(install_postgres):
@@ -912,6 +923,7 @@ def test_broken_aqo_tables(install_postgres):
     # TODO: make sure stats is the same as before deletion
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 @pytest.mark.usefixtures('install_postgres')
 def test_max_query_length(install_postgres):
     """
