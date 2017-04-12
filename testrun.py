@@ -273,7 +273,7 @@ def main():
         epilog='Possible operating systems (images): %s' % ' '.join(names))
     parser.add_argument('--target', dest="target",
                         help='system(s) under test (image(s))')
-    parser.add_argument('--test', dest="run_tests", default="",
+    parser.add_argument('--test', dest="run_tests", default="tests",
                         help='tests to run (default: all)')
     parser.add_argument("--product_name", dest="product_name",
                         help="specify product name", action="store")

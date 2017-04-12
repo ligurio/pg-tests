@@ -27,6 +27,8 @@ def test_version(request, install_postgres):
 
 @pytest.mark.usefixtures('install_postgres')
 def test_extensions(install_postgres):
+    # TODO add check for extension step 1. Create extension
+    # TODO add check for extensions, step 2. SELECT extname FROM pg_catalog.pg_extension WHERE extname = <ext_name>;
     """ Make sure all our extensions are available
     """
 

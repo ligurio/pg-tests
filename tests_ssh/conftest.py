@@ -10,7 +10,7 @@ def pytest_addoption(parser):
     :param parser pytest default param for command line args:
     :return:
     """
-    parser.addoption('--target', dest="target", help='system(s) under test (image(s))')
+    parser.addoption("--target", dest="target", help='system(s) under test (image(s))')
     parser.addoption("--product_version", action="store", default='9.6',
                      help="Specify product version. Available values: 9.5, 9.6")
     parser.addoption("--product_name", action="store", default='postgrespro',
