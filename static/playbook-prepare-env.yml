@@ -155,6 +155,14 @@
       requirements: "/home/test/pg-tests/static/requirements.txt"
     become_method: su
     become: true
+    when: ansible_distribution not in ['ROSA', "МСВСфера"]
+
+  - name: Download python2.7 for ROSA and MSVSSpehre
+    unarchive:
+      src: http://www.python.org/ftp/python/2.7.6/Python-2.7.6.tar.xz
+      dest: /tmp
+      remote_src: True
+    when: ansible_distribution in ['ROSA', "МСВСфера"]
 
 #   yum install -y python-psycopg2
 #   apt-get install -y python-psycopg2
@@ -254,8 +262,3 @@
     become_method: su
     become: true
     when: ansible_distribution == "RedHat"
-
-
-
-  #- name: psycopg2 test script
-  #  command: /usr/bin/python -c "import psycopg2; conn = psycopg2.connect(\"host='localhost' dbname='postgres' user='postgres' password='password'\") "
