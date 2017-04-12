@@ -209,12 +209,12 @@ def make_test_cmd(reportname, tests=None,
     if product_build:
         pcmd = "%s --product_build %s " % (pcmd, product_build)
 
-    cmd = 'cd /home/test/pg-tests && sudo pytest \
+    cmd = 'cd /home/test/pg-tests && sudo pytest %s \
                                     --self-contained-html \
                                     --html=%s.html \
                                     --junit-xml=%s.xml \
-                                    --maxfail=1 %s %s' \
-                                    % (reportname, reportname, pcmd, tests)
+                                    --maxfail=1 %s' \
+                                    % (tests, reportname, reportname, pcmd)
 
     if DEBUG:
         cmd = cmd + "--verbose --tb=long --full-trace"
