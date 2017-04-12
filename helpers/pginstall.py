@@ -160,13 +160,13 @@ def package_mgmt(remote=False, host=None, **kwargs):
         for p in PACKAGES:
             cmd = "yum install -y %s-%s" % (pkg_name, p)
             command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD)
-        cmd = "yum install -y libpq-devel"
+        cmd = "yum install -y libpq-dev"
         command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD)
 
     elif dist_info[0] in DEB_BASED:
         cmd = "apt-get install -y %s-%s" % (kwargs['name'], kwargs['version'])
         command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD)
-        cmd = "apt-get install -y libpq-devel"
+        cmd = "apt-get install -y libpq-dev"
         command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD)
 
     elif dist_info[0] == "ALT Linux ":
