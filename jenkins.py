@@ -11,14 +11,15 @@ import time
 import urllib2
 
 MAIL_HOST = "postfix.l.postgrespro.ru"
-MAIL_TO = ["sergeyb@postgrespro.ru"]
-MAIL_FROM = "sergeyb@postgrespro.ru"
+MAIL_TO = ["m.samoylov@postgrespro.ru"]
+MAIL_FROM = "m.samoylov@postgrespro.ru"
 CHECK_TIMEOUT = 10
 GITLAB_TOKEN = "8BZ5DaaLycAe5AGGTERb"
 JENKINS_LOGIN = "jenkins"
 JENKINS_PWORD = "jenkins"
 JENKINS_URL = "http://bldfrm0.l.postgrespro.ru:8080/view/%s/job/%s-hub/lastBuild/api/json"
-TESTRUN_CMD = "./testrun.py --target %s --product_name postgrespro --product_version %s --product_edition %s --product_milestone beta --export"
+TESTRUN_CMD = "./testrun.py --target %s --product_name postgrespro" \
+              " --product_version %s --product_edition %s --product_milestone beta --export"
 DEBUG = False
 
 if len(sys.argv) > 1:
@@ -143,8 +144,7 @@ while True:
             else:
                 subject = "[PASS]"
             output = "\n\nstdout\n\n%s\n\nstderr\n%s" % (out, err)
-            subject = subject + \
-                " %s build %s -- %s" % (branch, build_status["number"], t)
+            subject += " %s build %s -- %s" % (branch, build_status["number"], t)
             send_mail(output, subject)
             print "[" + branch + "] Done %s" % t
 
