@@ -6,7 +6,6 @@ import time
 
 from helpers.sql_helpers import execute
 from helpers.sql_helpers import pg_initdb
-from helpers.sql_helpers import create_test_table
 from helpers.os_helpers import load_pgbench
 
 START_XID = 4294967296                  # 2^32

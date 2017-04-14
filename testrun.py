@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#    Copyright 2015 - 2017 Postgres Professional
 
 import argparse
 import os
@@ -11,29 +12,32 @@ import subprocess
 import sys
 import time
 import urllib
+import winrm
 from subprocess import call
 
-from helpers.utils import copy_file, SSH_LOGIN, SSH_PASSWORD, SSH_ROOT_PASSWORD
+from helpers.utils import copy_file, copy_file_win, exec_command_win
+from helpers.utils import REMOTE_LOGIN, REMOTE_PASSWORD, REMOTE_ROOT_PASSWORD
 from helpers.utils import exec_command
 from helpers.utils import gen_name
 
 DEBUG = False
 
-"""PostgresPro regression tests run script."""
-
-__author__ = "Sergey Bronnikov <sergeyb@postgrespro.ru>"
-
-
 IMAGE_BASE_URL = 'http://webdav.l.postgrespro.ru/DIST/vm-images/test/'
 TEMPLATE_DIR = '/pgpro/templates/'
 WORK_DIR = '/pgpro/test-envs/'
-ANSIBLE_CMD = "ansible-playbook %s -i static/inventory -c paramiko --limit %s"
+ANSIBLE_CMD = "ansible-playbook %s -i static/inventory -c %s --limit %s"
 ANSIBLE_PLAYBOOK = 'static/playbook-prepare-env.yml'
 ANSIBLE_INVENTORY = "%s ansible_host=%s \
                     ansible_become_pass=%s \
                     ansible_ssh_pass=%s \
                     ansible_user=%s \
                     ansible_become_user=root\n"
+ANSIBLE_INVENTORY_WIN = "%s ansible_host=%s \
+                    ansible_user=%s  \
+                    ansible_password=%s \
+                    ansible_winrm_server_cert_validation=ignore  \
+                    ansible_port=5985  \
+                    ansible_connection=winrm \n"
 REPORT_SERVER_URL = 'http://testrep.l.postgrespro.ru/'
 
 
@@ -92,9 +96,6 @@ def create_image(domname, name):
     except IOError as e:
         print "I/O error({0}): {1}".format(e.errno, e.strerror)
 
-    # FIXME: use linked clone
-    #  qemu-img create -f qcow2 -b winxp.qcow2 winxp-clone.qcow2
-
     return domimage
 
 
@@ -113,6 +114,10 @@ def create_env(name, domname):
         qemu_path = """/usr/bin/qemu-system-x86_64"""
     elif platform.linux_distribution()[0] == 'CentOS Linux':
         qemu_path = """/usr/libexec/qemu-kvm"""
+    if domname[0:3] == 'win':
+        network_driver = "e1000"
+    else:
+        network_driver = "virtio"
     xmldesc = """<domain type='kvm'>
                   <name>%s</name>
                   <memory unit='GB'>1</memory>
@@ -138,14 +143,14 @@ def create_env(name, domname):
                     <interface type='bridge'>
                       <mac address='%s'/>
                       <source bridge='virbr0'/>
-                      <model type='virtio'/>
+                      <model type='%s'/>
                     </interface>
                     <input type='tablet' bus='usb'/>
                     <input type='mouse' bus='ps2'/>
                     <graphics type='vnc' port='-1' listen='0.0.0.0'/>
                   </devices>
                 </domain>
-                """ % (domname, qemu_path, domimage, dommac)
+                """ % (domname, qemu_path, domimage, dommac, network_driver)
 
     dom = conn.createLinux(xmldesc, 0)
     if dom is None:
@@ -169,16 +174,28 @@ def create_env(name, domname):
 
 
 def setup_env(domipaddress, domname):
+    """Create ansible cmd and run ansible on virtual machine
+
+    :param domipaddress str: ip address of virtual machine
+    :param domname str: virtual machine name
+    :return: int: 0 if all OK and 1 if not
+    """
     host_record = domipaddress + ' ' + domname + '\n'
     with open("/etc/hosts", "a") as hosts:
         hosts.write(host_record)
 
-    inv = ANSIBLE_INVENTORY % (domname, domipaddress, SSH_ROOT_PASSWORD, SSH_PASSWORD, SSH_LOGIN)
+    if domname[0:3] != 'win':
+        inv = ANSIBLE_INVENTORY % (domname, domipaddress, REMOTE_ROOT_PASSWORD, REMOTE_PASSWORD, REMOTE_LOGIN)
+        ansible_cmd = ANSIBLE_CMD % (ANSIBLE_PLAYBOOK, "paramiko", domname)
+    else:
+        inv = ANSIBLE_INVENTORY_WIN % (domname, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD)
+        ansible_cmd = ANSIBLE_CMD % (ANSIBLE_PLAYBOOK, "winrm", domname)
+
     with open("static/inventory", "a") as hosts:
         hosts.write(inv)
 
     os.environ['ANSIBLE_HOST_KEY_CHECKING'] = 'False'
-    ansible_cmd = ANSIBLE_CMD % (ANSIBLE_PLAYBOOK, domname)
+
     if DEBUG:
         ansible_cmd += " -vvv"
     print ansible_cmd
@@ -190,7 +207,7 @@ def setup_env(domipaddress, domname):
     return 0
 
 
-def make_test_cmd(reportname, tests=None,
+def make_test_cmd(domname, reportname, tests=None,
                   product_name=None,
                   product_version=None,
                   product_edition=None,
@@ -209,27 +226,30 @@ def make_test_cmd(reportname, tests=None,
     if product_build:
         pcmd = "%s --product_build %s " % (pcmd, product_build)
 
-    cmd = 'cd /home/test/pg-tests && sudo pytest %s \
-                                    --self-contained-html \
-                                    --html=%s.html \
-                                    --junit-xml=%s.xml \
-                                    --maxfail=1 %s' \
-                                    % (tests, reportname, reportname, pcmd)
+    if domname[0:3] == 'win':
+        cmd = r'cd C:\Users\test\pg-tests && pytest %s --self-contained-html --html=%s.html --junit-xml=%s.xml \
+                  --maxfail=1 %s' % (tests, reportname, reportname, pcmd)
+    else:
+        cmd = 'cd /home/test/pg-tests && sudo pytest %s --self-contained-html --html=%s.html --junit-xml=%s.xml ' \
+              '--maxfail=1 %s' % (tests, reportname, reportname, pcmd)
 
     if DEBUG:
-        cmd = cmd + "--verbose --tb=long --full-trace"
+        cmd += "--verbose --tb=long --full-trace"
 
     return cmd
 
 
-def export_results(domipaddress, reportname):
+def export_results(domname, domipaddress, reportname):
     if not os.path.exists('reports'):
         os.makedirs('reports')
-    copy_file("reports/%s.html" % reportname,
-              "/home/test/pg-tests/%s.html" % reportname, domipaddress)
-    copy_file("reports/%s.xml" % reportname,
-              "/home/test/pg-tests/%s.xml" % reportname, domipaddress)
 
+    if domname[0:3] == 'win':
+        copy_file_win(reportname, domipaddress)
+    else:
+        copy_file("reports/%s.html" % reportname,
+                  "/home/test/pg-tests/%s.html" % reportname, domipaddress)
+        copy_file("reports/%s.xml" % reportname,
+                  "/home/test/pg-tests/%s.xml" % reportname, domipaddress)
     subprocess.Popen(
         ['curl', '-T', 'reports/%s.html' % reportname, REPORT_SERVER_URL])
     subprocess.Popen(
@@ -308,19 +328,33 @@ def main():
         reportname = "report-" + time.strftime('%Y-%b-%d-%H-%M-%S')
         domipaddress = create_env(t, domname)[0]
         setup_env(domipaddress, domname)
-        cmd = make_test_cmd(reportname, args.run_tests,
+        cmd = make_test_cmd(domname, reportname, args.run_tests,
                             args.product_name,
                             args.product_version,
                             args.product_edition,
                             args.product_milestone,
                             args.product_build)
-        retcode, stdout, stderr = exec_command(cmd, domipaddress, SSH_LOGIN, SSH_PASSWORD)
+        if domname[0:3] == 'win':
+            s = winrm.Session(domipaddress, auth=(REMOTE_LOGIN, REMOTE_PASSWORD))
+            ps_script = """
+                Set-ExecutionPolicy Unrestricted
+                [Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Python27",
+                [EnvironmentVariableTarget]::Machine)
+                [Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Python27\Scripts",
+                [EnvironmentVariableTarget]::Machine)
+                """
+            s.run_ps(ps_script)
+            print "Added path for python and python scripts. \n"
+            retcode, stdout, stderr = exec_command_win(cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD)
+            # export_results(domname, domipaddress, reportname)
+        else:
+            retcode, stdout, stderr = exec_command(cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD)
         if retcode != 0:
             print "Test return code is not zero - %s." % retcode
             print retcode, stdout, stderr
 
         if args.export:
-            export_results(domipaddress, reportname)
+            export_results(domname, domipaddress, reportname)
             reporturl = os.path.join(REPORT_SERVER_URL, reportname)
             print "Link to the html report - %s.html" % reporturl
             print "Link to the xml report - %s.xml" % reporturl

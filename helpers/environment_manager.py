@@ -4,8 +4,8 @@ import os
 import sys
 
 from helpers.utils import exec_command, gen_name
-from helpers.utils import SSH_ROOT_PASSWORD
-from helpers.utils import SSH_ROOT
+from helpers.utils import REMOTE_ROOT_PASSWORD
+from helpers.utils import REMOTE_ROOT
 from testrun import create_env
 from testrun import list_images
 
@@ -47,13 +47,13 @@ class Environment(object):
                 with open("/etc/hosts", "a") as hosts:
                     hosts.write(host_record)
                 cmd = 'echo \"%s %s\" >> /etc/hosts ' % (node_name, node_info[0])
-                exec_command(cmd, node_info[0], SSH_ROOT, SSH_ROOT_PASSWORD)
+                exec_command(cmd, node_info[0], REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
                 cmd = 'hostname %s' % node_name
-                exec_command(cmd, node_info[0], SSH_ROOT, SSH_ROOT_PASSWORD)
+                exec_command(cmd, node_info[0], REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
                 cmd = 'sed -i \'s/^Defaults    requiretty/#Defaults    requiretty/\' /etc/sudoers'
-                exec_command(cmd, node_info[0], SSH_ROOT, SSH_ROOT_PASSWORD)
+                exec_command(cmd, node_info[0], REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
                 cmd = 'iptables -F'
-                exec_command(cmd, node_info[0], SSH_ROOT, SSH_ROOT_PASSWORD)
+                exec_command(cmd, node_info[0], REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             mode = 'a' if os.path.exists(self.CLUSTER_SETTING) else 'w'
             with open(self.CLUSTER_SETTING, mode) as f:
                 json.dump(env_info, f, indent=4, sort_keys=True)

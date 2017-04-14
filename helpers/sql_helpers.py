@@ -12,7 +12,7 @@ from helpers.pginstall import DEB_BASED
 from helpers.pginstall import RPM_BASED
 from helpers.os_helpers import pg_bindir
 from helpers.os_helpers import rmdir
-from helpers.utils import command_executor, SSH_ROOT, SSH_ROOT_PASSWORD
+from helpers.utils import command_executor, REMOTE_ROOT, REMOTE_ROOT_PASSWORD
 from tests import settings
 
 # TODO Change to class  all methods
@@ -192,11 +192,11 @@ def pg_manage_psql(action, data_dir, start_script=None, remote=False, host=None)
             pg_ctl = os.path.join(pg_bindir(), "pg_ctl")
             # cmd = ["sudo", "-u", "postgres", pg_ctl, "-D", data_dir, action]
             cmd = "sudo -u postgres %s -D %s %s" % (pg_ctl, data_dir, action)
-            return command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD)
+            return command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         else:
             # cmd = ["service", start_script, action]
             cmd = "service %s %s" % (start_script, action)
-            return command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD)
+            return command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
         # retcode = subprocess.check_call(cmd)
         # time.sleep(2)

@@ -4,8 +4,8 @@ import os
 from helpers.utils import exec_command
 from helpers.utils import command_executor
 from helpers.utils import get_distro
-from helpers.utils import SSH_ROOT
-from helpers.utils import SSH_ROOT_PASSWORD
+from helpers.utils import REMOTE_ROOT
+from helpers.utils import REMOTE_ROOT_PASSWORD
 from helpers.utils import write_file
 
 
@@ -33,7 +33,7 @@ dist = {"Oracle Linux Server": 'oraclelinux',
 
 def get_os_type(ip):
     cmd = 'cat /etc/*-release'
-    retcode, stdout, stderr = exec_command(cmd, ip, SSH_ROOT, SSH_ROOT_PASSWORD)
+    retcode, stdout, stderr = exec_command(cmd, ip, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
     if retcode == 0:
         return dict(
             v.split("=") for v in stdout.replace(
@@ -111,14 +111,14 @@ enabled=1
         repofile = "/etc/yum.repos.d/%s-%s.repo" % (kwargs['name'], kwargs['version'])
         write_file(repofile, repo, remote, host)
         cmd = "rpm --import %s" % gpg_key_url
-        command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD)
+        command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
     elif dist_info[0] in DEB_BASED or dist_info[0] == "ALT Linux ":
         cmd = "apt-get install -y lsb-release"
-        command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD)
+        command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         cmd = "lsb_release -cs"
         codename = ""
         if remote:
-            codename = command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD)[1].rstrip()
+            codename = command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)[1].rstrip()
         else:
             codename = command_executor(cmd, remote, stdout=True)
         repofile = "/etc/apt/sources.list.d/%s-%s.list" % (kwargs['name'],
@@ -133,14 +133,14 @@ enabled=1
 
         if dist_info[0] == "ALT Linux " and dist_info[1] == "7.0.4":
             cmd = "apt-get update -y"
-            command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD)
+            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         else:
             cmd = "apt-get install -y wget ca-certificates"
-            command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD)
+            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             cmd = "wget --quiet -O - %s | apt-key add -" % gpg_key_url
-            command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD)
+            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             cmd = "apt-get update -y"
-            command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD)
+            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
     else:
         print "Unsupported distro %s" % dist_info[0]
         return 1
@@ -159,13 +159,13 @@ def package_mgmt(remote=False, host=None, **kwargs):
 
         for p in PACKAGES:
             cmd = "yum install -y %s-%s" % (pkg_name, p)
-            command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD)
+            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
     elif dist_info[0] in DEB_BASED:
         cmd = "apt-get install -y %s-%s" % (kwargs['name'], kwargs['version'])
-        command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD)
+        command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         cmd = "apt-get install -y libpq-dev"
-        command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD)
+        command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
     elif dist_info[0] == "ALT Linux ":
         if kwargs['edition'] == "ee":
@@ -177,4 +177,12 @@ def package_mgmt(remote=False, host=None, **kwargs):
 
         for p in ALT_PACKAGES:
             cmd = "apt-get install -y %s-%s" % (pkg_name, p)
-            command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD)
+            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+
+
+def install_windows_console():
+    pass
+
+
+def get_windows_installer():
+    pass

@@ -3,20 +3,22 @@ import paramiko
 import platform
 import random
 import shlex
+import shutil
 import socket
 import subprocess
 import sys
+import winrm
 
 from time import sleep
 
-SSH_LOGIN = 'test'
-SSH_ROOT = 'root'
-SSH_PASSWORD = 'TestPass1'
-SSH_ROOT_PASSWORD = 'TestRoot1'
+REMOTE_LOGIN = 'test'
+REMOTE_ROOT = 'root'
+REMOTE_PASSWORD = 'TestPass1'
+REMOTE_ROOT_PASSWORD = 'TestRoot1'
 SSH_PORT = 22
 
 
-def command_executor(cmd, remote=False, host=None, login=None, password=None, stdout=False):
+def command_executor(cmd, remote=False, host=None, login=None, password=None, stdout=False, windows=False):
     """ Command executor for local commands and remote commands. For local command using subprocess
     for remote command paramiko or winrm (for windows)
 
@@ -28,6 +30,8 @@ def command_executor(cmd, remote=False, host=None, login=None, password=None, st
     """
     if remote:
         return exec_command(cmd, host, login, password)
+    elif windows:
+        return exec_command_win(cmd, host, login, password)
     else:
         if '|' in cmd:
             first_command = cmd[:cmd.index("|")]
@@ -43,17 +47,42 @@ def command_executor(cmd, remote=False, host=None, login=None, password=None, st
                 return subprocess.check_output(shlex.split(cmd))
 
 
+def get_virt_ip():
+    """ Get host ip for virtual machine bridge interface
+
+    :return: string ip address
+    """
+    out, err = subprocess.Popen('ifconfig virbr0|grep "inet addr"',
+                                shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+    return out[20:33]
+
+
 def copy_file(local_path, remote_path, hostname):
 
     transport = paramiko.Transport((hostname, SSH_PORT))
-    transport.connect(username=SSH_LOGIN, password=SSH_PASSWORD)
+    transport.connect(username=REMOTE_LOGIN, password=REMOTE_PASSWORD)
     sftp = paramiko.SFTPClient.from_transport(transport)
     print "Copying file '%s', remote host is '%s'" % (remote_path, hostname)
     sftp.get(remote_path, local_path)
     sftp.close()
     transport.close()
+    return 0
 
-    # TODO: return exit code
+
+def copy_file_win(reportname, domipaddress):
+    """ Copy reports
+
+    :param reportname:
+    :param domipaddress:
+    :return:
+    """
+
+    cmd = r'net use f: "\\%s\reports" &&xcopy .\pg-tests\*.html f:\ /Y' % get_virt_ip()
+    exec_command_win(cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD)
+    cmd = r'net use f: "\\%s\reports" &&xcopy .\pg-tests\*.xml f:\ /Y' % get_virt_ip()
+    exec_command_win(cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD)
+    shutil.copy(r'/reports/%s.html' % reportname, r'reports')
+    shutil.copy(r'/reports/%s.xml' % reportname, r'reports')
 
 
 def exec_command(cmd, hostname, login, password):
@@ -92,6 +121,20 @@ def exec_command(cmd, hostname, login, password):
     return retcode, stdout, stderr
 
 
+def exec_command_win(cmd, hostname, user, password):
+
+    p = winrm.Protocol(endpoint='http://' + hostname + ':5985/wsman', transport='plaintext',
+                       username=user,
+                       password=password)
+    shell_id = p.open_shell()
+    command_id = p.run_command(shell_id, cmd)
+    stdout, stderr, retcode = p.get_command_output(shell_id, command_id)
+    p.cleanup_command(shell_id, command_id)
+    p.close_shell(shell_id)
+
+    return retcode, stdout, stderr
+
+
 def gen_name(name):
     return name + '-' + str(random.getrandbits(15))
 
@@ -99,7 +142,7 @@ def gen_name(name):
 def write_file(file, text, remote=False, host=None):
     if remote:
         transport = paramiko.Transport((host, 22))
-        transport.connect(username=SSH_ROOT, password=SSH_ROOT_PASSWORD)
+        transport.connect(username=REMOTE_ROOT, password=REMOTE_ROOT_PASSWORD)
         sftp = paramiko.SFTPClient.from_transport(transport)
         f = sftp.open(file, "w+")
         f.write(text)
@@ -127,7 +170,7 @@ def get_distro(remote=False, ip=None):
 
 def get_os_type(ip):
     cmd = 'cat /etc/*-release'
-    retcode, stdout, stderr = exec_command(cmd, ip, SSH_ROOT, SSH_ROOT_PASSWORD)
+    retcode, stdout, stderr = exec_command(cmd, ip, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
     if retcode == 0:
         return dict(
             v.split("=") for v in stdout.replace(

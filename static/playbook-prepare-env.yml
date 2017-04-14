@@ -1,6 +1,9 @@
 ---
 - hosts: all
   gather_facts: true
+  vars:
+   win_path: C:\Users\test\Downloads\
+
   tasks:
 
   - name: subscribe to RHSM
@@ -18,7 +21,7 @@
         - libselinux-python
         - python-psycopg2
         - tkinter
-    when: ansible_pkg_mgr == "yum"
+    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "yum"
     become_method: su
     become: true
 
@@ -104,7 +107,7 @@
         - gcc
         - python-dev
         - python-selinux
-    when: ansible_pkg_mgr == "urpmi"
+    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "urpmi"
     become_method: su
     become: true
 
@@ -116,12 +119,13 @@
         - gcc
         - python-dev
         - python-selinux
-    when: ansible_pkg_mgr == "zypper"
+    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "zypper"
     become_method: su
     become: true
 
   - name: set up ssh authorized_keys
     authorized_key: user=test key="{{ item }}" state=present exclusive=yes
+    when: ansible_os_family != "Windows"
     with_file:
     - authorized_keys
 
@@ -130,6 +134,7 @@
       url: https://bootstrap.pypa.io/get-pip.py
       dest: /tmp
       validate_certs: no
+    when: ansible_os_family != "Windows"
 
   - name: install pip
     command: "python /tmp/get-pip.py"
@@ -137,9 +142,11 @@
     become: true
     tags:
     - skip_ansible_lint
+    when: ansible_os_family != "Windows"
 
   - name: delete get-pip.py
     file: state=absent path=/tmp/get-pip.py
+    when: ansible_os_family != "Windows"
 
   - name: set http.sslVerify to false in a git config
     git_config: name=http.sslVerify scope=global value="false"
@@ -149,13 +156,14 @@
     git: repo=https://git.postgrespro.ru/automation/pg-tests.git dest=/home/test/pg-tests
     tags:
     - skip_ansible_lint
+    when: ansible_os_family != "Windows"
 
   - name: install required pip modules
     pip:
       requirements: "/home/test/pg-tests/static/requirements.txt"
     become_method: su
     become: true
-    when: ansible_distribution not in ['ROSA', "МСВСфера"]
+    when: ansible_os_family != "Windows" and ansible_distribution not in ['ROSA', "МСВСфера"]
 
   - name: Download python2.7 for ROSA and MSVSSpehre
     unarchive:
@@ -164,33 +172,24 @@
       remote_src: True
     when: ansible_distribution in ['ROSA', "МСВСфера"]
 
-#   yum install -y python-psycopg2
-#   apt-get install -y python-psycopg2
-#  - name: install psycopg2
-#    pip: name=psycopg2 version=2.6.2
-#    environment:
-#      PATH: "{{ ansible_env.PATH }}:/usr/pgsql-9.6/bin/"
-#    become_method: su
-#    become: true
-
   - name: remove postgresql-devel (YUM)
     yum: name={{ item }} state=absent
     with_items:
       - postgresql-devel
       - postgresql
-    when: ansible_pkg_mgr == "yum"
+    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "yum"
     become_method: su
     become: true
 
   - name: remove libpq-dev (APT)
     apt: name=libpq-dev state=absent
-    when: ansible_pkg_mgr == "apt" and ansible_distribution != "Altlinux"
+    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "apt" and ansible_distribution != "Altlinux"
     become_method: su
     become: true
 
   - name: set selinux to permissive
     selinux: policy=targeted state=permissive
-    when: ansible_selinux == "Enabled"
+    when: ansible_os_family != "Windows" and ansible_selinux == "Enabled"
     #when: (ansible_distribution == "Ubuntu" and ansible_distribution_major_version == "15") or
     #      (ansible_distribution == "Debian" and ansible_distribution_major_version == "7")
     become_method: su
@@ -202,6 +201,7 @@
       state: present
     become_method: su
     become: true
+    when: ansible_os_family != "Windows"
 
   - name: allow 'wheel' group to have passwordless become_method
     lineinfile:
@@ -211,6 +211,7 @@
       line: '%wheel ALL=(ALL) NOPASSWD: ALL'
     become_method: su
     become: true
+    when: ansible_os_family != "Windows"
 
   # see https://bugzilla.redhat.com/show_bug.cgi?id=1020147
   - name: comment out requiretty option in /etc/sudoers
@@ -230,6 +231,7 @@
       append: yes
     become_method: su
     become: true
+    when: ansible_os_family != "Windows"
 
   - name: coredump handling
     pam_limits: domain={{ item }} limit_type=soft limit_item=core value=unlimited backup=yes
@@ -238,9 +240,11 @@
       - postgres
     become_method: su
     become: true
+    when: ansible_os_family != "Windows"
 
   - name: make a directory for coredumps
     file: path="/home/test/coredumps" state=directory
+    when: ansible_os_family != "Windows"
 
   - name: remove unknown keys from sysctl.conf
     sysctl: name={{ item }} state=absent reload=no
@@ -256,9 +260,59 @@
     sysctl: name="kernel.core_pattern" value="/home/test/coredumps/core-%e-%p-%t" sysctl_set=yes state=present
     become_method: su
     become: true
+    when: ansible_os_family != "Windows"
 
   - name: unsubscribe from RHSM
     redhat_subscription: state=absent username=v.wagner@postgrespro.ru password=thuch5Zeik
     become_method: su
     become: true
     when: ansible_distribution == "RedHat"
+
+  - name: windows download git
+    when: ansible_os_family == "Windows"
+    with_items:
+        - { win_url: "https://github.com/git-for-windows/git/releases/download/v2.11.0.windows.3/Git-2.11.0.3-64-bit.exe", win_dest: 'Git-2.11.0.3-64-bit.exe' }
+        - { win_url: "https://www.python.org/ftp/python/2.7.13/python-2.7.13.amd64.msi", win_dest: 'python2-7-13.amd64.msi' }
+        - { win_url: "https://bootstrap.pypa.io/get-pip.py", win_dest: 'get-pip.py' }
+    win_get_url:
+      url: '{{ item.win_url }}'
+      dest: '{{ win_path }}{{ item.win_dest }}'
+
+  - name: windows install git
+    when: ansible_os_family == "Windows"
+    win_shell: '{{ win_path }}Git-2.11.0.3-64-bit.exe /VERYSILENT'
+
+  - name: windows install python
+    when: ansible_os_family == "Windows"
+    win_msi:
+      path: '{{ win_path }}python2-7-13.amd64.msi'
+      wait: true
+
+  - name: windows install pip
+    when: ansible_os_family == "Windows"
+    win_shell: 'C:\Python27\python.exe {{ win_path }}get-pip.py'
+
+  - name: windows install libraries
+    when: ansible_os_family == "Windows"
+    with_items:
+        - pytest
+        - pytest-html
+        - psycopg2
+        - netaddr
+        - paramiko
+        - psutil
+    win_shell: 'C:\Python27\Scripts\pip.exe install {{ item }}'
+
+  - name: windows install pg-tests with git
+    when: ansible_os_family == "Windows"
+    win_shell: 'git clone https://git.postgrespro.ru/automation/pg-tests.git'
+
+  - name: windows remove pip, git, python installers
+    when: ansible_os_family == "Windows"
+    with_items:
+        - { win_dest: "Git-2.11.0.3-64-bit.exe" }
+        - { win_dest: "python2-7-13.amd64.msi" }
+        - { win_dest: "get-pip.py" }
+    win_file:
+      path: '{{ win_path }}{{ item.win_dest }}'
+      state: absent

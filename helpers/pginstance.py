@@ -1,9 +1,6 @@
 import os
 import psutil
-import platform
 import psycopg2
-import subprocess
-from subprocess import Popen
 
 from helpers.pginstall import package_mgmt
 from helpers.pginstall import setup_repo
@@ -12,13 +9,12 @@ from helpers.sql_helpers import pg_set_option
 from helpers.sql_helpers import pg_check_option
 from helpers.sql_helpers import pg_manage_psql
 from helpers.sql_helpers import pg_start_script_name
-from helpers.sql_helpers import pg_initdb
 from helpers.pginstall import RPM_BASED
 
 from helpers.utils import command_executor
 from helpers.utils import get_distro
-from helpers.utils import SSH_ROOT
-from helpers.utils import SSH_ROOT_PASSWORD
+from helpers.utils import REMOTE_ROOT
+from helpers.utils import REMOTE_ROOT_PASSWORD
 from helpers.utils import write_file
 
 
@@ -99,13 +95,13 @@ class PgInstance:
         cmd = "sudo -u postgres psql -t -P format=unaligned -c \"SHOW hba_file;\""
         hba_file = ""
         if remote:
-            hba_file = command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD)[1]
+            hba_file = command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)[1]
         else:
-            hba_file = command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD, stdout=True)
+            hba_file = command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD, stdout=True)
         print "Path to hba_file is", hba_file
         write_file(hba_file, pg_hba_config, remote, host)
         cmd = "chown postgres:postgres %s" % hba_file
-        return command_executor(cmd, remote, host, SSH_ROOT, SSH_ROOT_PASSWORD)
+        return command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
     def setup_psql(self, name, version, edition, milestone, build, remote=False, host=None):
 
@@ -121,11 +117,11 @@ class PgInstance:
 
         if remote:
             cmd = "export PATH=$PATH:/usr/pgsql-%s.%s/bin/" % (major, minor)
-            command_executor(cmd, remote, host, login=SSH_ROOT, password=SSH_ROOT_PASSWORD)
+            command_executor(cmd, remote, host, login=REMOTE_ROOT, password=REMOTE_ROOT_PASSWORD)
         else:
             os.environ['PATH'] += ":/usr/pgsql-%s.%s/bin/" % (major, minor)
         cmd = "sudo -u postgres psql -c \"ALTER USER postgres WITH PASSWORD \'%s\';\"" % self.PG_PASSWORD
-        command_executor(cmd, remote, host, login=SSH_ROOT, password=SSH_ROOT_PASSWORD)
+        command_executor(cmd, remote, host, login=REMOTE_ROOT, password=REMOTE_ROOT_PASSWORD)
 
         hba_auth = """
     local   all             all                                     peer
@@ -133,7 +129,7 @@ class PgInstance:
     host    all             all             ::0/0                   trust"""
         self.edit_pg_hba_conf(hba_auth, remote=remote, host=host)
         cmd = "sudo -u postgres psql -c \"ALTER SYSTEM SET listen_addresses to \'*\';\""
-        command_executor(cmd, remote, host, login=SSH_ROOT, password=SSH_ROOT_PASSWORD)
+        command_executor(cmd, remote, host, login=REMOTE_ROOT, password=REMOTE_ROOT_PASSWORD)
         self.manage_psql("restart", remote=remote, host=host)
 
     def get_postmaster_pid(self):
