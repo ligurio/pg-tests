@@ -30,12 +30,9 @@ class PgInstance:
         self.build = build
         self.skip_install = skip_install
         self.connstring = "host=localhost user=postgres"
+        self.windows = windows
         if cluster_name is None and not skip_install:
             self.skip_install = False
-            self.install_product(name, version, edition, milestone, build)
-        elif not skip_install and windows:
-            self.skip_install = False
-            self.windows = windows
             self.install_product(name, version, edition, milestone, build, windows=windows)
         elif not skip_install:
             self.environment_info = environment_info
@@ -54,7 +51,6 @@ class PgInstance:
         print(name, version, edition, milestone, build, windows)
         if windows:
             setup_repo(name=name, version=version, edition=edition, milestone=milestone, build=build)
-            package_mgmt(name=name, version=version, edition=edition, milestone=milestone, build=build)
         else:
             setup_repo(name=name, version=version, edition=edition, milestone=milestone, build=build)
             package_mgmt(name=name, version=version, edition=edition, milestone=milestone, build=build)

@@ -163,7 +163,7 @@ def create_env(name, domname):
         print "Waiting for IP address...%d" % timeout
         time.sleep(timeout)
         domipaddress = lookupIPbyMac(conn, dommac)
-        if timeout == 40:
+        if timeout == 60:
             print "Failed to obtain an IP address inside domain"
             sys.exit(1)
 
