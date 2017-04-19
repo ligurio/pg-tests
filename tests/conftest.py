@@ -21,6 +21,8 @@ def pytest_addoption(parser):
     :param parser pytest default param for command line args:
     :return:
     """
+    parser.addoption("--target", action="store",
+                     help="Operating system")
     parser.addoption("--product_version", action="store", default='9.6',
                      help="Specify product version. Available values: 9.5, 9.6")
     parser.addoption("--product_name", action="store", default='postgrespro',
@@ -58,15 +60,26 @@ def install_postgres(request):
         edition = None
         build = None
         local = True
+        windows = False
     else:
-        version = request.config.getoption('--product_version')
-        milestone = request.config.getoption('--product_milestone')
-        name = request.config.getoption('--product_name')
-        edition = request.config.getoption('--product_edition')
-        build = request.config.getoption('--product_build')
-        local = False
+        if request.config.getoption('--target')[0:3] == 'win':
+            version = request.config.getoption('--product_version')
+            milestone = request.config.getoption('--product_milestone')
+            name = request.config.getoption('--product_name')
+            edition = request.config.getoption('--product_edition')
+            build = request.config.getoption('--product_build')
+            local = False
+            windows = True
+        else:
+            version = request.config.getoption('--product_version')
+            milestone = request.config.getoption('--product_milestone')
+            name = request.config.getoption('--product_name')
+            edition = request.config.getoption('--product_edition')
+            build = request.config.getoption('--product_build')
+            local = False
+            windows = False
 
-    pginstance = PgInstance(version, milestone, name, edition, build, local)
+    pginstance = PgInstance(version, milestone, name, edition, build, local, windows=windows)
 
     return pginstance
 

@@ -30,7 +30,7 @@ def command_executor(cmd, remote=False, host=None, login=None, password=None, st
     """
     if remote:
         return exec_command(cmd, host, login, password)
-    elif windows:
+    elif remote and windows:
         return exec_command_win(cmd, host, login, password)
     else:
         if '|' in cmd:
@@ -122,6 +122,14 @@ def exec_command(cmd, hostname, login, password):
 
 
 def exec_command_win(cmd, hostname, user, password):
+    """ Execute command on windows remote host
+
+    :param cmd:
+    :param hostname:
+    :param user:
+    :param password:
+    :return:
+    """
 
     p = winrm.Protocol(endpoint='http://' + hostname + ':5985/wsman', transport='plaintext',
                        username=user,
@@ -165,10 +173,21 @@ def get_distro(remote=False, ip=None):
             host_info = get_os_type(ip)
         return host_info['NAME'].strip('"'), host_info['VERSION_ID'].strip('"')
     else:
-        return platform.linux_distribution()[0].strip('"'), platform.linux_distribution()[1]
+        if "Linux" in platform.platform():
+            return platform.linux_distribution()[0].strip('"'), platform.linux_distribution()[1]
+        elif "Windows" in platform.platform():
+            return platform.win32_ver()[0], platform.win32_ver()[1]
+        else:
+            print("Unknown distro")
+            sys.exit(1)
 
 
 def get_os_type(ip):
+    """ Get os type on remote linux machine
+
+    :param ip:
+    :return:
+    """
     cmd = 'cat /etc/*-release'
     retcode, stdout, stderr = exec_command(cmd, ip, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
     if retcode == 0:

@@ -1,5 +1,9 @@
 import logging
 import os
+import sys
+import urllib
+
+from BeautifulSoup import BeautifulSoup
 
 from helpers.utils import exec_command
 from helpers.utils import command_executor
@@ -17,6 +21,7 @@ RPM_BASED = ['CentOS Linux', 'RHEL', 'CentOS',
              'Red Hat Enterprise Linux Server', 'Oracle Linux Server', 'SLES',
              'ROSA Enterprise Linux Server', 'ROSA SX \"COBALT\" ']
 DEB_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux', 'AstraLinuxSE']
+WIN_BASED = ['2012ServerR2']
 
 dist = {"Oracle Linux Server": 'oraclelinux',
         "CentOS Linux": 'centos',
@@ -83,13 +88,23 @@ def generate_repo_info(distro, osversion, **kwargs):
         elif kwargs['edition'] == "cert":
             baseurl = os.path.join("http://localrepo.l.postgrespro.ru", product_dir, distname)
         else:
-            baseurl = os.path.join(PGPRO_HOST, product_dir, distname)
+            if distro[0] in WIN_BASED:
+                baseurl = os.path.join(PGPRO_HOST, product_dir, "win")
+            else:
+                baseurl = os.path.join(PGPRO_HOST, product_dir, distname)
         logging.debug("Installation repo path: %s" % baseurl)
         logging.debug("GPG key url for installation: %s" % gpg_key_url)
         return baseurl, gpg_key_url
 
 
 def setup_repo(remote=False, host=None, **kwargs):
+    """ Setup yum or apt repo for Linux Based envs and download windows installer for Windows based
+
+    :param remote: bool: remote or local installation
+    :param host:  str: ip address
+    :param kwargs: list of args about what we installing
+    :return: exit code 0 if all is ok and 1 if failed
+    """
     dist_info = get_distro(remote, host)
     repo_info = generate_repo_info(dist_info[0], dist_info[1], version=kwargs['version'],
                                    name=kwargs['name'], edition=kwargs['edition'],
@@ -141,9 +156,15 @@ enabled=1
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             cmd = "apt-get update -y"
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+    elif dist_info[0] in WIN_BASED:
+        windows_installer = urllib.URLopener()
+        installer_name = get_last_windows_installer_file(baseurl)
+        windows_installer_url = baseurl + installer_name
+        windows_installer.retrieve(windows_installer_url, "./" + installer_name)
+        install_windows_console(installer_name)
     else:
         print "Unsupported distro %s" % dist_info[0]
-        return 1
+        sys.exit(1)
 
 
 def package_mgmt(remote=False, host=None, **kwargs):
@@ -180,9 +201,24 @@ def package_mgmt(remote=False, host=None, **kwargs):
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
 
-def install_windows_console():
-    pass
+def install_windows_console(installer):
+    """Run shell command for silent installation
+    :return:
+    """
+    cmd = "C:/Users/test/pg-tests/helpers/{installer} /S".format(installer=installer)
+    return command_executor(cmd)
 
 
-def get_windows_installer():
-    pass
+def get_last_windows_installer_file(url):
+    """Get last uploaded postgrespro installation file from postgrespro repo
+
+    :param url: str:
+    :return: str: last postgrespro exe file
+    """
+    f = urllib.urlopen(url)
+    soup = BeautifulSoup(f)
+    postgres_files = []
+    for link in soup.findAll('a'):
+        if "Postgres" in link.get('href'):
+            postgres_files.append(link.get('href'))
+    return postgres_files[-1]

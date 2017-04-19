@@ -22,7 +22,7 @@ class PgInstance:
     PG_PASSWORD = 'password'
 
     def __init__(self, version, milestone, name, edition, build, skip_install,
-                 environment_info=None, cluster_name=None):
+                 environment_info=None, cluster_name=None, windows=False):
         self.version = version
         self.milestone = milestone
         self.name = name
@@ -30,9 +30,13 @@ class PgInstance:
         self.build = build
         self.skip_install = skip_install
         self.connstring = "host=localhost user=postgres"
+        self.windows = windows
         if cluster_name is None and not skip_install:
             self.skip_install = False
             self.install_product(name, version, edition, milestone, build)
+        elif not skip_install and windows:
+            self.skip_install = False
+            self.install_product(name, version, edition, milestone, build, windows=self.windows)
         elif not skip_install:
             self.environment_info = environment_info
             self.cluster_name = cluster_name
@@ -40,17 +44,20 @@ class PgInstance:
                                          version=version, edition=edition, milestone=milestone,
                                          build=build)
 
-    def install_product(self, name, version, edition, milestone, build):
+    def install_product(self, name, version, edition, milestone, build, windows=False):
         """ Install product
         Parameter: Product name: postgrespro, postgresql
         Parameter: Product version: 9.5, 9.6 etc
         Parameter: Product editions (postgrespro only): standard, ee
         Parameter: Product milestone (postgrespro only): beta
         """
-
-        setup_repo(name=name, version=version, edition=edition, milestone=milestone, build=build)
-        package_mgmt(name=name, version=version, edition=edition, milestone=milestone, build=build)
-        self.setup_psql(name, version, edition, milestone, build)
+        if windows:
+            setup_repo(name=name, version=version, edition=edition, milestone=milestone, build=build)
+            package_mgmt(name=name, version=version, edition=edition, milestone=milestone, build=build)
+        else:
+            setup_repo(name=name, version=version, edition=edition, milestone=milestone, build=build)
+            package_mgmt(name=name, version=version, edition=edition, milestone=milestone, build=build)
+            self.setup_psql(name, version, edition, milestone, build)
 
         return {'name': name,
                 'version': version,
