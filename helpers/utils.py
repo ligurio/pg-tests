@@ -44,7 +44,7 @@ def command_executor(cmd, remote=False, host=None, login=None, password=None, st
                 out = subprocess.Popen((shlex.split(cmd)), stdout=subprocess.PIPE)
                 return out.stdout.readline().rstrip()
             else:
-                return subprocess.check_output(shlex.split(cmd))
+                return subprocess.check_output(shlex.split(cmd), shell=True)
 
 
 def get_virt_ip():
