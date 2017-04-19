@@ -81,6 +81,8 @@ def generate_repo_info(distro, osversion, **kwargs):
             distname = "rosa-sx"
         elif distro == "AstraLinuxSE":
             distname = "astra-smolensk"
+        elif distro == "2012ServerR2":
+            distname = "Windows"
         else:
             distname = dist[distro].lower()
         if kwargs['edition'] == "cert" and distro == "AstraLinuxSE":
@@ -88,8 +90,8 @@ def generate_repo_info(distro, osversion, **kwargs):
         elif kwargs['edition'] == "cert":
             baseurl = os.path.join("http://localrepo.l.postgrespro.ru", product_dir, distname)
         else:
-            if distro[0] in WIN_BASED:
-                baseurl = os.path.join(PGPRO_HOST, product_dir, "win")
+            if distro in WIN_BASED:
+                baseurl = PGPRO_HOST + product_dir + "/win/"
             else:
                 baseurl = os.path.join(PGPRO_HOST, product_dir, distname)
         logging.debug("Installation repo path: %s" % baseurl)
@@ -205,7 +207,7 @@ def install_windows_console(installer):
     """Run shell command for silent installation
     :return:
     """
-    cmd = "C:/Users/test/pg-tests/helpers/{installer} /S".format(installer=installer)
+    cmd = "C:/Users/test/pg-tests/{installer} /S".format(installer=installer)
     return command_executor(cmd)
 
 
