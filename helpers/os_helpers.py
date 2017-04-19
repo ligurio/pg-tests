@@ -9,6 +9,12 @@ from helpers.pginstall import DEB_BASED, RPM_BASED
 
 
 def download_file(url, path):
+    """ Download file from remote path
+
+    :param url: str
+    :param path: str
+    :return:
+    """
 
     try:
         blob = urllib2.urlopen(url)

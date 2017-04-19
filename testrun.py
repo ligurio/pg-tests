@@ -228,10 +228,10 @@ def make_test_cmd(domname, reportname, tests=None,
 
     if domname[0:3] == 'win':
         cmd = r'cd C:\Users\test\pg-tests && pytest %s --self-contained-html --html=%s.html --junit-xml=%s.xml \
-                  --maxfail=1 %s' % (tests, reportname, reportname, pcmd)
+                  --maxfail=1 %s --target=%s' % (tests, reportname, reportname, pcmd, domname)
     else:
         cmd = 'cd /home/test/pg-tests && sudo pytest %s --self-contained-html --html=%s.html --junit-xml=%s.xml ' \
-              '--maxfail=1 %s' % (tests, reportname, reportname, pcmd)
+              '--maxfail=1 %s --target=%s' % (tests, reportname, reportname, pcmd, domname)
 
     if DEBUG:
         cmd += "--verbose --tb=long --full-trace"

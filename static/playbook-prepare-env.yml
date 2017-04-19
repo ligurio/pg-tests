@@ -292,20 +292,17 @@
     when: ansible_os_family == "Windows"
     win_shell: 'C:\Python27\python.exe {{ win_path }}get-pip.py'
 
-  - name: windows install libraries
-    when: ansible_os_family == "Windows"
-    with_items:
-        - pytest
-        - pytest-html
-        - psycopg2
-        - netaddr
-        - paramiko
-        - psutil
-    win_shell: 'C:\Python27\Scripts\pip.exe install {{ item }}'
-
   - name: windows install pg-tests with git
     when: ansible_os_family == "Windows"
     win_shell: 'git clone https://git.postgrespro.ru/automation/pg-tests.git'
+
+  - name: windows install libraries
+    when: ansible_os_family == "Windows"
+    win_shell: 'C:\Python27\Scripts\pip.exe install -r C:\Users\test\pg-tests\static\requirements.txt'
+
+  - name: windows install packages
+    when: ansible_os_family == "Windows"
+    win_shell: 'C:\Python27\Scripts\pip.exe install pywinrm, psycopg2'
 
   - name: windows remove pip, git, python installers
     when: ansible_os_family == "Windows"
