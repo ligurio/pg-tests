@@ -91,7 +91,7 @@ def generate_repo_info(distro, osversion, **kwargs):
             baseurl = os.path.join("http://localrepo.l.postgrespro.ru", product_dir, distname)
         else:
             if distro in WIN_BASED:
-                baseurl = PGPRO_HOST + product_dir + "/win/"
+                baseurl = "{}{}/win/".format(PGPRO_HOST, product_dir)
             else:
                 baseurl = os.path.join(PGPRO_HOST, product_dir, distname)
         logging.debug("Installation repo path: %s" % baseurl)

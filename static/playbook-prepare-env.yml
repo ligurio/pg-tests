@@ -302,7 +302,7 @@
 
   - name: windows install packages
     when: ansible_os_family == "Windows"
-    win_shell: 'C:\Python27\Scripts\pip.exe install pywinrm, psycopg2'
+    win_shell: 'C:\Python27\Scripts\pip.exe install psycopg2'
 
   - name: windows remove pip, git, python installers
     when: ansible_os_family == "Windows"
