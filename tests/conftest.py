@@ -61,6 +61,7 @@ def install_postgres(request):
         build = None
         local = True
         windows = False
+        return PgInstance(version, milestone, name, edition, build, local, windows=windows)
     else:
         if request.config.getoption('--target')[0:3] == 'win':
             version = request.config.getoption('--product_version')
@@ -70,6 +71,7 @@ def install_postgres(request):
             build = request.config.getoption('--product_build')
             local = False
             windows = True
+            return PgInstance(version, milestone, name, edition, build, local, windows=windows)
         else:
             version = request.config.getoption('--product_version')
             milestone = request.config.getoption('--product_milestone')
@@ -78,10 +80,7 @@ def install_postgres(request):
             build = request.config.getoption('--product_build')
             local = False
             windows = False
-
-    pginstance = PgInstance(version, milestone, name, edition, build, local, windows=windows)
-
-    return pginstance
+            return PgInstance(version, milestone, name, edition, build, local, windows=windows)
 
 
 @pytest.fixture

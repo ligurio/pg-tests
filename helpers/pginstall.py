@@ -208,7 +208,7 @@ def install_windows_console(installer):
     :return:
     """
     cmd = "C:/Users/test/pg-tests/{installer} /S".format(installer=installer)
-    return command_executor(cmd)
+    return command_executor(cmd, windows=True)
 
 
 def get_last_windows_installer_file(url):
