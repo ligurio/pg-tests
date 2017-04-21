@@ -48,7 +48,6 @@ class PgInstance:
         Parameter: Product editions (postgrespro only): standard, ee
         Parameter: Product milestone (postgrespro only): beta
         """
-        print(name, version, edition, milestone, build, windows)
         if windows:
             setup_repo(name=name, version=version, edition=edition, milestone=milestone, build=build)
         else:

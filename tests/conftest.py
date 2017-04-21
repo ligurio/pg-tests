@@ -21,7 +21,7 @@ def pytest_addoption(parser):
     :param parser pytest default param for command line args:
     :return:
     """
-    parser.addoption("--target", action="store",
+    parser.addoption("--target", action="store", default='linux',
                      help="Operating system")
     parser.addoption("--product_version", action="store", default='9.6',
                      help="Specify product version. Available values: 9.5, 9.6")

@@ -47,7 +47,8 @@ def command_executor(cmd, remote=False, host=None, login=None, password=None, st
                 if windows:
                     return subprocess.check_output(shlex.split(cmd), shell=True)
                 else:
-                    return subprocess.check_output(shlex.split(cmd))
+                    print(cmd)
+                    return subprocess.check_call(shlex.split(cmd))
 
 
 def get_virt_ip():
