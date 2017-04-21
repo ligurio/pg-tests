@@ -191,11 +191,13 @@ def pg_manage_psql(action, data_dir, start_script=None, remote=False, host=None)
         if start_script is None:
             pg_ctl = os.path.join(pg_bindir(), "pg_ctl")
             # cmd = ["sudo", "-u", "postgres", pg_ctl, "-D", data_dir, action]
-            cmd = "sudo -u postgres %s -D %s %s" % (pg_ctl, data_dir, action)
+            cmd = "sudo -u postgres %s -w -D %s %s" % (pg_ctl, data_dir, action)
+            print(cmd)
             return command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         else:
             # cmd = ["service", start_script, action]
             cmd = "service %s %s" % (start_script, action)
+            print(cmd)
             return command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
         # retcode = subprocess.check_call(cmd)
@@ -231,6 +233,9 @@ def pg_initdb(connstring, *params):
     pg_manage_psql("stop", data_dir)
     rmdir(data_dir)
     initdb = os.path.join(pg_bindir(), "initdb")
+    print(initdb)
     initdb_cmd = ["sudo", "-u", "postgres", initdb, "-D", data_dir]
+    print(initdb_cmd)
+    print(params)
     subprocess.check_output(initdb_cmd + list(params))
     pg_manage_psql("start", data_dir)

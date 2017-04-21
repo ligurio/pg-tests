@@ -42,7 +42,9 @@ def pg_bindir():
         if distro in RPM_BASED:
             return subprocess.check_output(['/usr/pgproee-9.6/bin/pg_config', "--bindir"]).strip()
         elif distro in DEB_BASED:
-            return subprocess.check_output(['/usr/bin/pg_config', "--bindir"]).strip()
+            a = subprocess.check_output(['/usr/bin/pg_config', "--bindir"]).strip()
+            print(a)
+            return a
     else:
         return subprocess.check_output([pg_config_bin, "--bindir"]).strip()
 
