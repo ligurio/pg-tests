@@ -80,7 +80,7 @@ def install_postgres(request):
             build = request.config.getoption('--product_build')
             local = False
             windows = False
-            return PgInstance(version, milestone, name, edition, build, local, windows=windows)
+            return PgInstanкщщеce(version, milestone, name, edition, build, local, windows=windows)
 
 
 @pytest.fixture
