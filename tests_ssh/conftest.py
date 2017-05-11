@@ -27,24 +27,36 @@ def pytest_addoption(parser):
 
 @pytest.fixture(scope='function')
 def environment(request):
-    name = request.node.name.split('.')[0]
-    return Environment(name)
+    # TODO set here that if param == 'baremetal' provide config file with cluster_config or parse it from options
+    if request.config.getoption('--config'):
+        """Parse config """
+        config = ""
+        return config
+    else:
+        name = request.node.name.split('.')[0]
+        return Environment(name)
 
 
 @pytest.mark.usefixtures('environment')
 @pytest.fixture(scope='function')
 def create_environment(request, environment):
-    nodes_count = request.param
-    return environment.create_environment(request.node.name,
-                                          nodes_count,
-                                          request.config.getoption("--target"))
+    if request.config.getoption('--config'):
+        config = ""
+        return config
+    else:
+        nodes_count = request.param
+        return environment.create_environment(request.node.name, nodes_count, request.config.getoption("--target"))
 
 
 @pytest.mark.usefixtures('environment')
 @pytest.fixture(scope='function')
 def install_postgres(request, environment):
-    environment_info = environment.get_cluster_config()
-    cluster_name = "%s_%s" % (request.node.name, request.config.getoption('--target'))
+    if request.config.getoption('--config'):
+        environment_info = environment
+        cluster_name = environment['env_name']
+    else:
+        environment_info = environment.get_cluster_config()
+        cluster_name = "%s_%s" % (request.node.name, request.config.getoption('--target'))
     pginstance = PgInstance(version=request.config.getoption('--product_version'),
                             milestone=request.config.getoption('--product_milestone'),
                             name=request.config.getoption('--product_name'),
