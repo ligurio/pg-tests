@@ -52,35 +52,24 @@ def install_postgres(request):
     :return:
     """
     skip_install = request.config.getoption("--skip_install")
-
+    version = request.config.getoption('--product_version')
+    milestone = request.config.getoption('--product_milestone')
+    name = request.config.getoption('--product_name')
+    edition = request.config.getoption('--product_edition')
+    build = request.config.getoption('--product_build')
     if skip_install:
-        version = None
-        milestone = None
-        name = None
-        edition = None
-        build = None
         local = True
         windows = False
         return PgInstance(version, milestone, name, edition, build, local, windows=windows)
     else:
         if request.config.getoption('--target')[0:3] == 'win':
-            version = request.config.getoption('--product_version')
-            milestone = request.config.getoption('--product_milestone')
-            name = request.config.getoption('--product_name')
-            edition = request.config.getoption('--product_edition')
-            build = request.config.getoption('--product_build')
             local = False
             windows = True
             return PgInstance(version, milestone, name, edition, build, local, windows=windows)
         else:
-            version = request.config.getoption('--product_version')
-            milestone = request.config.getoption('--product_milestone')
-            name = request.config.getoption('--product_name')
-            edition = request.config.getoption('--product_edition')
-            build = request.config.getoption('--product_build')
             local = False
             windows = False
-            return PgInstanкщщеce(version, milestone, name, edition, build, local, windows=windows)
+            return PgInstance(version, milestone, name, edition, build, local, windows=windows)
 
 
 @pytest.fixture
