@@ -48,9 +48,20 @@ def test_extensions(install_postgres):
     if edition == "standard":
         extensions = settings.EXTENSIONS_OS
     elif edition == "enterprise":
-        extensions = settings.EXTENSIONS_EE
+        extensions = settings.EXTENSIONS_EE + settings.EXTENSIONS_OS
     else:
         pytest.fail("Unknown PostgresPro edition")
 
     for e in extensions:
-        assert e in available_extensions
+        if e in ["aqo", "multimaster"]:
+            continue
+        else:
+            assert e in available_extensions
+            install_postgres.load_extension(e)
+            conn = psycopg2.connect(conn_string)
+            cursor = conn.cursor()
+            cursor.execute("SELECT extname FROM pg_catalog.pg_extension WHERE extname = \'%s\';" % e)
+            assert cursor.fetchall()[0][0] == e
+            cursor.execute("DROP EXTENSION IF EXISTS %s" % e)
+            conn.commit()
+            conn.close()

@@ -40,7 +40,14 @@ def pg_bindir():
         print("PG_CONFIG variable not in environment variables\n", e)
         print("Trying to install pg_config and set PG_CONFIG\n")
         if distro in RPM_BASED:
-            return subprocess.check_output(['/usr/pgproee-9.6/bin/pg_config', "--bindir"]).strip()
+            try:
+                print("Trying to execute pg_config for enterprise version")
+                return subprocess.check_output(['/usr/pgproee-9.6/bin/pg_config', "--bindir"]).strip()
+            except OSError as e:
+                print(e)
+                print("Cannot find pg_config for enterprise version")
+                print("Trying to execute pg_config for standard version")
+                return subprocess.check_output(['/usr/pgpro-9.6/bin/pg_config', "--bindir"]).strip()
         elif distro in DEB_BASED:
             a = subprocess.check_output(['/usr/bin/pg_config', "--bindir"]).strip()
             print(a)
