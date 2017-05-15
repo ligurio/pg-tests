@@ -186,5 +186,6 @@ class PgInstance:
         conn = psycopg2.connect(self.connstring)
         cursor = conn.cursor()
         cursor.execute("CREATE EXTENSION IF NOT EXISTS %s" % extension_name)
+        conn.commit()
         cursor.close()
         conn.close()
