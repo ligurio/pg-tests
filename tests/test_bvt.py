@@ -18,6 +18,8 @@ def test_version(request, install_postgres):
     cursor = conn.cursor()
     cursor.execute("SELECT pgpro_version()")
     pgpro_info = get_pgpro_info(cursor.fetchall()[0][0])
+    cursor.execute("SELECT pgpro_build()")
+    pgpro_info["last_commit"] = cursor.fetchall()[0][0]
     print("What must be installed:", request.config.getoption('--product_name'),
           request.config.getoption('--product_version'))
     print("Information about installed PostgresPro ", pgpro_info)
@@ -53,8 +55,9 @@ def test_extensions(install_postgres):
         pytest.fail("Unknown PostgresPro edition")
 
     for e in extensions:
-        if e in ["aqo", "multimaster"]:
-            continue
+        print("Trying to check extension %s" % e)
+        if e in ["aqo", "multimaster", "hunspell_en_us", "hunspell_nl_nl", "hunspell_fr", "hunspell_ru_ru"]:
+            assert e in available_extensions
         else:
             assert e in available_extensions
             install_postgres.load_extension(e)
