@@ -20,7 +20,7 @@ ALT_PACKAGES = ['server', 'contrib', 'devel']
 RPM_BASED = ['CentOS Linux', 'RHEL', 'CentOS',
              'Red Hat Enterprise Linux Server', 'Oracle Linux Server', 'SLES',
              'ROSA Enterprise Linux Server', 'ROSA SX \"COBALT\" ']
-DEB_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux', 'AstraLinuxSE']
+DEB_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux', 'AstraLinuxSE', 'Astra Linux SE', "\"Astra Linux SE\""]
 WIN_BASED = ['2012ServerR2']
 
 dist = {"Oracle Linux Server": 'oraclelinux',
@@ -79,8 +79,11 @@ def generate_repo_info(distro, osversion, **kwargs):
             distname = "rosa-el"
         elif distro == "ROSA SX \"COBALT\" ":
             distname = "rosa-sx"
-        elif distro == "AstraLinuxSE":
-            distname = "astra-smolensk"
+        elif distro == "AstraLinuxSE" or distro == "Astra Linux SE":
+            if osversion == "1.4":
+                distname = "astra-smolensk/1.4"
+            elif osversion == "1.5":
+                distname = "astra-smolensk/1.5"
         elif distro == "2012ServerR2":
             distname = "Windows"
         else:
