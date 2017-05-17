@@ -70,8 +70,16 @@
     become: true
 
   - name: install python module with APT support (ALTLinux)
-    command: apt-get install -y python-module-apt
-    when: ansible_os_family == "Altlinux"
+    command: apt-get install -y {{ item }}
+    with_items:
+        - git
+        - gcc4.5
+        - python-dev
+        - python-module-setools
+        - python-module-psycopg2
+        - libpq5.4-devel
+        - python-modules-tkinter
+    when: ansible_distribution == 'ALT'
     become_method: su
     become: true
     tags:
@@ -83,7 +91,6 @@
     become_method: su
     become: true
 
-# FIXME: [ubuntu1604]"/bin/sh: 1: /usr/bin/python: not found\r\n"
 # FIXME: [ubuntu1510]"/bin/sh: 1: /usr/bin/python: not found\r\n"
   - name: install required packages (APT)
     apt: name={{ item }} state=present update_cache=yes
@@ -98,6 +105,20 @@
     when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
     become_method: su
     become: true
+
+#  - name: install required packages (APT-RPM)
+#    apt_rpm: pkg={{ item }}  state=present update_cache=yes
+#    with_items:
+#        - git
+#        - gcc4.7
+#        - python-dev
+#        - python-modules-setools
+#        - python-modules-psycopg2
+#        - libpq5.4-devel
+#        - python-modules-tkinter
+#    when: ansible_distribution == 'ALT'
+#    become_method: su
+#    become: true
 
 # FIXME: Rosa Marathon 2012
   - name: install required packages (urpmi)
@@ -163,14 +184,14 @@
       requirements: "/home/test/pg-tests/static/requirements.txt"
     become_method: su
     become: true
-    when: ansible_os_family != "Windows" and ansible_distribution not in ['ROSA', "МСВСфера"]
+    when: ansible_os_family != "Windows"
 
-  - name: Download python2.7 for ROSA and MSVSSpehre
-    unarchive:
-      src: http://www.python.org/ftp/python/2.7.6/Python-2.7.6.tar.xz
-      dest: /tmp
-      remote_src: True
-    when: ansible_distribution in ['ROSA', "МСВСфера"]
+#  - name: Download python2.7 for ROSA and MSVSSpehre
+#    unarchive:
+#      src: http://www.python.org/ftp/python/2.7.6/Python-2.7.6.tar.xz
+#      dest: /tmp
+#      remote_src: True
+#    when: ansible_distribution in ['ROSA', "МСВСфера"]
 
   - name: remove postgresql-devel (YUM)
     yum: name={{ item }} state=absent
@@ -183,7 +204,7 @@
 
   - name: remove libpq-dev (APT)
     apt: name=libpq-dev state=absent
-    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "apt" and ansible_distribution != "Altlinux"
+    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "apt" and ansible_distribution != "ALT"
     become_method: su
     become: true
 
