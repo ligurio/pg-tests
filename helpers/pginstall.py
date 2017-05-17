@@ -198,6 +198,8 @@ def package_mgmt(remote=False, host=None, **kwargs):
             pkg_name = "%s-enterprise%s.%s" % (kwargs['name'], major, minor)
         elif kwargs['edition'] == "cert":
             pkg_name = "postgrespro%s.%s" % (major, minor)
+        elif kwargs['edition'] == "standard":
+            pkg_name = "postgrespro%s.%s" % (major, minor)
         else:
             pkg_name = kwargs['name'] + major + minor
 

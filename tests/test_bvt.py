@@ -29,9 +29,13 @@ def test_version(request, install_postgres):
 
 @pytest.mark.usefixtures('install_postgres')
 def test_extensions(install_postgres):
-    # TODO add check for extension step 1. Create extension
-    # TODO add check for extensions, step 2. SELECT extname FROM pg_catalog.pg_extension WHERE extname = <ext_name>;
     """ Make sure all our extensions are available
+    Scenario:
+    1. Check postgrespro edition
+    2. Check that extension for right edition available
+    3. Try to load extension
+    4. Check that every extension write information about self in table pg_catalog.pg_extension
+    5. Drop extension
     """
 
     conn_string = "host='localhost' user='postgres' "
