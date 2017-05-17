@@ -365,6 +365,7 @@ def main():
                 keep_env(domname, False)
 
         if retcode != 0:
+            reporturl = os.path.join(REPORT_SERVER_URL, reportname)
             print("Test return code is not zero - %s. Please check logs in report: %s" % (retcode, reporturl))
             print retcode, stdout, stderr
             sys.exit(1)
@@ -372,6 +373,6 @@ def main():
             print("Test execution finished without errors")
             sys.exit(0)
 
-        
+
 if __name__ == "__main__":
     exit(main())
