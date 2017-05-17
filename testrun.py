@@ -349,9 +349,6 @@ def main():
             # export_results(domname, domipaddress, reportname)
         else:
             retcode, stdout, stderr = exec_command(cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD)
-        if retcode != 0:
-            print "Test return code is not zero - %s." % retcode
-            print retcode, stdout, stderr
 
         if args.export:
             export_results(domname, domipaddress, reportname)
@@ -367,5 +364,14 @@ def main():
             else:
                 keep_env(domname, False)
 
+        if retcode != 0:
+            print("Test return code is not zero - %s. Please check logs in report: %s" % (retcode, reporturl))
+            print retcode, stdout, stderr
+            sys.exit(1)
+        else:
+            print("Test execution finished without errors")
+            sys.exit(0)
+
+        
 if __name__ == "__main__":
     exit(main())
