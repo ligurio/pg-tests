@@ -327,7 +327,11 @@ def main():
         domname = gen_name(t)
         reportname = "report-" + time.strftime('%Y-%b-%d-%H-%M-%S')
         domipaddress = create_env(t, domname)[0]
-        setup_env(domipaddress, domname)
+        setup_env_result = setup_env(domipaddress, domname)
+        if setup_env_result == 0:
+            print("Environment deployed without errors. Ready to run tests")
+        else:
+            sys.exit(1)
         cmd = make_test_cmd(domname, reportname, args.run_tests,
                             args.product_name,
                             args.product_version,
