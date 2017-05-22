@@ -20,7 +20,8 @@ ALT_PACKAGES = ['server', 'contrib', 'devel']
 RPM_BASED = ['CentOS Linux', 'RHEL', 'CentOS',
              'Red Hat Enterprise Linux Server', 'Oracle Linux Server', 'SLES',
              'ROSA Enterprise Linux Server', 'ROSA SX \"COBALT\" ']
-DEB_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux', 'AstraLinuxSE', 'Astra Linux SE', "\"Astra Linux SE\""]
+DEB_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux', 'AstraLinuxSE',
+             'Astra Linux SE', "\"Astra Linux SE\"", "\"AstraLinuxSE\""]
 WIN_BASED = ['2012ServerR2']
 
 dist = {"Oracle Linux Server": 'oraclelinux',

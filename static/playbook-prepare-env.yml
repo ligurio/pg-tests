@@ -12,6 +12,22 @@
     become: true
     when: ansible_distribution == "RedHat"
 
+  - name: Remove beta repository RHEL 7 (and clean up left-over metadata)
+    yum_repository:
+       name: rhel-7-server-rt-beta-rpms
+       state: absent
+    notify: yum-clean-metadata
+    become_method: su
+    become: true
+    when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "7"
+
+  - name: Add YUM repository for RHEL 7
+    yum_repository:
+       name: epel
+       description: EPEL YUM repo
+       baseurl: https://download.fedoraproject.org/pub/epel/$releasever/$basearch/
+    when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "7"
+
   - name: install required packages (YUM)
     yum: name={{ item }} state=present update_cache=yes
     with_items:
@@ -69,21 +85,22 @@
     become_method: su
     become: true
 
-  - name: install python module with APT support (ALTLinux)
-    command: apt-get install -y {{ item }}
-    with_items:
-        - git
-        - gcc4.5
-        - python-dev
-        - python-module-setools
-        - python-module-psycopg2
-        - libpq5.4-devel
-        - python-modules-tkinter
-    when: ansible_distribution == 'ALT'
-    become_method: su
-    become: true
-    tags:
-    - skip_ansible_lint
+#  - name: install python module with APT support (ALTLinux)
+#    command: apt-get install -y {{ item }}
+#    with_items:
+#        - update
+#        - git
+#        - gcc4.5
+#        - python-dev
+#        - python-module-setools
+#        - python-module-psycopg2 --fix-missing
+#        - libpq5.4-devel
+#        - python-modules-tkinter
+#    when: ansible_distribution == 'ALT'
+#    become_method: su
+#    become: true
+#    tags:
+#    - skip_ansible_lint
 
   - name: Wait for automatic system updates
     shell: while sudo fuser /var/lib/dpkg/lock >/dev/null 2>&1; do sleep 2; done;
@@ -106,19 +123,19 @@
     become_method: su
     become: true
 
-#  - name: install required packages (APT-RPM)
-#    apt_rpm: pkg={{ item }}  state=present update_cache=yes
-#    with_items:
-#        - git
-#        - gcc4.7
-#        - python-dev
-#        - python-modules-setools
-#        - python-modules-psycopg2
-#        - libpq5.4-devel
-#        - python-modules-tkinter
-#    when: ansible_distribution == 'ALT'
-#    become_method: su
-#    become: true
+  - name: install required packages (APT-RPM) Altlinux-6-SPT
+    apt_rpm: pkg={{ item }}  state=present update_cache=yes
+    with_items:
+        - git
+        - gcc4.5
+        - python-dev
+#        - python-module-setools
+        - python-module-psycopg2
+        - libpq5.4-devel
+        - python-modules-tkinter
+    when: ansible_distribution == 'ALT' and ansible_distribution_major_version == '6'
+    become_method: su
+    become: true
 
 # FIXME: Rosa Marathon 2012
   - name: install required packages (urpmi)
