@@ -114,7 +114,7 @@ class PgInstance:
         print "Setup PostgreSQL service"
 
         distro = get_distro(remote, host)[0]
-        if distro in RPM_BASED or distro == "ALT Linux ":
+        if distro in RPM_BASED or "ALT " in distro:
             self.manage_psql("initdb", remote=remote, host=host)
         self.manage_psql("start", remote=remote, host=host)
 
