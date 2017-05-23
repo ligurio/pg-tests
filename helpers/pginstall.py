@@ -21,7 +21,8 @@ RPM_BASED = ['CentOS Linux', 'RHEL', 'CentOS',
              'Red Hat Enterprise Linux Server', 'Oracle Linux Server', 'SLES',
              'ROSA Enterprise Linux Server', 'ROSA SX \"COBALT\" ']
 DEB_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux', 'AstraLinuxSE',
-             'Astra Linux SE', "\"Astra Linux SE\"", "\"AstraLinuxSE\""]
+             'Astra Linux SE', "\"Astra Linux SE\"", "\"AstraLinuxSE\"",
+             "ALT Linux ", "ALT "]
 WIN_BASED = ['2012ServerR2']
 
 dist = {"Oracle Linux Server": 'oraclelinux',
@@ -34,7 +35,8 @@ dist = {"Oracle Linux Server": 'oraclelinux',
         "Ubuntu": 'ubuntu',
         "ROSA Enterprise Linux Server": 'rosa-el',
         "ROSA SX \"COBALT\" ": 'rosa-sx',
-        "SLES": 'sles'}
+        "SLES": 'sles',
+        "ALT ": 'altlinux'}
 
 
 def get_os_type(ip):
@@ -74,8 +76,10 @@ def generate_repo_info(distro, osversion, **kwargs):
         if kwargs['milestone']:
             product_dir = product_dir + "-" + kwargs['milestone']
         gpg_key_url = "https://repo.postgrespro.ru/pgpro-%s/keys/GPG-KEY-POSTGRESPRO" % kwargs['version']
-        if distro == "ALT Linux " and osversion == "7.0.4":
+        if distro == "ALT Linux " and osversion in ["7.0.4", "6.0.1"]:
             distname = "altlinux-spt"
+        elif distro == "ALT Linux " and osversion == "7.0.5":
+            distname = "altlinux"
         elif distro == "ROSA Enterprise Linux Server":
             distname = "rosa-el"
         elif distro == "ROSA SX \"COBALT\" ":
@@ -133,7 +137,7 @@ enabled=1
         write_file(repofile, repo, remote, host)
         cmd = "rpm --import %s" % gpg_key_url
         command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-    elif dist_info[0] in DEB_BASED or dist_info[0] == "ALT Linux ":
+    elif dist_info[0] in DEB_BASED or "ALT" in dist_info[0]:
         cmd = "apt-get install -y lsb-release"
         command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         cmd = "lsb_release -cs"
@@ -148,11 +152,16 @@ enabled=1
             repo = "deb http://apt.postgresql.org/pub/repos/apt/ %s-pgdg main" % codename
         elif kwargs['name'] == "postgrespro":
             repo = "deb %s %s main" % (baseurl, codename)
-            if dist_info[0] == "ALT Linux " and dist_info[1] == "7.0.4":
+            if dist_info[0] == "ALT Linux " and dist_info[1] in ["7.0.4", "7.0.5"]:
                 repo = "rpm %s/7 x86_64 pgpro" % baseurl
+            elif dist_info[0] == "ALT Linux " and dist_info[1] == "6.0.1":
+                repo = "rpm %s/6 x86_64 pgpro" % baseurl
+            elif dist_info[0] == "ALT ":
+                repo = "rpm %s/8 x86_64 pgpro" % baseurl
+
         write_file(repofile, repo, remote, host)
 
-        if dist_info[0] == "ALT Linux " and dist_info[1] == "7.0.4":
+        if "ALT " in dist_info[0]:
             cmd = "apt-get update -y"
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         else:
@@ -188,13 +197,13 @@ def package_mgmt(remote=False, host=None, **kwargs):
             cmd = "yum install -y %s-%s" % (pkg_name, p)
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
-    elif dist_info[0] in DEB_BASED:
+    elif dist_info[0] in DEB_BASED and "ALT" not in dist_info[0]:
         cmd = "apt-get install -y %s-%s" % (kwargs['name'], kwargs['version'])
         command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         cmd = "apt-get install -y libpq-dev"
         command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
-    elif dist_info[0] == "ALT Linux ":
+    elif "ALT" in dist_info[0]:
         if kwargs['edition'] == "ee":
             pkg_name = "%s-enterprise%s.%s" % (kwargs['name'], major, minor)
         elif kwargs['edition'] == "cert":

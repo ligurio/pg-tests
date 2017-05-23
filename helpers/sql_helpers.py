@@ -221,7 +221,7 @@ def pg_start_script_name(name, edition, version, distro):
             service_name = "postgresql-%s.%s" % (major, minor)
         assert service_name is not None
         return service_name
-    elif distro == "ALT Linux ":
+    elif "ALT " in distro:
         service_name = "postgresql-%s.%s" % (major, minor)
         assert service_name is not None
         return service_name

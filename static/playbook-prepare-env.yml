@@ -85,22 +85,45 @@
     become_method: su
     become: true
 
-#  - name: install python module with APT support (ALTLinux)
-#    command: apt-get install -y {{ item }}
-#    with_items:
-#        - update
-#        - git
-#        - gcc4.5
-#        - python-dev
-#        - python-module-setools
-#        - python-module-psycopg2 --fix-missing
-#        - libpq5.4-devel
-#        - python-modules-tkinter
-#    when: ansible_distribution == 'ALT'
-#    become_method: su
-#    become: true
-#    tags:
-#    - skip_ansible_lint
+  - name: Update repos ALT
+    command: apt-get update
+    when: ansible_distribution == 'ALT'
+    become_method: su
+    become: true
+    tags:
+    - skip_ansible_lint
+
+  - name: install python module with APT support (ALTLinux)
+    command: apt-get install -y {{ item }}
+    with_items:
+        - git --fix-missing
+        - gcc4.5 --fix-missing
+        - python-dev --fix-missing
+        - python-module-setools --fix-missing
+        - python-module-psycopg2 --fix-missing
+        - libpq5.4-devel --fix-missing
+        - python-modules-tkinter --fix-missing
+    when: ansible_distribution == 'ALT' and ansible_distribution_major_version != '8'
+    become_method: su
+    become: true
+    tags:
+    - skip_ansible_lint
+
+  - name: install python module with APT support (ALTLinux 8)
+    command: apt-get install -y {{ item }}
+    with_items:
+        - git --fix-missing
+        - gcc4.5 --fix-missing
+        - python-dev --fix-missing
+        - python-module-setools --fix-missing
+        - python-module-psycopg2 --fix-missing
+        - libpq5.9-devel --fix-missing
+        - python-modules-tkinter --fix-missing
+    when: ansible_distribution == 'ALT' and ansible_distribution_major_version == '8'
+    become_method: su
+    become: true
+    tags:
+    - skip_ansible_lint
 
   - name: Wait for automatic system updates
     shell: while sudo fuser /var/lib/dpkg/lock >/dev/null 2>&1; do sleep 2; done;
@@ -123,19 +146,33 @@
     become_method: su
     become: true
 
-  - name: install required packages (APT-RPM) Altlinux-6-SPT
-    apt_rpm: pkg={{ item }}  state=present update_cache=yes
-    with_items:
-        - git
-        - gcc4.5
-        - python-dev
+#  - name: install required packages (APT-RPM) Altlinux-6-SPT
+#    apt_rpm: pkg={{ item }} update_cache=yes
+#    with_items:
+#        - git
+#        - gcc4.5
+#        - python-dev
+##        - python-module-setools
+#        - python-module-psycopg2
+#        - libpq5.4-devel
+#        - python-modules-tkinter
+#    when: ansible_distribution == 'ALT' and ansible_distribution_major_version == '6'
+#    become_method: su
+#    become: true
+
+#  - name: install required packages (APT-RPM) Altlinux-SPT-7
+#    apt_rpm: pkg={{ item }} update_cache=yes
+#    with_items:
+#        - git
+#        - gcc4.5
+#        - python-dev
 #        - python-module-setools
-        - python-module-psycopg2
-        - libpq5.4-devel
-        - python-modules-tkinter
-    when: ansible_distribution == 'ALT' and ansible_distribution_major_version == '6'
-    become_method: su
-    become: true
+#        - python-module-psycopg2
+#        - libpq5.4-devel
+#        - python-modules-tkinter
+#    when: ansible_distribution == 'ALT' and ansible_distribution_major_version == '7'
+#    become_method: su
+#    become: true
 
 # FIXME: Rosa Marathon 2012
   - name: install required packages (urpmi)
@@ -202,13 +239,6 @@
     become_method: su
     become: true
     when: ansible_os_family != "Windows"
-
-#  - name: Download python2.7 for ROSA and MSVSSpehre
-#    unarchive:
-#      src: http://www.python.org/ftp/python/2.7.6/Python-2.7.6.tar.xz
-#      dest: /tmp
-#      remote_src: True
-#    when: ansible_distribution in ['ROSA', "МСВСфера"]
 
   - name: remove postgresql-devel (YUM)
     yum: name={{ item }} state=absent
