@@ -12,7 +12,7 @@ from helpers.pginstall import DEB_BASED
 from helpers.pginstall import RPM_BASED
 from helpers.os_helpers import pg_bindir
 from helpers.os_helpers import rmdir
-from helpers.utils import command_executor, REMOTE_ROOT, REMOTE_ROOT_PASSWORD
+from helpers.utils import command_executor, get_distro, REMOTE_ROOT, REMOTE_ROOT_PASSWORD
 from tests import settings
 
 # TODO Change to class  all methods
@@ -188,6 +188,7 @@ def pg_manage_psql(action, data_dir, start_script=None, remote=False, host=None)
         :param init: Initialization before a first start
         :return:
         """
+        distro = get_distro(remote, host)
         if start_script is None:
             pg_ctl = os.path.join(pg_bindir(), "pg_ctl")
             # cmd = ["sudo", "-u", "postgres", pg_ctl, "-D", data_dir, action]
@@ -195,8 +196,12 @@ def pg_manage_psql(action, data_dir, start_script=None, remote=False, host=None)
             print(cmd)
             return command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         else:
-            # cmd = ["service", start_script, action]
-            cmd = "service %s %s" % (start_script, action)
+            # TODO add check that systemd enabled or not
+            # TODO if /run/systemd and binary file systemctl in file system we need to execute via /etc/init.d
+            if distro[0] == "ALT ":
+                cmd = "/etc/init.d/%s %s" % (start_script, action)
+            else:
+                cmd = "service %s %s" % (start_script, action)
             print(cmd)
             return command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
