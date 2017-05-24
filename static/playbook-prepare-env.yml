@@ -131,7 +131,6 @@
     become_method: su
     become: true
 
-# FIXME: [ubuntu1510]"/bin/sh: 1: /usr/bin/python: not found\r\n"
   - name: install required packages (APT)
     apt: name={{ item }} state=present update_cache=yes
     with_items:
@@ -146,53 +145,26 @@
     become_method: su
     become: true
 
-#  - name: install required packages (APT-RPM) Altlinux-6-SPT
-#    apt_rpm: pkg={{ item }} update_cache=yes
-#    with_items:
-#        - git
-#        - gcc4.5
-#        - python-dev
-##        - python-module-setools
-#        - python-module-psycopg2
-#        - libpq5.4-devel
-#        - python-modules-tkinter
-#    when: ansible_distribution == 'ALT' and ansible_distribution_major_version == '6'
-#    become_method: su
-#    become: true
-
-#  - name: install required packages (APT-RPM) Altlinux-SPT-7
-#    apt_rpm: pkg={{ item }} update_cache=yes
-#    with_items:
-#        - git
-#        - gcc4.5
-#        - python-dev
-#        - python-module-setools
-#        - python-module-psycopg2
-#        - libpq5.4-devel
-#        - python-modules-tkinter
-#    when: ansible_distribution == 'ALT' and ansible_distribution_major_version == '7'
-#    become_method: su
-#    become: true
-
 # FIXME: Rosa Marathon 2012
   - name: install required packages (urpmi)
     urpmi: name={{ item }} state=present update_cache=yes
     with_items:
         - git
         - gcc
-        - python-dev
         - python-selinux
+        - lib64python-devel
+        - tkinter
     when: ansible_os_family != "Windows" and ansible_pkg_mgr == "urpmi"
     become_method: su
     become: true
 
 # FIXME: SLES 11
   - name: install required packages (Zypper)
-    zypper: name={{ item }} state=present update_cache=yes
+    zypper: name={{ item }} state=present update_cache=yes force=yes oldpackage=yes
     with_items:
         - git
         - gcc
-        - python-dev
+        - python-devel
         - python-selinux
     when: ansible_os_family != "Windows" and ansible_pkg_mgr == "zypper"
     become_method: su

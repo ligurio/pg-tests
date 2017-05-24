@@ -195,7 +195,8 @@ def pg_manage_psql(action, data_dir, start_script=None, remote=False, host=None)
             print(cmd)
             return command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         else:
-            # cmd = ["service", start_script, action]
+            # TODO add check that systemd enabled or not
+            # TODO if /run/systemd and binary file systemctl in file system we need to execute via /etc/init.d
             cmd = "service %s %s" % (start_script, action)
             print(cmd)
             return command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
