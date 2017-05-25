@@ -246,14 +246,19 @@ def export_results(domname, domipaddress, reportname):
     if domname[0:3] == 'win':
         copy_file_win(reportname, domipaddress)
     else:
-        copy_file("reports/%s.html" % reportname,
-                  "/home/test/pg-tests/%s.html" % reportname, domipaddress)
-        copy_file("reports/%s.xml" % reportname,
-                  "/home/test/pg-tests/%s.xml" % reportname, domipaddress)
-    subprocess.Popen(
-        ['curl', '-T', 'reports/%s.html' % reportname, REPORT_SERVER_URL])
-    subprocess.Popen(
-        ['curl', '-T', 'reports/%s.xml' % reportname, REPORT_SERVER_URL])
+        try:
+            copy_file("reports/%s.html" % reportname,
+                      "/home/test/pg-tests/%s.html" % reportname, domipaddress)
+            copy_file("reports/%s.xml" % reportname,
+                      "/home/test/pg-tests/%s.xml" % reportname, domipaddress)
+        except IOError as e:
+            print(e)
+            pass
+        finally:
+            subprocess.Popen(
+                ['curl', '-T', 'reports/%s.html' % reportname, REPORT_SERVER_URL])
+            subprocess.Popen(
+                ['curl', '-T', 'reports/%s.xml' % reportname, REPORT_SERVER_URL])
 
 
 def keep_env(domname, keep):
