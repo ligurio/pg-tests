@@ -230,8 +230,8 @@ def make_test_cmd(domname, reportname, tests=None,
         cmd = r'cd C:\Users\test\pg-tests && pytest %s --self-contained-html --html=%s.html --junit-xml=%s.xml \
                   --maxfail=1 %s --target=%s' % (tests, reportname, reportname, pcmd, domname)
     else:
-        cmd = 'cd /home/test/pg-tests && sudo pytest %s --self-contained-html --html=%s.html --junit-xml=%s.xml ' \
-              '--maxfail=1 %s --target=%s' % (tests, reportname, reportname, pcmd, domname)
+        cmd = 'cd /home/test/pg-tests && sudo pytest -s -q %s --self-contained-html --html=%s.html ' \
+              '--junit-xml=%s.xml --maxfail=1 %s --target=%s' % (tests, reportname, reportname, pcmd, domname)
 
     if DEBUG:
         cmd += "--verbose --tb=long --full-trace"
@@ -252,6 +252,7 @@ def export_results(domname, domipaddress, reportname):
             copy_file("reports/%s.xml" % reportname,
                       "/home/test/pg-tests/%s.xml" % reportname, domipaddress)
         except IOError as e:
+            print("Cannot create report.  ")
             print(e)
             pass
         finally:
