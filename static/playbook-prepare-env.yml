@@ -7,7 +7,7 @@
   tasks:
 
   - name: subscribe to RHSM
-    redhat_subscription: state=present username=v.wagner@postgrespro.ru password=thuch5Zeik autosubscribe=true
+    redhat_subscription: state=present username=v.wagner@postgrespro.ru password=thuch5Zeik autosubscribe=true force_register=yes
     become_method: su
     become: true
     when: ansible_distribution == "RedHat"
