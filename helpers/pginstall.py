@@ -27,9 +27,9 @@ WIN_BASED = ['2012ServerR2']
 
 dist = {"Oracle Linux Server": 'oraclelinux',
         "CentOS Linux": 'centos',
-        "CentOS": 'centos6',
+        "CentOS": 'centos',
         "RHEL": 'rhel',
-        "Red Hat Enterprise Linux Server": 'rhel7',
+        "Red Hat Enterprise Linux Server": 'rhel',
         "debian": 'debian',
         "Debian GNU/Linux": 'debian',
         "Ubuntu": 'ubuntu',

@@ -21,13 +21,6 @@
     become: true
     when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "7"
 
-  - name: Add YUM repository for RHEL 7
-    yum_repository:
-       name: epel
-       description: EPEL YUM repo
-       baseurl: https://download.fedoraproject.org/pub/epel/$releasever/$basearch/
-    when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "7"
-
   - name: install required packages (YUM)
     yum: name={{ item }} state=present update_cache=yes
     with_items:
@@ -302,11 +295,11 @@
     become: true
     when: ansible_os_family != "Windows"
 
-  - name: unsubscribe from RHSM
-    redhat_subscription: state=absent username=v.wagner@postgrespro.ru password=thuch5Zeik
-    become_method: su
-    become: true
-    when: ansible_distribution == "RedHat"
+#  - name: unsubscribe from RHSM
+#    redhat_subscription: state=absent username=v.wagner@postgrespro.ru password=thuch5Zeik
+#    become_method: su
+#    become: true
+#    when: ansible_distribution == "RedHat"
 
   - name: windows download git
     when: ansible_os_family == "Windows"
