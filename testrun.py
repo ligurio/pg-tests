@@ -230,7 +230,7 @@ def make_test_cmd(domname, reportname, tests=None,
         cmd = r'cd C:\Users\test\pg-tests && pytest %s --self-contained-html --html=%s.html --junit-xml=%s.xml \
                   --maxfail=1 %s --target=%s' % (tests, reportname, reportname, pcmd, domname)
     else:
-        cmd = 'cd /home/test/pg-tests && sudo  pytest -s -q %s --self-contained-html --html=%s.html ' \
+        cmd = 'cd /home/test/pg-tests && sudo pytest %s --self-contained-html --html=%s.html ' \
               '--junit-xml=%s.xml --maxfail=1 %s --target=%s' % (tests, reportname, reportname, pcmd, domname)
 
     if DEBUG:
