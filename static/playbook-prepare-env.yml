@@ -159,7 +159,7 @@
 
 # FIXME: SLES 11
   - name: install required packages (Zypper)
-    zypper: name={{ item }} state=present update_cache=yes force=yes oldpackage=yes
+    zypper: name={{ item }} state=present update_cache=yes force=yes
     with_items:
         - git
         - gcc

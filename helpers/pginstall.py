@@ -19,7 +19,7 @@ PACKAGES = ['server', 'contrib', 'libs']
 ALT_PACKAGES = ['server', 'contrib', 'devel']
 RPM_BASED = ['CentOS Linux', 'RHEL', 'CentOS',
              'Red Hat Enterprise Linux Server', 'Oracle Linux Server', 'SLES',
-             'ROSA Enterprise Linux Server', 'ROSA SX \"COBALT\" ']
+             'ROSA Enterprise Linux Server', 'ROSA SX \"COBALT\" ', 'GosLinux']
 DEB_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux', 'AstraLinuxSE',
              'Astra Linux SE', "\"Astra Linux SE\"", "\"AstraLinuxSE\"",
              "ALT Linux ", "ALT "]
@@ -36,7 +36,8 @@ dist = {"Oracle Linux Server": 'oraclelinux',
         "ROSA Enterprise Linux Server": 'rosa-el',
         "ROSA SX \"COBALT\" ": 'rosa-sx',
         "SLES": 'sles',
-        "ALT ": 'altlinux'}
+        "ALT ": 'altlinux',
+        "GosLinux": 'goslinux'}
 
 
 def get_os_type(ip):
