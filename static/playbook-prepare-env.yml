@@ -267,7 +267,7 @@
       regexp: '^Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin'
       line: 'Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin'
       state: present
-    when: ansible_os_family != "Windows" or ansible_distribution == 'ALT'
+    when: ansible_os_family != "Windows" or ansible_distribution != 'ALT'
     become_method: su
     become: true
 
