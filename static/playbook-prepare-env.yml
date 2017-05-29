@@ -144,7 +144,6 @@
     become_method: su
     become: true
 
-# FIXME: Rosa Marathon 2012
   - name: install required packages (urpmi)
     urpmi: name={{ item }} state=present update_cache=yes
     with_items:
@@ -157,7 +156,6 @@
     become_method: su
     become: true
 
-# FIXME: SLES 11
   - name: install required packages (Zypper)
     zypper: name={{ item }} state=present update_cache=yes force=yes
     with_items:
@@ -269,7 +267,7 @@
       regexp: '^Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin'
       line: 'Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin'
       state: present
-    when: ansible_os_family != "Windows"
+    when: ansible_os_family != "Windows" or ansible_distribution == 'ALT'
     become_method: su
     become: true
 
@@ -310,12 +308,6 @@
     become_method: su
     become: true
     when: ansible_os_family != "Windows"
-
-#  - name: unsubscribe from RHSM
-#    redhat_subscription: state=absent username=v.wagner@postgrespro.ru password=thuch5Zeik
-#    become_method: su
-#    become: true
-#    when: ansible_distribution == "RedHat"
 
   - name: windows download git
     when: ansible_os_family == "Windows"
