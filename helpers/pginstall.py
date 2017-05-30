@@ -94,9 +94,7 @@ def generate_repo_info(distro, osversion, **kwargs):
             distname = "Windows"
         else:
             distname = dist[distro].lower()
-        if kwargs['edition'] == "cert" and distro == "AstraLinuxSE":
-            baseurl = os.path.join("http://localrepo.l.postgrespro.ru", product_dir, distname, "1.5")
-        elif kwargs['edition'] == "cert":
+        if kwargs['edition'] == "cert":
             baseurl = os.path.join("http://localrepo.l.postgrespro.ru", product_dir, distname)
         else:
             if distro in WIN_BASED:
