@@ -19,7 +19,8 @@ PACKAGES = ['server', 'contrib', 'libs']
 ALT_PACKAGES = ['server', 'contrib', 'devel']
 RPM_BASED = ['CentOS Linux', 'RHEL', 'CentOS',
              'Red Hat Enterprise Linux Server', 'Oracle Linux Server', 'SLES',
-             'ROSA Enterprise Linux Server', 'ROSA SX \"COBALT\" ', 'GosLinux']
+             'ROSA Enterprise Linux Server', 'ROSA SX \"COBALT\" ', 'GosLinux',
+             '\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0\xb5\xd1\x80\xd0\xb0 ']
 DEB_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux', 'AstraLinuxSE',
              'Astra Linux SE', "\"Astra Linux SE\"", "\"AstraLinuxSE\"",
              "ALT Linux ", "ALT "]
@@ -81,8 +82,10 @@ def generate_repo_info(distro, osversion, **kwargs):
             distname = "altlinux-spt"
         elif distro == "ALT Linux " and osversion == "7.0.5":
             distname = "altlinux"
-        elif distro == "ROSA Enterprise Linux Server":
+        elif distro == "ROSA Enterprise Linux Server" and osversion != "6.8":
             distname = "rosa-el"
+        elif distro == "ROSA Enterprise Linux Server" and osversion == "6.8":
+            distname = "rosa-chrome"
         elif distro == "ROSA SX \"COBALT\" ":
             distname = "rosa-sx"
         elif distro == "AstraLinuxSE" or distro == "Astra Linux SE":
@@ -90,13 +93,13 @@ def generate_repo_info(distro, osversion, **kwargs):
                 distname = "astra-smolensk/1.4"
             elif osversion == "1.5":
                 distname = "astra-smolensk/1.5"
+        elif distro == "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0\xb5\xd1\x80\xd0\xb0 ":
+            distname = "msvsphere"
         elif distro == "2012ServerR2":
             distname = "Windows"
         else:
             distname = dist[distro].lower()
-        if kwargs['edition'] == "cert" and distro == "AstraLinuxSE":
-            baseurl = os.path.join("http://localrepo.l.postgrespro.ru", product_dir, distname, "1.5")
-        elif kwargs['edition'] == "cert":
+        if kwargs['edition'] == "cert":
             baseurl = os.path.join("http://localrepo.l.postgrespro.ru", product_dir, distname)
         else:
             if distro in WIN_BASED:
@@ -126,7 +129,12 @@ def setup_repo(remote=False, host=None, **kwargs):
         # Example:
         # http://repo.postgrespro.ru/pgproee-9.6-beta/centos/$releasever/os/$basearch/rpms
         if kwargs['name'] == "postgrespro":
-            baseurl = os.path.join(baseurl, "$releasever/os/$basearch/rpms")
+            if dist_info[0] == "ROSA Enterprise Linux Server" and dist_info[1] == "6.8":
+                baseurl = os.path.join(baseurl, "6.8Server/os/$basearch/rpms")
+            elif dist_info[0] == "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0\xb5\xd1\x80\xd0\xb0 ":
+                baseurl = os.path.join(baseurl, "6.3Server/os/$basearch/rpms")
+            else:
+                baseurl = os.path.join(baseurl, "$releasever/os/$basearch/rpms")
 
         repo = """
 [%s-%s]

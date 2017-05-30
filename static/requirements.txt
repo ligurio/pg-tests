@@ -6,5 +6,6 @@ paramiko==1.17.2
 psutil==5.0.1
 psycopg2>=2.7.1
 pytest>=3.0.5
+pytest-allure-adaptor==1.7.7
 pytest-html>=1.10.1
 pywinrm==0.2.2

@@ -223,7 +223,7 @@ def pg_start_script_name(name, edition, version, distro):
         elif name == 'postgrespro' and edition == 'standard':
             service_name = "postgrespro-%s.%s" % (major, minor)
         elif name == 'postgrespro' and edition == 'cert':
-            service_name = "postgresql-%s.%s" % (major, minor)
+            service_name = "postgrespro-%s.%s" % (major, minor)
         assert service_name is not None
         return service_name
     elif "ALT " in distro:
