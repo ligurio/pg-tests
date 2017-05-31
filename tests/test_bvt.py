@@ -1,3 +1,5 @@
+import allure
+import platform
 import psycopg2
 import pytest
 import settings
@@ -5,6 +7,8 @@ import settings
 from helpers.sql_helpers import get_pgpro_info
 
 
+@allure.feature('BVT Tests {}'.format(platform.linux_distribution()))
+@allure.testcase('http://my.tms.org/browse/TESTCASE-2')
 @pytest.mark.usefixtures('install_postgres')
 def test_version(request, install_postgres):
     """ This is BVT test for all PostgreSQL version
@@ -27,6 +31,8 @@ def test_version(request, install_postgres):
     assert install_postgres.version == pgpro_info['version']
 
 
+@allure.feature('BVT Tests {}'.format(platform.linux_distribution()))
+@allure.testcase('http://my.tms.org/browse/TESTCASE-2')
 @pytest.mark.usefixtures('install_postgres')
 def test_extensions(install_postgres):
     """ Make sure all our extensions are available
