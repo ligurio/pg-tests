@@ -4,6 +4,7 @@ import platform
 import random
 import shlex
 import shutil
+import stat
 import socket
 import subprocess
 import sys
@@ -65,13 +66,22 @@ def get_virt_ip():
     return out[20:33]
 
 
-def copy_file(local_path, remote_path, hostname):
-
+def copy_file(remote_path, local_path, hostname, dir=False):
     transport = paramiko.Transport((hostname, SSH_PORT))
     transport.connect(username=REMOTE_LOGIN, password=REMOTE_PASSWORD)
     sftp = paramiko.SFTPClient.from_transport(transport)
-    print "Copying file '%s', remote host is '%s'" % (remote_path, hostname)
-    sftp.get(remote_path, local_path)
+    if dir:
+        print(sftp.listdir(remote_path))
+        for file in sftp.listdir(remote_path):
+            if '.xml' in file:
+                print "Copying file '%s', remote host is '%s'" % (file, hostname)
+                sftp.get(os.path.join(remote_path, file), os.path.join(local_path, file))
+                # sftp.get(''.join(remote_path, file), local_path + file)
+            else:
+                continue
+    else:
+        print "Copying file '%s', remote host is '%s'" % (remote_path, hostname)
+        sftp.get(remote_path, local_path)
     sftp.close()
     transport.close()
     return 0

@@ -309,7 +309,9 @@
     sysctl: name="kernel.core_pattern" value="/home/test/coredumps/core-%e-%p-%t" sysctl_set=yes state=present
     become_method: su
     become: true
-    when: ansible_os_family != "Windows"
+    when:
+      - ansible_os_family != "Windows"
+      - ansible_os_family != "МСВСфера"
 
   - name: windows download git
     when: ansible_os_family == "Windows"

@@ -228,10 +228,11 @@ def make_test_cmd(domname, reportname, tests=None,
 
     if domname[0:3] == 'win':
         cmd = r'cd C:\Users\test\pg-tests && pytest %s --self-contained-html --html=%s.html --junit-xml=%s.xml \
-                  --maxfail=1 %s --target=%s' % (tests, reportname, reportname, pcmd, domname)
+                  --maxfail=1 --alluredir=reports %s --target=%s' % (tests, reportname, reportname, pcmd, domname)
     else:
         cmd = 'cd /home/test/pg-tests && sudo pytest %s --self-contained-html --html=%s.html ' \
-              '--junit-xml=%s.xml --maxfail=1 %s --target=%s' % (tests, reportname, reportname, pcmd, domname)
+              '--junit-xml=%s.xml --maxfail=1 --alluredir=reports %s --target=%s' % (tests, reportname,
+                                                                                     reportname, pcmd, domname)
 
     if DEBUG:
         cmd += "--verbose --tb=long --full-trace"
@@ -243,16 +244,18 @@ def export_results(domname, domipaddress, reportname):
     if not os.path.exists('reports'):
         os.makedirs('reports')
 
+    if not os.path.exists('reports/allure_reports'):
+        os.makedirs('reports/allure_reports')
+
     if domname[0:3] == 'win':
         copy_file_win(reportname, domipaddress)
     else:
         try:
-            copy_file("reports/%s.html" % reportname,
-                      "/home/test/pg-tests/%s.html" % reportname, domipaddress)
-            copy_file("reports/%s.xml" % reportname,
-                      "/home/test/pg-tests/%s.xml" % reportname, domipaddress)
+            copy_file("/home/test/pg-tests/%s.html" % reportname, "reports/%s.html" % reportname, domipaddress)
+            copy_file("/home/test/pg-tests/%s.xml" % reportname, "reports/%s.xml" % reportname, domipaddress)
+            copy_file("/home/test/pg-tests/reports", "reports/allure_reports/", domipaddress, dir=True)
         except IOError as e:
-            print("Cannot create report.  ")
+            print("Cannot copy report from virtual machine.")
             print(e)
             pass
         finally:
@@ -260,6 +263,11 @@ def export_results(domname, domipaddress, reportname):
                 ['curl', '-T', 'reports/%s.html' % reportname, REPORT_SERVER_URL])
             subprocess.Popen(
                 ['curl', '-T', 'reports/%s.xml' % reportname, REPORT_SERVER_URL])
+            for file in os.listdir('reports/allure_reports'):
+                if '.xml' in file:
+                    subprocess.Popen(['curl', '-T', os.path.join('reports/allure_reports', file), REPORT_SERVER_URL])
+                else:
+                    continue
 
 
 def keep_env(domname, keep):
