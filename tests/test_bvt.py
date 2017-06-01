@@ -57,12 +57,12 @@ def test_extensions(install_postgres):
     cursor.execute("SELECT name FROM pg_catalog.pg_available_extensions")
     available_extensions = [e[0] for e in cursor]
 
-    if edition == "standard":
+    if "standard" in edition:
         extensions = settings.EXTENSIONS_OS
     elif edition == "enterprise":
         extensions = settings.EXTENSIONS_EE + settings.EXTENSIONS_OS
     else:
-        pytest.fail("Unknown PostgresPro edition")
+        pytest.fail("Unknown PostgresPro edition: %s" % edition)
 
     for e in extensions:
         print("Trying to check extension %s" % e)
