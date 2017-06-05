@@ -253,7 +253,8 @@ def export_results(domname, domipaddress, reportname):
         try:
             copy_file("/home/test/pg-tests/%s.html" % reportname, "reports/%s.html" % reportname, domipaddress)
             copy_file("/home/test/pg-tests/%s.xml" % reportname, "reports/%s.xml" % reportname, domipaddress)
-            copy_file("/home/test/pg-tests/reports", "reports/allure_reports/", domipaddress, dir=True)
+            copy_file("/home/test/pg-tests/reports", "reports/allure_reports", domipaddress, dir=True)
+            copy_file("/home/test/pg-tests/reports", "/var/www/html", domipaddress, dir=True)
         except IOError as e:
             print("Cannot copy report from virtual machine.")
             print(e)

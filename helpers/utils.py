@@ -49,11 +49,7 @@ def command_executor(cmd, remote=False, host=None, login=None, password=None, st
                     return subprocess.check_output(shlex.split(cmd), shell=True)
                 else:
                     print(cmd)
-                    if "ALT " in platform.linux_distribution()[0] and "initdb" in cmd:
-                        # Dirty hack for AltLinux, ALT always returns exit code 1 for initdb (PGPRO-573)
-                        return subprocess.call(shlex.split(cmd))
-                    else:
-                        return subprocess.check_call(shlex.split(cmd))
+                    return subprocess.check_call(shlex.split(cmd))
 
 
 def get_virt_ip():
