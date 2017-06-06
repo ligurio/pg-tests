@@ -240,9 +240,13 @@ def make_test_cmd(domname, reportname, tests=None,
     return cmd
 
 
-def export_results(domname, domipaddress, reportname):
+def export_results(domname, domipaddress, reportname, operating_system=None, product_name=None,
+                   product_version=None, product_edition=None):
     if not os.path.exists('reports'):
         os.makedirs('reports')
+    allure_reports_dir = "/var/www/html/%s" % time.strftime("/%Y/%m/%d")
+    if not os.path.exists(allure_reports_dir):
+        os.makedirs(allure_reports_dir)
 
     if not os.path.exists('reports/allure_reports'):
         os.makedirs('reports/allure_reports')
@@ -253,8 +257,11 @@ def export_results(domname, domipaddress, reportname):
         try:
             copy_file("/home/test/pg-tests/%s.html" % reportname, "reports/%s.html" % reportname, domipaddress)
             copy_file("/home/test/pg-tests/%s.xml" % reportname, "reports/%s.xml" % reportname, domipaddress)
-            copy_file("/home/test/pg-tests/reports", "reports/allure_reports", domipaddress, dir=True)
-            copy_file("/home/test/pg-tests/reports", "/var/www/html", domipaddress, dir=True)
+            copy_file("/home/test/pg-tests/reports", "reports/allure_reports", domipaddress,  dir=True)
+            copy_file("/home/test/pg-tests/reports", "/var/www/html/%s" % allure_reports_dir,
+                      domipaddress, dir=True, operating_system=operating_system,
+                      product_name=product_name, product_version=product_version,
+                      product_edition=product_edition)
         except IOError as e:
             print("Cannot copy report from virtual machine.")
             print(e)
@@ -370,7 +377,9 @@ def main():
             retcode, stdout, stderr = exec_command(cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD)
 
         if args.export:
-            export_results(domname, domipaddress, reportname)
+            export_results(domname, domipaddress, reportname,
+                           operating_system=args.target, product_name=args.product_name,
+                           product_version=args.product_version, product_edition=args.product_edition)
             reporturl = os.path.join(REPORT_SERVER_URL, reportname)
             print "Link to the html report - %s.html" % reporturl
             print "Link to the xml report - %s.xml" % reporturl
