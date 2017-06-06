@@ -75,6 +75,9 @@ def copy_file(remote_path, local_path, hostname, dir=False, operating_system=Non
                                                          product_version, product_edition)
                 print "Copying file '%s', remote host is '%s'" % (file, hostname)
                 sftp.get(os.path.join(remote_path, file), os.path.join(local_path, new_file_name))
+            elif '.txt' in file:
+                print "Copying file '%s', remote host is '%s'" % (file, hostname)
+                sftp.get(os.path.join(remote_path, file), os.path.join(local_path, file))
             else:
                 continue
     else:
