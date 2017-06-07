@@ -22,8 +22,11 @@ def test_version(request, install_postgres):
     cursor = conn.cursor()
     cursor.execute("SELECT pgpro_version()")
     pgpro_info = get_pgpro_info(cursor.fetchall()[0][0])
-    cursor.execute("SELECT pgpro_build()")
-    pgpro_info["last_commit"] = cursor.fetchall()[0][0]
+    if install_postgres.version == '9.5':
+        pass
+    else:
+        cursor.execute("SELECT pgpro_build()")
+        pgpro_info["last_commit"] = cursor.fetchall()[0][0]
     print("What must be installed:", request.config.getoption('--product_name'),
           request.config.getoption('--product_version'))
     print("Information about installed PostgresPro ", pgpro_info)
