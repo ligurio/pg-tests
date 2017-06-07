@@ -72,7 +72,7 @@ def copy_file(remote_path, local_path, hostname, dir=False, operating_system=Non
         for file in sftp.listdir(remote_path):
             if '.xml' in file:
                 new_file_name = "{}_{}_{}_{}-testsuite.xml".format(operating_system, product_name,
-                                                         product_version, product_edition)
+                                                                   product_version, product_edition)
                 print "Copying file '%s', remote host is '%s'" % (file, hostname)
                 sftp.get(os.path.join(remote_path, file), os.path.join(local_path, new_file_name))
             elif '.txt' in file:
