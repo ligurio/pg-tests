@@ -180,6 +180,11 @@ def setup_env(domipaddress, domname):
     :param domname str: virtual machine name
     :return: int: 0 if all OK and 1 if not
     """
+    try:
+        os.remove(os.path.join(os.environ.get("HOME"), '.ssh/known_hosts'))
+    except OSError:
+        pass
+    shutil.copyfile("/etc/hosts.bckp", "/etc/hosts")
     host_record = domipaddress + ' ' + domname + '\n'
     with open("/etc/hosts", "a") as hosts:
         hosts.write(host_record)
@@ -191,7 +196,7 @@ def setup_env(domipaddress, domname):
         inv = ANSIBLE_INVENTORY_WIN % (domname, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD)
         ansible_cmd = ANSIBLE_CMD % (ANSIBLE_PLAYBOOK, "winrm", domname)
 
-    with open("static/inventory", "a") as hosts:
+    with open("static/inventory", "w") as hosts:
         hosts.write(inv)
 
     os.environ['ANSIBLE_HOST_KEY_CHECKING'] = 'False'
