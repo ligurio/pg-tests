@@ -16,6 +16,8 @@ from helpers.sql_helpers import create_test_table
 from tests.settings import TMP_DIR
 
 
+@pytest.mark.core_functional
+@pytest.mark.compression
 class TestCompression():
 
     PGBENCH_SCHEMA_UNLOGGED = """
