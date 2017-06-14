@@ -10,6 +10,7 @@ import pytest
 from multiprocessing import Process
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
+from helpers.os_helpers import load_pgbench
 from helpers.sql_helpers import drop_test_table
 from helpers.sql_helpers import create_test_table
 from tests.settings import TMP_DIR
@@ -255,3 +256,38 @@ class TestCompression():
         # Step 6
         compression_files = self.get_filenames(compression_files_directory)
         assert '.cfm' in compression_files
+
+    @pytest.mark.usefixtures('install_postgres')
+    @pytest.mark.test_compression_alter_tablepsace_to_compression
+    def test_compression_alter_tablepsace(self):
+        """Scenario:
+        1. Create tablespace for test
+        2. Create test data with pgbench
+        3. Save rows count from pgbench_history
+        4. Move table to branch with compression
+        5. Check that rows count before and after moving the same
+        """
+        # Step 1
+        self.create_tablespace('compression_alter_tablepsace', compression=True)
+        # Step 2
+        conn_string = "host=localhost user=postgres"
+        load_pgbench(conn_string, ["-i", "-s", "10"])
+        load_pgbench(conn_string, ["-s", "10", "-t", "1000", "-c", "10"])
+        # Step 3
+        conn = psycopg2.connect(conn_string)
+        cursor = conn.cursor()
+        cursor.execute("select count(*) from pgbench_history")
+        rows_before_move = cursor.fetchall()[0][0]
+        conn.commit()
+        conn.close()
+        # Step 4
+        conn_string = "host='localhost' user='postgres' "
+        conn = psycopg2.connect(conn_string)
+        cursor = conn.cursor()
+        cursor.execute("ALTER TABLE pgbench_history SET TABLESPACE compression_alter_tablepsace")
+        cursor.execute("select count(*) from pgbench_history")
+        rows_after_move = cursor.fetchall()[0][0]
+        conn.commit()
+        conn. close()
+        # Step 5
+        assert rows_before_move == rows_after_move
