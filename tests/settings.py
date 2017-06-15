@@ -1,7 +1,7 @@
 
 COREDUMP_DIR = "/home/test/coredumps/"
 
-EXTENSIONS_POSTGRES = ['plpython2u', 'plperlu']
+EXTENSIONS_POSTGRES = ['plperlu', 'pltcl', 'plpython2u']
 
 EXTENSIONS_EE = ["pg_pathman", "pg_trgm", "pg_variables", "sr_plan",
                  "pgpro_scheduler", "jsquery", "pg_query_state", "rum",
