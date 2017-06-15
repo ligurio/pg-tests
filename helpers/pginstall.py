@@ -15,8 +15,9 @@ from helpers.utils import write_file
 
 PGPRO_HOST = "http://repo.postgrespro.ru/"
 PSQL_HOST = "https://download.postgresql.org/pub"
-PACKAGES = ['server', 'contrib', 'libs']
-ALT_PACKAGES = ['server', 'contrib', 'devel']
+PACKAGES = ['server', 'contrib', 'libs', 'docs', 'docs-ru', 'plperl', 'plpython', 'pltcl']
+DEB_PACKAGES = ['plperl', 'plpython', 'plpython3', 'pltcl']
+ALT_PACKAGES = ['server', 'contrib', 'devel', 'docs', 'docs-ru', 'perl', 'python', 'tcl']
 RPM_BASED = ['CentOS Linux', 'RHEL', 'CentOS',
              'Red Hat Enterprise Linux Server', 'Oracle Linux Server', 'SLES',
              'ROSA Enterprise Linux Server', 'ROSA SX \"COBALT\" ', 'GosLinux',
@@ -82,8 +83,6 @@ def generate_repo_info(distro, osversion, **kwargs):
             distname = "altlinux-spt"
         elif distro == "ALT Linux " and osversion == "7.0.5":
             distname = "altlinux"
-        elif distro == "ROSA Enterprise Linux Server" and osversion == "6.6":
-            distname = "rosa-sx"
         elif distro == "ROSA Enterprise Linux Server" and osversion != "6.8":
             distname = "rosa-el"
         elif distro == "ROSA Enterprise Linux Server" and osversion == "6.8":
@@ -207,12 +206,30 @@ def package_mgmt(remote=False, host=None, **kwargs):
         for p in PACKAGES:
             cmd = "yum install -y %s-%s" % (pkg_name, p)
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+        if kwargs['version'] != '9.5':
+            cmd = "yum install -y %s-%s" % (pkg_name, "pg_probackup")
+            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+        if kwargs['edition'] == 'cert':
+            cmd = "yum install -y pgbouncer"
+            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
     elif dist_info[0] in DEB_BASED and "ALT" not in dist_info[0]:
         cmd = "apt-get install -y %s-%s" % (kwargs['name'], kwargs['version'])
         command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+        cmd = "apt-get install -y %s-doc-%s" % (kwargs['name'], kwargs['version'])
+        command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+        cmd = "apt-get install -y %s-doc-ru-%s" % (kwargs['name'], kwargs['version'])
+        command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         cmd = "apt-get install -y libpq-dev"
         command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+        cmd = "apt-get install -y %s-pg-probackup-%s" % (kwargs['name'], kwargs['version'])
+        command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+        if kwargs['edition'] == 'cert':
+            cmd = "apt-get install -y pgbouncer"
+            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+        for p in DEB_PACKAGES:
+            cmd = "apt-get install -y %s-%s-%s" % (kwargs['name'], p, kwargs['version'])
+            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
     elif "ALT" in dist_info[0]:
         if kwargs['edition'] == "ee":
@@ -226,6 +243,12 @@ def package_mgmt(remote=False, host=None, **kwargs):
 
         for p in ALT_PACKAGES:
             cmd = "apt-get install -y %s-%s" % (pkg_name, p)
+            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+        if kwargs['version'] != '9.5':
+            cmd = "apt-get install -y %s-%s" % (pkg_name, "pg-probackup")
+            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+        if kwargs['edition'] == 'cert':
+            cmd = "apt-get install -y pgbouncer"
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
 

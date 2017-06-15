@@ -43,7 +43,7 @@ def sqlsmith_queries(request):
     return request.config.getoption("--sqlsmith-queries")
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def install_postgres(request):
     """This fixture for postgres installation on different platforms
 

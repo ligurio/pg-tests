@@ -23,6 +23,8 @@ def pytest_addoption(parser):
                      help="Specify product build.")
     parser.addoption("--sqlsmith-queries", action="store", default=10000,
                      help="Number of sqlsmith queries.")
+    parser.addoption("--sqlsmith-queries", action="store", default=10000,
+                     help="Number of sqlsmith queries.")
 
 
 @pytest.fixture(scope='function')
