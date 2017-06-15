@@ -222,8 +222,9 @@ def package_mgmt(remote=False, host=None, **kwargs):
         command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         cmd = "apt-get install -y libpq-dev"
         command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-        cmd = "apt-get install -y %s-pg-probackup-%s" % (kwargs['name'], kwargs['version'])
-        command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+        if kwargs['version'] != '9.5':
+            cmd = "apt-get install -y %s-pg-probackup-%s" % (kwargs['name'], kwargs['version'])
+            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         if kwargs['edition'] == 'cert':
             cmd = "apt-get install -y pgbouncer"
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
