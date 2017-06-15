@@ -246,7 +246,7 @@ def package_mgmt(remote=False, host=None, **kwargs):
             cmd = "apt-get install -y %s-%s" % (pkg_name, p)
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         if kwargs['version'] != '9.5':
-            cmd = "apt-get install -y %s-%s" % (pkg_name, "pg-probackup")
+            cmd = "apt-get install -y %s-%s" % (pkg_name, "pg_probackup")
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         if kwargs['edition'] == 'cert':
             cmd = "apt-get install -y pgbouncer"
