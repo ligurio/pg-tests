@@ -177,11 +177,12 @@ class PgInstance:
         """
 
         loaded_extensions = self.get_option('shared_libraries')
-        if loaded_extensions is None:
-            extensions = extension_name
-        else:
-            extensions = loaded_extensions + ',' + extension_name
-        self.set_option('shared_preload_libraries', extensions)
+        if extension_name not in ['plperlu', 'pltcl', 'plpython2u']:
+            if loaded_extensions is None:
+                extensions = extension_name
+            else:
+                extensions = loaded_extensions + ',' + extension_name
+            self.set_option('shared_preload_libraries', extensions)
 
         conn = psycopg2.connect(self.connstring)
         cursor = conn.cursor()
