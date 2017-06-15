@@ -82,6 +82,8 @@ def generate_repo_info(distro, osversion, **kwargs):
             distname = "altlinux-spt"
         elif distro == "ALT Linux " and osversion == "7.0.5":
             distname = "altlinux"
+        elif distro == "ROSA Enterprise Linux Server" and osversion == "6.6":
+            distname = "rosa-sx"
         elif distro == "ROSA Enterprise Linux Server" and osversion != "6.8":
             distname = "rosa-el"
         elif distro == "ROSA Enterprise Linux Server" and osversion == "6.8":

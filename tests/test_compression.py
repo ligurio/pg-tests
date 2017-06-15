@@ -16,6 +16,8 @@ from helpers.sql_helpers import create_test_table
 from tests.settings import TMP_DIR
 
 
+@pytest.mark.core_functional
+@pytest.mark.compression
 class TestCompression():
 
     PGBENCH_SCHEMA_UNLOGGED = """
@@ -259,7 +261,7 @@ class TestCompression():
 
     @pytest.mark.usefixtures('install_postgres')
     @pytest.mark.test_compression_alter_tablepsace_to_compression
-    def test_compression_alter_tablepsace(self):
+    def test_compression_alter_tablepsace_to_compression(self):
         """Scenario:
         1. Create tablespace for test
         2. Create test data with pgbench
