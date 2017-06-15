@@ -6,9 +6,17 @@ import settings
 
 from helpers.sql_helpers import get_pgpro_info
 
+if platform.system() == 'Linux':
+    dist = platform.linux_distribution()
+elif platform.system() == 'Windows':
+    dist = 'Windows'
+else:
+    print("Unknown Distro")
 
-@allure.feature('BVT Tests {}'.format(platform.linux_distribution()))
+
+@allure.feature('BVT Tests {}'.format(dist))
 @allure.testcase('http://my.tms.org/browse/TESTCASE-2')
+@pytest.mark.bvt
 @pytest.mark.usefixtures('install_postgres')
 def test_version(request, install_postgres):
     """ This is BVT test for all PostgreSQL version
@@ -36,6 +44,7 @@ def test_version(request, install_postgres):
 
 @allure.feature('BVT Tests {}'.format(platform.linux_distribution()))
 @allure.testcase('http://my.tms.org/browse/TESTCASE-2')
+@pytest.mark.bvt
 @pytest.mark.usefixtures('install_postgres')
 def test_extensions(install_postgres):
     """ Make sure all our extensions are available
@@ -61,9 +70,9 @@ def test_extensions(install_postgres):
     available_extensions = [e[0] for e in cursor]
 
     if "standard" in edition:
-        extensions = settings.EXTENSIONS_OS
+        extensions = settings.EXTENSIONS_OS + settings.EXTENSIONS_POSTGRES
     elif edition == "enterprise":
-        extensions = settings.EXTENSIONS_EE + settings.EXTENSIONS_OS
+        extensions = settings.EXTENSIONS_EE + settings.EXTENSIONS_OS + settings.EXTENSIONS_POSTGRES
     else:
         pytest.fail("Unknown PostgresPro edition: %s" % edition)
 
