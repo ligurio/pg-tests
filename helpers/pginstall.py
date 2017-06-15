@@ -163,11 +163,11 @@ enabled=1
         elif kwargs['name'] == "postgrespro":
             repo = "deb %s %s main" % (baseurl, codename)
             if dist_info[0] == "ALT Linux " and dist_info[1] in ["7.0.4", "7.0.5"]:
-                repo = "rpm %s/7 x86_64 pgpro" % baseurl
+                repo = "rpm %s/7 x86_64 pgpro\n rpm %s/7 noarch pgpro\n " % (baseurl, baseurl)
             elif dist_info[0] == "ALT Linux " and dist_info[1] == "6.0.1":
-                repo = "rpm %s/6 x86_64 pgpro" % baseurl
+                repo = "rpm %s/6 x86_64 pgpro\n rpm %s/6 noarch pgpro\n" % (baseurl, baseurl)
             elif dist_info[0] == "ALT ":
-                repo = "rpm %s/8 x86_64 pgpro" % baseurl
+                repo = "rpm %s/8 x86_64 pgpro\n rpm %s/8 x86_64 pgpro\n" % (baseurl, baseurl)
 
         write_file(repofile, repo, remote, host)
 
