@@ -90,3 +90,112 @@ def test_extensions(install_postgres):
             cursor.execute("DROP EXTENSION IF EXISTS %s" % e)
             conn.commit()
             conn.close()
+
+
+@allure.feature('BVT Tests {}'.format(dist))
+@pytest.mark.bvt
+@pytest.mark.usefixtures('install_postgres')
+def test_plpython(install_postgres):
+    """Test for plpython language
+    Scenario:
+    1. Create extension plpython2u
+    2. Create function
+    3. Execute function
+    4. Check function result
+    5. Drop function
+    6. Drop extension
+    """
+    # Step 1
+    install_postgres.load_extension("plpython2u")
+    fun = """CREATE FUNCTION py_test_function()
+  RETURNS text
+AS $$
+  return "python test function"
+$$ LANGUAGE plpython2u;"""
+    conn_string = "host='localhost' user='postgres' "
+    conn = psycopg2.connect(conn_string)
+    cursor = conn.cursor()
+    # Step 2
+    cursor.execute(fun)
+    # Step 3
+    cursor.execute("SELECT py_test_function()")
+    # Step 4
+    assert cursor.fetchall()[0][0] == "python test function"
+    # Step 5
+    cursor.execute("DROP FUNCTION IF EXISTS py_test_function()")
+    # Step 6
+    cursor.execute("DROP EXTENSION IF EXISTS plpython2u")
+    conn.commit()
+    conn.close()
+
+
+@allure.feature('BVT Tests {}'.format(dist))
+@pytest.mark.bvt
+@pytest.mark.usefixtures('install_postgres')
+def test_pltcl(install_postgres):
+    """Test for pltcl language
+        Scenario:
+        1. Create extension pltcl
+        2. Create function
+        3. Execute function
+        4. Check function result
+        5. Drop function
+        6. Drop extension
+        """
+    install_postgres.load_extension("pltcl")
+    fun = """CREATE FUNCTION pltcl_test_function()
+      RETURNS text
+    AS $$
+      return "pltcl test function"
+    $$ LANGUAGE pltcl;"""
+    conn_string = "host='localhost' user='postgres' "
+    conn = psycopg2.connect(conn_string)
+    cursor = conn.cursor()
+    # Step 2
+    cursor.execute(fun)
+    # Step 3
+    cursor.execute("SELECT pltcl_test_function()")
+    # Step 4
+    assert cursor.fetchall()[0][0] == "pltcl test function"
+    # Step 5
+    cursor.execute("DROP FUNCTION IF EXISTS pltcl_test_function()")
+    # Step 6
+    cursor.execute("DROP EXTENSION IF EXISTS pltcl")
+    conn.commit()
+    conn.close()
+
+
+@allure.feature('BVT Tests {}'.format(dist))
+@pytest.mark.bvt
+@pytest.mark.usefixtures('install_postgres')
+def test_plperl(install_postgres):
+    """Test for plperl language
+        Scenario:
+        1. Create extension plperl
+        2. Create function
+        3. Execute function
+        4. Check function result
+        5. Drop function
+        6. Drop extension
+        """
+    install_postgres.load_extension("plperl")
+    fun = """CREATE FUNCTION plperl_test_function()
+      RETURNS text
+    AS $$
+      return "plperl test function"
+    $$ LANGUAGE plperl;"""
+    conn_string = "host='localhost' user='postgres' "
+    conn = psycopg2.connect(conn_string)
+    cursor = conn.cursor()
+    # Step 2
+    cursor.execute(fun)
+    # Step 3
+    cursor.execute("SELECT plperl_test_function()")
+    # Step 4
+    assert cursor.fetchall()[0][0] == "plperl test function"
+    # Step 5
+    cursor.execute("DROP FUNCTION IF EXISTS plperl_test_function()")
+    # Step 6
+    cursor.execute("DROP EXTENSION IF EXISTS plperl")
+    conn.commit()
+    conn.close()
