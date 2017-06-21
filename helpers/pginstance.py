@@ -177,7 +177,7 @@ class PgInstance:
         """
 
         loaded_extensions = self.get_option('shared_libraries')
-        if extension_name not in ['plperlu', 'pltcl', 'plpython2u']:
+        if extension_name not in ['plperlu', 'pltcl', 'plpython2u', 'plperl']:
             if loaded_extensions is None:
                 extensions = extension_name
             else:
