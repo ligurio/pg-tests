@@ -225,11 +225,11 @@ $$
 DECLARE
     result text;
 BEGIN
-    result = 'plpgsql test function'
+    result = 'plpgsql test function';
     RETURN result;
 END;
 $$
-LANGUAGE 'plpgsql' """
+LANGUAGE plpgsql """
     conn_string = "host='localhost' user='postgres' "
     conn = psycopg2.connect(conn_string)
     cursor = conn.cursor()
