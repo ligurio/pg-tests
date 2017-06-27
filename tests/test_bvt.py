@@ -17,6 +17,7 @@ else:
 @allure.feature('BVT Tests {}'.format(dist))
 @allure.testcase('http://my.tms.org/browse/TESTCASE-2')
 @pytest.mark.bvt
+@pytest.mark.test_version
 @pytest.mark.usefixtures('install_postgres')
 def test_version(request, install_postgres):
     """ This is BVT test for all PostgreSQL version
@@ -45,6 +46,7 @@ def test_version(request, install_postgres):
 @allure.feature('BVT Tests {}'.format(platform.linux_distribution()))
 @allure.testcase('http://my.tms.org/browse/TESTCASE-2')
 @pytest.mark.bvt
+@pytest.mark.test_extensions
 @pytest.mark.usefixtures('install_postgres')
 def test_extensions(install_postgres):
     """ Make sure all our extensions are available
@@ -88,12 +90,14 @@ def test_extensions(install_postgres):
             cursor.execute("SELECT extname FROM pg_catalog.pg_extension WHERE extname = \'%s\';" % e)
             assert cursor.fetchall()[0][0] == e
             cursor.execute("DROP EXTENSION IF EXISTS %s" % e)
+            # TODO add check that in pg_catalog extension was deleted
             conn.commit()
             conn.close()
 
 
 @allure.feature('BVT Tests {}'.format(dist))
 @pytest.mark.bvt
+@pytest.mark.test_plpython
 @pytest.mark.usefixtures('install_postgres')
 def test_plpython(install_postgres):
     """Test for plpython language
@@ -131,6 +135,7 @@ $$ LANGUAGE plpython2u;"""
 
 @allure.feature('BVT Tests {}'.format(dist))
 @pytest.mark.bvt
+@pytest.mark.test_pltcl
 @pytest.mark.usefixtures('install_postgres')
 def test_pltcl(install_postgres):
     """Test for pltcl language
@@ -167,6 +172,7 @@ def test_pltcl(install_postgres):
 
 @allure.feature('BVT Tests {}'.format(dist))
 @pytest.mark.bvt
+@pytest.mark.test_plperl
 @pytest.mark.usefixtures('install_postgres')
 def test_plperl(install_postgres):
     """Test for plperl language
@@ -197,5 +203,43 @@ def test_plperl(install_postgres):
     cursor.execute("DROP FUNCTION IF EXISTS plperl_test_function()")
     # Step 6
     cursor.execute("DROP EXTENSION IF EXISTS plperl")
+    conn.commit()
+    conn.close()
+
+
+@allure.feature('BVT Tests {}'.format(dist))
+@pytest.mark.bvt
+@pytest.mark.test_plpgsql
+@pytest.mark.usefixtures('install_postgres')
+def test_plpgsql(install_postgres):
+    """Test for plperl language
+        Scenario:
+        1. Create  plpgsql function
+        2. Execute  plpgsql function
+        3. Check plpgsql function result
+        4. Drop  plpgsql function
+        """
+    fun = """CREATE OR REPLACE FUNCTION plpgsql_test_function()
+    RETURNS text AS
+$$
+DECLARE
+    result text;
+BEGIN
+    result = 'plpgsql test function';
+    RETURN result;
+END;
+$$
+LANGUAGE plpgsql """
+    conn_string = "host='localhost' user='postgres' "
+    conn = psycopg2.connect(conn_string)
+    cursor = conn.cursor()
+    # Step 1
+    cursor.execute(fun)
+    # Step 2
+    cursor.execute("SELECT plpgsql_test_function()")
+    # Step 3
+    assert cursor.fetchall()[0][0] == "plpgsql test function"
+    # Step 4
+    cursor.execute("DROP FUNCTION IF EXISTS plpgsql_test_function()")
     conn.commit()
     conn.close()
