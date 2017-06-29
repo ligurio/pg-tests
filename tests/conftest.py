@@ -40,10 +40,6 @@ def pytest_addoption(parser):
     parser.addoption("--skip_install", action="store_true")
 
 
-def pytest_configure(config):
-    allure.environment(hostname=platform.linux_distribution()[0])
-
-
 @pytest.fixture
 def sqlsmith_queries(request):
     return request.config.getoption("--sqlsmith-queries")
@@ -57,7 +53,6 @@ def install_postgres(request):
     command line variables from pytest_addoption() method
     :return:
     """
-    allure.environment(hostname=platform.linux_distribution()[0])
     skip_install = request.config.getoption("--skip_install")
     version = request.config.getoption('--product_version')
     milestone = request.config.getoption('--product_milestone')
