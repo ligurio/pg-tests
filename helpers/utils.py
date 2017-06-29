@@ -174,6 +174,7 @@ def write_file(file, text, remote=False, host=None):
         f = sftp.open(file, "w+")
         f.write(text)
         f.close
+        transport.close()
     else:
         with open(file, "w+") as f:
             f.write(text)

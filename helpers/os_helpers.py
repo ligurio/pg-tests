@@ -56,6 +56,22 @@ def pg_bindir():
         return subprocess.check_output([pg_config_bin, "--bindir"]).strip()
 
 
+def pg_config_dir():
+    distro = platform.linux_distribution()[0]
+    try:
+        pg_config_bin = os.environ['PG_CONFIG']
+    except KeyError:
+        if distro in RPM_BASED:
+            try:
+                return '/usr/pgproee-9.6/bin/pg_config'
+            except OSError:
+                return '/usr/pgpro-9.6/bin/pg_config'
+        elif distro in DEB_BASED:
+            return '/usr/bin/pg_config'
+    else:
+        return pg_config_bin
+
+
 def rmdir(dirname):
     for item in os.listdir(dirname):
         path = os.path.join(dirname, item)
