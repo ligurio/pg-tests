@@ -38,5 +38,5 @@ pep8-check:
 pylint-check:
   stage: test
   script:
-    - pylint --ignore=datafiller.py -E pg-tests
+    - PYTHONPATH=${PYTHONPATH}:$(dirname %d) pylint --ignore=datafiller.py -E pg-tests
   when: always
