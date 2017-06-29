@@ -31,6 +31,7 @@ class PgInstance:
         self.skip_install = skip_install
         self.connstring = "host=localhost user=postgres"
         self.windows = windows
+        self.cluster_name = cluster_name
         if cluster_name is None and not skip_install:
             self.skip_install = False
             self.install_product(name, version, edition, milestone, build, windows=windows)
@@ -98,9 +99,9 @@ class PgInstance:
         cmd = "sudo -u postgres psql -t -P format=unaligned -c \"SHOW hba_file;\""
         hba_file = ""
         if remote:
-            hba_file = command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)[1]
+            hba_file = command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)[1].strip()
         else:
-            hba_file = command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD, stdout=True)
+            hba_file = command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD, stdout=True).strip()
         print "Path to hba_file is", hba_file
         write_file(hba_file, pg_hba_config, remote, host)
         cmd = "chown postgres:postgres %s" % hba_file
@@ -126,7 +127,14 @@ class PgInstance:
         cmd = "sudo -u postgres psql -c \"ALTER USER postgres WITH PASSWORD \'%s\';\"" % self.PG_PASSWORD
         command_executor(cmd, remote, host, login=REMOTE_ROOT, password=REMOTE_ROOT_PASSWORD)
 
-        hba_auth = """
+        if self.cluster_name is not None:
+            hba_auth = """
+    local   all             all                                     peer
+    host    all             all             0.0.0.0/0               trust
+    host    all             all             ::0/0                   trust
+    host    replication     postgres    0.0.0.0/0       trust"""
+        else:
+            hba_auth = """
     local   all             all                                     peer
     host    all             all             0.0.0.0/0               trust
     host    all             all             ::0/0                   trust"""

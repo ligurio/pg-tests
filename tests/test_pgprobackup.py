@@ -5,11 +5,8 @@ import platform
 import psycopg2
 import pytest
 import pwd
-import shlex
 import subprocess
 
-from helpers.pginstall import DEB_BASED
-from helpers.pginstall import RPM_BASED
 from helpers.os_helpers import pg_bindir
 from helpers.sql_helpers import execute
 from tests.settings import TMP_DIR
@@ -34,29 +31,6 @@ host    all             all             ::0/0                   trust"""
         """
         return dict(v.split("=") for v in out.replace('\t', ' ').strip().split('\n') if v.strip() and "=" in v)
 
-    def install_pgprobackup(self, version, edition):
-        """Install pgprobackup from  deb or rpm package
-
-        :param version: postgrespro version
-        :param edition: can be standard or ee
-        :return:
-        """
-
-        major = version.split(".")[0]
-        minor = version.split(".")[1]
-
-        if self.DISTRO in RPM_BASED or self.DISTRO == "ALT Linux ":
-            if edition == 'ee':
-                service_name = "postgrespro-enterprise%s%s-pg_probackup" % (major, minor)
-            elif edition == 'standard':
-                service_name = "postgrespro%s%s-pg-probackup" % (major, minor)
-            subprocess.call(['yum', 'install', service_name, '-y'])
-
-        elif self.DISTRO in DEB_BASED:
-            service_name = "postgrespro-pg-probackup-%s.%s" % (major, minor)
-            subprocess.call(["apt-get", "update", "-y"])
-            subprocess.call(["apt-get", "install", service_name, "libpq-dev", "-y"])
-
     @staticmethod
     def create_backup_directory():
         """Create new  directory for tablespace
@@ -80,19 +54,15 @@ host    all             all             ::0/0                   trust"""
         return subprocess.check_output(cmd)
 
     @pytest.mark.test_install_pgprobackup
-    def test_install_pgprobackup(self, install_postgres):
+    def test_install_pgprobackup(self):
         """ Install pg_probackup utility and configure postgresql for running pg_probackup.
         Scenario:
-        1. Install pg_probackup
-        2. Check version function
-        3. Check help function
+        1. Check version function
+        2. Check help function
         """
-
         # Step 1
-        self.install_pgprobackup(install_postgres.version, install_postgres.edition)
-        # Step 2
         assert self.execute_pg_probackup("--version") is not None
-        # Step 3
+        # Step 2
         assert self.execute_pg_probackup("--help") is not None
 
     @pytest.mark.test_pgprobackup_compression_continious_backup
