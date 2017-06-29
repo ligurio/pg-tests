@@ -12,6 +12,9 @@ from helpers.sql_helpers import execute
 from tests.settings import TMP_DIR
 
 
+@pytest.mark.features
+@pytest.mark.feature_pgprobackup
+@pytest.mark.usefixtures('install_postgres')
 class TestPgprobackup():
     # TODO add restore from backup for all test cases
 
