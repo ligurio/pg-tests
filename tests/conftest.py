@@ -57,7 +57,7 @@ def install_postgres(request):
     command line variables from pytest_addoption() method
     :return:
     """
-    allure.environment()
+    allure.environment(hostname=platform.linux_distribution()[0])
     skip_install = request.config.getoption("--skip_install")
     version = request.config.getoption('--product_version')
     milestone = request.config.getoption('--product_milestone')
