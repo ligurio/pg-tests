@@ -246,7 +246,7 @@ def make_test_cmd(domname, reportname, tests=None,
 
 
 def export_results(domname, domipaddress, reportname, operating_system=None, product_name=None,
-                   product_version=None, product_edition=None):
+                   product_version=None, product_edition=None, tests=None):
     if not os.path.exists('reports'):
         os.makedirs('reports')
     allure_reports_dir = "/var/www/html/%s" % time.strftime("/%Y/%m/%d")
@@ -266,7 +266,7 @@ def export_results(domname, domipaddress, reportname, operating_system=None, pro
             copy_file("/home/test/pg-tests/reports", allure_reports_dir,
                       domipaddress, dir=True, operating_system=operating_system,
                       product_name=product_name, product_version=product_version,
-                      product_edition=product_edition)
+                      product_edition=product_edition, tests=tests)
         except IOError as e:
             print("Cannot copy report from virtual machine.")
             print(e)
@@ -384,7 +384,8 @@ def main():
         if args.export:
             export_results(domname, domipaddress, reportname,
                            operating_system=args.target, product_name=args.product_name,
-                           product_version=args.product_version, product_edition=args.product_edition)
+                           product_version=args.product_version, product_edition=args.product_edition,
+                           tests=args.run_tests)
             reporturl = os.path.join(REPORT_SERVER_URL, reportname)
             print "Link to the html report - %s.html" % reporturl
             print "Link to the xml report - %s.xml" % reporturl

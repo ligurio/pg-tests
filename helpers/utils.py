@@ -63,7 +63,7 @@ def get_virt_ip():
 
 
 def copy_file(remote_path, local_path, hostname, dir=False, operating_system=None,
-              product_name=None, product_version=None, product_edition=None):
+              product_name=None, product_version=None, product_edition=None, tests=None):
     transport = paramiko.Transport((hostname, SSH_PORT))
     transport.connect(username=REMOTE_LOGIN, password=REMOTE_PASSWORD)
     sftp = paramiko.SFTPClient.from_transport(transport)
@@ -71,8 +71,8 @@ def copy_file(remote_path, local_path, hostname, dir=False, operating_system=Non
         print(sftp.listdir(remote_path))
         for file in sftp.listdir(remote_path):
             if '.xml' in file:
-                new_file_name = "{}_{}_{}_{}-testsuite.xml".format(operating_system, product_name,
-                                                                   product_version, product_edition)
+                new_file_name = "{}_{}_{}_{}_{}-testsuite.xml".format(operating_system, product_name,
+                                                                   product_version, product_edition, tests)
                 print "Copying file '%s', remote host is '%s'" % (file, hostname)
                 sftp.get(os.path.join(remote_path, file), os.path.join(local_path, new_file_name))
             elif '.txt' in file:
