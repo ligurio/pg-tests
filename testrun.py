@@ -382,10 +382,11 @@ def main():
             retcode, stdout, stderr = exec_command(cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD)
 
         if args.export:
+            test = args.run_tests.split('/')[1].split('.')[0]
             export_results(domname, domipaddress, reportname,
                            operating_system=args.target, product_name=args.product_name,
                            product_version=args.product_version, product_edition=args.product_edition,
-                           tests=args.run_tests)
+                           tests=test)
             reporturl = os.path.join(REPORT_SERVER_URL, reportname)
             print "Link to the html report - %s.html" % reporturl
             print "Link to the xml report - %s.xml" % reporturl
