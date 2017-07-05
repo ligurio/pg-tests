@@ -14,8 +14,8 @@ else:
     print("Unknown Distro")
 
 
-@allure.feature('BVT Tests {}'.format(dist))
-@allure.testcase('http://my.tms.org/browse/TESTCASE-2')
+@pytest.allure.feature('BVT Tests {}'.format(dist))
+@pytest.allure.testcase('http://my.tms.org/browse/TESTCASE-2')
 @pytest.mark.bvt
 @pytest.mark.test_version
 @pytest.mark.usefixtures('install_postgres')
@@ -43,8 +43,7 @@ def test_version(request, install_postgres):
     assert install_postgres.version == pgpro_info['version']
 
 
-@allure.feature('BVT Tests {}'.format(platform.linux_distribution()))
-@allure.testcase('http://my.tms.org/browse/TESTCASE-2')
+@pytest.allure.feature('BVT Tests {}'.format(platform.linux_distribution()))
 @pytest.mark.bvt
 @pytest.mark.test_extensions
 @pytest.mark.usefixtures('install_postgres')
@@ -95,7 +94,7 @@ def test_extensions(install_postgres):
             conn.close()
 
 
-@allure.feature('BVT Tests {}'.format(dist))
+@pytest.allure.feature('BVT Tests {}'.format(dist))
 @pytest.mark.bvt
 @pytest.mark.test_plpython
 @pytest.mark.usefixtures('install_postgres')
@@ -133,7 +132,7 @@ $$ LANGUAGE plpython2u;"""
     conn.close()
 
 
-@allure.feature('BVT Tests {}'.format(dist))
+@pytest.allure.feature('BVT Tests {}'.format(dist))
 @pytest.mark.bvt
 @pytest.mark.test_pltcl
 @pytest.mark.usefixtures('install_postgres')
@@ -170,7 +169,7 @@ def test_pltcl(install_postgres):
     conn.close()
 
 
-@allure.feature('BVT Tests {}'.format(dist))
+@pytest.allure.feature('BVT Tests {}'.format(dist))
 @pytest.mark.bvt
 @pytest.mark.test_plperl
 @pytest.mark.usefixtures('install_postgres')
@@ -207,7 +206,7 @@ def test_plperl(install_postgres):
     conn.close()
 
 
-@allure.feature('BVT Tests {}'.format(dist))
+@pytest.allure.feature('BVT Tests {}'.format(dist))
 @pytest.mark.bvt
 @pytest.mark.test_plpgsql
 @pytest.mark.usefixtures('install_postgres')
