@@ -22,6 +22,7 @@ before_script:
   - pip install --upgrade cffi
   - pip install ansible-lint
   - pip install pep8
+  - pip install -r static/requirements.txt
 
 ansible-lint:
   stage: test
