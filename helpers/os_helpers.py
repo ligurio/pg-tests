@@ -42,13 +42,16 @@ def pg_bindir():
         if distro in RPM_BASED:
             try:
                 print("Trying to execute pg_config for enterprise version")
+                os.environ['PG_CONFIG'] = '/usr/pgproee-9.6/bin/pg_config'
                 return subprocess.check_output(['/usr/pgproee-9.6/bin/pg_config', "--bindir"]).strip()
             except OSError as e:
                 print(e)
                 print("Cannot find pg_config for enterprise version")
                 print("Trying to execute pg_config for standard version")
+                os.environ['PG_CONFIG'] = '/usr/bin/pg_config'
                 return subprocess.check_output(['/usr/pgpro-9.6/bin/pg_config', "--bindir"]).strip()
         elif distro in DEB_BASED:
+            os.environ['PG_CONFIG'] = '/usr/bin/pg_config'
             a = subprocess.check_output(['/usr/bin/pg_config', "--bindir"]).strip()
             print(a)
             return a
@@ -63,10 +66,13 @@ def pg_config_dir():
     except KeyError:
         if distro in RPM_BASED:
             try:
+                os.environ['PG_CONFIG'] = '/usr/pgproee-9.6/bin/pg_config'
                 return '/usr/pgproee-9.6/bin/pg_config'
             except OSError:
+                os.environ['PG_CONFIG'] = '/usr/bin/pg_config'
                 return '/usr/pgpro-9.6/bin/pg_config'
         elif distro in DEB_BASED:
+            os.environ['PG_CONFIG'] = '/usr/bin/pg_config'
             return '/usr/bin/pg_config'
     else:
         return pg_config_bin

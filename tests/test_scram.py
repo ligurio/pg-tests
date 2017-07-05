@@ -5,6 +5,7 @@ import random
 import string
 
 
+@pytest.mark.usefixtures('install_postgres')
 class TestScram():
     """
     Only Enterprise Edition Feature
