@@ -120,7 +120,7 @@ host    all             all             ::0/0                   trust"""
                 'CREATE TABLE tbl TABLESPACE pgprobackup_compression'
                 ' AS SELECT i, md5(random()::text) FROM generate_series(0,1e05) AS i;')
         # Step 8
-        self.execute_pg_probackup("-d", "postgres", "-b", "full", "backup", "-U", "postgres")
+        self.execute_pg_probackup("backup", "-b", "full", "-d", "postgres", "-U", "postgres")
         # Step 9
         # Get last backup id and get out for show command with this backup
         pgprobackup_show = subprocess.Popen(["%s/pg_probackup" % pg_bindir(), "show", "-U", "postgres"],
@@ -152,7 +152,7 @@ host    all             all             ::0/0                   trust"""
         """
         # Step 1
         for i in range(3):
-            self.execute_pg_probackup("-d", "postgres", "-b", "full", "backup", "-U", "postgres")
+            self.execute_pg_probackup("backup", "-b", "full", "-d", "postgres", "-U", "postgres")
         # Step 2
         self.execute_pg_probackup("retention", "--redundancy=1", "purge")
         # Step 3
@@ -163,7 +163,7 @@ host    all             all             ::0/0                   trust"""
         assert len(awk_backup_ids.communicate()[0].strip().split()) == 1
         # Step 4
         for i in range(2):
-            self.execute_pg_probackup("-d", "postgres", "-b", "full", "backup", "-U", "postgres")
+            self.execute_pg_probackup("backup", "-b", "full", "-d", "postgres", "-U", "postgres")
         # Step 5
         new_time = datetime.datetime.now() + datetime.timedelta(days=3)
         subprocess.check_output(["sudo", "date", "-s", str(new_time)])
@@ -177,7 +177,7 @@ host    all             all             ::0/0                   trust"""
         assert len(awk_backup_ids.communicate()[0].strip().split()) == 1
         # Step 8
         for i in range(2):
-            self.execute_pg_probackup("-d", "postgres", "-b", "full", "backup", "-U", "postgres")
+            self.execute_pg_probackup("backup", "-b", "full", "-d", "postgres", "-U", "postgres")
         # Step 9
         new_time = datetime.datetime.now() + datetime.timedelta(days=3)
         subprocess.check_output(["sudo", "date", "-s", str(new_time)])

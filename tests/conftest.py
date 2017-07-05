@@ -62,16 +62,19 @@ def install_postgres(request):
     if skip_install:
         local = True
         windows = False
-        return PgInstance(version, milestone, name, edition, build, local, windows=windows)
+        yield PgInstance(version, milestone, name, edition, build, local, windows=windows)
+        print('teardown_method')
     else:
         if request.config.getoption('--target')[0:3] == 'win':
             local = False
             windows = True
-            return PgInstance(version, milestone, name, edition, build, local, windows=windows)
+            yield PgInstance(version, milestone, name, edition, build, local, windows=windows)
+            print('teardown_method')
         else:
             local = False
             windows = False
-            return PgInstance(version, milestone, name, edition, build, local, windows=windows)
+            yield PgInstance(version, milestone, name, edition, build, local, windows=windows)
+            print('teardown_method')
 
 
 @pytest.fixture

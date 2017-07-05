@@ -72,7 +72,7 @@ def copy_file(remote_path, local_path, hostname, dir=False, operating_system=Non
         for file in sftp.listdir(remote_path):
             if '.xml' in file and 'environment' not in file:
                 new_file_name = "{}_{}_{}_{}_{}-testsuite.xml".format(operating_system, product_name,
-                                                                   product_version, product_edition, tests)
+                                                                      product_version, product_edition, tests)
                 print "Copying file '%s', remote host is '%s'" % (file, hostname)
                 sftp.get(os.path.join(remote_path, file), os.path.join(local_path, new_file_name))
             elif '.txt' in file:
@@ -139,8 +139,15 @@ def exec_command(cmd, hostname, login, password):
         stderr += chan.recv_stderr(buff_size)
 
     client.close()
-
-    return retcode, stdout, stderr
+    if retcode != 0:
+        print("Return code for command  \'%s\' is not zero\n" % cmd)
+        print("Stdout for command \'%s\'\n" % cmd)
+        print(stdout)
+        print("Stderror for command \'%s\'\n" % cmd)
+        print(stderr)
+        sys.exit(1)
+    else:
+        return retcode, stdout, stderr
 
 
 def exec_command_win(cmd, hostname, user, password):
@@ -162,7 +169,15 @@ def exec_command_win(cmd, hostname, user, password):
     p.cleanup_command(shell_id, command_id)
     p.close_shell(shell_id)
 
-    return retcode, stdout, stderr
+    if retcode != 0:
+        print("Return code for command  \'%s\' is not zero\n" % cmd)
+        print("Stdout for command \'%s\'\n" % cmd)
+        print(stdout)
+        print("Stderror for command \'%s\'\n" % cmd)
+        print(stderr)
+        sys.exit(1)
+    else:
+        return retcode, stdout, stderr
 
 
 def gen_name(name):
