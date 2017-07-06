@@ -372,4 +372,3 @@ def delete_packages(remote=False, host=None, **kwargs):
         if kwargs['edition'] == 'cert':
             cmd = "apt-get remove -y pgbouncer"
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-
