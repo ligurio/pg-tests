@@ -277,9 +277,9 @@ def export_results(domname, domipaddress, reportname, operating_system=None, pro
                 ['curl', '-T', 'reports/%s.html' % reportname, REPORT_SERVER_URL])
             subprocess.Popen(
                 ['curl', '-T', 'reports/%s.xml' % reportname, REPORT_SERVER_URL])
-            for file in os.listdir('reports/allure_reports'):
-                if '.xml' in file:
-                    subprocess.Popen(['curl', '-T', os.path.join('reports/allure_reports', file), REPORT_SERVER_URL])
+            for file in os.listdir('reports'):
+                if '.json' in file:
+                    subprocess.Popen(['curl', '-T', os.path.join('reports', file), REPORT_SERVER_URL])
                 else:
                     continue
 
@@ -377,10 +377,12 @@ def main():
                 """
             s.run_ps(ps_script)
             print "Added path for python and python scripts. \n"
-            retcode, stdout, stderr = exec_command_win(cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD)
+            retcode, stdout, stderr = exec_command_win(cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD,
+                                                       skip_ret_code_check=True)
             # export_results(domname, domipaddress, reportname)
         else:
-            retcode, stdout, stderr = exec_command(cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD)
+            retcode, stdout, stderr = exec_command(cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD,
+                                                   skip_ret_code_check=True)
 
         if args.export:
             test = args.run_tests.split('/')[1].split('.')[0]
