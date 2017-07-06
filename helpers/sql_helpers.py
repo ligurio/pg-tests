@@ -92,11 +92,10 @@ def execute(conn, sql_query):
     return response
 
 
-def drop_test_table():
+def drop_test_table(conn_string):
     """Drop tables from schema public
     :return:
     """
-    conn_string = "host='localhost' user='postgres' "
     conn = psycopg2.connect(conn_string)
     cursor = conn.cursor()
     cursor.execute(
@@ -106,6 +105,7 @@ def drop_test_table():
         cursor.execute("\n".join(req))
     conn.commit()
     conn.close()
+    print("Test data was deleted")
 
 
 def pg_get_option(connstring, option):

@@ -70,19 +70,21 @@ def copy_file(remote_path, local_path, hostname, dir=False, operating_system=Non
     if dir:
         print(sftp.listdir(remote_path))
         for file in sftp.listdir(remote_path):
-            if '.xml' in file and 'environment' not in file:
-                new_file_name = "{}_{}_{}_{}_{}-testsuite.xml".format(operating_system, product_name,
-                                                                      product_version, product_edition, tests)
-                print "Copying file '%s', remote host is '%s'" % (file, hostname)
-                sftp.get(os.path.join(remote_path, file), os.path.join(local_path, new_file_name))
-            elif '.txt' in file:
-                print "Copying file '%s', remote host is '%s'" % (file, hostname)
-                sftp.get(os.path.join(remote_path, file), os.path.join(local_path, file))
-            elif '.xml' in file and 'environment' in file:
-                print "Copying file '%s', remote host is '%s'" % (file, hostname)
-                sftp.get(os.path.join(remote_path, file), os.path.join(local_path, file))
-            else:
-                continue
+            print "Copying file '%s', remote host is '%s'" % (file, hostname)
+            sftp.get(os.path.join(remote_path, file), os.path.join(local_path, file))
+            # if '.xml' in file and 'environment' not in file:
+            #     new_file_name = "{}_{}_{}_{}_{}-testsuite.xml".format(operating_system, product_name,
+            #                                                           product_version, product_edition, tests)
+            #     print "Copying file '%s', remote host is '%s'" % (file, hostname)
+            #     sftp.get(os.path.join(remote_path, file), os.path.join(local_path, new_file_name))
+            # elif '.txt' in file:
+            #     print "Copying file '%s', remote host is '%s'" % (file, hostname)
+            #     sftp.get(os.path.join(remote_path, file), os.path.join(local_path, file))
+            # elif '.xml' in file and 'environment' in file:
+            #     print "Copying file '%s', remote host is '%s'" % (file, hostname)
+            #     sftp.get(os.path.join(remote_path, file), os.path.join(local_path, file))
+            # else:
+            #     continue
     else:
         print "Copying file '%s', remote host is '%s'" % (remote_path, hostname)
         sftp.get(remote_path, local_path)

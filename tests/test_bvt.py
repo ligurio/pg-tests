@@ -1,4 +1,3 @@
-import allure
 import platform
 import psycopg2
 import pytest
@@ -15,7 +14,6 @@ else:
 
 
 @pytest.allure.feature('BVT Tests {}'.format(dist))
-@pytest.allure.testcase('http://my.tms.org/browse/TESTCASE-2')
 @pytest.mark.bvt
 @pytest.mark.test_version
 @pytest.mark.usefixtures('install_postgres')
