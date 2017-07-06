@@ -94,7 +94,7 @@ def create_table(request):
     schema, size = request.param
 
     def delete_tables():
-        drop_test_table()
+        drop_test_table("host='localhost' user='postgres'")
 
     request.addfinalizer(delete_tables)
 

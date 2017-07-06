@@ -151,7 +151,7 @@ class TestCompression():
         print(result)
         assert result != 0
         conn.close()
-        drop_test_table()
+        drop_test_table(conn_string)
 
     @pytest.mark.test_compression_unlogged_tables
     def test_compression_unlogged_tables(self, install_postgres):
@@ -214,7 +214,7 @@ class TestCompression():
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM pg_tables WHERE tablespace=\'compression_negative\';")
         assert len(cursor.fetchall()) == 0
-        drop_test_table()
+        drop_test_table(conn_string)
 
     @pytest.mark.test_compression_unlogged_tables_negative
     def test_compression_unlogged_tables_negative(self, install_postgres):
