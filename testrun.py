@@ -253,8 +253,8 @@ def export_results(domname, domipaddress, reportname, operating_system=None, pro
     if not os.path.exists(allure_reports_dir):
         os.makedirs(allure_reports_dir)
 
-    if not os.path.exists('reports/allure_reports'):
-        os.makedirs('reports/allure_reports')
+    # if not os.path.exists('reports/allure_reports'):
+    #     os.makedirs('reports/allure_reports')
 
     if domname[0:3] == 'win':
         copy_file_win(reportname, domipaddress)
@@ -262,11 +262,12 @@ def export_results(domname, domipaddress, reportname, operating_system=None, pro
         try:
             copy_file("/home/test/pg-tests/%s.html" % reportname, "reports/%s.html" % reportname, domipaddress)
             copy_file("/home/test/pg-tests/%s.xml" % reportname, "reports/%s.xml" % reportname, domipaddress)
-            copy_file("/home/test/pg-tests/reports", "reports/allure_reports", domipaddress, dir=True)
-            copy_file("/home/test/pg-tests/reports", allure_reports_dir,
-                      domipaddress, dir=True, operating_system=operating_system,
-                      product_name=product_name, product_version=product_version,
-                      product_edition=product_edition, tests=tests)
+            copy_file("/home/test/pg-tests/reports", allure_reports_dir, domipaddress, dir=True)
+            # copy_file("/home/test/pg-tests/reports", "reports/allure_reports", domipaddress, dir=True)
+            # copy_file("/home/test/pg-tests/reports", allure_reports_dir,
+            #           domipaddress, dir=True, operating_system=operating_system,
+            #           product_name=product_name, product_version=product_version,
+            #           product_edition=product_edition, tests=tests)
         except IOError as e:
             print("Cannot copy report from virtual machine.")
             print(e)
