@@ -109,7 +109,7 @@ def copy_file_win(reportname, domipaddress):
     shutil.copy(r'/reports/%s.xml' % reportname, r'reports')
 
 
-def exec_command(cmd, hostname, login, password, skip_ret_code_check= False):
+def exec_command(cmd, hostname, login, password, skip_ret_code_check=False):
 
     buff_size = 1024
     stdout = ""
@@ -155,7 +155,7 @@ def exec_command(cmd, hostname, login, password, skip_ret_code_check= False):
             return retcode, stdout, stderr
 
 
-def exec_command_win(cmd, hostname, user, password, skip_ret_code_check= False):
+def exec_command_win(cmd, hostname, user, password, skip_ret_code_check=False):
     """ Execute command on windows remote host
 
     :param cmd:
