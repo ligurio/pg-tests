@@ -1,5 +1,6 @@
 import logging
 import os
+import shutil
 import sys
 import urllib
 
@@ -147,6 +148,7 @@ enabled=1
         write_file(repofile, repo, remote, host)
         cmd = "rpm --import %s" % gpg_key_url
         command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+        return repofile
     elif dist_info[0] in DEB_BASED or "ALT" in dist_info[0]:
         cmd = "apt-get install -y lsb-release"
         command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
@@ -174,6 +176,7 @@ enabled=1
         if "ALT " in dist_info[0]:
             cmd = "apt-get update -y"
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+
         else:
             cmd = "apt-get install -y wget ca-certificates"
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
@@ -181,6 +184,7 @@ enabled=1
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             cmd = "apt-get update -y"
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+        return repofile
     elif dist_info[0] in WIN_BASED:
         windows_installer = urllib.URLopener()
         installer_name = get_last_windows_installer_file(baseurl)
@@ -274,3 +278,98 @@ def get_last_windows_installer_file(url):
         if "Postgres" in link.get('href'):
             postgres_files.append(link.get('href'))
     return postgres_files[-1]
+
+
+def delete_repo(remote=False, host=None, **kwargs):
+    """ Setup yum or apt repo for Linux Based envs and download windows installer for Windows based
+
+    :param remote: bool: remote or local installation
+    :param host:  str: ip address
+    :param kwargs: list of args about what we installing
+    :return: exit code 0 if all is ok and 1 if failed
+    """
+    dist_info = get_distro(remote, host)
+    if dist_info[0] in RPM_BASED:
+        repofile = "/etc/yum.repos.d/%s-%s.repo" % (kwargs['name'], kwargs['version'])
+        cmd = "rm -f %s" % repofile
+        command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+        cmd = "yum update -y && yum clean cache"
+        command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+    elif dist_info[0] in DEB_BASED or "ALT" in dist_info[0]:
+        repofile = "/etc/apt/sources.list.d/%s-%s.list" % (kwargs['name'],
+                                                           kwargs['version'])
+        cmd = "rm -f %s" % repofile
+        command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+        cmd = "apt-get update -y && apt-get clean cache"
+        command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+    else:
+        print "Unsupported distro %s" % dist_info[0]
+        sys.exit(1)
+
+
+def delete_packages(remote=False, host=None, **kwargs):
+    """ Delete postgrespro packages
+
+    :param remote:
+    :param host:
+    :return:
+    """
+    dist_info = get_distro(remote, host)
+    major = kwargs['version'].split(".")[0]
+    minor = kwargs['version'].split(".")[1]
+    pkg_name = ""
+    if dist_info[0] in RPM_BASED:
+        if kwargs['edition'] == "ee":
+            pkg_name = "%s-enterprise%s%s" % (kwargs['name'], major, minor)
+        else:
+            pkg_name = kwargs['name'] + major + minor
+
+        for p in PACKAGES:
+            cmd = "yum remove -y %s-%s" % (pkg_name, p)
+            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+        if kwargs['version'] != '9.5':
+            cmd = "yum remove -y %s-%s" % (pkg_name, "pg_probackup")
+            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+        if kwargs['edition'] == 'cert':
+            cmd = "yum remove -y pgbouncer"
+            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+
+    elif dist_info[0] in DEB_BASED and "ALT" not in dist_info[0]:
+        cmd = "apt-get remove -y %s-%s" % (kwargs['name'], kwargs['version'])
+        command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+        cmd = "apt-get remove -y %s-doc-%s" % (kwargs['name'], kwargs['version'])
+        command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+        cmd = "apt-get remove -y %s-doc-ru-%s" % (kwargs['name'], kwargs['version'])
+        command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+        cmd = "apt-get remove -y libpq-dev"
+        command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+        if kwargs['version'] != '9.5':
+            cmd = "apt-get remove -y %s-pg-probackup-%s" % (kwargs['name'], kwargs['version'])
+            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+        if kwargs['edition'] == 'cert':
+            cmd = "apt-get remove -y pgbouncer"
+            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+        for p in DEB_PACKAGES:
+            cmd = "apt-get remove -y %s-%s-%s" % (kwargs['name'], p, kwargs['version'])
+            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+
+    elif "ALT" in dist_info[0]:
+        if kwargs['edition'] == "ee":
+            pkg_name = "%s-enterprise%s.%s" % (kwargs['name'], major, minor)
+        elif kwargs['edition'] == "cert":
+            pkg_name = "postgrespro%s.%s" % (major, minor)
+        elif kwargs['edition'] == "standard":
+            pkg_name = "postgrespro%s.%s" % (major, minor)
+        else:
+            pkg_name = kwargs['name'] + major + minor
+
+        for p in ALT_PACKAGES:
+            cmd = "apt-get remove -y %s-%s" % (pkg_name, p)
+            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+        if kwargs['version'] != '9.5':
+            cmd = "apt-get remove -y %s-%s" % (pkg_name, "pg_probackup")
+            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+        if kwargs['edition'] == 'cert':
+            cmd = "apt-get remove -y pgbouncer"
+            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+

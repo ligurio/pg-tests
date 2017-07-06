@@ -1,5 +1,3 @@
-import allure
-import platform
 import psycopg2
 import glob
 import pytest
@@ -7,6 +5,8 @@ import os
 import shutil
 import subprocess
 
+from helpers.pginstall import delete_packages
+from helpers.pginstall import delete_repo
 from helpers.pginstance import PgInstance
 from helpers.sql_helpers import drop_test_table
 from helpers.sql_helpers import create_test_table
@@ -63,18 +63,22 @@ def install_postgres(request):
         local = True
         windows = False
         yield PgInstance(version, milestone, name, edition, build, local, windows=windows)
-        print('teardown_method')
+        drop_test_table("host='localhost' user='postgres'")
     else:
         if request.config.getoption('--target')[0:3] == 'win':
             local = False
             windows = True
             yield PgInstance(version, milestone, name, edition, build, local, windows=windows)
-            print('teardown_method')
+            drop_test_table("host='localhost' user='postgres'")
+            # delete_packages(remote=False, host=None, name=name, version=version, edition=edition)
+            # delete_repo(remote=False, host=None, name=name, version=version)
         else:
             local = False
             windows = False
             yield PgInstance(version, milestone, name, edition, build, local, windows=windows)
-            print('teardown_method')
+            drop_test_table("host='localhost' user='postgres'")
+            # delete_packages(remote=False, host=None, name=name, version=version, edition=edition)
+            # delete_repo(remote=False, host=None, name=name, version=version)
 
 
 @pytest.fixture
