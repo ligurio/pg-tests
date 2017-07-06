@@ -109,7 +109,7 @@ def copy_file_win(reportname, domipaddress):
     shutil.copy(r'/reports/%s.xml' % reportname, r'reports')
 
 
-def exec_command(cmd, hostname, login, password):
+def exec_command(cmd, hostname, login, password, skip_ret_code_check= False):
 
     buff_size = 1024
     stdout = ""
@@ -141,18 +141,21 @@ def exec_command(cmd, hostname, login, password):
         stderr += chan.recv_stderr(buff_size)
 
     client.close()
-    if retcode != 0:
-        print("Return code for command  \'%s\' is not zero\n" % cmd)
-        print("Stdout for command \'%s\'\n" % cmd)
-        print(stdout)
-        print("Stderror for command \'%s\'\n" % cmd)
-        print(stderr)
-        sys.exit(1)
-    else:
+    if skip_ret_code_check:
         return retcode, stdout, stderr
+    else:
+        if retcode != 0:
+            print("Return code for command  \'%s\' is not zero\n" % cmd)
+            print("Stdout for command \'%s\'\n" % cmd)
+            print(stdout)
+            print("Stderror for command \'%s\'\n" % cmd)
+            print(stderr)
+            sys.exit(1)
+        else:
+            return retcode, stdout, stderr
 
 
-def exec_command_win(cmd, hostname, user, password):
+def exec_command_win(cmd, hostname, user, password, skip_ret_code_check= False):
     """ Execute command on windows remote host
 
     :param cmd:
@@ -171,15 +174,18 @@ def exec_command_win(cmd, hostname, user, password):
     p.cleanup_command(shell_id, command_id)
     p.close_shell(shell_id)
 
-    if retcode != 0:
-        print("Return code for command  \'%s\' is not zero\n" % cmd)
-        print("Stdout for command \'%s\'\n" % cmd)
-        print(stdout)
-        print("Stderror for command \'%s\'\n" % cmd)
-        print(stderr)
-        sys.exit(1)
-    else:
+    if skip_ret_code_check:
         return retcode, stdout, stderr
+    else:
+        if retcode != 0:
+            print("Return code for command  \'%s\' is not zero\n" % cmd)
+            print("Stdout for command \'%s\'\n" % cmd)
+            print(stdout)
+            print("Stderror for command \'%s\'\n" % cmd)
+            print(stderr)
+            sys.exit(1)
+        else:
+            return retcode, stdout, stderr
 
 
 def gen_name(name):
