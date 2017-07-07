@@ -13,9 +13,8 @@ else:
     print("Unknown Distro")
 
 
-@pytest.allure.feature('BVT Tests {}'.format(dist))
 @pytest.mark.bvt
-@pytest.mark.test_version
+@pytest.mark.test_version(name1=dist)
 @pytest.mark.usefixtures('install_postgres')
 def test_version(request, install_postgres):
     """ This is BVT test for all PostgreSQL version
@@ -43,7 +42,7 @@ def test_version(request, install_postgres):
 
 @pytest.allure.feature('BVT Tests {}'.format(platform.linux_distribution()))
 @pytest.mark.bvt
-@pytest.mark.test_extensions
+@pytest.mark.test_extensions(name1=dist)
 @pytest.mark.usefixtures('install_postgres')
 def test_extensions(install_postgres):
     """ Make sure all our extensions are available
@@ -94,7 +93,7 @@ def test_extensions(install_postgres):
 
 @pytest.allure.feature('BVT Tests {}'.format(dist))
 @pytest.mark.bvt
-@pytest.mark.test_plpython
+@pytest.mark.test_plpython(name1=dist)
 @pytest.mark.usefixtures('install_postgres')
 def test_plpython(install_postgres):
     """Test for plpython language
@@ -132,7 +131,7 @@ $$ LANGUAGE plpython2u;"""
 
 @pytest.allure.feature('BVT Tests {}'.format(dist))
 @pytest.mark.bvt
-@pytest.mark.test_pltcl
+@pytest.mark.test_pltcl(name1=dist)
 @pytest.mark.usefixtures('install_postgres')
 def test_pltcl(install_postgres):
     """Test for pltcl language
@@ -169,7 +168,7 @@ def test_pltcl(install_postgres):
 
 @pytest.allure.feature('BVT Tests {}'.format(dist))
 @pytest.mark.bvt
-@pytest.mark.test_plperl
+@pytest.mark.test_plperl(name1=dist)
 @pytest.mark.usefixtures('install_postgres')
 def test_plperl(install_postgres):
     """Test for plperl language
@@ -206,7 +205,7 @@ def test_plperl(install_postgres):
 
 @pytest.allure.feature('BVT Tests {}'.format(dist))
 @pytest.mark.bvt
-@pytest.mark.test_plpgsql
+@pytest.mark.test_plpgsql(name1=dist)
 @pytest.mark.usefixtures('install_postgres')
 def test_plpgsql(install_postgres):
     """Test for plperl language
