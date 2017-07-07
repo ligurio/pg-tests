@@ -7,7 +7,7 @@ from allure.types import LabelType
 from helpers.sql_helpers import get_pgpro_info
 
 if platform.system() == 'Linux':
-    dist = platform.linux_distribution()[0:2]
+    dist = " ".join(platform.linux_distribution()[0:2])
 elif platform.system() == 'Windows':
     dist = 'Windows'
 else:
