@@ -1,8 +1,12 @@
 import hashlib
+import platform
 import pytest
 import psycopg2
 import random
 import string
+
+from allure.types import LabelType
+from helpers.utils import MySuites
 
 
 @pytest.mark.core_functional
@@ -11,6 +15,13 @@ class TestScram():
     """
     Only Enterprise Edition Feature
     """
+    if platform.system() == 'Linux':
+        dist = " ".join(platform.linux_distribution()[0:2])
+    elif platform.system() == 'Windows':
+        dist = 'Windows'
+    else:
+        print("Unknown Distro")
+
     @staticmethod
     def random_password():
         return ''.join(random.choice(string.lowercase) for i in range(16))
@@ -30,7 +41,7 @@ class TestScram():
             return None
 
     @pytest.mark.test_scram_configuring
-    def test_scram_configuring(self):
+    def test_scram_configuring(self, request):
         """Check that we can set GUC variables via SET command,
          they saved and in pg_authid password saved in right format
         Scenario:
@@ -53,6 +64,16 @@ class TestScram():
         17. Check from pg_authid that password for user test_off_user in plain
 
         """
+        version = request.config.getoption('--product_version')
+        name = request.config.getoption('--product_name')
+        edition = request.config.getoption('--product_edition')
+        product_info = " ".join([self.dist, name, edition, version])
+        tag_mark = pytest.allure.label(LabelType.TAG, self.dist)
+        request.node.add_marker(tag_mark)
+        tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
+        request.node.add_marker(tag_mark)
+        tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
+        request.node.add_marker(tag_mark)
         # Step 1
         conn_string = "host='localhost' user='postgres'"
         conn = psycopg2.connect(conn_string)
@@ -107,7 +128,7 @@ class TestScram():
 
     @pytest.mark.xfail
     @pytest.mark.test_authentication
-    def test_authentication(self, install_postgres):
+    def test_authentication(self, request, install_postgres):
         """Check that we can authenticate user with different password types
         Scenario:
         1. Edit pg_hba conf for test and restart postgres
@@ -117,6 +138,16 @@ class TestScram():
         5. Try to connect to db with password in scram format
         6. Try to connect with password in scram hash
         """
+        version = request.config.getoption('--product_version')
+        name = request.config.getoption('--product_name')
+        edition = request.config.getoption('--product_edition')
+        product_info = " ".join([self.dist, name, edition, version])
+        tag_mark = pytest.allure.label(LabelType.TAG, self.dist)
+        request.node.add_marker(tag_mark)
+        tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
+        request.node.add_marker(tag_mark)
+        tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
+        request.node.add_marker(tag_mark)
         # Step 1
         hba_auth = """
             local   all             test_md5_hash_user                      md5

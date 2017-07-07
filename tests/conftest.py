@@ -1,5 +1,6 @@
 import psycopg2
 import glob
+import platform
 import pytest
 import os
 import shutil
@@ -13,6 +14,13 @@ from helpers.sql_helpers import create_test_table
 from helpers.sql_helpers import execute
 from helpers.os_helpers import download_file
 from tests.settings import TMP_DIR
+
+if platform.system() == 'Linux':
+    dist = platform.linux_distribution()
+elif platform.system() == 'Windows':
+    dist = 'Windows'
+else:
+    print("Unknown Distro")
 
 
 def pytest_addoption(parser):

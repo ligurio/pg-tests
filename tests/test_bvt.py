@@ -26,11 +26,15 @@ def test_version(request, install_postgres):
     2. Check PGPRO edition
     3. Check system default tables
     """
+    version = request.config.getoption('--product_version')
+    name = request.config.getoption('--product_name')
+    edition = request.config.getoption('--product_edition')
+    product_info = " ".join([dist, name, edition, version])
     tag_mark = pytest.allure.label(LabelType.TAG, dist)
     request.node.add_marker(tag_mark)
-    tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, dist)
+    tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
     request.node.add_marker(tag_mark)
-    tag_mark = pytest.allure.label(MySuites.EPIC, dist)
+    tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
     request.node.add_marker(tag_mark)
     conn_string = "host='localhost' user='postgres' "
     conn = psycopg2.connect(conn_string)
@@ -62,9 +66,15 @@ def test_extensions(request, install_postgres):
     4. Check that every extension write information about self in table pg_catalog.pg_extension
     5. Drop extension
     """
+    version = request.config.getoption('--product_version')
+    name = request.config.getoption('--product_name')
+    edition = request.config.getoption('--product_edition')
+    product_info = " ".join([dist, name, edition, version])
     tag_mark = pytest.allure.label(LabelType.TAG, dist)
     request.node.add_marker(tag_mark)
-    tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, dist)
+    tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
+    request.node.add_marker(tag_mark)
+    tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
     request.node.add_marker(tag_mark)
     conn_string = "host='localhost' user='postgres' "
     conn = psycopg2.connect(conn_string)
@@ -117,11 +127,15 @@ def test_plpython(request, install_postgres):
     5. Drop function
     6. Drop extension
     """
+    version = request.config.getoption('--product_version')
+    name = request.config.getoption('--product_name')
+    edition = request.config.getoption('--product_edition')
+    product_info = " ".join([dist, name, edition, version])
     tag_mark = pytest.allure.label(LabelType.TAG, dist)
     request.node.add_marker(tag_mark)
-    tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, dist)
+    tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
     request.node.add_marker(tag_mark)
-    tag_mark = pytest.allure.label(MySuites.EPIC, dist)
+    tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
     request.node.add_marker(tag_mark)
     # Step 1
     install_postgres.load_extension("plpython2u")
@@ -161,11 +175,15 @@ def test_pltcl(request, install_postgres):
         5. Drop function
         6. Drop extension
         """
+    version = request.config.getoption('--product_version')
+    name = request.config.getoption('--product_name')
+    edition = request.config.getoption('--product_edition')
+    product_info = " ".join([dist, name, edition, version])
     tag_mark = pytest.allure.label(LabelType.TAG, dist)
     request.node.add_marker(tag_mark)
-    tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, dist)
+    tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
     request.node.add_marker(tag_mark)
-    tag_mark = pytest.allure.label(MySuites.EPIC, dist)
+    tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
     request.node.add_marker(tag_mark)
     install_postgres.load_extension("pltcl")
     fun = """CREATE FUNCTION pltcl_test_function()
@@ -204,11 +222,15 @@ def test_plperl(request, install_postgres):
         5. Drop function
         6. Drop extension
         """
+    version = request.config.getoption('--product_version')
+    name = request.config.getoption('--product_name')
+    edition = request.config.getoption('--product_edition')
+    product_info = " ".join([dist, name, edition, version])
     tag_mark = pytest.allure.label(LabelType.TAG, dist)
     request.node.add_marker(tag_mark)
-    tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, dist)
+    tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
     request.node.add_marker(tag_mark)
-    tag_mark = pytest.allure.label(MySuites.EPIC, dist)
+    tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
     request.node.add_marker(tag_mark)
     install_postgres.load_extension("plperl")
     fun = """CREATE FUNCTION plperl_test_function()
@@ -245,11 +267,15 @@ def test_plpgsql(request, install_postgres):
         3. Check plpgsql function result
         4. Drop  plpgsql function
         """
+    version = request.config.getoption('--product_version')
+    name = request.config.getoption('--product_name')
+    edition = request.config.getoption('--product_edition')
+    product_info = " ".join([dist, name, edition, version])
     tag_mark = pytest.allure.label(LabelType.TAG, dist)
     request.node.add_marker(tag_mark)
-    tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, dist)
+    tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
     request.node.add_marker(tag_mark)
-    tag_mark = pytest.allure.label(MySuites.EPIC, dist)
+    tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
     request.node.add_marker(tag_mark)
     fun = """CREATE OR REPLACE FUNCTION plpgsql_test_function()
     RETURNS text AS
