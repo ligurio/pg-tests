@@ -1,8 +1,18 @@
+import platform
 import pytest
 
+from allure.types import LabelType
+
+from helpers.utils import MySuites
 from helpers.environment_manager import Environment
 from helpers.pginstance import PgInstance
 
+if platform.system() == 'Linux':
+    dist = " ".join(platform.linux_distribution()[0:2])
+elif platform.system() == 'Windows':
+    dist = 'Windows'
+else:
+    print("Unknown Distro")
 
 def pytest_addoption(parser):
     """Option for pytest run, list of images for test
@@ -53,6 +63,16 @@ def create_environment(request, environment):
 @pytest.mark.usefixtures('environment')
 @pytest.fixture(scope='function')
 def install_postgres(request, environment):
+    version = request.config.getoption('--product_version')
+    name = request.config.getoption('--product_name')
+    edition = request.config.getoption('--product_edition')
+    product_info = " ".join([dist, name, edition, version])
+    tag_mark = pytest.allure.label(LabelType.TAG, dist)
+    request.node.add_marker(tag_mark)
+    tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
+    request.node.add_marker(tag_mark)
+    tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
+    request.node.add_marker(tag_mark)
     if request.config.getoption('--config'):
         environment_info = environment
         cluster_name = environment['env_name']
