@@ -10,6 +10,7 @@ import subprocess
 import sys
 import winrm
 
+from enum import Enum
 from time import sleep
 
 REMOTE_LOGIN = 'test'
@@ -17,6 +18,14 @@ REMOTE_ROOT = 'root'
 REMOTE_PASSWORD = 'TestPass1'
 REMOTE_ROOT_PASSWORD = 'TestRoot1'
 SSH_PORT = 22
+
+
+class MySuites(Enum):
+    def __str__(self):
+        return self.value
+
+    PARENT_SUITE = 'parentSuite'
+    EPIC = 'epic'
 
 
 def command_executor(cmd, remote=False, host=None, login=None, password=None, stdout=False, windows=False):

@@ -4,6 +4,7 @@ import pytest
 import settings
 
 from allure.types import LabelType
+from helpers.utils import MySuites
 from helpers.sql_helpers import get_pgpro_info
 
 if platform.system() == 'Linux':
@@ -27,6 +28,10 @@ def test_version(request, install_postgres):
     """
     tag_mark = pytest.allure.label(LabelType.TAG, dist)
     request.node.add_marker(tag_mark)
+    tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, dist)
+    request.node.add_marker(tag_mark)
+    tag_mark = pytest.allure.label(MySuites.EPIC, dist)
+    request.node.add_marker(tag_mark)
     conn_string = "host='localhost' user='postgres' "
     conn = psycopg2.connect(conn_string)
     cursor = conn.cursor()
@@ -48,7 +53,7 @@ def test_version(request, install_postgres):
 @pytest.mark.bvt
 @pytest.mark.test_extensions
 @pytest.mark.usefixtures('install_postgres')
-def test_extensions(install_postgres):
+def test_extensions(request, install_postgres):
     """ Make sure all our extensions are available
     Scenario:
     1. Check postgrespro edition
@@ -57,7 +62,10 @@ def test_extensions(install_postgres):
     4. Check that every extension write information about self in table pg_catalog.pg_extension
     5. Drop extension
     """
-
+    tag_mark = pytest.allure.label(LabelType.TAG, dist)
+    request.node.add_marker(tag_mark)
+    tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, dist)
+    request.node.add_marker(tag_mark)
     conn_string = "host='localhost' user='postgres' "
     conn = psycopg2.connect(conn_string)
     cursor = conn.cursor()
@@ -111,6 +119,10 @@ def test_plpython(request, install_postgres):
     """
     tag_mark = pytest.allure.label(LabelType.TAG, dist)
     request.node.add_marker(tag_mark)
+    tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, dist)
+    request.node.add_marker(tag_mark)
+    tag_mark = pytest.allure.label(MySuites.EPIC, dist)
+    request.node.add_marker(tag_mark)
     # Step 1
     install_postgres.load_extension("plpython2u")
     fun = """CREATE FUNCTION py_test_function()
@@ -151,6 +163,10 @@ def test_pltcl(request, install_postgres):
         """
     tag_mark = pytest.allure.label(LabelType.TAG, dist)
     request.node.add_marker(tag_mark)
+    tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, dist)
+    request.node.add_marker(tag_mark)
+    tag_mark = pytest.allure.label(MySuites.EPIC, dist)
+    request.node.add_marker(tag_mark)
     install_postgres.load_extension("pltcl")
     fun = """CREATE FUNCTION pltcl_test_function()
       RETURNS text
@@ -176,7 +192,7 @@ def test_pltcl(request, install_postgres):
 
 @pytest.allure.story(dist)
 @pytest.mark.bvt
-@pytest.mark.test_plperl(distribution=dist)
+@pytest.mark.test_plperl
 @pytest.mark.usefixtures('install_postgres')
 def test_plperl(request, install_postgres):
     """Test for plperl language
@@ -189,6 +205,10 @@ def test_plperl(request, install_postgres):
         6. Drop extension
         """
     tag_mark = pytest.allure.label(LabelType.TAG, dist)
+    request.node.add_marker(tag_mark)
+    tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, dist)
+    request.node.add_marker(tag_mark)
+    tag_mark = pytest.allure.label(MySuites.EPIC, dist)
     request.node.add_marker(tag_mark)
     install_postgres.load_extension("plperl")
     fun = """CREATE FUNCTION plperl_test_function()
@@ -215,7 +235,7 @@ def test_plperl(request, install_postgres):
 
 @pytest.allure.story(dist)
 @pytest.mark.bvt
-@pytest.mark.test_plpgsql(distribution=dist)
+@pytest.mark.test_plpgsql
 @pytest.mark.usefixtures('install_postgres')
 def test_plpgsql(request, install_postgres):
     """Test for plperl language
@@ -226,6 +246,10 @@ def test_plpgsql(request, install_postgres):
         4. Drop  plpgsql function
         """
     tag_mark = pytest.allure.label(LabelType.TAG, dist)
+    request.node.add_marker(tag_mark)
+    tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, dist)
+    request.node.add_marker(tag_mark)
+    tag_mark = pytest.allure.label(MySuites.EPIC, dist)
     request.node.add_marker(tag_mark)
     fun = """CREATE OR REPLACE FUNCTION plpgsql_test_function()
     RETURNS text AS
