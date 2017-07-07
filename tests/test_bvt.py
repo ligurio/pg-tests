@@ -3,10 +3,11 @@ import psycopg2
 import pytest
 import settings
 
+from allure.types import LabelType
 from helpers.sql_helpers import get_pgpro_info
 
 if platform.system() == 'Linux':
-    dist = platform.linux_distribution()
+    dist = platform.linux_distribution()[0:2]
 elif platform.system() == 'Windows':
     dist = 'Windows'
 else:
@@ -14,7 +15,7 @@ else:
 
 
 @pytest.mark.bvt
-@pytest.mark.test_version(name1=dist)
+@pytest.mark.test_version
 @pytest.mark.usefixtures('install_postgres')
 def test_version(request, install_postgres):
     """ This is BVT test for all PostgreSQL version
@@ -23,6 +24,8 @@ def test_version(request, install_postgres):
     2. Check PGPRO edition
     3. Check system default tables
     """
+    tag_mark = pytest.allure.label(LabelType.TAG, dist)
+    request.node.add_marker(tag_mark)
     conn_string = "host='localhost' user='postgres' "
     conn = psycopg2.connect(conn_string)
     cursor = conn.cursor()
@@ -40,9 +43,8 @@ def test_version(request, install_postgres):
     assert install_postgres.version == pgpro_info['version']
 
 
-@pytest.allure.feature('BVT Tests {}'.format(platform.linux_distribution()))
 @pytest.mark.bvt
-@pytest.mark.test_extensions(name1=dist)
+@pytest.mark.test_extensions
 @pytest.mark.usefixtures('install_postgres')
 def test_extensions(install_postgres):
     """ Make sure all our extensions are available
@@ -91,11 +93,10 @@ def test_extensions(install_postgres):
             conn.close()
 
 
-@pytest.allure.feature('BVT Tests {}'.format(dist))
 @pytest.mark.bvt
-@pytest.mark.test_plpython(name1=dist)
+@pytest.mark.test_plpython
 @pytest.mark.usefixtures('install_postgres')
-def test_plpython(install_postgres):
+def test_plpython(request, install_postgres):
     """Test for plpython language
     Scenario:
     1. Create extension plpython2u
@@ -105,6 +106,8 @@ def test_plpython(install_postgres):
     5. Drop function
     6. Drop extension
     """
+    tag_mark = pytest.allure.label(LabelType.TAG, dist)
+    request.node.add_marker(tag_mark)
     # Step 1
     install_postgres.load_extension("plpython2u")
     fun = """CREATE FUNCTION py_test_function()
@@ -129,11 +132,10 @@ $$ LANGUAGE plpython2u;"""
     conn.close()
 
 
-@pytest.allure.feature('BVT Tests {}'.format(dist))
 @pytest.mark.bvt
-@pytest.mark.test_pltcl(name1=dist)
+@pytest.mark.test_pltcl
 @pytest.mark.usefixtures('install_postgres')
-def test_pltcl(install_postgres):
+def test_pltcl(request, install_postgres):
     """Test for pltcl language
         Scenario:
         1. Create extension pltcl
@@ -143,6 +145,8 @@ def test_pltcl(install_postgres):
         5. Drop function
         6. Drop extension
         """
+    tag_mark = pytest.allure.label(LabelType.TAG, dist)
+    request.node.add_marker(tag_mark)
     install_postgres.load_extension("pltcl")
     fun = """CREATE FUNCTION pltcl_test_function()
       RETURNS text
@@ -166,11 +170,10 @@ def test_pltcl(install_postgres):
     conn.close()
 
 
-@pytest.allure.feature('BVT Tests {}'.format(dist))
 @pytest.mark.bvt
-@pytest.mark.test_plperl(name1=dist)
+@pytest.mark.test_plperl(distribution=dist)
 @pytest.mark.usefixtures('install_postgres')
-def test_plperl(install_postgres):
+def test_plperl(request, install_postgres):
     """Test for plperl language
         Scenario:
         1. Create extension plperl
@@ -180,6 +183,8 @@ def test_plperl(install_postgres):
         5. Drop function
         6. Drop extension
         """
+    tag_mark = pytest.allure.label(LabelType.TAG, dist)
+    request.node.add_marker(tag_mark)
     install_postgres.load_extension("plperl")
     fun = """CREATE FUNCTION plperl_test_function()
       RETURNS text
@@ -203,11 +208,10 @@ def test_plperl(install_postgres):
     conn.close()
 
 
-@pytest.allure.feature('BVT Tests {}'.format(dist))
 @pytest.mark.bvt
-@pytest.mark.test_plpgsql(name1=dist)
+@pytest.mark.test_plpgsql(distribution=dist)
 @pytest.mark.usefixtures('install_postgres')
-def test_plpgsql(install_postgres):
+def test_plpgsql(request, install_postgres):
     """Test for plperl language
         Scenario:
         1. Create  plpgsql function
@@ -215,6 +219,8 @@ def test_plpgsql(install_postgres):
         3. Check plpgsql function result
         4. Drop  plpgsql function
         """
+    tag_mark = pytest.allure.label(LabelType.TAG, dist)
+    request.node.add_marker(tag_mark)
     fun = """CREATE OR REPLACE FUNCTION plpgsql_test_function()
     RETURNS text AS
 $$
