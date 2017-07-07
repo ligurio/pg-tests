@@ -7,6 +7,7 @@ from allure.types import LabelType
 from helpers.utils import MySuites
 from helpers.sql_helpers import get_pgpro_info
 
+dist = ""
 if platform.system() == 'Linux':
     dist = " ".join(platform.linux_distribution()[0:2])
 elif platform.system() == 'Windows':
@@ -14,8 +15,13 @@ elif platform.system() == 'Windows':
 else:
     print("Unknown Distro")
 
+version = pytest.config.getoption('--product_version')
+name = pytest.config.getoption('--product_name')
+edition = pytest.config.getoption('--product_edition')
+product_info = " ".join([dist, name, edition, version])
 
-@pytest.allure.story(dist)
+
+@pytest.allure.story(product_info)
 @pytest.mark.bvt
 @pytest.mark.test_version
 @pytest.mark.usefixtures('install_postgres')
@@ -53,7 +59,7 @@ def test_version(request, install_postgres):
     assert install_postgres.version == pgpro_info['version']
 
 
-@pytest.allure.story(dist)
+@pytest.allure.story(product_info)
 @pytest.mark.bvt
 @pytest.mark.test_extensions
 @pytest.mark.usefixtures('install_postgres')
@@ -113,7 +119,7 @@ def test_extensions(request, install_postgres):
             conn.close()
 
 
-@pytest.allure.story(dist)
+@pytest.allure.story(product_info)
 @pytest.mark.bvt
 @pytest.mark.test_plpython
 @pytest.mark.usefixtures('install_postgres')
@@ -161,7 +167,7 @@ $$ LANGUAGE plpython2u;"""
     conn.close()
 
 
-@pytest.allure.story(dist)
+@pytest.allure.story(product_info)
 @pytest.mark.bvt
 @pytest.mark.test_pltcl
 @pytest.mark.usefixtures('install_postgres')
@@ -208,7 +214,7 @@ def test_pltcl(request, install_postgres):
     conn.close()
 
 
-@pytest.allure.story(dist)
+@pytest.allure.story(product_info)
 @pytest.mark.bvt
 @pytest.mark.test_plperl
 @pytest.mark.usefixtures('install_postgres')
@@ -255,7 +261,7 @@ def test_plperl(request, install_postgres):
     conn.close()
 
 
-@pytest.allure.story(dist)
+@pytest.allure.story(product_info)
 @pytest.mark.bvt
 @pytest.mark.test_plpgsql
 @pytest.mark.usefixtures('install_postgres')
