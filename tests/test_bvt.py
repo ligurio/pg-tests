@@ -14,6 +14,7 @@ else:
     print("Unknown Distro")
 
 
+@pytest.allure.story(dist)
 @pytest.mark.bvt
 @pytest.mark.test_version
 @pytest.mark.usefixtures('install_postgres')
@@ -43,6 +44,7 @@ def test_version(request, install_postgres):
     assert install_postgres.version == pgpro_info['version']
 
 
+@pytest.allure.story(dist)
 @pytest.mark.bvt
 @pytest.mark.test_extensions
 @pytest.mark.usefixtures('install_postgres')
@@ -93,6 +95,7 @@ def test_extensions(install_postgres):
             conn.close()
 
 
+@pytest.allure.story(dist)
 @pytest.mark.bvt
 @pytest.mark.test_plpython
 @pytest.mark.usefixtures('install_postgres')
@@ -132,6 +135,7 @@ $$ LANGUAGE plpython2u;"""
     conn.close()
 
 
+@pytest.allure.story(dist)
 @pytest.mark.bvt
 @pytest.mark.test_pltcl
 @pytest.mark.usefixtures('install_postgres')
@@ -170,6 +174,7 @@ def test_pltcl(request, install_postgres):
     conn.close()
 
 
+@pytest.allure.story(dist)
 @pytest.mark.bvt
 @pytest.mark.test_plperl(distribution=dist)
 @pytest.mark.usefixtures('install_postgres')
@@ -208,6 +213,7 @@ def test_plperl(request, install_postgres):
     conn.close()
 
 
+@pytest.allure.story(dist)
 @pytest.mark.bvt
 @pytest.mark.test_plpgsql(distribution=dist)
 @pytest.mark.usefixtures('install_postgres')
