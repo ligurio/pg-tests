@@ -15,12 +15,18 @@ class TestScram():
     """
     Only Enterprise Edition Feature
     """
+    dist = ""
     if platform.system() == 'Linux':
         dist = " ".join(platform.linux_distribution()[0:2])
     elif platform.system() == 'Windows':
         dist = 'Windows'
     else:
         print("Unknown Distro")
+
+    version = pytest.config.getoption('--product_version')
+    name = pytest.config.getoption('--product_name')
+    edition = pytest.config.getoption('--product_edition')
+    product_info = " ".join([dist, name, edition, version])
 
     @staticmethod
     def random_password():
@@ -40,6 +46,7 @@ class TestScram():
             print("Error. Bad hash type. Use md5 or sha256")
             return None
 
+    @pytest.allure.story(product_info)
     @pytest.mark.test_scram_configuring
     def test_scram_configuring(self, request):
         """Check that we can set GUC variables via SET command,
@@ -126,6 +133,7 @@ class TestScram():
         cursor.close()
         conn.close()
 
+    @pytest.allure.story(product_info)
     @pytest.mark.xfail
     @pytest.mark.test_authentication
     def test_authentication(self, request, install_postgres):
