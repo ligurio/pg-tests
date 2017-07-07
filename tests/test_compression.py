@@ -1,5 +1,6 @@
 import grp
 import os
+import platform
 import psutil
 import pwd
 import random
@@ -7,6 +8,8 @@ import time
 import psycopg2
 import pytest
 
+from allure.types import LabelType
+from helpers.utils import MySuites
 from multiprocessing import Process
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
@@ -19,7 +22,12 @@ from tests.settings import TMP_DIR
 @pytest.mark.core_functional
 @pytest.mark.compression
 class TestCompression():
-
+    if platform.system() == 'Linux':
+        dist = " ".join(platform.linux_distribution()[0:2])
+    elif platform.system() == 'Windows':
+        dist = 'Windows'
+    else:
+        print("Unknown Distro")
     PGBENCH_SCHEMA_UNLOGGED = """
 
     CREATE UNLOGGED TABLE pgbench_branches_unlogged(
@@ -111,7 +119,7 @@ class TestCompression():
         return tablespace_location
 
     @pytest.mark.test_compression_standalone_positive
-    def test_compression_standalone_positive(self, install_postgres):
+    def test_compression_standalone_positive(self, request, install_postgres):
         """ Test for compression feature.
         Scenario:
         1. Create test tables
@@ -123,6 +131,16 @@ class TestCompression():
         6. Check tablespace folder for files with *.cfm extension
         7. Check that tables has some data
         """
+        version = request.config.getoption('--product_version')
+        name = request.config.getoption('--product_name')
+        edition = request.config.getoption('--product_edition')
+        product_info = " ".join([self.dist, name, edition, version])
+        tag_mark = pytest.allure.label(LabelType.TAG, self.dist)
+        request.node.add_marker(tag_mark)
+        tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
+        request.node.add_marker(tag_mark)
+        tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
+        request.node.add_marker(tag_mark)
         # Step 1
         create_test_table('20', 'pgbench')
         # Step 2
@@ -154,13 +172,23 @@ class TestCompression():
         drop_test_table(conn_string)
 
     @pytest.mark.test_compression_unlogged_tables
-    def test_compression_unlogged_tables(self, install_postgres):
+    def test_compression_unlogged_tables(self, request, install_postgres):
         """ Test for compression feature.
         Scenario:
         1. Create tablespace with compression
         2. Run pgbench (unlogged schema) for tablespace with compression
         3. Check tablespace folder for files with *.cfm extension
         """
+        version = request.config.getoption('--product_version')
+        name = request.config.getoption('--product_name')
+        edition = request.config.getoption('--product_edition')
+        product_info = " ".join([self.dist, name, edition, version])
+        tag_mark = pytest.allure.label(LabelType.TAG, self.dist)
+        request.node.add_marker(tag_mark)
+        tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
+        request.node.add_marker(tag_mark)
+        tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
+        request.node.add_marker(tag_mark)
         # Step 1
         compression_files_directory = self.create_tablespace('compression_unlogged_tables', compression=True)
         print compression_files_directory
@@ -180,7 +208,7 @@ class TestCompression():
         conn.close()
 
     @pytest.mark.test_compression_negative
-    def test_compression_negative(self, install_postgres):
+    def test_compression_negative(self, request, install_postgres):
         """ Test for compression feature.
         Scenario:
         1. Create tablespace with compression
@@ -189,6 +217,16 @@ class TestCompression():
         4. Check that cfm files created
         5. Check that pgbench tables don't created
         """
+        version = request.config.getoption('--product_version')
+        name = request.config.getoption('--product_name')
+        edition = request.config.getoption('--product_edition')
+        product_info = " ".join([self.dist, name, edition, version])
+        tag_mark = pytest.allure.label(LabelType.TAG, self.dist)
+        request.node.add_marker(tag_mark)
+        tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
+        request.node.add_marker(tag_mark)
+        tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
+        request.node.add_marker(tag_mark)
         # Step 1
         compression_files_directory = self.create_tablespace('compression_negative', compression=True)
         print(compression_files_directory)
@@ -217,7 +255,7 @@ class TestCompression():
         drop_test_table(conn_string)
 
     @pytest.mark.test_compression_unlogged_tables_negative
-    def test_compression_unlogged_tables_negative(self, install_postgres):
+    def test_compression_unlogged_tables_negative(self, request,  install_postgres):
         """ Test for compression feature.
         Scenario:
         1. Create tablespace with compression for test
@@ -227,6 +265,16 @@ class TestCompression():
         5. Check that tables was created and readable
         6. Check tablespace folder for files with *.cfm extension
         """
+        version = request.config.getoption('--product_version')
+        name = request.config.getoption('--product_name')
+        edition = request.config.getoption('--product_edition')
+        product_info = " ".join([self.dist, name, edition, version])
+        tag_mark = pytest.allure.label(LabelType.TAG, self.dist)
+        request.node.add_marker(tag_mark)
+        tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
+        request.node.add_marker(tag_mark)
+        tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
+        request.node.add_marker(tag_mark)
         # Step 1
         compression_files_directory = self.create_tablespace('compression_unlogged_tables_negative', compression=True)
         # Step 2
@@ -261,7 +309,7 @@ class TestCompression():
 
     @pytest.mark.usefixtures('install_postgres')
     @pytest.mark.test_compression_alter_tablepsace_to_compression
-    def test_compression_alter_tablepsace_to_compression(self):
+    def test_compression_alter_tablepsace_to_compression(self, request):
         """Scenario:
         1. Create tablespace for test
         2. Create test data with pgbench
@@ -269,6 +317,16 @@ class TestCompression():
         4. Move table to branch with compression
         5. Check that rows count before and after moving the same
         """
+        version = request.config.getoption('--product_version')
+        name = request.config.getoption('--product_name')
+        edition = request.config.getoption('--product_edition')
+        product_info = " ".join([self.dist, name, edition, version])
+        tag_mark = pytest.allure.label(LabelType.TAG, self.dist)
+        request.node.add_marker(tag_mark)
+        tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
+        request.node.add_marker(tag_mark)
+        tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
+        request.node.add_marker(tag_mark)
         # Step 1
         self.create_tablespace('compression_alter_tablepsace', compression=True)
         # Step 2
@@ -296,7 +354,7 @@ class TestCompression():
 
     @pytest.mark.usefixtures('install_postgres')
     @pytest.mark.test_compression_alter_tablepsace_from_compression
-    def test_compression_alter_tablepsace_from_compression(self):
+    def test_compression_alter_tablepsace_from_compression(self, request):
         """Scenario:
         1. Create tablespace for test
         2. Create test data with pgbench
@@ -304,6 +362,16 @@ class TestCompression():
         4. Move table to branch without compression
         5. Check that rows count before and after moving the same
         """
+        version = request.config.getoption('--product_version')
+        name = request.config.getoption('--product_name')
+        edition = request.config.getoption('--product_edition')
+        product_info = " ".join([self.dist, name, edition, version])
+        tag_mark = pytest.allure.label(LabelType.TAG, self.dist)
+        request.node.add_marker(tag_mark)
+        tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
+        request.node.add_marker(tag_mark)
+        tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
+        request.node.add_marker(tag_mark)
         # Step 1
         self.create_tablespace('compression_alter_from_tablepsace', compression=True)
         # Step 2
