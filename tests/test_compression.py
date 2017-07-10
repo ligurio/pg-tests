@@ -279,7 +279,7 @@ class TestCompression():
 
     @pytest.allure.feature(feature_name)
     @pytest.mark.test_compression_unlogged_tables_negative
-    def test_compression_unlogged_tables_negative(self, request,  install_postgres):
+    def test_compression_unlogged_tables_negative(self, request, install_postgres):
         """ Test for compression feature.
         Scenario:
         1. Create tablespace with compression for test
