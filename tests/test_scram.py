@@ -8,7 +8,21 @@ import string
 from allure.types import LabelType
 from helpers.utils import MySuites
 
+dist = ""
+if platform.system() == 'Linux':
+    dist = " ".join(platform.linux_distribution()[0:2])
+elif platform.system() == 'Windows':
+    dist = 'Windows'
+else:
+    print("Unknown Distro")
 
+version = pytest.config.getoption('--product_version')
+name = pytest.config.getoption('--product_name')
+edition = pytest.config.getoption('--product_edition')
+feature_name = "_".join(["Scram", dist, name, edition, version])
+
+
+@pytest.allure.feature(feature_name)
 @pytest.mark.core_functional
 @pytest.mark.usefixtures('install_postgres')
 class TestScram():
@@ -26,7 +40,7 @@ class TestScram():
     version = pytest.config.getoption('--product_version')
     name = pytest.config.getoption('--product_name')
     edition = pytest.config.getoption('--product_edition')
-    product_info = " ".join([dist, name, edition, version])
+    feature_name = "_".join(["Scram", dist, name, edition, version])
 
     @staticmethod
     def random_password():
@@ -46,7 +60,7 @@ class TestScram():
             print("Error. Bad hash type. Use md5 or sha256")
             return None
 
-    @pytest.allure.story(product_info)
+    @pytest.allure.feature(feature_name)
     @pytest.mark.test_scram_configuring
     def test_scram_configuring(self, request):
         """Check that we can set GUC variables via SET command,
@@ -75,7 +89,7 @@ class TestScram():
         name = request.config.getoption('--product_name')
         edition = request.config.getoption('--product_edition')
         product_info = " ".join([self.dist, name, edition, version])
-        tag_mark = pytest.allure.label(LabelType.TAG, self.dist)
+        tag_mark = pytest.allure.label(LabelType.TAG, product_info)
         request.node.add_marker(tag_mark)
         tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
         request.node.add_marker(tag_mark)
@@ -133,7 +147,7 @@ class TestScram():
         cursor.close()
         conn.close()
 
-    @pytest.allure.story(product_info)
+    @pytest.allure.feature(feature_name)
     @pytest.mark.xfail
     @pytest.mark.test_authentication
     def test_authentication(self, request, install_postgres):
@@ -150,7 +164,7 @@ class TestScram():
         name = request.config.getoption('--product_name')
         edition = request.config.getoption('--product_edition')
         product_info = " ".join([self.dist, name, edition, version])
-        tag_mark = pytest.allure.label(LabelType.TAG, self.dist)
+        tag_mark = pytest.allure.label(LabelType.TAG, product_info)
         request.node.add_marker(tag_mark)
         tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
         request.node.add_marker(tag_mark)

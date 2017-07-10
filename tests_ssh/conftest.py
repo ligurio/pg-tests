@@ -14,6 +14,7 @@ elif platform.system() == 'Windows':
 else:
     print("Unknown Distro")
 
+
 def pytest_addoption(parser):
     """Option for pytest run, list of images for test
 

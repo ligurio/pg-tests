@@ -4,6 +4,7 @@ import pytest
 import settings
 
 from allure.types import LabelType
+
 from helpers.utils import MySuites
 from helpers.sql_helpers import get_pgpro_info
 
@@ -18,10 +19,10 @@ else:
 version = pytest.config.getoption('--product_version')
 name = pytest.config.getoption('--product_name')
 edition = pytest.config.getoption('--product_edition')
-product_info = " ".join([dist, name, edition, version])
+feature_name = "_".join(["BVT", dist, name, edition, version])
 
 
-@pytest.allure.story(product_info)
+@pytest.allure.feature(feature_name)
 @pytest.mark.bvt
 @pytest.mark.test_version
 @pytest.mark.usefixtures('install_postgres')
@@ -36,7 +37,7 @@ def test_version(request, install_postgres):
     name = request.config.getoption('--product_name')
     edition = request.config.getoption('--product_edition')
     product_info = " ".join([dist, name, edition, version])
-    tag_mark = pytest.allure.label(LabelType.TAG, dist)
+    tag_mark = pytest.allure.label(LabelType.TAG, product_info)
     request.node.add_marker(tag_mark)
     tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
     request.node.add_marker(tag_mark)
@@ -59,7 +60,7 @@ def test_version(request, install_postgres):
     assert install_postgres.version == pgpro_info['version']
 
 
-@pytest.allure.story(product_info)
+@pytest.allure.feature(feature_name)
 @pytest.mark.bvt
 @pytest.mark.test_extensions
 @pytest.mark.usefixtures('install_postgres')
@@ -76,7 +77,7 @@ def test_extensions(request, install_postgres):
     name = request.config.getoption('--product_name')
     edition = request.config.getoption('--product_edition')
     product_info = " ".join([dist, name, edition, version])
-    tag_mark = pytest.allure.label(LabelType.TAG, dist)
+    tag_mark = pytest.allure.label(LabelType.TAG, product_info)
     request.node.add_marker(tag_mark)
     tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
     request.node.add_marker(tag_mark)
@@ -119,7 +120,7 @@ def test_extensions(request, install_postgres):
             conn.close()
 
 
-@pytest.allure.story(product_info)
+@pytest.allure.feature(feature_name)
 @pytest.mark.bvt
 @pytest.mark.test_plpython
 @pytest.mark.usefixtures('install_postgres')
@@ -137,7 +138,7 @@ def test_plpython(request, install_postgres):
     name = request.config.getoption('--product_name')
     edition = request.config.getoption('--product_edition')
     product_info = " ".join([dist, name, edition, version])
-    tag_mark = pytest.allure.label(LabelType.TAG, dist)
+    tag_mark = pytest.allure.label(LabelType.TAG, product_info)
     request.node.add_marker(tag_mark)
     tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
     request.node.add_marker(tag_mark)
@@ -167,7 +168,7 @@ $$ LANGUAGE plpython2u;"""
     conn.close()
 
 
-@pytest.allure.story(product_info)
+@pytest.allure.feature(feature_name)
 @pytest.mark.bvt
 @pytest.mark.test_pltcl
 @pytest.mark.usefixtures('install_postgres')
@@ -185,7 +186,7 @@ def test_pltcl(request, install_postgres):
     name = request.config.getoption('--product_name')
     edition = request.config.getoption('--product_edition')
     product_info = " ".join([dist, name, edition, version])
-    tag_mark = pytest.allure.label(LabelType.TAG, dist)
+    tag_mark = pytest.allure.label(LabelType.TAG, product_info)
     request.node.add_marker(tag_mark)
     tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
     request.node.add_marker(tag_mark)
@@ -214,7 +215,7 @@ def test_pltcl(request, install_postgres):
     conn.close()
 
 
-@pytest.allure.story(product_info)
+@pytest.allure.feature(feature_name)
 @pytest.mark.bvt
 @pytest.mark.test_plperl
 @pytest.mark.usefixtures('install_postgres')
@@ -232,7 +233,7 @@ def test_plperl(request, install_postgres):
     name = request.config.getoption('--product_name')
     edition = request.config.getoption('--product_edition')
     product_info = " ".join([dist, name, edition, version])
-    tag_mark = pytest.allure.label(LabelType.TAG, dist)
+    tag_mark = pytest.allure.label(LabelType.TAG, product_info)
     request.node.add_marker(tag_mark)
     tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
     request.node.add_marker(tag_mark)
@@ -261,7 +262,7 @@ def test_plperl(request, install_postgres):
     conn.close()
 
 
-@pytest.allure.story(product_info)
+@pytest.allure.feature(feature_name)
 @pytest.mark.bvt
 @pytest.mark.test_plpgsql
 @pytest.mark.usefixtures('install_postgres')
@@ -277,7 +278,7 @@ def test_plpgsql(request, install_postgres):
     name = request.config.getoption('--product_name')
     edition = request.config.getoption('--product_edition')
     product_info = " ".join([dist, name, edition, version])
-    tag_mark = pytest.allure.label(LabelType.TAG, dist)
+    tag_mark = pytest.allure.label(LabelType.TAG, product_info)
     request.node.add_marker(tag_mark)
     tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
     request.node.add_marker(tag_mark)
