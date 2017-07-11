@@ -5,6 +5,7 @@ import settings
 
 from allure.types import LabelType
 
+from helpers.pginstall import delete_packages
 from helpers.utils import MySuites
 from helpers.sql_helpers import get_pgpro_info
 
@@ -308,3 +309,24 @@ LANGUAGE plpgsql """
     cursor.execute("DROP FUNCTION IF EXISTS plpgsql_test_function()")
     conn.commit()
     conn.close()
+
+
+@pytest.allure.feature(feature_name)
+@pytest.mark.bvt
+@pytest.mark.test_delete_packages
+@pytest.mark.usefixtures('install_postgres')
+def test_delete_packages(request):
+    """Try to delete all installed packages for version under test
+
+    """
+    version = request.config.getoption('--product_version')
+    name = request.config.getoption('--product_name')
+    edition = request.config.getoption('--product_edition')
+    product_info = " ".join([dist, name, edition, version])
+    tag_mark = pytest.allure.label(LabelType.TAG, product_info)
+    request.node.add_marker(tag_mark)
+    tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
+    request.node.add_marker(tag_mark)
+    tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
+    request.node.add_marker(tag_mark)
+    delete_packages(remote=False, host=None, name=name, version=version, edition=edition)
