@@ -129,12 +129,14 @@ class PgInstance:
 
         if self.cluster_name is not None:
             hba_auth = """
+    local   all             postgres                                trust
     local   all             all                                     peer
     host    all             all             0.0.0.0/0               trust
     host    all             all             ::0/0                   trust
     host    replication     postgres    0.0.0.0/0       trust"""
         else:
             hba_auth = """
+    local   all             postgres                                trust
     local   all             all                                     peer
     host    all             all             0.0.0.0/0               trust
     host    all             all             ::0/0                   trust"""
