@@ -6,6 +6,8 @@ import os
 import shutil
 import subprocess
 
+
+from helpers.os_helpers import delete_data_directory
 from helpers.pginstall import delete_packages
 from helpers.pginstall import delete_repo
 from helpers.pginstance import PgInstance
@@ -80,6 +82,7 @@ def install_postgres(request):
             drop_test_table("host='localhost' user='postgres'")
             # delete_packages(remote=False, host=None, name=name, version=version, edition=edition)
             # delete_repo(remote=False, host=None, name=name, version=version)
+            # delete_data_directory()
         else:
             local = False
             windows = False
@@ -87,6 +90,7 @@ def install_postgres(request):
             drop_test_table("host='localhost' user='postgres'")
             # delete_packages(remote=False, host=None, name=name, version=version, edition=edition)
             # delete_repo(remote=False, host=None, name=name, version=version)
+            # delete_data_directory()
 
 
 @pytest.fixture

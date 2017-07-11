@@ -98,3 +98,42 @@ def load_pgbench(connstring, params):
     cmd = ["sudo", "-u", "postgres", pgbench]
 
     return subprocess.check_call(cmd + conn_params + params)
+
+
+def find_postgresqlconf():
+    """Walk on file system and find postgresql.conf file
+
+    :return: string with path to postgresql.conf
+    """
+    if platform.system() == 'Linux':
+        for root, dirs, files in os.walk("/"):
+            for file in files:
+                if file.endswith("postgresql.conf"):
+                    return os.path.join(root, file)
+    elif platform.system() == 'Windows':
+        for root, dirs, files in os.walk("c:"):
+            for file in files:
+                if file.endswith("postgresql.conf"):
+                    return os.path.join(root, file)
+
+
+def get_data_directory_path():
+    """Get data directory path
+
+    :return: string data directory path
+    """
+    if platform.system() == 'Linux':
+        path_list = find_postgresqlconf().split(os.sep)
+        return "/".join(path_list[:-2])
+    elif platform.system() == 'Windows':
+        pass
+
+
+def delete_data_directory():
+    """Delete all files in data directory
+
+    :param data_directory_path: string data directory
+    """
+    data_dir = get_data_directory_path()
+    print("Data directory will be deleted %s" % data_dir)
+    shutil.rmtree(data_dir)
