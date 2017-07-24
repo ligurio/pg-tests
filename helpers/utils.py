@@ -1,3 +1,4 @@
+import ConfigParser
 import os
 import paramiko
 import platform
@@ -251,3 +252,31 @@ def get_os_type(ip):
                 '\t', ' ').strip().split('\n') if v.strip() and "=" in v)
     else:
         return None
+
+
+def parse_config_runner(config):
+    """Parse config file
+
+    :param config: string path to config
+    :return:
+    """
+    pass
+
+
+def create_env_info_from_config(env_name, config):
+    """Create environment information from config file
+
+    :param env_name: string with env name
+    :param config: string path to config file
+    :return: dict with config
+    """
+    env_info = {env_name: {}}
+    env_info[env_name]['nodes'] = []
+    config_file = ConfigParser.ConfigParser()
+    config_file.read(config)
+    for node in config_file.sections():
+        for value in config_file.items(node):
+            if value[0] == 'ip_address':
+                env_info[env_name]['nodes'].append({"domname": node, "ip": value[1]})
+
+    return env_info

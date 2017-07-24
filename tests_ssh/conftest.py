@@ -3,6 +3,7 @@ import pytest
 
 from allure.types import LabelType
 
+from helpers.utils import create_env_info_from_config
 from helpers.utils import MySuites
 from helpers.environment_manager import Environment
 from helpers.pginstance import PgInstance
@@ -40,12 +41,6 @@ def pytest_addoption(parser):
 
 @pytest.fixture(scope='function')
 def environment(request):
-    # TODO set here that if param == 'baremetal' provide config file with cluster_config or parse it from options
-    if request.config.getoption('--config'):
-        """Parse config """
-        config = ""
-        return config
-    else:
         name = request.node.name.split('.')[0]
         return Environment(name)
 
@@ -54,8 +49,7 @@ def environment(request):
 @pytest.fixture(scope='function')
 def create_environment(request, environment):
     if request.config.getoption('--config'):
-        config = ""
-        return config
+        print('Environment will be use from config')
     else:
         nodes_count = request.param
         return environment.create_environment(request.node.name, nodes_count, request.config.getoption("--target"))
@@ -75,8 +69,8 @@ def install_postgres(request, environment):
     tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
     request.node.add_marker(tag_mark)
     if request.config.getoption('--config'):
-        environment_info = environment
-        cluster_name = environment['env_name']
+        environment_info = create_env_info_from_config(request.node.name, request.config.getoption('--config'))
+        cluster_name = request.node.name
     else:
         environment_info = environment.get_cluster_config()
         cluster_name = "%s_%s" % (request.node.name, request.config.getoption('--target'))
