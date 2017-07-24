@@ -280,6 +280,7 @@ def export_results(domname, domipaddress, reportname, operating_system=None, pro
                 else:
                     continue
 
+
 def keep_env(domname, keep):
     try:
         import libvirt
