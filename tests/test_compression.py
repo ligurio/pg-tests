@@ -29,10 +29,12 @@ else:
 version = pytest.config.getoption('--product_version')
 name = pytest.config.getoption('--product_name')
 edition = pytest.config.getoption('--product_edition')
-feature_name = "_".join(["Scram", dist, name, edition, version])
+feature_name = "COMPRESSION"
+story_name = "_".join([dist, name, edition, version])
 
 
 @pytest.allure.feature(feature_name)
+@pytest.allure.story(story_name)
 @pytest.mark.core_functional
 @pytest.mark.compression
 class TestCompression():
@@ -47,7 +49,8 @@ class TestCompression():
     version = pytest.config.getoption('--product_version')
     name = pytest.config.getoption('--product_name')
     edition = pytest.config.getoption('--product_edition')
-    feature_name = "_".join(["Compression", dist, name, edition, version])
+    feature_name = "COMPRESSION"
+    story_name = "_".join([dist, name, edition, version])
     PGBENCH_SCHEMA_UNLOGGED = """
 
     CREATE UNLOGGED TABLE pgbench_branches_unlogged(
@@ -139,6 +142,7 @@ class TestCompression():
         return tablespace_location
 
     @pytest.allure.feature(feature_name)
+    @pytest.allure.story(story_name)
     @pytest.mark.test_compression_standalone_positive
     def test_compression_standalone_positive(self, request, install_postgres):
         """ Test for compression feature.
@@ -193,6 +197,7 @@ class TestCompression():
         drop_test_table(conn_string)
 
     @pytest.allure.feature(feature_name)
+    @pytest.allure.story(story_name)
     @pytest.mark.test_compression_unlogged_tables
     def test_compression_unlogged_tables(self, request, install_postgres):
         """ Test for compression feature.
@@ -230,6 +235,7 @@ class TestCompression():
         conn.close()
 
     @pytest.allure.feature(feature_name)
+    @pytest.allure.story(story_name)
     @pytest.mark.test_compression_negative
     def test_compression_negative(self, request, install_postgres):
         """ Test for compression feature.
@@ -278,6 +284,7 @@ class TestCompression():
         drop_test_table(conn_string)
 
     @pytest.allure.feature(feature_name)
+    @pytest.allure.story(story_name)
     @pytest.mark.test_compression_unlogged_tables_negative
     def test_compression_unlogged_tables_negative(self, request, install_postgres):
         """ Test for compression feature.
@@ -332,6 +339,7 @@ class TestCompression():
         assert '.cfm' in compression_files
 
     @pytest.allure.feature(feature_name)
+    @pytest.allure.story(story_name)
     @pytest.mark.usefixtures('install_postgres')
     @pytest.mark.test_compression_alter_tablepsace_to_compression
     def test_compression_alter_tablepsace_to_compression(self, request):
@@ -378,6 +386,7 @@ class TestCompression():
         assert rows_before_move == rows_after_move
 
     @pytest.allure.feature(feature_name)
+    @pytest.allure.story(story_name)
     @pytest.mark.usefixtures('install_postgres')
     @pytest.mark.test_compression_alter_tablepsace_from_compression
     def test_compression_alter_tablepsace_from_compression(self, request):
