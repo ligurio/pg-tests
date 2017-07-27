@@ -20,10 +20,12 @@ else:
 version = pytest.config.getoption('--product_version')
 name = pytest.config.getoption('--product_name')
 edition = pytest.config.getoption('--product_edition')
-feature_name = "_".join(["BVT", dist, name, edition, version])
+feature_name = "BVT"
+story_name = "_".join([dist, name, edition, version])
 
 
 @pytest.allure.feature(feature_name)
+@pytest.allure.story(story_name)
 @pytest.mark.bvt
 @pytest.mark.test_version
 @pytest.mark.usefixtures('install_postgres')
@@ -62,6 +64,7 @@ def test_version(request, install_postgres):
 
 
 @pytest.allure.feature(feature_name)
+@pytest.allure.story(story_name)
 @pytest.mark.bvt
 @pytest.mark.test_extensions
 @pytest.mark.usefixtures('install_postgres')
@@ -122,6 +125,7 @@ def test_extensions(request, install_postgres):
 
 
 @pytest.allure.feature(feature_name)
+@pytest.allure.story(story_name)
 @pytest.mark.bvt
 @pytest.mark.test_plpython
 @pytest.mark.usefixtures('install_postgres')
@@ -170,6 +174,7 @@ $$ LANGUAGE plpython2u;"""
 
 
 @pytest.allure.feature(feature_name)
+@pytest.allure.story(story_name)
 @pytest.mark.bvt
 @pytest.mark.test_pltcl
 @pytest.mark.usefixtures('install_postgres')
@@ -217,6 +222,7 @@ def test_pltcl(request, install_postgres):
 
 
 @pytest.allure.feature(feature_name)
+@pytest.allure.story(story_name)
 @pytest.mark.bvt
 @pytest.mark.test_plperl
 @pytest.mark.usefixtures('install_postgres')
@@ -264,6 +270,7 @@ def test_plperl(request, install_postgres):
 
 
 @pytest.allure.feature(feature_name)
+@pytest.allure.story(story_name)
 @pytest.mark.bvt
 @pytest.mark.test_plpgsql
 @pytest.mark.usefixtures('install_postgres')
@@ -312,6 +319,7 @@ LANGUAGE plpgsql """
 
 
 @pytest.allure.feature(feature_name)
+@pytest.allure.story(story_name)
 @pytest.mark.bvt
 @pytest.mark.test_delete_packages
 @pytest.mark.usefixtures('install_postgres')
