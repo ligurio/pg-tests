@@ -20,8 +20,8 @@ else:
 version = pytest.config.getoption('--product_version')
 name = pytest.config.getoption('--product_name')
 edition = pytest.config.getoption('--product_edition')
-feature_name = "BVT"
-story_name = "_".join([dist, name, edition, version])
+story_name = "BVT"
+feature_name = "_".join([dist, name, edition, version])
 
 
 @pytest.allure.feature(feature_name)

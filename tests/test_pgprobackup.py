@@ -24,8 +24,8 @@ else:
 version = pytest.config.getoption('--product_version')
 name = pytest.config.getoption('--product_name')
 edition = pytest.config.getoption('--product_edition')
-feature_name = "PGPRO_BACKUP"
-story_name = "_".join([dist, name, edition, version])
+story_name = "PGPRO_BACKUP"
+feature_name = "_".join([dist, name, edition, version])
 
 
 @pytest.allure.feature(feature_name)
@@ -45,8 +45,8 @@ class TestPgprobackup():
     version = pytest.config.getoption('--product_version')
     name = pytest.config.getoption('--product_name')
     edition = pytest.config.getoption('--product_edition')
-    feature_name = "PGPRO_BACKUP"
-    story_name = "_".join([dist, name, edition, version])
+    story_name = "PGPRO_BACKUP"
+    feature_name = "_".join([dist, name, edition, version])
 
     # TODO add restore from backup for all test cases
 
