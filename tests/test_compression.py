@@ -29,8 +29,8 @@ else:
 version = pytest.config.getoption('--product_version')
 name = pytest.config.getoption('--product_name')
 edition = pytest.config.getoption('--product_edition')
-feature_name = "COMPRESSION"
-story_name = "_".join([dist, name, edition, version])
+story_name = "COMPRESSION"
+feature_name = "_".join([dist, name, edition, version])
 
 
 @pytest.allure.feature(feature_name)
@@ -49,8 +49,8 @@ class TestCompression():
     version = pytest.config.getoption('--product_version')
     name = pytest.config.getoption('--product_name')
     edition = pytest.config.getoption('--product_edition')
-    feature_name = "COMPRESSION"
-    story_name = "_".join([dist, name, edition, version])
+    story_name = "COMPRESSION"
+    feature_name = "_".join([dist, name, edition, version])
     PGBENCH_SCHEMA_UNLOGGED = """
 
     CREATE UNLOGGED TABLE pgbench_branches_unlogged(
