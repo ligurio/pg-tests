@@ -19,12 +19,10 @@ else:
 version = pytest.config.getoption('--product_version')
 name = pytest.config.getoption('--product_name')
 edition = pytest.config.getoption('--product_edition')
-story_name = "SCRAM"
-feature_name = "_".join([dist, name, edition, version])
+feature_name = "_".join(["SCRAM", dist, name, edition, version])
 
 
 @pytest.allure.feature(feature_name)
-@pytest.allure.story(story_name)
 @pytest.mark.core_functional
 @pytest.mark.usefixtures('install_postgres')
 class TestScram():
@@ -42,8 +40,7 @@ class TestScram():
     version = pytest.config.getoption('--product_version')
     name = pytest.config.getoption('--product_name')
     edition = pytest.config.getoption('--product_edition')
-    story_name = "SCRAM"
-    feature_name = "_".join([dist, name, edition, version])
+    feature_name = "_".join(["Scram", dist, name, edition, version])
 
     @staticmethod
     def random_password():
@@ -64,7 +61,6 @@ class TestScram():
             return None
 
     @pytest.allure.feature(feature_name)
-    @pytest.allure.story(story_name)
     @pytest.mark.test_scram_configuring
     def test_scram_configuring(self, request):
         """Check that we can set GUC variables via SET command,
@@ -152,7 +148,6 @@ class TestScram():
         conn.close()
 
     @pytest.allure.feature(feature_name)
-    @pytest.allure.story(story_name)
     @pytest.mark.xfail
     @pytest.mark.test_authentication
     def test_authentication(self, request, install_postgres):
