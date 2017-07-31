@@ -24,12 +24,10 @@ else:
 version = pytest.config.getoption('--product_version')
 name = pytest.config.getoption('--product_name')
 edition = pytest.config.getoption('--product_edition')
-story_name = "PGPRO_BACKUP"
-feature_name = "_".join([dist, name, edition, version])
+feature_name = "_".join(["PGPRO_BACKUP", dist, name, edition, version])
 
 
 @pytest.allure.feature(feature_name)
-@pytest.allure.story(story_name)
 @pytest.mark.features
 @pytest.mark.feature_pgprobackup
 @pytest.mark.usefixtures('install_postgres')
@@ -45,8 +43,7 @@ class TestPgprobackup():
     version = pytest.config.getoption('--product_version')
     name = pytest.config.getoption('--product_name')
     edition = pytest.config.getoption('--product_edition')
-    story_name = "PGPRO_BACKUP"
-    feature_name = "_".join([dist, name, edition, version])
+    feature_name = "_".join(["PGPRO_BACKUP", dist, name, edition, version])
 
     # TODO add restore from backup for all test cases
 
@@ -89,7 +86,6 @@ host    all             all             ::0/0                   trust"""
         return subprocess.check_output(cmd)
 
     @pytest.allure.feature(feature_name)
-    @pytest.allure.story(story_name)
     @pytest.mark.test_install_pgprobackup
     def test_install_pgprobackup(self, request):
         """ Install pg_probackup utility and configure postgresql for running pg_probackup.
@@ -191,7 +187,6 @@ host    all             all             ::0/0                   trust"""
         self.execute_pg_probackup("validate", backup_id)
 
     @pytest.allure.feature(feature_name)
-    @pytest.allure.story(story_name)
     @pytest.mark.test_pgprobackup_retention_policy_options
     def test_pgprobackup_retention_policy_options(self, request):
         """Scenario
