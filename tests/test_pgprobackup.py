@@ -7,7 +7,7 @@ import pytest
 import pwd
 import subprocess
 
-from allure.types import LabelType
+from allure_commons.types import LabelType
 from helpers.utils import MySuites
 from helpers.os_helpers import pg_bindir
 from helpers.sql_helpers import execute

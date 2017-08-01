@@ -1,7 +1,7 @@
 import platform
 import pytest
 
-from allure.types import LabelType
+from allure_commons.types import LabelType
 
 from helpers.utils import create_env_info_from_config
 from helpers.utils import MySuites
