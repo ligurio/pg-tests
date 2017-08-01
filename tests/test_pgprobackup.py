@@ -40,11 +40,6 @@ class TestPgprobackup():
     else:
         print("Unknown Distro")
 
-    version = pytest.config.getoption('--product_version')
-    name = pytest.config.getoption('--product_name')
-    edition = pytest.config.getoption('--product_edition')
-    feature_name = "_".join(["PGPRO_BACKUP", dist, name, edition, version])
-
     # TODO add restore from backup for all test cases
 
     DISTRO = platform.linux_distribution()[0]
@@ -85,7 +80,6 @@ host    all             all             ::0/0                   trust"""
         cmd = ["%s/pg_probackup" % pg_bindir()] + list(options)
         return subprocess.check_output(cmd)
 
-    @pytest.allure.feature(feature_name)
     @pytest.mark.test_install_pgprobackup
     def test_install_pgprobackup(self, request):
         """ Install pg_probackup utility and configure postgresql for running pg_probackup.
@@ -108,7 +102,6 @@ host    all             all             ::0/0                   trust"""
         # Step 2
         assert self.execute_pg_probackup("--help") is not None
 
-    @pytest.allure.feature(feature_name)
     @pytest.mark.test_pgprobackup_compression_continious_backup
     def test_pgprobackup_compression_continious_backup(self, request, install_postgres):
         """Test pg_probackup with compression feature and full continious backup
@@ -186,7 +179,6 @@ host    all             all             ::0/0                   trust"""
         # Step 11
         self.execute_pg_probackup("validate", backup_id)
 
-    @pytest.allure.feature(feature_name)
     @pytest.mark.test_pgprobackup_retention_policy_options
     def test_pgprobackup_retention_policy_options(self, request):
         """Scenario
