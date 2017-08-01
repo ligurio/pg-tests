@@ -3,7 +3,7 @@ import psycopg2
 import pytest
 import settings
 
-from allure.types import LabelType
+from allure_commons.types import LabelType
 
 from helpers.pginstall import delete_packages
 from helpers.utils import MySuites

@@ -8,7 +8,7 @@ import time
 import psycopg2
 import pytest
 
-from allure.types import LabelType
+from allure_commons.types import LabelType
 from helpers.utils import MySuites
 from multiprocessing import Process
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT

@@ -5,7 +5,7 @@ import psycopg2
 import random
 import string
 
-from allure.types import LabelType
+from allure_commons.types import LabelType
 from helpers.utils import MySuites
 
 dist = ""
