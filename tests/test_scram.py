@@ -37,11 +37,6 @@ class TestScram():
     else:
         print("Unknown Distro")
 
-    version = pytest.config.getoption('--product_version')
-    name = pytest.config.getoption('--product_name')
-    edition = pytest.config.getoption('--product_edition')
-    feature_name = "_".join(["Scram", dist, name, edition, version])
-
     @staticmethod
     def random_password():
         return ''.join(random.choice(string.lowercase) for i in range(16))
@@ -60,7 +55,6 @@ class TestScram():
             print("Error. Bad hash type. Use md5 or sha256")
             return None
 
-    @pytest.allure.feature(feature_name)
     @pytest.mark.test_scram_configuring
     def test_scram_configuring(self, request):
         """Check that we can set GUC variables via SET command,
@@ -147,7 +141,6 @@ class TestScram():
         cursor.close()
         conn.close()
 
-    @pytest.allure.feature(feature_name)
     @pytest.mark.xfail
     @pytest.mark.test_authentication
     def test_authentication(self, request, install_postgres):
