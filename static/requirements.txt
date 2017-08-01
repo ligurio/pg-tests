@@ -1,4 +1,4 @@
-allure-pytest==2.0.0b2
+allure-pytest==2.1.1b1
 BeautifulSoup==3.2.1
 matplotlib==2.0.0
 netaddr==0.7.19
