@@ -6,7 +6,7 @@ import settings
 from allure_commons.types import LabelType
 
 from helpers.pginstall import delete_packages
-from helpers.utils import MySuites
+# from helpers.utils import MySuites
 from helpers.sql_helpers import get_pgpro_info
 
 dist = ""
@@ -39,10 +39,6 @@ def test_version(request, install_postgres):
     edition = request.config.getoption('--product_edition')
     product_info = " ".join([dist, name, edition, version])
     tag_mark = pytest.allure.label(LabelType.TAG, product_info)
-    request.node.add_marker(tag_mark)
-    tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
-    request.node.add_marker(tag_mark)
-    tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
     request.node.add_marker(tag_mark)
     conn_string = "host='localhost' user='postgres' "
     conn = psycopg2.connect(conn_string)
@@ -79,10 +75,6 @@ def test_extensions(request, install_postgres):
     edition = request.config.getoption('--product_edition')
     product_info = " ".join([dist, name, edition, version])
     tag_mark = pytest.allure.label(LabelType.TAG, product_info)
-    request.node.add_marker(tag_mark)
-    tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
-    request.node.add_marker(tag_mark)
-    tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
     request.node.add_marker(tag_mark)
     conn_string = "host='localhost' user='postgres' "
     conn = psycopg2.connect(conn_string)
@@ -141,10 +133,6 @@ def test_plpython(request, install_postgres):
     product_info = " ".join([dist, name, edition, version])
     tag_mark = pytest.allure.label(LabelType.TAG, product_info)
     request.node.add_marker(tag_mark)
-    tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
-    request.node.add_marker(tag_mark)
-    tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
-    request.node.add_marker(tag_mark)
     # Step 1
     install_postgres.load_extension("plpython2u")
     fun = """CREATE FUNCTION py_test_function()
@@ -189,10 +177,6 @@ def test_pltcl(request, install_postgres):
     product_info = " ".join([dist, name, edition, version])
     tag_mark = pytest.allure.label(LabelType.TAG, product_info)
     request.node.add_marker(tag_mark)
-    tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
-    request.node.add_marker(tag_mark)
-    tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
-    request.node.add_marker(tag_mark)
     install_postgres.load_extension("pltcl")
     fun = """CREATE FUNCTION pltcl_test_function()
       RETURNS text
@@ -236,10 +220,6 @@ def test_plperl(request, install_postgres):
     product_info = " ".join([dist, name, edition, version])
     tag_mark = pytest.allure.label(LabelType.TAG, product_info)
     request.node.add_marker(tag_mark)
-    tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
-    request.node.add_marker(tag_mark)
-    tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
-    request.node.add_marker(tag_mark)
     install_postgres.load_extension("plperl")
     fun = """CREATE FUNCTION plperl_test_function()
       RETURNS text
@@ -281,10 +261,6 @@ def test_plpgsql(request, install_postgres):
     product_info = " ".join([dist, name, edition, version])
     tag_mark = pytest.allure.label(LabelType.TAG, product_info)
     request.node.add_marker(tag_mark)
-    tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
-    request.node.add_marker(tag_mark)
-    tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
-    request.node.add_marker(tag_mark)
     fun = """CREATE OR REPLACE FUNCTION plpgsql_test_function()
     RETURNS text AS
 $$
@@ -324,9 +300,5 @@ def test_delete_packages(request):
     edition = request.config.getoption('--product_edition')
     product_info = " ".join([dist, name, edition, version])
     tag_mark = pytest.allure.label(LabelType.TAG, product_info)
-    request.node.add_marker(tag_mark)
-    tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
-    request.node.add_marker(tag_mark)
-    tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
     request.node.add_marker(tag_mark)
     delete_packages(remote=False, host=None, name=name, version=version, edition=edition)

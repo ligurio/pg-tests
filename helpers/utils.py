@@ -21,12 +21,12 @@ REMOTE_ROOT_PASSWORD = 'TestRoot1'
 SSH_PORT = 22
 
 
-class MySuites(Enum):
-    def __str__(self):
-        return self.value
-
-    PARENT_SUITE = 'parentSuite'
-    EPIC = 'epic'
+# class MySuites(Enum):
+#     def __str__(self):
+#         return self.value
+#
+#     PARENT_SUITE = 'parentSuite'
+#     EPIC = 'epic'
 
 
 def command_executor(cmd, remote=False, host=None, login=None, password=None, stdout=False, windows=False):
