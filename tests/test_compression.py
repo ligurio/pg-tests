@@ -9,7 +9,7 @@ import psycopg2
 import pytest
 
 from allure_commons.types import LabelType
-from helpers.utils import MySuites
+# from helpers.utils import MySuites
 from multiprocessing import Process
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
@@ -153,10 +153,6 @@ class TestCompression():
         product_info = " ".join([self.dist, name, edition, version])
         tag_mark = pytest.allure.label(LabelType.TAG, product_info)
         request.node.add_marker(tag_mark)
-        tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
-        request.node.add_marker(tag_mark)
-        tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
-        request.node.add_marker(tag_mark)
         # Step 1
         create_test_table('20', 'pgbench')
         # Step 2
@@ -201,10 +197,6 @@ class TestCompression():
         product_info = " ".join([self.dist, name, edition, version])
         tag_mark = pytest.allure.label(LabelType.TAG, product_info)
         request.node.add_marker(tag_mark)
-        tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
-        request.node.add_marker(tag_mark)
-        tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
-        request.node.add_marker(tag_mark)
         # Step 1
         compression_files_directory = self.create_tablespace('compression_unlogged_tables', compression=True)
         print compression_files_directory
@@ -238,10 +230,6 @@ class TestCompression():
         edition = request.config.getoption('--product_edition')
         product_info = " ".join([self.dist, name, edition, version])
         tag_mark = pytest.allure.label(LabelType.TAG, product_info)
-        request.node.add_marker(tag_mark)
-        tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
-        request.node.add_marker(tag_mark)
-        tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
         request.node.add_marker(tag_mark)
         # Step 1
         compression_files_directory = self.create_tablespace('compression_negative', compression=True)
@@ -286,10 +274,6 @@ class TestCompression():
         edition = request.config.getoption('--product_edition')
         product_info = " ".join([self.dist, name, edition, version])
         tag_mark = pytest.allure.label(LabelType.TAG, product_info)
-        request.node.add_marker(tag_mark)
-        tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
-        request.node.add_marker(tag_mark)
-        tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
         request.node.add_marker(tag_mark)
         # Step 1
         compression_files_directory = self.create_tablespace('compression_unlogged_tables_negative', compression=True)
@@ -339,10 +323,6 @@ class TestCompression():
         product_info = " ".join([self.dist, name, edition, version])
         tag_mark = pytest.allure.label(LabelType.TAG, product_info)
         request.node.add_marker(tag_mark)
-        tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
-        request.node.add_marker(tag_mark)
-        tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
-        request.node.add_marker(tag_mark)
         # Step 1
         self.create_tablespace('compression_alter_tablepsace', compression=True)
         # Step 2
@@ -383,10 +363,6 @@ class TestCompression():
         edition = request.config.getoption('--product_edition')
         product_info = " ".join([self.dist, name, edition, version])
         tag_mark = pytest.allure.label(LabelType.TAG, product_info)
-        request.node.add_marker(tag_mark)
-        tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
-        request.node.add_marker(tag_mark)
-        tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
         request.node.add_marker(tag_mark)
         # Step 1
         self.create_tablespace('compression_alter_from_tablepsace', compression=True)

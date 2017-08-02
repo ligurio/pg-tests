@@ -6,7 +6,7 @@ import random
 import string
 
 from allure_commons.types import LabelType
-from helpers.utils import MySuites
+# from helpers.utils import MySuites
 
 dist = ""
 if platform.system() == 'Linux':
@@ -85,10 +85,6 @@ class TestScram():
         product_info = " ".join([self.dist, name, edition, version])
         tag_mark = pytest.allure.label(LabelType.TAG, product_info)
         request.node.add_marker(tag_mark)
-        tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
-        request.node.add_marker(tag_mark)
-        tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
-        request.node.add_marker(tag_mark)
         # Step 1
         conn_string = "host='localhost' user='postgres'"
         conn = psycopg2.connect(conn_string)
@@ -158,10 +154,6 @@ class TestScram():
         edition = request.config.getoption('--product_edition')
         product_info = " ".join([self.dist, name, edition, version])
         tag_mark = pytest.allure.label(LabelType.TAG, product_info)
-        request.node.add_marker(tag_mark)
-        tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
-        request.node.add_marker(tag_mark)
-        tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
         request.node.add_marker(tag_mark)
         # Step 1
         hba_auth = """

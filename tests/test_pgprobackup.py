@@ -8,7 +8,7 @@ import pwd
 import subprocess
 
 from allure_commons.types import LabelType
-from helpers.utils import MySuites
+# from helpers.utils import MySuites
 from helpers.os_helpers import pg_bindir
 from helpers.sql_helpers import execute
 from tests.settings import TMP_DIR
@@ -93,10 +93,6 @@ host    all             all             ::0/0                   trust"""
         product_info = " ".join([self.dist, name, edition, version])
         tag_mark = pytest.allure.label(LabelType.TAG, product_info)
         request.node.add_marker(tag_mark)
-        tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
-        request.node.add_marker(tag_mark)
-        tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
-        request.node.add_marker(tag_mark)
         # Step 1
         assert self.execute_pg_probackup("--version") is not None
         # Step 2
@@ -124,10 +120,6 @@ host    all             all             ::0/0                   trust"""
         edition = request.config.getoption('--product_edition')
         product_info = " ".join([self.dist, name, edition, version])
         tag_mark = pytest.allure.label(LabelType.TAG, product_info)
-        request.node.add_marker(tag_mark)
-        tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
-        request.node.add_marker(tag_mark)
-        tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
         request.node.add_marker(tag_mark)
         # Step 1
         backup_dir = self.create_backup_directory()
@@ -199,10 +191,6 @@ host    all             all             ::0/0                   trust"""
         edition = request.config.getoption('--product_edition')
         product_info = " ".join([self.dist, name, edition, version])
         tag_mark = pytest.allure.label(LabelType.TAG, product_info)
-        request.node.add_marker(tag_mark)
-        tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
-        request.node.add_marker(tag_mark)
-        tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
         request.node.add_marker(tag_mark)
         # Step 1
         for i in range(3):
