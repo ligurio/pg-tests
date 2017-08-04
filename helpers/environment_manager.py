@@ -104,7 +104,7 @@ class Environment(object):
         if self.env in clusters:
             for node in clusters[self.env]['nodes']:
                 dom = self.conn.lookupByName(node['domname'])
-                dom.undefine()
+                dom.destroy()
         os.remove(self.CLUSTER_SETTING)
 
     def get_cluster_config(self):

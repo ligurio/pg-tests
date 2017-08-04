@@ -41,7 +41,7 @@ def pytest_addoption(parser):
 
 @pytest.fixture(scope='function')
 def environment(request):
-        name = request.node.name.split('.')[0]
+        name = "%s_%s" % (request.node.name, request.config.getoption('--target'))
         return Environment(name)
 
 
@@ -62,11 +62,7 @@ def install_postgres(request, environment):
     name = request.config.getoption('--product_name')
     edition = request.config.getoption('--product_edition')
     product_info = " ".join([dist, name, edition, version])
-    tag_mark = pytest.allure.label(LabelType.TAG, dist)
-    request.node.add_marker(tag_mark)
-    tag_mark = pytest.allure.label(MySuites.PARENT_SUITE, product_info)
-    request.node.add_marker(tag_mark)
-    tag_mark = pytest.allure.label(MySuites.EPIC, product_info)
+    tag_mark = pytest.allure.label(LabelType.TAG, product_info)
     request.node.add_marker(tag_mark)
     if request.config.getoption('--config'):
         environment_info = create_env_info_from_config(request.node.name, request.config.getoption('--config'))
@@ -74,13 +70,21 @@ def install_postgres(request, environment):
     else:
         environment_info = environment.get_cluster_config()
         cluster_name = "%s_%s" % (request.node.name, request.config.getoption('--target'))
-    pginstance = PgInstance(version=request.config.getoption('--product_version'),
-                            milestone=request.config.getoption('--product_milestone'),
-                            name=request.config.getoption('--product_name'),
-                            edition=request.config.getoption('--product_edition'),
-                            build=request.config.getoption('--product_build'),
-                            skip_install=False,
-                            environment_info=environment_info,
-                            cluster_name=cluster_name)
+    yield PgInstance(version=request.config.getoption('--product_version'),
+                     milestone=request.config.getoption('--product_milestone'),
+                     name=request.config.getoption('--product_name'),
+                     edition=request.config.getoption('--product_edition'),
+                     build=request.config.getoption('--product_build'),
+                     skip_install=False,
+                     environment_info=environment_info,
+                     cluster_name=cluster_name)
 
-    return pginstance
+    if request.config.getoption('--config'):
+        print("Cluster was deployed from config. No teardown actions for this type of cluster deploy")
+    else:
+        environment.delete_env()
+
+
+def pytest_runtest_logreport(report):
+    if report.when == 'call' and report.failed:
+        pass
