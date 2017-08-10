@@ -75,8 +75,10 @@ def generate_repo_info(distro, osversion, **kwargs):
             product_dir = "pgproee-%s" % kwargs['version']
         elif kwargs['edition'] == "standard":
             product_dir = "pgpro-%s" % kwargs['version']
-        elif kwargs['edition'] == "cert":
+        elif kwargs['edition'] == "cert-standard":
             product_dir = "pgpro-standard-9.6.3.1-cert/repo"
+        elif kwargs['edition'] == "cert-enterprise":
+            product_dir = "pgpro-enterprise-9.6.3.2-cert/repo"
         if kwargs['milestone']:
             product_dir = product_dir + "-" + kwargs['milestone']
         gpg_key_url = "https://repo.postgrespro.ru/pgpro-%s/keys/GPG-KEY-POSTGRESPRO" % kwargs['version']
@@ -101,7 +103,7 @@ def generate_repo_info(distro, osversion, **kwargs):
             distname = "Windows"
         else:
             distname = dist[distro].lower()
-        if kwargs['edition'] == "cert":
+        if kwargs['edition'] in ['cert-standard', 'cert-enterprise']:
             baseurl = os.path.join("http://localrepo.l.postgrespro.ru", product_dir, distname)
         else:
             if distro in WIN_BASED:
@@ -202,7 +204,7 @@ def package_mgmt(remote=False, host=None, **kwargs):
     minor = kwargs['version'].split(".")[1]
     pkg_name = ""
     if dist_info[0] in RPM_BASED:
-        if kwargs['edition'] == "ee":
+        if kwargs['edition'] in ["ee", "cert-enterprise"]:
             pkg_name = "%s-enterprise%s%s" % (kwargs['name'], major, minor)
         else:
             pkg_name = kwargs['name'] + major + minor
@@ -213,7 +215,7 @@ def package_mgmt(remote=False, host=None, **kwargs):
         if kwargs['version'] != '9.5':
             cmd = "yum install -y %s-%s" % (pkg_name, "pg_probackup")
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-        if kwargs['edition'] == 'cert':
+        if kwargs['edition'] in ['cert-standard', 'cert-enterprise']:
             cmd = "yum install -y pgbouncer"
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
@@ -229,7 +231,7 @@ def package_mgmt(remote=False, host=None, **kwargs):
         if kwargs['version'] != '9.5':
             cmd = "apt-get install -y %s-pg-probackup-%s" % (kwargs['name'], kwargs['version'])
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-        if kwargs['edition'] == 'cert':
+        if kwargs['edition'] in ['cert-standard', 'cert-enterprise']:
             cmd = "apt-get install -y pgbouncer"
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         for p in DEB_PACKAGES:
@@ -237,9 +239,9 @@ def package_mgmt(remote=False, host=None, **kwargs):
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
     elif "ALT" in dist_info[0]:
-        if kwargs['edition'] == "ee":
+        if kwargs['edition'] in ["ee", "cert-enterprise"]:
             pkg_name = "%s-enterprise%s.%s" % (kwargs['name'], major, minor)
-        elif kwargs['edition'] == "cert":
+        elif kwargs['edition'] == "cert-standard":
             pkg_name = "postgrespro%s.%s" % (major, minor)
         elif kwargs['edition'] == "standard":
             pkg_name = "postgrespro%s.%s" % (major, minor)
@@ -252,7 +254,7 @@ def package_mgmt(remote=False, host=None, **kwargs):
         if kwargs['version'] != '9.5':
             cmd = "apt-get install -y %s-%s" % (pkg_name, "pg_probackup")
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-        if kwargs['edition'] == 'cert':
+        if kwargs['edition'] in ['cert-standard', 'cert-enterprise']:
             cmd = "apt-get install -y pgbouncer"
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
@@ -330,7 +332,7 @@ def delete_packages(remote=False, host=None, **kwargs):
         if kwargs['version'] != '9.5':
             cmd = "yum remove -y %s-%s" % (pkg_name, "pg_probackup")
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-        if kwargs['edition'] == 'cert':
+        if kwargs['edition'] in ['cert-standard', 'cert-enterprise']:
             cmd = "yum remove -y pgbouncer"
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
@@ -346,7 +348,7 @@ def delete_packages(remote=False, host=None, **kwargs):
         if kwargs['version'] != '9.5':
             cmd = "apt-get remove -y %s-pg-probackup-%s" % (kwargs['name'], kwargs['version'])
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-        if kwargs['edition'] == 'cert':
+        if kwargs['edition'] in ['cert-standard', 'cert-enterprise']:
             cmd = "apt-get remove -y pgbouncer"
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         for p in DEB_PACKAGES:
@@ -354,9 +356,9 @@ def delete_packages(remote=False, host=None, **kwargs):
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
     elif "ALT" in dist_info[0]:
-        if kwargs['edition'] == "ee":
+        if kwargs['edition'] in ["ee", "cert-enterprise"]:
             pkg_name = "%s-enterprise%s.%s" % (kwargs['name'], major, minor)
-        elif kwargs['edition'] == "cert":
+        elif kwargs['edition'] == 'cert-standard':
             pkg_name = "postgrespro%s.%s" % (major, minor)
         elif kwargs['edition'] == "standard":
             pkg_name = "postgrespro%s.%s" % (major, minor)
@@ -369,6 +371,6 @@ def delete_packages(remote=False, host=None, **kwargs):
         if kwargs['version'] != '9.5':
             cmd = "apt-get remove -y %s-%s" % (pkg_name, "pg_probackup")
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-        if kwargs['edition'] == 'cert':
+        if kwargs['edition'] in ['cert-standard', 'cert-enterprise']:
             cmd = "apt-get remove -y pgbouncer"
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)

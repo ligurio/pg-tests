@@ -236,8 +236,11 @@ def make_test_cmd(domname, reportname, tests=None,
                   --maxfail=1 --alluredir=reports %s --target=%s' % (tests, reportname, reportname, pcmd, domname)
     else:
         cmd = 'cd /home/test/pg-tests && sudo pytest %s --self-contained-html --html=%s.html ' \
-              '--junit-xml=%s.xml --maxfail=1 --alluredir=reports %s --target=%s' % (tests, reportname,
-                                                                                     reportname, pcmd, domname)
+              '--junit-xml=%s.xml --json=%s.json --maxfail=1 --alluredir=reports %s --target=%s' % (tests,
+                                                                                                    reportname,
+                                                                                                    reportname,
+                                                                                                    reportname,
+                                                                                                    pcmd, domname)
 
     if DEBUG:
         cmd += "--verbose --tb=long --full-trace"
@@ -262,6 +265,7 @@ def export_results(domname, domipaddress, reportname, operating_system=None, pro
         try:
             copy_file("/home/test/pg-tests/%s.html" % reportname, "reports/%s.html" % reportname, domipaddress)
             copy_file("/home/test/pg-tests/%s.xml" % reportname, "reports/%s.xml" % reportname, domipaddress)
+            copy_file("/home/test/pg-tests/%s.json" % reportname, "reports/%s.json" % reportname, domipaddress)
             copy_file("/home/test/pg-tests/reports", allure_reports_dir, domipaddress, dir=True)
             # copy_file("/home/test/pg-tests/reports", "reports/allure_reports", domipaddress, dir=True)
             # copy_file("/home/test/pg-tests/reports", allure_reports_dir,
