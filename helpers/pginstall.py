@@ -55,7 +55,13 @@ def get_os_type(ip):
 
 
 def generate_repo_info(distro, osversion, **kwargs):
+    """Generate information about repository: url to packages and path to gpg key
 
+    :param distro:
+    :param osversion:
+    :param kwargs:
+    :return:
+    """
     major = kwargs['version'].split(".")[0]
     minor = kwargs['version'].split(".")[1]
 
@@ -78,7 +84,7 @@ def generate_repo_info(distro, osversion, **kwargs):
         elif kwargs['edition'] == "cert-standard":
             product_dir = "pgpro-standard-9.6.3.1-cert/repo"
         elif kwargs['edition'] == "cert-enterprise":
-            product_dir = "pgpro-enterprise-9.6.3.2-cert/repo"
+            product_dir = "pgpro-enterprise-9.6.4.1-cert/repo"
         if kwargs['milestone']:
             product_dir = product_dir + "-" + kwargs['milestone']
         gpg_key_url = "https://repo.postgrespro.ru/pgpro-%s/keys/GPG-KEY-POSTGRESPRO" % kwargs['version']
