@@ -2,9 +2,11 @@ import platform
 import psycopg2
 import pytest
 import settings
+import subprocess
 
 from allure_commons.types import LabelType
 
+from helpers.os_helpers import pg_config_dir
 from helpers.pginstall import delete_packages
 # from helpers.utils import MySuites
 from helpers.sql_helpers import get_pgpro_info
@@ -93,6 +95,8 @@ def test_extensions(request, install_postgres):
         extensions = settings.EXTENSIONS_OS + settings.EXTENSIONS_POSTGRES
     elif edition == "enterprise":
         extensions = settings.EXTENSIONS_EE + settings.EXTENSIONS_OS + settings.EXTENSIONS_POSTGRES
+    elif edition == "enterprise-certified":
+        extensions = settings.EXTENSIONS_EE + settings.EXTENSIONS_OS + settings.EXTENSIONS_POSTGRES + ["pgaudit"]
     else:
         pytest.fail("Unknown PostgresPro edition: %s" % edition)
 
@@ -283,6 +287,47 @@ LANGUAGE plpgsql """
     assert cursor.fetchall()[0][0] == "plpgsql test function"
     # Step 4
     cursor.execute("DROP FUNCTION IF EXISTS plpgsql_test_function()")
+    conn.commit()
+    conn.close()
+
+
+@pytest.allure.feature(feature_name)
+@pytest.mark.bvt
+@pytest.mark.test_passwordcheck
+@pytest.mark.usefixtures('install_postgres')
+def test_passwordcheck(install_postgres, request):
+    """Test for passwordcheck feature for certified enterprise version
+    Scenario:
+    1. Add passwordcheck lib
+    2. Check default value for password_min_unique_chars variable
+    3. Check default value for password_min_pass_len
+    4. Check default value for password_with_nonletters
+    :param install_postgres:
+    :param request:
+    :return:
+    """
+    version = request.config.getoption('--product_version')
+    name = request.config.getoption('--product_name')
+    edition = request.config.getoption('--product_edition')
+    product_info = " ".join([dist, name, edition, version])
+    tag_mark = pytest.allure.label(LabelType.TAG, product_info)
+    request.node.add_marker(tag_mark)
+    if request.config.getoption('--product_edition') != "cert-enterprise":
+        pytest.skip("This test only for certified enterprise version.")
+    # Step 1
+    install_postgres.set_option('shared_preload_libraries', 'passwordcheck')
+    # Step 2
+    conn_string = "host='localhost' user='postgres' "
+    conn = psycopg2.connect(conn_string)
+    cursor = conn.cursor()
+    cursor.execute("SHOW password_min_unique_chars")
+    assert cursor.fetchall()[0][0] == "8"
+    # Step 3
+    cursor.execute("SHOW password_min_pass_len")
+    assert cursor.fetchall()[0][0] == "8"
+    # Step 4
+    cursor.execute("SHOW password_with_nonletters")
+    assert cursor.fetchall()[0][0] == "on"
     conn.commit()
     conn.close()
 

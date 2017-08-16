@@ -185,7 +185,8 @@ class PgInstance:
     def load_extension(self, extension_name):
         """ Load PostgreSQL extension
         """
-
+        # FIXME we need to change shared_libraries to shared_preload librires, and if we have multiple extensions we
+        # FIXME need to write it without quotes (for this situation we need to change set_option() method
         loaded_extensions = self.get_option('shared_libraries')
         if extension_name not in ['plperlu', 'pltcl', 'plpython2u', 'plperl']:
             if loaded_extensions is None:
