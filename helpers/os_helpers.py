@@ -48,8 +48,15 @@ def pg_bindir():
                 print(e)
                 print("Cannot find pg_config for enterprise version")
                 print("Trying to execute pg_config for standard version")
-                os.environ['PG_CONFIG'] = '/usr/pgpro-9.6/bin/pg_config'
-                return subprocess.check_output(['/usr/pgpro-9.6/bin/pg_config', "--bindir"]).strip()
+                try:
+                    os.environ['PG_CONFIG'] = '/usr/pgpro-9.6/bin/pg_config'
+                    return subprocess.check_output(['/usr/pgpro-9.6/bin/pg_config', "--bindir"]).strip()
+                except OSError as e:
+                    print(e)
+                    print("Cannot find pg_config for standard newest versions")
+                    print("Trying to execute pg_config for standard old version")
+                    os.environ['PG_CONFIG'] = '/usr/pgsql-9.6/bin/pg_config'
+                    return subprocess.check_output(['/usr/pgsql-9.6/bin/pg_config', "--bindir"]).strip()
         elif distro in DEB_BASED:
             os.environ['PG_CONFIG'] = '/usr/bin/pg_config'
             a = subprocess.check_output(['/usr/bin/pg_config', "--bindir"]).strip()

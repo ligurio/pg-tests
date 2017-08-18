@@ -280,3 +280,18 @@ def create_env_info_from_config(env_name, config):
                 env_info[env_name]['nodes'].append({"domname": node, "ip": value[1]})
 
     return env_info
+
+
+# def check_systemd(remote=False, host=None):
+#     """Check systemd or not in system
+#
+#     :return:
+#     """
+#     cmd = "ps -p 1"
+#     result = command_executor(cmd, remote=remote, host=host, stdout=True)
+#     if remote:
+#         if "systemd" in result[1]:
+#             return True
+#     else:
+#         if "systemd" in result:
+#             return True
