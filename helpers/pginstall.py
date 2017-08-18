@@ -224,6 +224,9 @@ def package_mgmt(remote=False, host=None, **kwargs):
         if kwargs['edition'] in ['cert-standard', 'cert-enterprise']:
             cmd = "yum install -y pgbouncer"
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+        if kwargs['edition'] == 'ee':
+            cmd = "yum install -y pg_repack%s%s" % (major, minor)
+            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
     elif dist_info[0] in DEB_BASED and "ALT" not in dist_info[0]:
         cmd = "apt-get install -y %s-%s" % (kwargs['name'], kwargs['version'])
@@ -242,6 +245,9 @@ def package_mgmt(remote=False, host=None, **kwargs):
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         for p in DEB_PACKAGES:
             cmd = "apt-get install -y %s-%s-%s" % (kwargs['name'], p, kwargs['version'])
+            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+        if kwargs['edition'] == 'ee':
+            cmd = "apt-get install -y pg-repack-%s" % kwargs['version']
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
     elif "ALT" in dist_info[0]:
@@ -262,6 +268,9 @@ def package_mgmt(remote=False, host=None, **kwargs):
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         if kwargs['edition'] in ['cert-standard', 'cert-enterprise']:
             cmd = "apt-get install -y pgbouncer"
+            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+        if kwargs['edition'] == 'ee':
+            cmd = "apt-get install -y pg_repack%s%s" % (major, minor)
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
 
@@ -289,12 +298,7 @@ def get_last_windows_installer_file(url):
 
 
 def delete_repo(remote=False, host=None, **kwargs):
-    """ Setup yum or apt repo for Linux Based envs and download windows installer for Windows based
-
-    :param remote: bool: remote or local installation
-    :param host:  str: ip address
-    :param kwargs: list of args about what we installing
-    :return: exit code 0 if all is ok and 1 if failed
+    """ Delete repo file
     """
     dist_info = get_distro(remote, host)
     if dist_info[0] in RPM_BASED:
