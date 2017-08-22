@@ -98,6 +98,7 @@ host    all             all             ::0/0                   trust"""
         # Step 2
         assert self.execute_pg_probackup("--help") is not None
 
+    @pytest.mark.xfail(strict=True)
     @pytest.mark.test_pgprobackup_compression_continious_backup
     def test_pgprobackup_compression_continious_backup(self, request, install_postgres):
         """Test pg_probackup with compression feature and full continious backup
@@ -171,6 +172,7 @@ host    all             all             ::0/0                   trust"""
         # Step 11
         self.execute_pg_probackup("validate", backup_id)
 
+    @pytest.mark.xfail(strict=True)
     @pytest.mark.test_pgprobackup_retention_policy_options
     def test_pgprobackup_retention_policy_options(self, request):
         """Scenario
