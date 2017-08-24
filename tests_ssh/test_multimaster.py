@@ -54,12 +54,11 @@ class TestMultimaster():
         """
         # Step 1
         cluster_name = create_environment.keys()[0]
-        multimaster_conn_string = "'dbname=postgres user=postgres host=%s," \
-                                  " dbname=postgres user=postgres host=%s, " \
-                                  "dbname=postgres user=postgres host=%s'" % (
-            create_environment[cluster_name]['nodes'][0]['ip'],
-            create_environment[cluster_name]['nodes'][1]['ip'],
-            create_environment[cluster_name]['nodes'][2]['ip'])
+        multimaster_conn_string = ""
+        for node in create_environment[cluster_name]['nodes']:
+            multimaster_conn_string += "dbname=postgres user=postgres host=%s, " % node['ip']
+        multimaster_conn_string = multimaster_conn_string.rstrip(", ")
+        multimaster_conn_string = "'%s'" % multimaster_conn_string
         node_id = 1
         for node in create_environment[cluster_name]['nodes']:
 
@@ -130,12 +129,11 @@ class TestMultimaster():
         """
         # Step 1
         cluster_name = create_environment.keys()[0]
-        multimaster_conn_string = "'dbname=postgres user=postgres host=%s," \
-                                  " dbname=postgres user=postgres host=%s, " \
-                                  "dbname=postgres user=postgres host=%s'" % (
-                                      create_environment[cluster_name]['nodes'][0]['ip'],
-                                      create_environment[cluster_name]['nodes'][1]['ip'],
-                                      create_environment[cluster_name]['nodes'][2]['ip'])
+        multimaster_conn_string = ""
+        for node in create_environment[cluster_name]['nodes']:
+            multimaster_conn_string += "dbname=postgres user=postgres host=%s, " % node['ip']
+        multimaster_conn_string = multimaster_conn_string.rstrip(", ")
+        multimaster_conn_string = "'%s'" % multimaster_conn_string
         node_id = 1
         for node in create_environment[cluster_name]['nodes']:
             install_postgres.connstring = "host=%s user=postgres" % node['ip']
