@@ -338,32 +338,6 @@ enabled=1
             cmd = ""
             pass
 
-    # def do_dump(self):
-    #     """Dump data from data_directory
-    #
-    #     :return: output for command
-    #     """
-    #     distro = get_distro()[0]
-    #     if distro in RPM_BASED or "ALT " in distro:
-    #         cmd = "/usr/pgpro-9.6/bin/pg_dump -U postgres postgres > /tmp/postgres.sql"
-    #         return command_executor(cmd)
-    #     elif distro in DEB_BASED:
-    #         cmd = ""
-    #         pass
-    #
-    # def do_dump_restore(self, dump):
-    #     """Restore dump after dump
-    #
-    #     :return:
-    #     """
-    #     distro = get_distro()[0]
-    #     if distro in RPM_BASED or "ALT " in distro:
-    #         cmd = "/usr/pgpro-9.6/bin/pg_dump -U postgres postgres > /tmp/postgres.sql"
-    #         return command_executor(cmd)
-    #     elif distro in DEB_BASED:
-    #         cmd = ""
-    #         pass
-
     @pytest.mark.test_minor_updates
     def test_minor_updates(self, request):
         """
@@ -385,13 +359,6 @@ enabled=1
         for version in minor_versions:
             print("Trying to update to version: %s" % version)
             version_for_check = version.strip("pgpro-")
-            if version_for_check == "9.6.4.1":
-                # do dump
-                self.do_dump()
-                # do stop db
-                self.manage_psql("stop", version=version)
-                # clean or move to another dir data directory /var/lib/pgpro/9.6/data
-                pass
             self.setup_repo(version)
             self.package_mgmt(version)
             if version_for_check == "9.6.2.1":
