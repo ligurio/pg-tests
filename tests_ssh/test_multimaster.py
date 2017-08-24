@@ -39,7 +39,7 @@ class TestMultimaster():
         drop_test_table(conn_string)
 
     @pytest.mark.usefixtures('install_postgres')
-    @pytest.mark.parametrize("create_environment", [2, 3, 4, 5], indirect=True)
+    @pytest.mark.parametrize("create_environment", [1, 2, 3, 4, 5], indirect=True)
     @pytest.mark.usefixtures('create_environment')
     @pytest.mark.usefixtures('environment')
     def test_create_multimaster_cluster(self, create_environment, install_postgres):
