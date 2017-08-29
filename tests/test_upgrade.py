@@ -453,6 +453,8 @@ enabled=1
         # Step 7
         version = request.config.getoption('--product_version')
         pginstance = PgInstance(version, milestone, name, edition, build, local, branch)
+        pginstance.install_product(version=version, milestone=milestone, name=name, edition=edition, branch=branch,
+                                   skip_install_psql=True)
         pginstance.manage_psql("restart")
         # Step 8
         assert self.select_from_test_table() == (1, 'test_text')

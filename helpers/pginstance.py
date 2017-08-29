@@ -34,7 +34,7 @@ class PgInstance:
         self.cluster_name = cluster_name
         self.environment_info = environment_info
 
-    def install_product(self, name, version, edition, milestone, branch, windows=False):
+    def install_product(self, name, version, edition, milestone, branch, windows=False, skip_install_psql=False):
         """ Install product
         Parameter: Product name: postgrespro, postgresql
         Parameter: Product version: 9.5, 9.6 etc
@@ -44,9 +44,13 @@ class PgInstance:
         if windows:
             setup_repo(name=name, version=version, edition=edition, milestone=milestone, branch=branch)
         else:
-            setup_repo(name=name, version=version, edition=edition, milestone=milestone, branch=branch)
-            package_mgmt(name=name, version=version, edition=edition, milestone=milestone, branch=branch)
-            self.setup_psql(version)
+            if skip_install_psql:
+                setup_repo(name=name, version=version, edition=edition, milestone=milestone, branch=branch)
+                package_mgmt(name=name, version=version, edition=edition, milestone=milestone, branch=branch)
+            else:
+                setup_repo(name=name, version=version, edition=edition, milestone=milestone, branch=branch)
+                package_mgmt(name=name, version=version, edition=edition, milestone=milestone, branch=branch)
+                self.setup_psql(version)
 
         return {'name': name,
                 'version': version,
@@ -54,6 +58,7 @@ class PgInstance:
                 'milestone': milestone}
 
     def install_product_cluster(self, cluster_info, cluster_name, name, version, edition, milestone, branch):
+        print(cluster_info)
         if cluster_name in cluster_info.keys():
             for node in cluster_info[cluster_name]['nodes']:
                 setup_repo(remote=True, host=node['ip'], version=version, milestone=milestone, name=name,
