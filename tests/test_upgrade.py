@@ -3,11 +3,17 @@ import os
 import psycopg2
 import psutil
 import pytest
+import shlex
+import subprocess
 import re
 import sys
 import urllib
 
+from time import sleep
+
+from helpers.pginstance import PgInstance
 from helpers.pginstall import ALT_PACKAGES, DEB_BASED, DEB_PACKAGES, RPM_BASED, PACKAGES, dist
+from helpers.sql_helpers import create_tablespace
 from helpers.sql_helpers import pg_bindir
 from helpers.utils import command_executor
 from helpers.utils import get_distro
@@ -23,38 +29,41 @@ class TestMinorUpdates():
     This test for standard and enterprise versions.
 
     """
-    PGPRO_ARCHIVE = "http://repo.postgrespro.ru/pgpro-archive/"
+    PGPRO_ARCHIVE_STANDARD = "http://repo.postgrespro.ru/pgpro-archive/"
+    PGPRO_ARCHIVE_ENTERPRISE = "http://repoee.l.postgrespro.ru/archive/"
 
     connstring = "host=localhost user=postgres"
 
-    def get_pgpro_minor_versions(self, major_version='9.6'):
+    def get_pgpro_minor_versions(self, major_version='9.6', edition='standard'):
         """ Get all minor versions of pgpro
 
         :return: list with minor version
         """
         minor_versions = []
-        page = urllib.urlopen(self.PGPRO_ARCHIVE).read()
+        if edition == 'standard':
+            page = urllib.urlopen(self.PGPRO_ARCHIVE_STANDARD).read()
+        elif edition == 'ee':
+            page = urllib.urlopen(self.PGPRO_ARCHIVE_ENTERPRISE).read()
         versions = re.findall('href=[\'"]?([^\'" >]+)/', page)
         for version in versions:
-            if major_version in version:
+            if major_version in version and "9.6.4.1" not in version:
                 minor_versions.append(version)
         return minor_versions
 
-    def get_pgpro_earliest_minor_version(self, major_version='9.6'):
+    def get_pgpro_earliest_minor_version(self, major_version='9.6', edition="standard"):
         """ Get earlies minor version
         :return string with earliest minor version
         """
-        versions = self.get_pgpro_minor_versions(major_version)
+        versions = self.get_pgpro_minor_versions(major_version, edition)
         versions.sort()
         return versions[0]
 
-    def generate_repo_info(self, distro, osversion, version):
+    def generate_repo_info(self, distro, osversion, version, edition="standard"):
         """
 
         :return:
         """
-        gpg_key_url = self.PGPRO_ARCHIVE + version
-        gpg_key_url += '/keys/GPG-KEY-POSTGRESPRO'
+
         if distro == "ALT Linux " and osversion in ["7.0.4", "6.0.1"]:
             distname = "altlinux-spt"
         elif distro == "ALT Linux " and osversion == "7.0.5":
@@ -77,12 +86,18 @@ class TestMinorUpdates():
         else:
             distname = dist[distro].lower()
 
-        baseurl = os.path.join(self.PGPRO_ARCHIVE, version,  distname)
+        if edition == "ee":
+            baseurl = os.path.join(self.PGPRO_ARCHIVE_ENTERPRISE, version, distname)
+            gpg_key_url = self.PGPRO_ARCHIVE_ENTERPRISE + version
+        elif edition == "standard":
+            baseurl = os.path.join(self.PGPRO_ARCHIVE_STANDARD, version, distname)
+            gpg_key_url = self.PGPRO_ARCHIVE_STANDARD + version
+        gpg_key_url += '/keys/GPG-KEY-POSTGRESPRO'
         logging.debug("Installation repo path: %s" % baseurl)
         logging.debug("GPG key url for installation: %s" % gpg_key_url)
         return baseurl, gpg_key_url
 
-    def setup_repo(self, version):
+    def setup_repo(self, version, edition="standard"):
         """
         Check that we already has repo file
         Delete old repo file if needed
@@ -91,7 +106,7 @@ class TestMinorUpdates():
         :return:
         """
         dist_info = get_distro()
-        repo_info = self.generate_repo_info(dist_info[0], dist_info[1], version)
+        repo_info = self.generate_repo_info(dist_info[0], dist_info[1], version, edition)
         baseurl = repo_info[0]
         gpg_key_url = repo_info[1]
         if dist_info[0] in RPM_BASED:
@@ -144,13 +159,16 @@ enabled=1
             print "Unsupported distro %s" % dist_info[0]
             sys.exit(1)
 
-    def package_mgmt(self, version):
+    def package_mgmt(self, version, edition="standard"):
         dist_info = get_distro()
         major = "9"
         minor = version.split(".")[1]
         pkg_name = ""
         if dist_info[0] in RPM_BASED:
-            pkg_name = "postgrespro" + major + minor
+            if edition == "ee":
+                pkg_name = "postgrespro-enterprise%s%s" % (major, minor)
+            elif edition == "standard":
+                pkg_name = "postgrespro%s%s" % (major, minor)
 
             for p in PACKAGES:
                 cmd = "yum install -y %s-%s" % (pkg_name, p)
@@ -175,7 +193,10 @@ enabled=1
                 command_executor(cmd)
 
         elif "ALT" in dist_info[0]:
-            pkg_name = "postgrespro%s.%s" % (major, minor)
+            if edition == "standard":
+                pkg_name = "postgrespro%s.%s" % (major, minor)
+            elif edition == "ee":
+                pkg_name = "postgrespro-enterprise%s.%s" % (major, minor)
             for p in ALT_PACKAGES:
                 cmd = "apt-get install -y %s-%s" % (pkg_name, p)
                 command_executor(cmd)
@@ -183,7 +204,7 @@ enabled=1
             #     cmd = "apt-get install -y %s-%s" % (pkg_name, "pg_probackup")
             #     command_executor(cmd)
 
-    def delete_repo(self, version):
+    def delete_repo(self, version, edition="standard"):
         """ Delete repo file
         """
         dist_info = get_distro()
@@ -241,7 +262,7 @@ enabled=1
         cmd = "chown postgres:postgres %s" % hba_file
         return command_executor(cmd)
 
-    def pg_start_script_name(self, version, distro):
+    def pg_start_script_name(self, version, distro, edition="standard"):
         """
 
         :param version:
@@ -258,7 +279,10 @@ enabled=1
                 assert service_name is not None
                 return service_name
             else:
-                service_name = "postgrespro-%s.%s" % (major, minor)
+                if edition == "standard":
+                    service_name = "postgrespro-%s.%s" % (major, minor)
+                elif edition == "ee":
+                    service_name = "postgrespro-enterprise-%s.%s" % (major, minor)
                 assert service_name is not None
                 return service_name
         elif "ALT " in distro:
@@ -305,7 +329,10 @@ enabled=1
             else:
                 cmd = "service %s %s" % (start_script, action)
             print(cmd)
-            return command_executor(cmd)
+            if "ALT" in distro[0]:
+                return subprocess.call(shlex.split(cmd))
+            else:
+                return command_executor(cmd)
 
     def kill_postgres_instance(self):
         """
@@ -320,7 +347,7 @@ enabled=1
         cmd = "kill -9 %s" % ppid
         return command_executor(cmd)
 
-    def move_data_direcory(self, version):
+    def move_data_direcory(self, version, edition="standard"):
         """Move data directory from one folder to another
 
         :return:
@@ -329,7 +356,7 @@ enabled=1
         minor = version.split(".")[1]
         distro = get_distro()[0]
         self.kill_postgres_instance()
-        if distro in RPM_BASED or "ALT " in distro:
+        if distro in RPM_BASED:
             cmd = "cp -r /var/lib/pgsql/%s.%s/data/ /var/lib/pgpro/%s.%s/" % (major, minor, major, minor)
             command_executor(cmd)
             cmd = "chown -R postgres:postgres /var/lib/pgpro/%s.%s/data" % (major, minor)
@@ -338,40 +365,97 @@ enabled=1
             cmd = ""
             pass
 
+    def create_test_tablespace(self):
+        """
+
+        :return:
+        """
+        create_tablespace("tbs_upgrade_check")
+        return "tbs_upgrade_check"
+
+    def create_test_table(self):
+        """
+
+        :return:
+        """
+        tbs_name = self.create_test_tablespace()
+        conn = psycopg2.connect(self.connstring)
+        cursor = conn.cursor()
+        cursor.execute("CREATE TABLE test (id serial, name text) TABLESPACE %s" % tbs_name)
+        cursor.execute("INSERT INTO  test VALUES (1, 'test_text')")
+        conn.commit()
+        conn.close()
+
+    def select_from_test_table(self):
+        conn = psycopg2.connect(self.connstring)
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM test")
+        return cursor.fetchall()[0]
+
     @pytest.mark.test_minor_updates
     def test_minor_updates(self, request):
         """
         Scenario:
         1. Install earliest minor version and configure it
-        2. Check that setup successfull (postgres run and we can execute select 1)
-        3. Rewrite repoinfo and update package
-        4. Check that update was successfull (postgres run and we can execute select 1)
+        2. Check that setup successfull (postgres run and we can create test table)
+        3. Create tablespace
+        4. Rewrite repoinfo and update package
+        5. Check that update was successfull (postgres run and we can execute select 1)
+        6. Check that we can read information from tablespace
+        7. Download and install beta version or version from branch
+        8. Check that we can read information from tablespace
 
         :return:
         """
+        milestone = request.config.getoption('--product_milestone')
+        name = request.config.getoption('--product_name')
+        edition = request.config.getoption('--product_edition')
+        build = request.config.getoption('--product_build')
+        branch = request.config.getoption('--branch')
+        local = False
         # Step 1
-        earliest_pgpro_version = self.get_pgpro_earliest_minor_version(request.config.getoption('--product_version'))
-        minor_versions = self.get_pgpro_minor_versions(request.config.getoption('--product_version'))[1:]
-        self.setup_repo(earliest_pgpro_version)
-        self.package_mgmt(earliest_pgpro_version)
+        earliest_pgpro_version = self.get_pgpro_earliest_minor_version(request.config.getoption('--product_version'),
+                                                                       edition)
+        minor_versions = self.get_pgpro_minor_versions(request.config.getoption('--product_version'), edition)[1:]
+        self.setup_repo(earliest_pgpro_version, edition)
+        self.package_mgmt(earliest_pgpro_version, edition)
         self.setup_psql(earliest_pgpro_version)
-        self.delete_repo(earliest_pgpro_version)
+        self.delete_repo(earliest_pgpro_version, edition)
+        # Step 2
+        # Step 3
+        self.create_test_table()
+        # Steps 4-6
         for version in minor_versions:
             print("Trying to update to version: %s" % version)
-            version_for_check = version.strip("pgpro-")
-            self.setup_repo(version)
-            self.package_mgmt(version)
+            if edition == "standard":
+                version_for_check = version.strip("pgpro-")
+            else:
+                version_for_check = version.strip("pgproee-")
+            if version_for_check == "9.6.4.1":
+                break
+            self.setup_repo(version, edition)
+            self.package_mgmt(version, edition)
             if version_for_check == "9.6.2.1":
                 self.move_data_direcory(version_for_check)
-            else:
-                self.manage_psql("restart", version=version)
-            conn_string = "host='localhost' user='postgres' "
-            conn = psycopg2.connect(conn_string)
+            self.manage_psql("restart", version=version)
+            connect_retry_count = 3
+            for _ in range(connect_retry_count):
+                try:
+                    conn = psycopg2.connect(self.connstring)
+                except psycopg2.OperationalError:
+                    sleep(10)
             cursor = conn.cursor()
             cursor.execute("SELECT pgpro_version()")
             assert version_for_check == cursor.fetchall()[0][0].split()[1]
             conn.close()
-            self.delete_repo(version)
+            assert self.select_from_test_table() == (1, 'test_text')
+            self.delete_repo(version, edition)
+        # Step 7
+        version = request.config.getoption('--product_version')
+        pginstance = PgInstance(version, milestone, name, edition, build, local, branch)
+        pginstance.manage_psql("restart")
+        # Step 8
+        assert self.select_from_test_table() == (1, 'test_text')
 
 
 @pytest.mark.major_updates

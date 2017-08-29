@@ -1,15 +1,12 @@
-import glob
 import os
-import platform
 import psycopg2
-import shlex
 import subprocess
-import shutil
-import time
+
 
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from helpers.pginstall import DEB_BASED
 from helpers.pginstall import RPM_BASED
+from helpers.os_helpers import create_tablespace_directory
 from helpers.os_helpers import pg_bindir
 from helpers.os_helpers import rmdir
 from helpers.utils import command_executor, get_distro, REMOTE_ROOT, REMOTE_ROOT_PASSWORD
@@ -182,7 +179,7 @@ def pg_set_option(connstring, option, value):
         return pg_manage_psql("restart", pg_get_option(connstring, 'data_directory'))
 
 
-def pg_manage_psql(action, data_dir, start_script=None, remote=False, host=None):
+def pg_manage_psql(action, data_dir, version="9.6",  start_script=None, remote=False, host=None):
         """ Manage Postgres instance
         :param action: start, restart, stop etc
         :param init: Initialization before a first start
@@ -200,10 +197,12 @@ def pg_manage_psql(action, data_dir, start_script=None, remote=False, host=None)
             # TODO if /run/systemd and binary file systemctl in file system we need to execute via /etc/init.d
             if distro[0] == "ALT ":
                 cmd = "/etc/init.d/%s %s" % (start_script, action)
+            elif version < "9.6.2.1" and distro[0] in RPM_BASED:
+                cmd = "/etc/init.d/%s %s" % (start_script, action)
             else:
                 cmd = "service %s %s" % (start_script, action)
             print(cmd)
-            return command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            return command_executor(cmd)
 
         # retcode = subprocess.check_call(cmd)
         # time.sleep(2)
@@ -248,3 +247,23 @@ def pg_initdb(connstring, *params):
     print(params)
     subprocess.check_output(initdb_cmd + list(params))
     pg_manage_psql("start", data_dir)
+
+
+def create_tablespace(tablespace_name, compression=False):
+    """ Create tablespace
+
+    :return:
+    """
+    tablespace_location = create_tablespace_directory()
+    conn_string = "host='localhost' user='postgres' "
+    conn = psycopg2.connect(conn_string)
+    conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+    cursor = conn.cursor()
+    # TODO add check that PGPRO edition is enterprise
+    if compression:
+        cursor.execute('CREATE TABLESPACE {0} LOCATION \'{1}\' WITH (compression=true);'.format(
+            tablespace_name,
+            tablespace_location))
+    else:
+        cursor.execute('CREATE TABLESPACE {0} LOCATION \'{1}\';'.format(tablespace_name, tablespace_location))
+    return tablespace_location

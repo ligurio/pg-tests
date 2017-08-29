@@ -1,5 +1,9 @@
+import grp
 import os
 import platform
+import psutil
+import pwd
+import random
 import re
 import shutil
 import subprocess
@@ -144,3 +148,44 @@ def delete_data_directory():
     data_dir = get_data_directory_path()
     print("Data directory will be deleted %s" % data_dir)
     shutil.rmtree(data_dir)
+
+
+def get_directory_size(start_path):
+    """ Get directory size recursively
+
+    :param start_path: directory for start
+    :return: total size of directory in bytes
+    """
+    total_size = 0
+    for dirpath, dirnames, filenames in os.walk(start_path):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            total_size += os.path.getsize(fp)
+    return total_size
+
+
+def get_postgres_process_pids(process_name="postgres"):
+    """Get postgres process ids
+    :process_name: string: process_name, default "postgres"
+    :return: list of postgress pids
+    """
+    pids = []
+    for p in psutil.process_iter():
+        if p.name() == process_name:
+            pids.append(p.pid)
+    print(pids)
+    return pids
+
+
+def create_tablespace_directory():
+    """Create new  directory for tablespace
+    :return: str path to tablespace
+    """
+    tmp_dir = '/tmp'
+    tablespace_catalog = 'tablespace-' + str(random.randint(0, 100))
+    tablespace_path = os.path.join(tmp_dir, tablespace_catalog)
+    os.mkdir(tablespace_path)
+    os.chown(tablespace_path,
+             pwd.getpwnam("postgres").pw_uid,
+             grp.getgrnam("postgres").gr_gid)
+    return tablespace_path

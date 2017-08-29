@@ -132,7 +132,7 @@ def setup_repo(remote=False, host=None, **kwargs):
     dist_info = get_distro(remote, host)
     repo_info = generate_repo_info(dist_info[0], dist_info[1], version=kwargs['version'],
                                    name=kwargs['name'], edition=kwargs['edition'],
-                                   milestone=kwargs['milestone'], build=kwargs['build'])
+                                   milestone=kwargs['milestone'])
     baseurl = repo_info[0]
     gpg_key_url = repo_info[1]
     if dist_info[0] in RPM_BASED:
