@@ -325,8 +325,8 @@ def main():
     parser.add_argument("--keep", dest="keep", action='store_true', help='what to do with env after testing')
     parser.add_argument("--export", dest="export", help='export results', action='store_true')
     subparser = parser.add_subparsers()
-    branch_install = subparser.add_parser("branch_install")
-    branch_install.add_argument("--name", dest="name", help="From which branch install",
+    branch_install = subparser.add_parser("sources_install")
+    branch_install.add_argument("--name", dest="name", help="From which branch take source code for install",
                                 default={})
     branch_install.add_argument("--configure_options", dest="configure_options", help="Options for configure stage",
                                 default={})
@@ -341,6 +341,7 @@ def main():
                                  action="store")
     package_install.add_argument("--product_build", dest="product_build", help="specify product build",
                                  action="store")
+    package_install.add_argument("--branch", dest="branch", help="specify product branch for package", action="store")
 
     args = parser.parse_args()
     if len(sys.argv) == 1:

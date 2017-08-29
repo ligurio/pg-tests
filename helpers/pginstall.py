@@ -13,7 +13,7 @@ from helpers.utils import REMOTE_ROOT
 from helpers.utils import REMOTE_ROOT_PASSWORD
 from helpers.utils import write_file
 
-
+PGPRO_BRANCH_HOST = "http://localrepo.l.postgrespro.ru/branches/"
 PGPRO_HOST = "http://repo.postgrespro.ru/"
 PSQL_HOST = "https://download.postgresql.org/pub"
 PACKAGES = ['server', 'contrib', 'libs', 'docs', 'docs-ru', 'plperl', 'plpython', 'pltcl']
@@ -65,6 +65,7 @@ def generate_repo_info(distro, osversion, **kwargs):
     major = kwargs['version'].split(".")[0]
     minor = kwargs['version'].split(".")[1]
 
+    distname = ""
     product_dir = ""
     gpg_key_url = ""
     if kwargs['name'] == "postgresql":
@@ -114,6 +115,8 @@ def generate_repo_info(distro, osversion, **kwargs):
         else:
             if distro in WIN_BASED:
                 baseurl = "{}{}/win/".format(PGPRO_HOST, product_dir)
+            elif kwargs['branch'] is not None:
+                baseurl = os.path.join(PGPRO_BRANCH_HOST, kwargs['branch'], product_dir, distname)
             else:
                 baseurl = os.path.join(PGPRO_HOST, product_dir, distname)
         logging.debug("Installation repo path: %s" % baseurl)
@@ -132,7 +135,7 @@ def setup_repo(remote=False, host=None, **kwargs):
     dist_info = get_distro(remote, host)
     repo_info = generate_repo_info(dist_info[0], dist_info[1], version=kwargs['version'],
                                    name=kwargs['name'], edition=kwargs['edition'],
-                                   milestone=kwargs['milestone'])
+                                   milestone=kwargs['milestone'], branch=kwargs['branch'])
     baseurl = repo_info[0]
     gpg_key_url = repo_info[1]
     if dist_info[0] in RPM_BASED:
