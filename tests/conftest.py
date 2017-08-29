@@ -45,6 +45,8 @@ def pytest_addoption(parser):
                      help="Specify product milestone. Available values: beta")
     parser.addoption("--product_build", action="store",
                      help="Specify product build.")
+    parser.addoption("--branch", action="store",
+                     help="Specify branch")
     parser.addoption("--sqlsmith-queries", action="store", default=10000,
                      help="Number of sqlsmith queries.")
     parser.addoption("--skip_install", action="store_true")
@@ -68,29 +70,33 @@ def install_postgres(request):
     milestone = request.config.getoption('--product_milestone')
     name = request.config.getoption('--product_name')
     edition = request.config.getoption('--product_edition')
-    build = request.config.getoption('--product_build')
+    branch = request.config.getoption('--branch')
     if skip_install:
         local = True
         windows = False
-        yield PgInstance(version, milestone, name, edition, build, local, windows=windows)
-        drop_test_table("host='localhost' user='postgres'")
+        yield PgInstance(version, milestone, name, edition, local, branch, windows=windows)
+        if request.node.name != "test_delete_packages":
+            drop_test_table("host='localhost' user='postgres'")
     else:
         if request.config.getoption('--target')[0:3] == 'win':
             local = False
             windows = True
-            yield PgInstance(version, milestone, name, edition, build, local, windows=windows)
-            drop_test_table("host='localhost' user='postgres'")
-            # delete_packages(remote=False, host=None, name=name, version=version, edition=edition)
-            # delete_repo(remote=False, host=None, name=name, version=version)
-            # delete_data_directory()
+            pginstance = PgInstance(version=version, milestone=milestone, name=name, edition=edition,
+                                    skip_install=local, branch=branch, windows=windows)
+            pginstance.install_product(version=version, milestone=milestone, name=name, edition=edition,
+                                       branch=branch, windows=windows)
+            yield pginstance
+            if request.node.name != "test_delete_packages":
+                drop_test_table("host='localhost' user='postgres'")
         else:
             local = False
             windows = False
-            yield PgInstance(version, milestone, name, edition, build, local, windows=windows)
-            drop_test_table("host='localhost' user='postgres'")
-            # delete_packages(remote=False, host=None, name=name, version=version, edition=edition)
-            # delete_repo(remote=False, host=None, name=name, version=version)
-            # delete_data_directory()
+            pginstance = PgInstance(version, milestone, name, edition, local, branch, windows=windows)
+            pginstance.install_product(version=version, milestone=milestone, name=name, edition=edition,
+                                       branch=branch, windows=windows)
+            yield pginstance
+            if request.node.name != "test_delete_packages":
+                drop_test_table("host='localhost' user='postgres'")
 
 
 @pytest.fixture

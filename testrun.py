@@ -328,15 +328,15 @@ def main():
     parser.add_argument('--test', dest="run_tests", default="tests",
                         help='tests to run (default: all)')
     parser.add_argument("--product_name", dest="product_name",
-                        help="specify product name", action="store")
+                        help="specify product name", action="store", default="postgrespro")
     parser.add_argument("--product_version", dest="product_version",
-                        help="specify product version", action="store")
+                        help="specify product version", action="store", default="9.6")
     parser.add_argument("--product_edition", dest="product_edition",
                         help="specify product edition", action="store")
     parser.add_argument("--product_milestone", dest="product_milestone",
-                        help="specify target milestone", action="store")
-    parser.add_argument("--product_build", dest="product_build",
-                        help="specify product build", action="store")
+                        help="specify target milestone", action="store", default="beta")
+    parser.add_argument("--branch", dest="branch",
+                        help="specify product branch for package", action="store")
     parser.add_argument('--keep', dest="keep", action='store_true',
                         help='what to do with env after testing')
     parser.add_argument('--export', dest="export",
@@ -369,7 +369,7 @@ def main():
                             args.product_version,
                             args.product_edition,
                             args.product_milestone,
-                            args.product_build)
+                            args.branch)
         if domname[0:3] == 'win':
             s = winrm.Session(domipaddress, auth=(REMOTE_LOGIN, REMOTE_PASSWORD))
             ps_script = """

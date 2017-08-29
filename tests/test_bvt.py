@@ -1,14 +1,14 @@
+import os
 import platform
 import psycopg2
 import pytest
 import settings
-import subprocess
 
 from allure_commons.types import LabelType
 
-from helpers.os_helpers import pg_config_dir
+from helpers.os_helpers import get_directory_size
+from helpers.os_helpers import get_postgres_process_pids
 from helpers.pginstall import delete_packages
-# from helpers.utils import MySuites
 from helpers.sql_helpers import get_pgpro_info
 
 dist = ""
@@ -52,11 +52,22 @@ def test_version(request, install_postgres):
     else:
         cursor.execute("SELECT pgpro_build()")
         pgpro_info["last_commit"] = cursor.fetchall()[0][0]
+        cursor.execute("SELECT pgpro_build()")
+        pgpro_info["edition"] = cursor.fetchall()[0][0]
+        # if edition == "ee":
+        #     assert pgpro_info["edition"] == "enterprise"
+        # elif edition == "standard":
+        #     assert pgpro_info["edition"] == "standard"
+        # elif edition == "cert":
+        #     assert pgpro_info["edition"] == "standard-certification"
+        # elif edition == "cert-enterprise":
+        #     assert pgpro_info["edition"] == "enterprise-certification"
     print("What must be installed:", request.config.getoption('--product_name'),
           request.config.getoption('--product_version'))
     print("Information about installed PostgresPro ", pgpro_info)
     assert install_postgres.name == pgpro_info['name'].lower()
     assert install_postgres.version == pgpro_info['version']
+    # TODO add check pgpro_edition()
 
 
 @pytest.allure.feature(feature_name)
@@ -336,14 +347,29 @@ def test_passwordcheck(install_postgres, request):
 @pytest.mark.bvt
 @pytest.mark.test_delete_packages
 @pytest.mark.usefixtures('install_postgres')
-def test_delete_packages(request):
+def test_delete_packages(request, install_postgres):
     """Try to delete all installed packages for version under test
+    Scenario:
+    1. Delete packages
+    2. Check that postgres instance was stopped
+    3. Check that test data is not deleted
 
     """
+    print(request.node.name)
     version = request.config.getoption('--product_version')
     name = request.config.getoption('--product_name')
     edition = request.config.getoption('--product_edition')
     product_info = " ".join([dist, name, edition, version])
     tag_mark = pytest.allure.label(LabelType.TAG, product_info)
     request.node.add_marker(tag_mark)
+    data_directory = install_postgres.get_option('data_directory')
+    data_dir_size_before_delete_packages = get_directory_size(data_directory)
+    pids = get_postgres_process_pids()
+    # Step 1
     delete_packages(remote=False, host=None, name=name, version=version, edition=edition)
+    data_dir_size_after_delete_packages = get_directory_size(data_directory)
+    # Step 2
+    # assert data_dir_size_before_delete_packages == data_dir_size_after_delete_packages
+    # Step 3
+    for pid in pids:
+        assert os.path.exists("/proc/%s") % str(pid) is False

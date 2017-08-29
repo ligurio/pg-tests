@@ -31,12 +31,13 @@ def pytest_addoption(parser):
                      help="Specify product edition. Available values: ee, standard")
     parser.addoption("--product_milestone", action="store", default='beta',
                      help="Specify product milestone. Available values: beta")
-    parser.addoption("--product_build", action="store",
-                     help="Specify product build.")
+    parser.addoption("--branch", action="store",
+                     help="Specify branch")
     parser.addoption("--sqlsmith-queries", action="store", default=10000,
                      help="Number of sqlsmith queries.")
     parser.addoption("--config", dest="config", action="store",
                      help="Path to config file")
+    parser.addoption("--skip_install", action="store_true")
 
 
 @pytest.fixture(scope='function')
@@ -70,19 +71,35 @@ def install_postgres(request, environment):
     else:
         environment_info = environment.get_cluster_config()
         cluster_name = "%s_%s" % (request.node.name, request.config.getoption('--target'))
-    yield PgInstance(version=request.config.getoption('--product_version'),
-                     milestone=request.config.getoption('--product_milestone'),
-                     name=request.config.getoption('--product_name'),
-                     edition=request.config.getoption('--product_edition'),
-                     build=request.config.getoption('--product_build'),
-                     skip_install=False,
-                     environment_info=environment_info,
-                     cluster_name=cluster_name)
-
+    pginstance = PgInstance(version=request.config.getoption('--product_version'),
+                            milestone=request.config.getoption('--product_milestone'),
+                            name=request.config.getoption('--product_name'),
+                            edition=request.config.getoption('--product_edition'),
+                            branch=request.config.getoption('--branch'),
+                            skip_install=False,
+                            environment_info=environment_info,
+                            cluster_name=cluster_name)
+    pginstance.install_product_cluster(version=request.config.getoption('--product_version'),
+                                       milestone=request.config.getoption('--product_milestone'),
+                                       name=request.config.getoption('--product_name'),
+                                       edition=request.config.getoption('--product_edition'),
+                                       branch=request.config.getoption('--branch'),
+                                       cluster_info=environment_info,
+                                       cluster_name=cluster_name)
+    yield pginstance
     if request.config.getoption('--config'):
         print("Cluster was deployed from config. No teardown actions for this type of cluster deploy")
     else:
         environment.delete_env()
+
+# TODO create different behaviour for multimaster and replica,
+# TODO example here: https://docs.pytest.org/en/latest/proposals/parametrize_with_fixtures.html
+# @pytest.fixture(params=['multimaster', 'replica'])
+# def deploy_cluster(request):
+#     if request.param == 'multimaster':
+#         return request.getfuncargvalue('default_context')
+#     elif request.param == 'replica':
+#         return request.getfuncargvalue('extra_context')
 
 
 def pytest_runtest_logreport(report):

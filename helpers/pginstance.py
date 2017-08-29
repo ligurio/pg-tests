@@ -21,28 +21,20 @@ from helpers.utils import write_file
 class PgInstance:
     PG_PASSWORD = 'password'
 
-    def __init__(self, version, milestone, name, edition, build, skip_install,
+    def __init__(self, version, milestone, name, edition, skip_install, branch,
                  environment_info=None, cluster_name=None, windows=False):
         self.version = version
         self.milestone = milestone
         self.name = name
         self.edition = edition
-        self.build = build
         self.skip_install = skip_install
+        self.branch = branch
         self.connstring = "host=localhost user=postgres"
         self.windows = windows
         self.cluster_name = cluster_name
-        if cluster_name is None and not skip_install:
-            self.skip_install = False
-            self.install_product(name, version, edition, milestone, build, windows=windows)
-        elif not skip_install:
-            self.environment_info = environment_info
-            self.cluster_name = cluster_name
-            self.install_product_cluster(environment_info, cluster_name, name=name,
-                                         version=version, edition=edition, milestone=milestone,
-                                         build=build)
+        self.environment_info = environment_info
 
-    def install_product(self, name, version, edition, milestone, build, windows=False):
+    def install_product(self, name, version, edition, milestone, branch, windows=False):
         """ Install product
         Parameter: Product name: postgrespro, postgresql
         Parameter: Product version: 9.5, 9.6 etc
@@ -50,26 +42,25 @@ class PgInstance:
         Parameter: Product milestone (postgrespro only): beta
         """
         if windows:
-            setup_repo(name=name, version=version, edition=edition, milestone=milestone, build=build)
+            setup_repo(name=name, version=version, edition=edition, milestone=milestone, branch=branch)
         else:
-            setup_repo(name=name, version=version, edition=edition, milestone=milestone, build=build)
-            package_mgmt(name=name, version=version, edition=edition, milestone=milestone, build=build)
-            self.setup_psql(name, version, edition, milestone, build)
+            setup_repo(name=name, version=version, edition=edition, milestone=milestone, branch=branch)
+            package_mgmt(name=name, version=version, edition=edition, milestone=milestone, branch=branch)
+            self.setup_psql(version)
 
         return {'name': name,
                 'version': version,
                 'edition': edition,
                 'milestone': milestone}
 
-    def install_product_cluster(self, cluster_info, cluster_name, name, version, edition, milestone, build):
+    def install_product_cluster(self, cluster_info, cluster_name, name, version, edition, milestone, branch):
         if cluster_name in cluster_info.keys():
             for node in cluster_info[cluster_name]['nodes']:
                 setup_repo(remote=True, host=node['ip'], version=version, milestone=milestone, name=name,
-                           edition=edition, build=build)
+                           edition=edition, branch=branch)
                 package_mgmt(remote=True, host=node['ip'], version=version, milestone=milestone, name=name,
-                             edition=edition, build=build)
-                self.setup_psql(remote=True, host=node['ip'], name=name, version=version, edition=edition,
-                                milestone=milestone, build=build)
+                             edition=edition, branch=branch)
+                self.setup_psql(remote=True, host=node['ip'], version=version)
         return {'name': name,
                 'version': version,
                 'edition': edition,
@@ -89,7 +80,8 @@ class PgInstance:
         if self.skip_install:
             return pg_manage_psql(action, data_dir)
         else:
-            return pg_manage_psql(action, data_dir, self.start_script_name(remote, host), remote, host)
+            return pg_manage_psql(action=action, data_dir=data_dir,
+                                  start_script=self.start_script_name(remote, host), remote=remote, host=host)
 
     def edit_pg_hba_conf(self, pg_hba_config, remote=False, host=None):
         """Rewrite pg_hba.conf
@@ -107,7 +99,7 @@ class PgInstance:
         cmd = "chown postgres:postgres %s" % hba_file
         return command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
-    def setup_psql(self, name, version, edition, milestone, build, remote=False, host=None):
+    def setup_psql(self, version, remote=False, host=None):
 
         major = version.split(".")[0]
         minor = version.split(".")[1]
@@ -201,3 +193,31 @@ class PgInstance:
         conn.commit()
         cursor.close()
         conn.close()
+
+    def execute_sql_command(self, command,  connstring="host=localhost user=postgres"):
+        """ Execute sql command
+
+        :param command:
+        :param connstring:
+        :return: list
+        """
+        conn = psycopg2.connect(connstring)
+        cursor = conn.cursor()
+        cursor.execute(command)
+        return cursor.fetchall()
+
+    def minor_upgrade(self, minor_version):
+        """
+
+        :param minor_version:
+        :return:
+        """
+        pass
+
+    def get_current_minor_version(self):
+        return self.execute_sql_command("SELECT pgpro_version()")[0][0].split()[1]
+
+    # TODO add editing repo file for update
+
+    def major_upgrade(self, version_to_upgrade):
+        pass
