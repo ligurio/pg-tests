@@ -169,7 +169,7 @@ def get_postgres_process_pids(process_name="postgres"):
     :process_name: string: process_name, default "postgres"
     :return: list of postgress pids
     """
-    pids = list
+    pids = []
     for p in psutil.process_iter():
         if p.name() == process_name:
             pids.append(p.pid)
