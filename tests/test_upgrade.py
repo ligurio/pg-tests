@@ -411,7 +411,7 @@ enabled=1
         name = request.config.getoption('--product_name')
         edition = request.config.getoption('--product_edition')
         build = request.config.getoption('--product_build')
-        branch = request.config.getoption('--branch')
+        branch = "PGPRO9_6_TASK941"
         local = False
         # Step 1
         earliest_pgpro_version = self.get_pgpro_earliest_minor_version(request.config.getoption('--product_version'),
@@ -431,8 +431,8 @@ enabled=1
                 version_for_check = version.strip("pgpro-")
             else:
                 version_for_check = version.strip("pgproee-")
-            if version_for_check == "9.6.4.1":
-                break
+            if version_for_check in ["9.6.4.1", "9.6.4.2"]:
+                continue
             self.setup_repo(version, edition)
             self.package_mgmt(version, edition)
             if version_for_check == "9.6.2.1":
