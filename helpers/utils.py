@@ -5,7 +5,6 @@ import platform
 import random
 import shlex
 import shutil
-import stat
 import socket
 import subprocess
 import sys
@@ -278,7 +277,6 @@ def create_env_info_from_config(env_name, config):
         for value in config_file.items(node):
             if value[0] == 'ip_address':
                 env_info[env_name]['nodes'].append({"domname": node, "ip": value[1]})
-
     return env_info
 
 

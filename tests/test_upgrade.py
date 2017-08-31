@@ -179,10 +179,6 @@ enabled=1
         elif dist_info[0] in DEB_BASED and "ALT" not in dist_info[0]:
             cmd = "apt-get install -y %s-%s" % ("postgrespro",  ".".join([major, minor]))
             command_executor(cmd)
-            cmd = "apt-get install -y %s-doc-%s" % ("postgrespro",  ".".join([major, minor]))
-            command_executor(cmd)
-            cmd = "apt-get install -y %s-doc-ru-%s" % ("postgrespro",  ".".join([major, minor]))
-            command_executor(cmd)
             cmd = "apt-get install -y libpq-dev"
             command_executor(cmd)
             # if '9.5' not in version:
@@ -387,7 +383,12 @@ enabled=1
         conn.close()
 
     def select_from_test_table(self):
-        conn = psycopg2.connect(self.connstring)
+        connect_retry_count = 3
+        for _ in range(connect_retry_count):
+            try:
+                conn = psycopg2.connect(self.connstring)
+            except psycopg2.OperationalError:
+                sleep(10)
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM test")
         return cursor.fetchall()[0]
@@ -411,6 +412,7 @@ enabled=1
         name = request.config.getoption('--product_name')
         edition = request.config.getoption('--product_edition')
         build = request.config.getoption('--product_build')
+        branch = request.config.getoption('--branch')
         branch = "PGPRO9_6_TASK941"
         local = False
         # Step 1
@@ -458,11 +460,3 @@ enabled=1
         pginstance.manage_psql("restart")
         # Step 8
         assert self.select_from_test_table() == (1, 'test_text')
-
-
-@pytest.mark.major_updates
-class TestMajorUpdates():
-    """ Test class for majos updates
-
-    """
-    pass
