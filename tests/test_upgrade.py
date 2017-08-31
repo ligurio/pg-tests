@@ -1,5 +1,6 @@
 import logging
 import os
+import platform
 import psycopg2
 import psutil
 import pytest
@@ -9,6 +10,7 @@ import re
 import sys
 import urllib
 
+from allure_commons.types import LabelType
 from time import sleep
 
 from helpers.os_helpers import pg_bindir
@@ -421,12 +423,26 @@ enabled=1
 
         :return:
         """
-        milestone = request.config.getoption('--product_milestone')
+        dist = ""
+        if platform.system() == 'Linux':
+            dist = " ".join(platform.linux_distribution()[0:2])
+        elif platform.system() == 'Windows':
+            dist = 'Windows'
+        else:
+            print("Unknown Distro")
+        version = request.config.getoption('--product_version')
         name = request.config.getoption('--product_name')
         edition = request.config.getoption('--product_edition')
         build = request.config.getoption('--product_build')
+        milestone=request.config.getoption('--product_milestone')
+        product_info = " ".join([dist, name, edition, version])
+        tag_mark = pytest.allure.label(LabelType.TAG, product_info)
+        request.node.add_marker(tag_mark)
+        branch = request.config.getoption('--branch')
         local = False
         # Step 1
+        tag_mark = pytest.allure.label(LabelType.TAG, product_info)
+        request.node.add_marker(tag_mark)
         earliest_pgpro_version = self.get_pgpro_earliest_minor_version(request.config.getoption('--product_version'),
                                                                        edition)
         minor_versions = self.get_pgpro_minor_versions(request.config.getoption('--product_version'), edition)[1:]
