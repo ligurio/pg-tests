@@ -4,7 +4,6 @@ import pytest
 from allure_commons.types import LabelType
 
 from helpers.utils import create_env_info_from_config
-from helpers.utils import MySuites
 from helpers.environment_manager import Environment
 from helpers.pginstance import PgInstance
 
@@ -41,24 +40,27 @@ def pytest_addoption(parser):
 
 
 @pytest.fixture(scope='function')
-def environment(request):
-        name = "%s_%s" % (request.node.name, request.config.getoption('--target'))
-        return Environment(name)
-
-
-@pytest.mark.usefixtures('environment')
-@pytest.fixture(scope='function')
-def create_environment(request, environment):
+def create_environment(request):
     if request.config.getoption('--config'):
         print('Environment will be use from config')
     else:
-        nodes_count = request.param
-        return environment.create_environment(request.node.name, nodes_count, request.config.getoption("--target"))
+        name = request.node.name
+        os = request.config.getoption('--target')
+        if request.param:
+            environment = Environment(name, os, nodes_count=request.param)
+        else:
+            environment = Environment(name, os)
+        environment.create_environment()
+        yield environment
+        if request.config.getoption('--config'):
+            print("Cluster was deployed from config. No teardown actions for this type of cluster deploy")
+        else:
+            environment.delete_env()
 
 
-@pytest.mark.usefixtures('environment')
+@pytest.mark.usefixtures('create_environment')
 @pytest.fixture(scope='function')
-def install_postgres(request, environment):
+def install_postgres(request, create_environment):
     version = request.config.getoption('--product_version')
     name = request.config.getoption('--product_name')
     edition = request.config.getoption('--product_edition')
@@ -69,28 +71,30 @@ def install_postgres(request, environment):
         environment_info = create_env_info_from_config(request.node.name, request.config.getoption('--config'))
         cluster_name = request.node.name
     else:
-        environment_info = environment.get_cluster_config()
+        environment_info = create_environment.env_info
         cluster_name = "%s_%s" % (request.node.name, request.config.getoption('--target'))
-    pginstance = PgInstance(version=request.config.getoption('--product_version'),
-                            milestone=request.config.getoption('--product_milestone'),
-                            name=request.config.getoption('--product_name'),
-                            edition=request.config.getoption('--product_edition'),
-                            branch=request.config.getoption('--branch'),
-                            skip_install=False,
-                            environment_info=environment_info,
-                            cluster_name=cluster_name)
-    pginstance.install_product_cluster(version=request.config.getoption('--product_version'),
-                                       milestone=request.config.getoption('--product_milestone'),
-                                       name=request.config.getoption('--product_name'),
-                                       edition=request.config.getoption('--product_edition'),
-                                       branch=request.config.getoption('--branch'),
-                                       cluster_info=environment_info,
-                                       cluster_name=cluster_name)
-    yield pginstance
+    cluster_nodes = []
+    for node in environment_info[cluster_name]['nodes']:
+        cluster_node = PgInstance(version=request.config.getoption('--product_version'),
+                                  milestone=request.config.getoption('--product_milestone'),
+                                  name=request.config.getoption('--product_name'),
+                                  edition=request.config.getoption('--product_edition'),
+                                  branch=request.config.getoption('--branch'),
+                                  skip_install=False,
+                                  node_ip=node['ip'],
+                                  cluster=True)
+        cluster_node.install_product_cluster(version=request.config.getoption('--product_version'),
+                                             milestone=request.config.getoption('--product_milestone'),
+                                             name=request.config.getoption('--product_name'),
+                                             edition=request.config.getoption('--product_edition'),
+                                             branch=request.config.getoption('--branch'),
+                                             node_ip=node['ip'])
+        cluster_nodes.append(cluster_node)
+    yield cluster_nodes
     if request.config.getoption('--config'):
         print("Cluster was deployed from config. No teardown actions for this type of cluster deploy")
     else:
-        environment.delete_env()
+        create_environment.delete_env()
 
 # TODO create different behaviour for multimaster and replica,
 # TODO example here: https://docs.pytest.org/en/latest/proposals/parametrize_with_fixtures.html
@@ -100,6 +104,16 @@ def install_postgres(request, environment):
 #         return request.getfuncargvalue('default_context')
 #     elif request.param == 'replica':
 #         return request.getfuncargvalue('extra_context')
+
+
+@pytest.fixture()
+def create_multimaster_cluster(request):
+    pass
+
+
+@pytest.fixture()
+def create_replica(request):
+    pass
 
 
 def pytest_runtest_logreport(report):

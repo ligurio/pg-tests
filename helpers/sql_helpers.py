@@ -202,7 +202,7 @@ def pg_manage_psql(action, data_dir, version="9.6",  start_script=None, remote=F
             else:
                 cmd = "service %s %s" % (start_script, action)
             print(cmd)
-            return command_executor(cmd)
+            return command_executor(cmd, remote=remote, host=host, login=REMOTE_ROOT, password=REMOTE_ROOT_PASSWORD)
 
         # retcode = subprocess.check_call(cmd)
         # time.sleep(2)

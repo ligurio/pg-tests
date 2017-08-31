@@ -1,6 +1,7 @@
 import os
 import psutil
 import psycopg2
+import sys
 
 from helpers.pginstall import package_mgmt
 from helpers.pginstall import setup_repo
@@ -22,7 +23,7 @@ class PgInstance:
     PG_PASSWORD = 'password'
 
     def __init__(self, version, milestone, name, edition, skip_install, branch,
-                 environment_info=None, cluster_name=None, windows=False):
+                 node_ip=None, cluster=False, windows=False):
         self.version = version
         self.milestone = milestone
         self.name = name
@@ -31,8 +32,14 @@ class PgInstance:
         self.branch = branch
         self.connstring = "host=localhost user=postgres"
         self.windows = windows
-        self.cluster_name = cluster_name
-        self.environment_info = environment_info
+        self.cluster = cluster
+        self.node_ip = node_ip
+        self.pgpro_version = None
+        self.postgresql_version = None
+        self.pgpro_edition = None
+        if cluster and not node_ip:
+            print("You must provide ip address for node in cluster mode")
+            sys.exit(1)
 
     def install_product(self, name, version, edition, milestone, branch, windows=False, skip_install_psql=False):
         """ Install product
@@ -57,15 +64,12 @@ class PgInstance:
                 'edition': edition,
                 'milestone': milestone}
 
-    def install_product_cluster(self, cluster_info, cluster_name, name, version, edition, milestone, branch):
-        print(cluster_info)
-        if cluster_name in cluster_info.keys():
-            for node in cluster_info[cluster_name]['nodes']:
-                setup_repo(remote=True, host=node['ip'], version=version, milestone=milestone, name=name,
-                           edition=edition, branch=branch)
-                package_mgmt(remote=True, host=node['ip'], version=version, milestone=milestone, name=name,
-                             edition=edition, branch=branch)
-                self.setup_psql(remote=True, host=node['ip'], version=version)
+    def install_product_cluster(self, node_ip, name, version, edition, milestone, branch):
+        setup_repo(remote=True, host=node_ip, version=version, milestone=milestone, name=name,
+                   edition=edition, branch=branch)
+        package_mgmt(remote=True, host=node_ip, version=version, milestone=milestone, name=name,
+                     edition=edition, branch=branch)
+        self.setup_psql(remote=True, host=node_ip, version=version)
         return {'name': name,
                 'version': version,
                 'edition': edition,
@@ -124,7 +128,7 @@ class PgInstance:
         cmd = "sudo -u postgres psql -c \"ALTER USER postgres WITH PASSWORD \'%s\';\"" % self.PG_PASSWORD
         command_executor(cmd, remote, host, login=REMOTE_ROOT, password=REMOTE_ROOT_PASSWORD)
 
-        if self.cluster_name is not None:
+        if self.cluster:
             hba_auth = """
     local   all             postgres                                trust
     local   all             all                                     peer
@@ -224,5 +228,64 @@ class PgInstance:
 
     # TODO add editing repo file for update
 
-    def major_upgrade(self, version_to_upgrade):
+    def major_upgrade(self, name, version, edition, milestone, branch, windows=False, skip_install_psql=False):
+        """
+
+        :param name: product name to upgrade
+        :param version: version to upgrade
+        :param edition: edition to upgrade
+        :param milestone:
+        :param branch:
+        :param windows:
+        :param skip_install_psql:
+        :return:
+        """
         pass
+
+    @property
+    def get_instance_ip(self):
+        """
+
+        :return:
+        """
+        return self.node_ip
+
+    @property
+    def get_pgpro_version(self):
+        """ Get pgpro_version
+
+        :return: string with output of pgpro_version() output
+        """
+        if self.cluster:
+            connstring = "host=%s user=postgres" % self.node_ip
+        else:
+            connstring = "host=localhost user=postgres"
+        conn = psycopg2.connect(connstring)
+        cursor = conn.cursor()
+        cursor.execute("SELECT pgpro_version()")
+        self.pgpro_version = cursor.fetchall()[0][0]
+        return self.pgpro_version
+
+    @property
+    def get_version(self):
+        if self.cluster:
+            connstring = "host=%s user=postgres" % self.node_ip
+        else:
+            connstring = "host=localhost user=postgres"
+        conn = psycopg2.connect(connstring)
+        cursor = conn.cursor()
+        cursor.execute("SELECT version()")
+        self.postgresql_version = cursor.fetchall()[0][0]
+        return self.postgresql_version
+
+    @property
+    def get_edition(self):
+        if self.cluster:
+            connstring = "host=%s user=postgres" % self.node_ip
+        else:
+            connstring = "host=localhost user=postgres"
+        conn = psycopg2.connect(connstring)
+        cursor = conn.cursor()
+        cursor.execute("SELECT pgpro_edition()")
+        self.pgpro_edition = cursor.fetchall()[0][0]
+        return self.pgpro_edition

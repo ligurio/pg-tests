@@ -15,8 +15,12 @@ from testrun import WORK_DIR
 class Environment(object):
     CLUSTER_SETTING = WORK_DIR + gen_name("cluster") + ".json"
 
-    def __init__(self, env_name):
-        self.env = env_name
+    def __init__(self, env_name, image_name, nodes_count=1):
+        self.env_name = env_name
+        self.nodes_count = nodes_count
+        self.image_name = image_name
+        self.env_info = {}
+        self.nodes = []
         try:
             import libvirt
             self.conn = libvirt.open(None)
@@ -24,22 +28,22 @@ class Environment(object):
             print 'LibVirt connect error: ', e
             sys.exit(1)
 
-    def create_environment(self, name, node_count, image_name):
+    def create_environment(self):
         """ Create cluster method
 
         :param node_count: int
         :param image_name: str
         :return:
         """
-        env_info = {}
-        if image_name in list_images():
-            cluster_name = "%s_%s" % (name, image_name)
-            env_info[cluster_name] = {}
-            env_info[cluster_name]['nodes'] = []
-            for node in (range(1, node_count + 1)):
-                node_name = gen_name(image_name)
-                node_info = create_env(image_name, node_name)
-                env_info[cluster_name]['nodes'].append({"domname": node_name,
+        # env_info = {}
+        if self.image_name in list_images():
+            cluster_name = "%s_%s" % (self.env_name, self.image_name)
+            self.env_info[cluster_name] = {}
+            self.env_info[cluster_name]['nodes'] = []
+            for node in (range(1, self.nodes_count + 1)):
+                node_name = gen_name(self.image_name)
+                node_info = create_env(self.image_name, node_name)
+                self.env_info[cluster_name]['nodes'].append({"domname": node_name,
                                                         "ip": node_info[0],
                                                         "image_path": node_info[1],
                                                         "xml_desc": node_info[2]})
@@ -56,20 +60,20 @@ class Environment(object):
                 exec_command(cmd, node_info[0], REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             mode = 'a' if os.path.exists(self.CLUSTER_SETTING) else 'w'
             with open(self.CLUSTER_SETTING, mode) as f:
-                json.dump(env_info, f, indent=4, sort_keys=True)
+                json.dump(self.env_info, f, indent=4, sort_keys=True)
 
-            logging.debug("Was created cluster with following nodes: %s" % env_info)
-            return env_info
+            logging.debug("Was created cluster with following nodes: %s" % self.env_info)
+            return self.env_info
         else:
-            logging.error("We haven't image with name %s" % image_name)
+            logging.error("We haven't image with name %s" % self.image_name)
 
     def start_env(self):
         """
         Check that env not running and if not start vms from env
         """
         clusters = self.get_cluster_config()
-        if self.env in clusters:
-            for node in clusters[self.env]['nodes']:
+        if self.env_name in clusters:
+            for node in clusters[self.env_name]['nodes']:
                 dom = self.conn.lookupByName(node['domname'])
                 dom.resume()
 
@@ -79,8 +83,8 @@ class Environment(object):
         :return:
         """
         clusters = self.get_cluster_config()
-        if self.env in clusters:
-            for node in clusters[self.env]['nodes']:
+        if self.env_name in clusters:
+            for node in clusters[self.env_name]['nodes']:
                 dom = self.conn.lookupByName(node['domname'])
                 dom.suspend()
 
@@ -90,8 +94,8 @@ class Environment(object):
         :return:
         """
         clusters = self.get_cluster_config()
-        if self.env in clusters:
-            for node in clusters[self.env]['nodes']:
+        if self.env_name in clusters:
+            for node in clusters[self.env_name]['nodes']:
                 dom = self.conn.lookupByName(node['domname'])
                 dom.shutdown()
 
@@ -101,8 +105,8 @@ class Environment(object):
         :return:
         """
         clusters = self.get_cluster_config()
-        if self.env in clusters:
-            for node in clusters[self.env]['nodes']:
+        if self.env_name in clusters:
+            for node in clusters[self.env_name]['nodes']:
                 dom = self.conn.lookupByName(node['domname'])
                 dom.destroy()
         os.remove(self.CLUSTER_SETTING)
