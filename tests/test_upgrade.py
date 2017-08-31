@@ -15,7 +15,6 @@ from helpers.os_helpers import pg_bindir
 from helpers.pginstance import PgInstance
 from helpers.pginstall import ALT_PACKAGES, DEB_BASED, DEB_PACKAGES, RPM_BASED, PACKAGES, dist
 from helpers.sql_helpers import create_tablespace
-from helpers.sql_helpers import pg_bindir
 from helpers.utils import command_executor
 from helpers.utils import get_distro
 from helpers.utils import write_file
@@ -354,13 +353,16 @@ enabled=1
         distro = get_distro()[0]
         self.kill_postgres_instance()
         if distro in RPM_BASED:
-            cmd = "cp -r /var/lib/pgsql/%s.%s/data/ /var/lib/pgpro/%s.%s/" % (major, minor, major, minor)
-            command_executor(cmd)
-            cmd = "chown -R postgres:postgres /var/lib/pgpro/%s.%s/data" % (major, minor)
-            return command_executor(cmd)
-        elif distro in DEB_BASED:
-            cmd = ""
-            pass
+            if edition == "standard":
+                cmd = "cp -r /var/lib/pgsql/%s.%s/data/ /var/lib/pgpro/%s.%s/" % (major, minor, major, minor)
+                command_executor(cmd)
+                cmd = "chown -R postgres:postgres /var/lib/pgpro/%s.%s/data" % (major, minor)
+                return command_executor(cmd)
+            elif edition == "ee":
+                cmd = "cp -r /var/lib/pgsql/%s.%s/data/ /var/lib/pgproee/%s.%s/" % (major, minor, major, minor)
+                command_executor(cmd)
+                cmd = "chown -R postgres:postgres /var/lib/pgproee/%s.%s/data" % (major, minor)
+                return command_executor(cmd)
 
     def create_test_tablespace(self):
         """
@@ -404,7 +406,6 @@ enabled=1
         cmd = "su - postgres -c \"%s\"" % pgpro_upgrade_script
         return command_executor(cmd)
 
-
     @pytest.mark.test_minor_updates
     def test_minor_updates(self, request):
         """
@@ -424,8 +425,6 @@ enabled=1
         name = request.config.getoption('--product_name')
         edition = request.config.getoption('--product_edition')
         build = request.config.getoption('--product_build')
-        branch = request.config.getoption('--branch')
-        branch = "PGPRO9_6_TASK941"
         local = False
         # Step 1
         earliest_pgpro_version = self.get_pgpro_earliest_minor_version(request.config.getoption('--product_version'),
@@ -467,20 +466,17 @@ enabled=1
         # Step 7
         version = request.config.getoption('--product_version')
         pginstance = PgInstance(version, milestone, name, edition, build, local, branch)
-        pginstance.install_product(version=version, milestone=milestone, name=name, edition=edition, branch=branch,
-                                   skip_install_psql=True)
         if get_distro()[0] in RPM_BASED:
-            # Stop instance
-            # Provide PGDATA path
-            # Do pgpro_upgrade
-            # Start instance
             data_dir = pginstance.get_option("data_directory")
-            cmd = "export PGDATA=%s" % data_dir
-            command_executor(cmd)
+            pginstance.install_product(version=version, milestone=milestone, name=name, edition=edition, branch=branch,
+                                       skip_install_psql=True)
+            os.environ["PGDATA"] = data_dir
             pginstance.manage_psql("stop")
             self.execute_pgpro_upgrade()
             pginstance.manage_psql("start")
         else:
+            pginstance.install_product(version=version, milestone=milestone, name=name, edition=edition, branch=branch,
+                                       skip_install_psql=True)
             pginstance.manage_psql("restart")
         # Step 8
         assert self.select_from_test_table() == (1, 'test_text')
