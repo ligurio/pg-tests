@@ -64,12 +64,18 @@ class PgInstance:
                 'edition': edition,
                 'milestone': milestone}
 
-    def install_product_cluster(self, node_ip, name, version, edition, milestone, branch):
-        setup_repo(remote=True, host=node_ip, version=version, milestone=milestone, name=name,
-                   edition=edition, branch=branch)
-        package_mgmt(remote=True, host=node_ip, version=version, milestone=milestone, name=name,
-                     edition=edition, branch=branch)
-        self.setup_psql(remote=True, host=node_ip, version=version)
+    def install_product_cluster(self, node_ip, name, version, edition, milestone, branch, skip_install_psql=False):
+        if skip_install_psql:
+            setup_repo(remote=True, host=node_ip, version=version, milestone=milestone, name=name,
+                       edition=edition, branch=branch)
+            package_mgmt(remote=True, host=node_ip, version=version, milestone=milestone, name=name,
+                         edition=edition, branch=branch)
+        else:
+            setup_repo(remote=True, host=node_ip, version=version, milestone=milestone, name=name,
+                       edition=edition, branch=branch)
+            package_mgmt(remote=True, host=node_ip, version=version, milestone=milestone, name=name,
+                         edition=edition, branch=branch)
+            self.setup_psql(remote=True, host=node_ip, version=version)
         return {'name': name,
                 'version': version,
                 'edition': edition,
