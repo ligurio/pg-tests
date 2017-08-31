@@ -11,6 +11,7 @@ import urllib
 
 from time import sleep
 
+from helpers.os_helpers import pg_bindir
 from helpers.pginstance import PgInstance
 from helpers.pginstall import ALT_PACKAGES, DEB_BASED, DEB_PACKAGES, RPM_BASED, PACKAGES, dist
 from helpers.sql_helpers import create_tablespace
@@ -393,6 +394,17 @@ enabled=1
         cursor.execute("SELECT * FROM test")
         return cursor.fetchall()[0]
 
+    def execute_pgpro_upgrade(self):
+        """For CentOS based OS we need to do pgpro_upgrade
+
+        :return:
+        """
+        pgbindir = pg_bindir()
+        pgpro_upgrade_script = os.path.join(pgbindir, "pgpro_upgrade")
+        cmd = "su - postgres -c \"%s\"" % pgpro_upgrade_script
+        return command_executor(cmd)
+
+
     @pytest.mark.test_minor_updates
     def test_minor_updates(self, request):
         """
@@ -457,6 +469,18 @@ enabled=1
         pginstance = PgInstance(version, milestone, name, edition, build, local, branch)
         pginstance.install_product(version=version, milestone=milestone, name=name, edition=edition, branch=branch,
                                    skip_install_psql=True)
-        pginstance.manage_psql("restart")
+        if get_distro()[0] in RPM_BASED:
+            # Stop instance
+            # Provide PGDATA path
+            # Do pgpro_upgrade
+            # Start instance
+            data_dir = pginstance.get_option("data_directory")
+            cmd = "export PGDATA=%s" % data_dir
+            command_executor(cmd)
+            pginstance.manage_psql("stop")
+            self.execute_pgpro_upgrade()
+            pginstance.manage_psql("start")
+        else:
+            pginstance.manage_psql("restart")
         # Step 8
         assert self.select_from_test_table() == (1, 'test_text')

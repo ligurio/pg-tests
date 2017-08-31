@@ -17,6 +17,7 @@ class Environment(object):
 
     def __init__(self, env_name, image_name, nodes_count=1):
         self.env_name = env_name
+        self.cluster_name = "%s_%s" % (env_name, image_name)
         self.nodes_count = nodes_count
         self.image_name = image_name
         self.env_info = {}
@@ -105,8 +106,8 @@ class Environment(object):
         :return:
         """
         clusters = self.get_cluster_config()
-        if self.env_name in clusters:
-            for node in clusters[self.env_name]['nodes']:
+        if self.cluster_name in clusters:
+            for node in clusters[self.cluster_name]['nodes']:
                 dom = self.conn.lookupByName(node['domname'])
                 dom.destroy()
         os.remove(self.CLUSTER_SETTING)
