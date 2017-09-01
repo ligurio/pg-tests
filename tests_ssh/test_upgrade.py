@@ -1,8 +1,13 @@
 import pytest
 
+
 @pytest.mark.minor_updates
 class TestMinorUpdates():
-    pass
+
+    @pytest.mark.parametrize("create_environment", [1], indirect=True)
+    @pytest.mark.usefixtures('install_postgres')
+    def test_minor_updates(self, install_postgres):
+        pass
 
 
 @pytest.mark.major_updates

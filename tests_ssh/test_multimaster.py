@@ -90,7 +90,7 @@ class TestMultimaster():
         time.sleep(30)
         node = install_postgres[0]
         node.connstring = "host=%s user=postgres" % node.node_ip
-        conn = psycopg2.connect(install_postgres.connstring)
+        conn = psycopg2.connect(node.connstring)
         cursor = conn.cursor()
         cursor.execute("CREATE EXTENSION multimaster")
         cursor.close()
@@ -127,44 +127,45 @@ class TestMultimaster():
         # Step 1
         cluster_name = create_environment.keys()[0]
         multimaster_conn_string = ""
-        for node in create_environment[cluster_name]['nodes']:
-            multimaster_conn_string += "dbname=postgres user=postgres host=%s, " % node['ip']
+        for node in install_postgres:
+            multimaster_conn_string += "dbname=postgres user=postgres host=%s, " % node.node_ip
         multimaster_conn_string = multimaster_conn_string.rstrip(", ")
         multimaster_conn_string = "'%s'" % multimaster_conn_string
         node_id = 1
-        for node in create_environment[cluster_name]['nodes']:
-            install_postgres.connstring = "host=%s user=postgres" % node['ip']
+        for node in install_postgres:
+            install_postgres.connstring = "host=%s user=postgres" % node.node_ip
             self.backp_postgresqlconf(node['ip'], install_postgres.get_option('data_directory'))
             postgresql_conf_file = '/'.join([install_postgres.get_option('data_directory'), 'postgresql.conf'])
             cmd = "echo \'shared_preload_libraries = \'multimaster\'\' >> %s " % postgresql_conf_file
-            command_executor(cmd, remote=True, host=node['ip'], login='root', password='TestRoot1')
+            command_executor(cmd, remote=True, host=node.node_ip, login='root', password='TestRoot1')
             cmd = "echo \'multimaster.conn_strings = \'\\\'%s\\\'\'\' >> %s" % (multimaster_conn_string,
                                                                                 postgresql_conf_file)
-            command_executor(cmd, remote=True, host=node['ip'], login='root', password='TestRoot1')
+            command_executor(cmd, remote=True, host=node.node_ip, login='root', password='TestRoot1')
             cmd = "echo \'wal_level = logical\' >> %s " % postgresql_conf_file
-            command_executor(cmd, remote=True, host=node['ip'], login='root', password='TestRoot1')
+            command_executor(cmd, remote=True, host=node.node_ip, login='root', password='TestRoot1')
             cmd = "echo \'max_prepared_transactions = 300\' >> %s " % postgresql_conf_file
-            command_executor(cmd, remote=True, host=node['ip'], login='root', password='TestRoot1')
+            command_executor(cmd, remote=True, host=node.node_ip, login='root', password='TestRoot1')
             cmd = "echo \'max_wal_senders = 10\' >> %s " % postgresql_conf_file
             command_executor(cmd, remote=True, host=node['ip'], login='root', password='TestRoot1')
             cmd = "echo \'max_replication_slots = 10\' >> %s " % postgresql_conf_file
-            command_executor(cmd, remote=True, host=node['ip'], login='root', password='TestRoot1')
+            command_executor(cmd, remote=True, host=node.node_ip, login='root', password='TestRoot1')
             cmd = "echo \'max_worker_processes = 250\' >> %s " % postgresql_conf_file
-            command_executor(cmd, remote=True, host=node['ip'], login='root', password='TestRoot1')
+            command_executor(cmd, remote=True, host=node.node_ip, login='root', password='TestRoot1')
             cmd = "echo \'multimaster.max_nodes = 3\' >> %s " % postgresql_conf_file
-            command_executor(cmd, remote=True, host=node['ip'], login='root', password='TestRoot1')
+            command_executor(cmd, remote=True, host=node.node_ip, login='root', password='TestRoot1')
             cmd = "echo \'multimaster.node_id = %s\' >> %s " % (str(node_id), postgresql_conf_file)
-            command_executor(cmd, remote=True, host=node['ip'], login='root', password='TestRoot1')
+            command_executor(cmd, remote=True, host=node.node_ip, login='root', password='TestRoot1')
             node_id += 1
             cmd = "echo \'log_min_messages = log\' >> %s " % postgresql_conf_file
-            command_executor(cmd, remote=True, host=node['ip'], login='root', password='TestRoot1')
+            command_executor(cmd, remote=True, host=node.node_ip, login='root', password='TestRoot1')
             cmd = "echo \'log_min_error_statement = log\' >> %s " % postgresql_conf_file
-            command_executor(cmd, remote=True, host=node['ip'], login='root', password='TestRoot1')
-            install_postgres.manage_psql("restart", remote=True, host=node['ip'])
+            command_executor(cmd, remote=True, host=node.node_ip, login='root', password='TestRoot1')
+            node.manage_psql("restart", remote=True, host=node.node_ip)
 
         time.sleep(30)
-        install_postgres.connstring = "host=%s user=postgres" % create_environment[cluster_name]['nodes'][0]['ip']
-        conn = psycopg2.connect(install_postgres.connstring)
+        node = install_postgres[0]
+        node.connstring = "host=%s user=postgres" % node.node_ip
+        conn = psycopg2.connect(node.connstring)
         cursor = conn.cursor()
         cursor.execute("CREATE EXTENSION multimaster")
         cursor.close()

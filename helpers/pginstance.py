@@ -1,7 +1,9 @@
 import os
 import psutil
 import psycopg2
+import re
 import sys
+import urllib
 
 from helpers.pginstall import package_mgmt
 from helpers.pginstall import setup_repo
@@ -10,7 +12,7 @@ from helpers.sql_helpers import pg_set_option
 from helpers.sql_helpers import pg_check_option
 from helpers.sql_helpers import pg_manage_psql
 from helpers.sql_helpers import pg_start_script_name
-from helpers.pginstall import RPM_BASED
+from helpers.pginstall import RPM_BASED, PGPRO_ARCHIVE_STANDARD, PGPRO_ARCHIVE_ENTERPRISE
 
 from helpers.utils import command_executor
 from helpers.utils import get_distro
@@ -37,9 +39,13 @@ class PgInstance:
         self.pgpro_version = None
         self.postgresql_version = None
         self.pgpro_edition = None
+        self.available_minor_updates = None
+        self.minor_version = None
         if cluster and not node_ip:
             print("You must provide ip address for node in cluster mode")
             sys.exit(1)
+        if cluster and node_ip:
+            self.connstring = "host=%s user=postgres" % node_ip
 
     def install_product(self, name, version, edition, milestone, branch, windows=False, skip_install_psql=False):
         """ Install product
@@ -222,15 +228,41 @@ class PgInstance:
         return cursor.fetchall()
 
     def minor_upgrade(self, minor_version):
-        """
+        """ Update to one version up
+         Add check
 
-        :param minor_version:
+        :param minor_version: version to upgrade
         :return:
         """
+        if self.minor_version > minor_version:
+            print("You try to downgrade. This action deprecated")
+            sys.exit(1)
+
+        # Delete old repo file
+        # Add new repo file
+        # Install new packages
+        # Do initdb if needed
         pass
 
+    def minor_upgrade_to_lates_version(self):
+        """Upgrade to latest minor version.
+
+        :return:
+        """
+        # Delete old repo file
+        # Add new repo file
+        # Install new packages
+        # Do initdb if needed
+
+
+    @property
     def get_current_minor_version(self):
-        return self.execute_sql_command("SELECT pgpro_version()")[0][0].split()[1]
+        """ Get current minor version
+
+        :return:
+        """
+        self.minor_version = self.execute_sql_command("SELECT pgpro_version()")[0][0].split()[1]
+        return self.minor_version
 
     # TODO add editing repo file for update
 
@@ -295,3 +327,77 @@ class PgInstance:
         cursor.execute("SELECT pgpro_edition()")
         self.pgpro_edition = cursor.fetchall()[0][0]
         return self.pgpro_edition
+
+    def get_available_minor_updates(self):
+        """ Check current minor version and get all available updates
+
+        :return:
+        """
+        current_minor_version = self.minor_version
+        minor_versions = self.get_pgpro_minor_versions(self.version, self.edition)
+        position = int
+        for version in minor_versions:
+            if current_minor_version in version:
+                position = minor_versions.index(version)
+        return minor_versions[position+1:]
+
+    def move_data_direcory(self, version, edition="standard", remote=False, host=None):
+        """Move data directory from one folder to another
+
+        :return:
+        """
+        major = "9"
+        minor = version.split(".")[1]
+        distro = get_distro()[0]
+        self.kill_postgres_instance()
+        if distro in RPM_BASED:
+            if edition == "standard":
+                cmd = "cp -r /var/lib/pgsql/%s.%s/data/ /var/lib/pgpro/%s.%s/" % (major, minor, major, minor)
+                command_executor(cmd)
+                cmd = "chown -R postgres:postgres /var/lib/pgpro/%s.%s/data" % (major, minor)
+                return command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            elif edition == "ee":
+                cmd = "cp -r /var/lib/pgsql/%s.%s/data/ /var/lib/pgproee/%s.%s/" % (major, minor, major, minor)
+                command_executor(cmd)
+                cmd = "chown -R postgres:postgres /var/lib/pgproee/%s.%s/data" % (major, minor)
+                return command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+
+    def kill_postgres_instance(self):
+        """
+        Method returns PID of the postmaster process.
+
+        :returns: number with process identificator
+        """
+        conn = psycopg2.connect(self.connstring)
+        pid = conn.get_backend_pid()
+        ppid = psutil.Process(pid).ppid()
+        conn.close()
+        cmd = "kill -9 %s" % ppid
+        return command_executor(cmd)
+
+    def get_pgpro_minor_versions(self, major_version='9.6', edition='standard'):
+        """ Get all minor versions of pgpro
+
+        :return: list with minor version
+        """
+        # TODO add dependencie from distribution because not for all dists we have all updates
+        minor_versions = []
+        if edition == 'standard':
+            page = urllib.urlopen(PGPRO_ARCHIVE_STANDARD).read()
+        elif edition == 'ee':
+            page = urllib.urlopen(PGPRO_ARCHIVE_ENTERPRISE).read()
+        versions = re.findall('href=[\'"]?([^\'" >]+)/', page)
+        for version in versions:
+            if major_version in version and "9.6.4.1" not in version:
+                minor_versions.append(version)
+        return minor_versions
+
+    def get_pgpro_earliest_minor_version(self, major_version='9.6', edition="standard"):
+        """ Get earlies minor version
+        :return string with earliest minor version
+        """
+        versions = self.get_pgpro_minor_versions(major_version, edition)
+        versions.sort()
+        return versions[0]
+
+
