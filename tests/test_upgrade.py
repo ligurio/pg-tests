@@ -224,7 +224,7 @@ enabled=1
             print "Unsupported distro %s" % dist_info[0]
             sys.exit(1)
 
-    def setup_psql(self, version):
+    def setup_psql(self, version, edition="standard"):
         """
 
         :return: None
@@ -234,8 +234,8 @@ enabled=1
         print "Setup PostgreSQL service"
         distro = get_distro()[0]
         if distro in RPM_BASED or "ALT " in distro:
-            self.manage_psql("initdb", version=version)
-        self.manage_psql("start", version=version)
+            self.manage_psql("initdb", version=version, edition=edition)
+        self.manage_psql("start", version=version, edition=edition)
         os.environ['PATH'] += ":/usr/pgsql-%s.%s/bin/" % (major, minor)
         cmd = "sudo -u postgres psql -c \"ALTER USER postgres WITH PASSWORD \'postgres\';\""
         command_executor(cmd)
@@ -247,7 +247,7 @@ enabled=1
         self.edit_pg_hba_conf(hba_auth)
         cmd = "sudo -u postgres psql -c \"ALTER SYSTEM SET listen_addresses to \'*\';\""
         command_executor(cmd)
-        self.manage_psql("restart", version=version)
+        self.manage_psql("restart", version=version, edition=edition)
 
     def edit_pg_hba_conf(self, pg_hba_config):
         """Rewrite pg_hba.conf
@@ -268,7 +268,10 @@ enabled=1
         :return:
         """
         print(version)
-        version = version.strip("pgpro-")
+        if edition == "standard":
+            version = version.strip("pgpro-")
+        elif edition == "ee":
+            version = version.strip("pgproee-")
         major = "9"
         minor = version.split(".")[1]
         if distro in RPM_BASED:
@@ -292,18 +295,19 @@ enabled=1
             assert service_name is not None
             return service_name
 
-    def start_script_name(self, version):
+    def start_script_name(self, version, edition="standard"):
 
-        return self.pg_start_script_name(version, distro=get_distro()[0])
+        return self.pg_start_script_name(version, distro=get_distro()[0], edition=edition)
 
-    def manage_psql(self, action, data_dir=None, version="9.6"):
+    def manage_psql(self, action, data_dir=None, version="9.6", edition="standard"):
         """ Manage Postgres instance
         :param action: start, restart, stop etc
         :param init: Initialization before a first start
         :return:
         """
 
-        return self.pg_manage_psql(action, data_dir, version=version, start_script=self.start_script_name(version))
+        return self.pg_manage_psql(action, data_dir, version=version, start_script=self.start_script_name(version,
+                                                                                                          edition))
 
     def pg_manage_psql(self, action, data_dir, version, start_script=None):
         """ Manage Postgres instance
@@ -312,7 +316,6 @@ enabled=1
         :return:
         """
         version = version.strip("pgpro-")
-        print(version)
         distro = get_distro()
         if start_script is None:
             pg_ctl = os.path.join(pg_bindir(), "pg_ctl")
@@ -434,7 +437,7 @@ enabled=1
         name = request.config.getoption('--product_name')
         edition = request.config.getoption('--product_edition')
         build = request.config.getoption('--product_build')
-        milestone=request.config.getoption('--product_milestone')
+        milestone = request.config.getoption('--product_milestone')
         product_info = " ".join([dist, name, edition, version])
         tag_mark = pytest.allure.label(LabelType.TAG, product_info)
         request.node.add_marker(tag_mark)
@@ -448,7 +451,7 @@ enabled=1
         minor_versions = self.get_pgpro_minor_versions(request.config.getoption('--product_version'), edition)[1:]
         self.setup_repo(earliest_pgpro_version, edition)
         self.package_mgmt(earliest_pgpro_version, edition)
-        self.setup_psql(earliest_pgpro_version)
+        self.setup_psql(earliest_pgpro_version, edition)
         self.delete_repo(earliest_pgpro_version, edition)
         # Step 2
         # Step 3
@@ -460,13 +463,13 @@ enabled=1
                 version_for_check = version.strip("pgpro-")
             else:
                 version_for_check = version.strip("pgproee-")
-            if version_for_check in ["9.6.4.1", "9.6.4.2"]:
+            if version_for_check in ["9.6.4.1", "9.6.4.2", "9.6.5.1"]:
                 continue
             self.setup_repo(version, edition)
             self.package_mgmt(version, edition)
-            if version_for_check == "9.6.2.1":
-                self.move_data_direcory(version_for_check)
-            self.manage_psql("restart", version=version)
+            if version_for_check == "9.6.2.1" or edition == "ee" and version_for_check == "9.6.3.1":
+                self.move_data_direcory(version_for_check, edition)
+            self.manage_psql("restart", version=version, edition=edition)
             connect_retry_count = 3
             for _ in range(connect_retry_count):
                 try:
