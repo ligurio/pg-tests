@@ -9,7 +9,6 @@ import psycopg2
 import pytest
 
 from allure_commons.types import LabelType
-# from helpers.utils import MySuites
 from multiprocessing import Process
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
@@ -18,21 +17,7 @@ from helpers.sql_helpers import drop_test_table
 from helpers.sql_helpers import create_test_table
 from tests.settings import TMP_DIR
 
-dist = ""
-if platform.system() == 'Linux':
-    dist = " ".join(platform.linux_distribution()[0:2])
-elif platform.system() == 'Windows':
-    dist = 'Windows'
-else:
-    print("Unknown Distro")
 
-version = pytest.config.getoption('--product_version')
-name = pytest.config.getoption('--product_name')
-edition = pytest.config.getoption('--product_edition')
-feature_name = "_".join(["COMPRESSION", dist, name, edition, version])
-
-
-@pytest.allure.feature(feature_name)
 @pytest.mark.core_functional
 @pytest.mark.compression
 class TestCompression():
@@ -147,12 +132,6 @@ class TestCompression():
         6. Check tablespace folder for files with *.cfm extension
         7. Check that tables has some data
         """
-        version = request.config.getoption('--product_version')
-        name = request.config.getoption('--product_name')
-        edition = request.config.getoption('--product_edition')
-        product_info = " ".join([self.dist, name, edition, version])
-        tag_mark = pytest.allure.label(LabelType.TAG, product_info)
-        request.node.add_marker(tag_mark)
         # Step 1
         create_test_table('20', 'pgbench')
         # Step 2
@@ -191,12 +170,6 @@ class TestCompression():
         2. Run pgbench (unlogged schema) for tablespace with compression
         3. Check tablespace folder for files with *.cfm extension
         """
-        version = request.config.getoption('--product_version')
-        name = request.config.getoption('--product_name')
-        edition = request.config.getoption('--product_edition')
-        product_info = " ".join([self.dist, name, edition, version])
-        tag_mark = pytest.allure.label(LabelType.TAG, product_info)
-        request.node.add_marker(tag_mark)
         # Step 1
         compression_files_directory = self.create_tablespace('compression_unlogged_tables', compression=True)
         print compression_files_directory
@@ -269,12 +242,6 @@ class TestCompression():
         5. Check that tables was created and readable
         6. Check tablespace folder for files with *.cfm extension
         """
-        version = request.config.getoption('--product_version')
-        name = request.config.getoption('--product_name')
-        edition = request.config.getoption('--product_edition')
-        product_info = " ".join([self.dist, name, edition, version])
-        tag_mark = pytest.allure.label(LabelType.TAG, product_info)
-        request.node.add_marker(tag_mark)
         # Step 1
         compression_files_directory = self.create_tablespace('compression_unlogged_tables_negative', compression=True)
         # Step 2
@@ -317,12 +284,6 @@ class TestCompression():
         4. Move table to branch with compression
         5. Check that rows count before and after moving the same
         """
-        version = request.config.getoption('--product_version')
-        name = request.config.getoption('--product_name')
-        edition = request.config.getoption('--product_edition')
-        product_info = " ".join([self.dist, name, edition, version])
-        tag_mark = pytest.allure.label(LabelType.TAG, product_info)
-        request.node.add_marker(tag_mark)
         # Step 1
         self.create_tablespace('compression_alter_tablepsace', compression=True)
         # Step 2
@@ -358,12 +319,6 @@ class TestCompression():
         4. Move table to branch without compression
         5. Check that rows count before and after moving the same
         """
-        version = request.config.getoption('--product_version')
-        name = request.config.getoption('--product_name')
-        edition = request.config.getoption('--product_edition')
-        product_info = " ".join([self.dist, name, edition, version])
-        tag_mark = pytest.allure.label(LabelType.TAG, product_info)
-        request.node.add_marker(tag_mark)
         # Step 1
         self.create_tablespace('compression_alter_from_tablepsace', compression=True)
         # Step 2

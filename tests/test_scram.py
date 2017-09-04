@@ -5,24 +5,8 @@ import psycopg2
 import random
 import string
 
-from allure_commons.types import LabelType
-# from helpers.utils import MySuites
-
-dist = ""
-if platform.system() == 'Linux':
-    dist = " ".join(platform.linux_distribution()[0:2])
-elif platform.system() == 'Windows':
-    dist = 'Windows'
-else:
-    print("Unknown Distro")
-
-version = pytest.config.getoption('--product_version')
-name = pytest.config.getoption('--product_name')
-edition = pytest.config.getoption('--product_edition')
-feature_name = "_".join(["SCRAM", dist, name, edition, version])
 
 
-@pytest.allure.feature(feature_name)
 @pytest.mark.core_functional
 @pytest.mark.usefixtures('install_postgres')
 class TestScram():
@@ -79,12 +63,6 @@ class TestScram():
         17. Check from pg_authid that password for user test_off_user in plain
 
         """
-        version = request.config.getoption('--product_version')
-        name = request.config.getoption('--product_name')
-        edition = request.config.getoption('--product_edition')
-        product_info = " ".join([self.dist, name, edition, version])
-        tag_mark = pytest.allure.label(LabelType.TAG, product_info)
-        request.node.add_marker(tag_mark)
         # Step 1
         conn_string = "host='localhost' user='postgres'"
         conn = psycopg2.connect(conn_string)
@@ -137,7 +115,7 @@ class TestScram():
         cursor.close()
         conn.close()
 
-    @pytest.mark.xfail
+    @pytest.mark.xfail(reason="Implementation of feature was changed", strict=True)
     @pytest.mark.test_authentication
     def test_authentication(self, request, install_postgres):
         """Check that we can authenticate user with different password types
@@ -149,12 +127,6 @@ class TestScram():
         5. Try to connect to db with password in scram format
         6. Try to connect with password in scram hash
         """
-        version = request.config.getoption('--product_version')
-        name = request.config.getoption('--product_name')
-        edition = request.config.getoption('--product_edition')
-        product_info = " ".join([self.dist, name, edition, version])
-        tag_mark = pytest.allure.label(LabelType.TAG, product_info)
-        request.node.add_marker(tag_mark)
         # Step 1
         hba_auth = """
             local   all             test_md5_hash_user                      md5

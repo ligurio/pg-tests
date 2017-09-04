@@ -8,26 +8,11 @@ import pwd
 import subprocess
 
 from allure_commons.types import LabelType
-# from helpers.utils import MySuites
 from helpers.os_helpers import pg_bindir
 from helpers.sql_helpers import execute
 from tests.settings import TMP_DIR
 
-dist = ""
-if platform.system() == 'Linux':
-    dist = " ".join(platform.linux_distribution()[0:2])
-elif platform.system() == 'Windows':
-    dist = 'Windows'
-else:
-    print("Unknown Distro")
 
-version = pytest.config.getoption('--product_version')
-name = pytest.config.getoption('--product_name')
-edition = pytest.config.getoption('--product_edition')
-feature_name = "_".join(["PGPRO_BACKUP", dist, name, edition, version])
-
-
-@pytest.allure.feature(feature_name)
 @pytest.mark.features
 @pytest.mark.feature_pgprobackup
 @pytest.mark.usefixtures('install_postgres')
@@ -87,18 +72,12 @@ host    all             all             ::0/0                   trust"""
         1. Check version function
         2. Check help function
         """
-        version = request.config.getoption('--product_version')
-        name = request.config.getoption('--product_name')
-        edition = request.config.getoption('--product_edition')
-        product_info = " ".join([self.dist, name, edition, version])
-        tag_mark = pytest.allure.label(LabelType.TAG, product_info)
-        request.node.add_marker(tag_mark)
         # Step 1
         assert self.execute_pg_probackup("--version") is not None
         # Step 2
         assert self.execute_pg_probackup("--help") is not None
 
-    @pytest.mark.xfail(strict=True)
+    @pytest.mark.xfail(reason="Implementation of feature was changed", strict=True)
     @pytest.mark.test_pgprobackup_compression_continious_backup
     def test_pgprobackup_compression_continious_backup(self, request, install_postgres):
         """Test pg_probackup with compression feature and full continious backup
@@ -116,12 +95,6 @@ host    all             all             ::0/0                   trust"""
         11. Check that backup validation is OK
 
         """
-        version = request.config.getoption('--product_version')
-        name = request.config.getoption('--product_name')
-        edition = request.config.getoption('--product_edition')
-        product_info = " ".join([self.dist, name, edition, version])
-        tag_mark = pytest.allure.label(LabelType.TAG, product_info)
-        request.node.add_marker(tag_mark)
         # Step 1
         backup_dir = self.create_backup_directory()
         # Step 2
@@ -172,7 +145,7 @@ host    all             all             ::0/0                   trust"""
         # Step 11
         self.execute_pg_probackup("validate", backup_id)
 
-    @pytest.mark.xfail(strict=True)
+    @pytest.mark.xfail(reason="Implementation of feature was changed", strict=True)
     @pytest.mark.test_pgprobackup_retention_policy_options
     def test_pgprobackup_retention_policy_options(self, request):
         """Scenario
@@ -188,12 +161,6 @@ host    all             all             ::0/0                   trust"""
         10. Run purge with redundancy=2 and window=1
         11. Check that saved 2 backups
         """
-        version = request.config.getoption('--product_version')
-        name = request.config.getoption('--product_name')
-        edition = request.config.getoption('--product_edition')
-        product_info = " ".join([self.dist, name, edition, version])
-        tag_mark = pytest.allure.label(LabelType.TAG, product_info)
-        request.node.add_marker(tag_mark)
         # Step 1
         for i in range(3):
             self.execute_pg_probackup("backup", "-b", "full", "-d", "postgres", "-U", "postgres")
