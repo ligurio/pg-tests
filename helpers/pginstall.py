@@ -12,6 +12,8 @@ from helpers.utils import REMOTE_ROOT
 from helpers.utils import REMOTE_ROOT_PASSWORD
 from helpers.utils import write_file
 
+PGPRO_ARCHIVE_STANDARD = "http://repo.postgrespro.ru/pgpro-archive/"
+PGPRO_ARCHIVE_ENTERPRISE = "http://repoee.l.postgrespro.ru/archive/"
 PGPRO_BRANCH_HOST = "http://localrepo.l.postgrespro.ru/branches/"
 PGPRO_HOST = "http://repo.postgrespro.ru/"
 PSQL_HOST = "https://download.postgresql.org/pub"
@@ -53,11 +55,12 @@ def get_os_type(ip):
         return None
 
 
-def generate_repo_info(distro, osversion, **kwargs):
+def generate_repo_info(distro, osversion, action="install", **kwargs):
     """Generate information about repository: url to packages and path to gpg key
 
     :param distro:
     :param osversion:
+    :param action: action what we do install or upgrade
     :param kwargs:
     :return:
     """
@@ -112,12 +115,23 @@ def generate_repo_info(distro, osversion, **kwargs):
         if kwargs['edition'] in ['cert-standard', 'cert-enterprise']:
             baseurl = os.path.join("http://localrepo.l.postgrespro.ru", product_dir, distname)
         else:
-            if distro in WIN_BASED:
-                baseurl = "{}{}/win/".format(PGPRO_HOST, product_dir)
-            elif kwargs['branch'] is not None:
-                baseurl = os.path.join(PGPRO_BRANCH_HOST, kwargs['branch'], product_dir, distname)
-            else:
-                baseurl = os.path.join(PGPRO_HOST, product_dir, distname)
+            if action == "install":
+                if distro in WIN_BASED:
+                    baseurl = "{}{}/win/".format(PGPRO_HOST, product_dir)
+                elif kwargs['branch'] is not None:
+                    baseurl = os.path.join(PGPRO_BRANCH_HOST, kwargs['branch'], product_dir, distname)
+                else:
+                    baseurl = os.path.join(PGPRO_HOST, product_dir, distname)
+            elif action == "upgrade":
+                if distro in WIN_BASED:
+                    baseurl = "{}{}/win/".format(PGPRO_HOST, product_dir)
+                elif kwargs['edition'] == "ee":
+                    baseurl = os.path.join(PGPRO_ARCHIVE_ENTERPRISE, kwargs['version'], distname)
+                    gpg_key_url = PGPRO_ARCHIVE_ENTERPRISE + kwargs['version']
+                elif kwargs['edition'] == "standard":
+                    baseurl = os.path.join(PGPRO_ARCHIVE_STANDARD, kwargs['version'], distname)
+                    gpg_key_url = PGPRO_ARCHIVE_STANDARD + kwargs['version']
+                gpg_key_url += '/keys/GPG-KEY-POSTGRESPRO'
         logging.debug("Installation repo path: %s" % baseurl)
         logging.debug("GPG key url for installation: %s" % gpg_key_url)
         return baseurl, gpg_key_url
@@ -206,74 +220,116 @@ enabled=1
         sys.exit(1)
 
 
-def package_mgmt(remote=False, host=None, **kwargs):
+def package_mgmt(remote=False, host=None, action="install", **kwargs):
+    """
+
+    :param remote:
+    :param host:
+    :param action: install or upgrade
+    :param kwargs:
+    :return:
+    """
     dist_info = get_distro(remote, host)
     major = kwargs['version'].split(".")[0]
     minor = kwargs['version'].split(".")[1]
     pkg_name = ""
     if dist_info[0] in RPM_BASED:
-        if kwargs['edition'] in ["ee", "cert-enterprise"]:
-            pkg_name = "%s-enterprise%s%s" % (kwargs['name'], major, minor)
-        else:
-            pkg_name = kwargs['name'] + major + minor
+        if action == "install":
+            if kwargs['edition'] in ["ee", "cert-enterprise"]:
+                pkg_name = "%s-enterprise%s%s" % (kwargs['name'], major, minor)
+            else:
+                pkg_name = kwargs['name'] + major + minor
+            for p in PACKAGES:
+                cmd = "yum install -y %s-%s" % (pkg_name, p)
+                command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            if kwargs['version'] != '9.5':
+                cmd = "yum install -y %s-%s" % (pkg_name, "pg_probackup")
+                command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            if kwargs['edition'] in ['cert-standard', 'cert-enterprise']:
+                cmd = "yum install -y pgbouncer"
+                command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            if kwargs['edition'] == 'ee':
+                cmd = "yum install -y pg_repack%s%s" % (major, minor)
+                command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
-        for p in PACKAGES:
-            cmd = "yum install -y %s-%s" % (pkg_name, p)
-            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-        if kwargs['version'] != '9.5':
-            cmd = "yum install -y %s-%s" % (pkg_name, "pg_probackup")
-            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-        if kwargs['edition'] in ['cert-standard', 'cert-enterprise']:
-            cmd = "yum install -y pgbouncer"
-            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-        if kwargs['edition'] == 'ee':
-            cmd = "yum install -y pg_repack%s%s" % (major, minor)
-            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+        elif action == "upgrade":
+            if kwargs['edition'] in ["ee", "cert-enterprise"]:
+                pkg_name = "%s-enterprise%s%s" % (kwargs['name'], major, minor)
+            else:
+                pkg_name = kwargs['name'] + major + minor
+
+            for p in PACKAGES:
+                cmd = "yum install -y %s-%s" % (pkg_name, p)
+                command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
     elif dist_info[0] in DEB_BASED and "ALT" not in dist_info[0]:
-        cmd = "apt-get install -y %s-%s" % (kwargs['name'], kwargs['version'])
-        command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-        cmd = "apt-get install -y %s-doc-%s" % (kwargs['name'], kwargs['version'])
-        command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-        cmd = "apt-get install -y %s-doc-ru-%s" % (kwargs['name'], kwargs['version'])
-        command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-        cmd = "apt-get install -y libpq-dev"
-        command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-        if kwargs['version'] != '9.5':
-            cmd = "apt-get install -y %s-pg-probackup-%s" % (kwargs['name'], kwargs['version'])
+        if action == "install":
+            cmd = "apt-get install -y %s-%s" % (kwargs['name'], kwargs['version'])
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-        if kwargs['edition'] in ['cert-standard', 'cert-enterprise']:
-            cmd = "apt-get install -y pgbouncer"
+            cmd = "apt-get install -y %s-doc-%s" % (kwargs['name'], kwargs['version'])
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-        for p in DEB_PACKAGES:
-            cmd = "apt-get install -y %s-%s-%s" % (kwargs['name'], p, kwargs['version'])
+            cmd = "apt-get install -y %s-doc-ru-%s" % (kwargs['name'], kwargs['version'])
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-        if kwargs['edition'] == 'ee':
-            cmd = "apt-get install -y pg-repack-%s" % kwargs['version']
+            cmd = "apt-get install -y libpq-dev"
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            if kwargs['version'] != '9.5':
+                cmd = "apt-get install -y %s-pg-probackup-%s" % (kwargs['name'], kwargs['version'])
+                command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            if kwargs['edition'] in ['cert-standard', 'cert-enterprise']:
+                cmd = "apt-get install -y pgbouncer"
+                command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            for p in DEB_PACKAGES:
+                cmd = "apt-get install -y %s-%s-%s" % (kwargs['name'], p, kwargs['version'])
+                command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            if kwargs['edition'] == 'ee':
+                cmd = "apt-get install -y pg-repack-%s" % kwargs['version']
+                command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+
+        elif action == "upgrade":
+            cmd = "apt-get install -y %s-%s" % (kwargs['name'], kwargs['version'])
+            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            cmd = "apt-get install -y libpq-dev"
+            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+
+            for p in DEB_PACKAGES:
+                cmd = "apt-get install -y %s-%s-%s" % (kwargs['name'], p, kwargs['version'])
+                command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
     elif "ALT" in dist_info[0]:
-        if kwargs['edition'] in ["ee", "cert-enterprise"]:
-            pkg_name = "%s-enterprise%s.%s" % (kwargs['name'], major, minor)
-        elif kwargs['edition'] == "cert-standard":
-            pkg_name = "postgrespro%s.%s" % (major, minor)
-        elif kwargs['edition'] == "standard":
-            pkg_name = "postgrespro%s.%s" % (major, minor)
-        else:
-            pkg_name = kwargs['name'] + major + minor
+        if action == "install":
+            if kwargs['edition'] in ["ee", "cert-enterprise"]:
+                pkg_name = "%s-enterprise%s.%s" % (kwargs['name'], major, minor)
+            elif kwargs['edition'] == "cert-standard":
+                pkg_name = "postgrespro%s.%s" % (major, minor)
+            elif kwargs['edition'] == "standard":
+                pkg_name = "postgrespro%s.%s" % (major, minor)
+            else:
+                pkg_name = kwargs['name'] + major + minor
 
-        for p in ALT_PACKAGES:
-            cmd = "apt-get install -y %s-%s" % (pkg_name, p)
-            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-        if kwargs['version'] != '9.5':
-            cmd = "apt-get install -y %s-%s" % (pkg_name, "pg_probackup")
-            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-        if kwargs['edition'] in ['cert-standard', 'cert-enterprise']:
-            cmd = "apt-get install -y pgbouncer"
-            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-        if kwargs['edition'] == 'ee':
-            cmd = "apt-get install -y pg_repack%s%s" % (major, minor)
-            command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            for p in ALT_PACKAGES:
+                cmd = "apt-get install -y %s-%s" % (pkg_name, p)
+                command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            if kwargs['version'] != '9.5':
+                cmd = "apt-get install -y %s-%s" % (pkg_name, "pg_probackup")
+                command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            if kwargs['edition'] in ['cert-standard', 'cert-enterprise']:
+                cmd = "apt-get install -y pgbouncer"
+                command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            if kwargs['edition'] == 'ee':
+                cmd = "apt-get install -y pg_repack%s%s" % (major, minor)
+                command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+
+        elif action == "upgrade":
+            if kwargs['edition'] in ["ee", "cert-enterprise"]:
+                pkg_name = "%s-enterprise%s.%s" % (kwargs['name'], major, minor)
+            elif kwargs['edition'] == "standard":
+                pkg_name = "postgrespro%s.%s" % (major, minor)
+            else:
+                pkg_name = kwargs['name'] + major + minor
+
+            for p in ALT_PACKAGES:
+                cmd = "apt-get install -y %s-%s" % (pkg_name, p)
+                command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
 
 def install_windows_console(installer):

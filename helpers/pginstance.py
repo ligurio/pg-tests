@@ -5,6 +5,8 @@ import re
 import sys
 import urllib
 
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+
 from helpers.pginstall import package_mgmt
 from helpers.pginstall import setup_repo
 from helpers.sql_helpers import pg_get_option
@@ -26,6 +28,18 @@ class PgInstance:
 
     def __init__(self, version, milestone, name, edition, skip_install, branch,
                  node_ip=None, cluster=False, windows=False):
+        """
+
+        :param version:
+        :param milestone:
+        :param name:
+        :param edition:
+        :param skip_install:
+        :param branch:
+        :param node_ip:
+        :param cluster:
+        :param windows:
+        """
         self.version = version
         self.milestone = milestone
         self.name = name
@@ -71,6 +85,17 @@ class PgInstance:
                 'milestone': milestone}
 
     def install_product_cluster(self, node_ip, name, version, edition, milestone, branch, skip_install_psql=False):
+        """
+
+        :param node_ip:
+        :param name:
+        :param version:
+        :param edition:
+        :param milestone:
+        :param branch:
+        :param skip_install_psql:
+        :return:
+        """
         if skip_install_psql:
             setup_repo(remote=True, host=node_ip, version=version, milestone=milestone, name=name,
                        edition=edition, branch=branch)
@@ -121,6 +146,13 @@ class PgInstance:
         return command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
     def setup_psql(self, version, remote=False, host=None):
+        """
+
+        :param version:
+        :param remote:
+        :param host:
+        :return:
+        """
 
         major = version.split(".")[0]
         minor = version.split(".")[1]
@@ -174,7 +206,7 @@ class PgInstance:
     def get_option(self, option):
         """ Get current value of a PostgreSQL option
         :param: option name
-        :return:
+        :return: string
         """
 
         return pg_get_option(self.connstring, option)
@@ -215,17 +247,29 @@ class PgInstance:
         cursor.close()
         conn.close()
 
-    def execute_sql_command(self, command,  connstring="host=localhost user=postgres"):
-        """ Execute sql command
+    def execute_sql(self,  sql_query, conn="host=localhost user=postgres"):
+        """Execute sql query
 
-        :param command:
-        :param connstring:
-        :return: list
+        :param conn: connection string
+        :param sql_query: string sql query
+        :return: list of tuples
         """
-        conn = psycopg2.connect(connstring)
+        conn = psycopg2.connect(conn)
+        conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
         cursor = conn.cursor()
-        cursor.execute(command)
-        return cursor.fetchall()
+        try:
+            cursor.execute(sql_query)
+        except psycopg2.Error as e:
+            print e.pgerror
+            raise Exception("SQL execution failed")
+        conn.commit()
+
+        response = None
+        if cursor.description is not None:
+            response = cursor.fetchall()
+        cursor.close()
+
+        return response
 
     def minor_upgrade(self, minor_version):
         """ Update to one version up
@@ -254,7 +298,6 @@ class PgInstance:
         # Install new packages
         # Do initdb if needed
 
-
     @property
     def get_current_minor_version(self):
         """ Get current minor version
@@ -272,19 +315,19 @@ class PgInstance:
         :param name: product name to upgrade
         :param version: version to upgrade
         :param edition: edition to upgrade
-        :param milestone:
-        :param branch:
-        :param windows:
-        :param skip_install_psql:
+        :param milestone: milestone to upgrade can be beta or nothing (release version)
+        :param branch: string package branch
+        :param windows: bool, if you need to install on windows set True
+        :param skip_install_psql: bool, if you not install psql set to True
         :return:
         """
         pass
 
     @property
     def get_instance_ip(self):
-        """
+        """Get instance ip
 
-        :return:
+        :return: string
         """
         return self.node_ip
 
@@ -306,6 +349,10 @@ class PgInstance:
 
     @property
     def get_version(self):
+        """Get postgresql version for postgrespro instance.
+         Postgrespro always inherited from postgresql
+        :return: string
+        """
         if self.cluster:
             connstring = "host=%s user=postgres" % self.node_ip
         else:
@@ -318,6 +365,11 @@ class PgInstance:
 
     @property
     def get_edition(self):
+        """Get postgrespro edition.
+        It can be standard, enterprise, standard-certified and enterprise-certified
+
+        :return: string
+        """
         if self.cluster:
             connstring = "host=%s user=postgres" % self.node_ip
         else:
@@ -329,9 +381,9 @@ class PgInstance:
         return self.pgpro_edition
 
     def get_available_minor_updates(self):
-        """ Check current minor version and get all available updates
+        """Check current minor version and get all available updates
 
-        :return:
+        :return: list with minor version
         """
         current_minor_version = self.minor_version
         minor_versions = self.get_pgpro_minor_versions(self.version, self.edition)
@@ -344,7 +396,7 @@ class PgInstance:
     def move_data_direcory(self, version, edition="standard", remote=False, host=None):
         """Move data directory from one folder to another
 
-        :return:
+        :return: int
         """
         major = "9"
         minor = version.split(".")[1]
@@ -366,7 +418,7 @@ class PgInstance:
         """
         Method returns PID of the postmaster process.
 
-        :returns: number with process identificator
+        :return: int number with process identificator
         """
         conn = psycopg2.connect(self.connstring)
         pid = conn.get_backend_pid()
@@ -393,11 +445,9 @@ class PgInstance:
         return minor_versions
 
     def get_pgpro_earliest_minor_version(self, major_version='9.6', edition="standard"):
-        """ Get earlies minor version
+        """ Get earliest minor version
         :return string with earliest minor version
         """
         versions = self.get_pgpro_minor_versions(major_version, edition)
         versions.sort()
         return versions[0]
-
-
