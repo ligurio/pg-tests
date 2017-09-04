@@ -71,6 +71,12 @@ def create_test_table(size, schema):
 
 
 def execute(conn, sql_query):
+    """Execute sql query
+
+    :param conn: psycopg2 connection object
+    :param sql_query:
+    :return: string
+    """
 
     conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
     cursor = conn.cursor()
@@ -91,7 +97,7 @@ def execute(conn, sql_query):
 
 def drop_test_table(conn_string):
     """Drop tables from schema public
-    :return:
+    :return: 0
     """
     conn = psycopg2.connect(conn_string)
     cursor = conn.cursor()
@@ -103,10 +109,12 @@ def drop_test_table(conn_string):
     conn.commit()
     conn.close()
     print("Test data was deleted")
+    return 0
 
 
 def pg_get_option(connstring, option):
     """ Get current value of a PostgreSQL option
+    :param: connstring connection string
     :param: option name
     :return:
     """
@@ -128,6 +136,7 @@ def pg_get_option(connstring, option):
 
 def pg_check_option(connstring, option):
     """ Check existence of a PostgreSQL option
+    :param: connstring string for connect to postgres
     :param: option name
     :return: False or True
     """
@@ -210,6 +219,14 @@ def pg_manage_psql(action, data_dir, version="9.6",  start_script=None, remote=F
 
 
 def pg_start_script_name(name, edition, version, distro):
+    """
+
+    :param name:
+    :param edition:
+    :param version:
+    :param distro:
+    :return:
+    """
 
     major = version.split(".")[0]
     minor = version.split(".")[1]
@@ -236,6 +253,12 @@ def pg_start_script_name(name, edition, version, distro):
 
 
 def pg_initdb(connstring, *params):
+    """
+
+    :param connstring:
+    :param params:
+    :return:
+    """
 
     data_dir = pg_get_option(connstring, "data_directory")
     pg_manage_psql("stop", data_dir)

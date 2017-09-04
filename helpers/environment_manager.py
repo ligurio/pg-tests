@@ -16,6 +16,12 @@ class Environment(object):
     CLUSTER_SETTING = WORK_DIR + gen_name("cluster") + ".json"
 
     def __init__(self, env_name, image_name, nodes_count=1):
+        """
+
+        :param env_name: string
+        :param image_name: string
+        :param nodes_count: int
+        """
         self.env_name = env_name
         self.cluster_name = "%s_%s" % (env_name, image_name)
         self.nodes_count = nodes_count
@@ -113,11 +119,20 @@ class Environment(object):
         os.remove(self.CLUSTER_SETTING)
 
     def get_cluster_config(self):
+        """Read from config file and return cluster config for current instance
+
+        :return: dict
+        """
         with open(self.CLUSTER_SETTING) as f:
             cluster_config = json.load(f)
             return cluster_config
 
     def get_cluster_config_from_file(self, file):
+        """Read cluster config from file
+
+        :param file: string
+        :return: dict with config from cluster
+        """
         with open(file) as f:
             cluster_config = json.load(f)
             return cluster_config

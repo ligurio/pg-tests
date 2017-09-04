@@ -37,6 +37,10 @@ def parse_connstring(connstring):
 
 
 def pg_bindir():
+    """Get path to postgresql(postgrespro) bin directory
+
+    :return: string path to bin directory
+    """
     distro = platform.linux_distribution()[0]
     try:
         pg_config_bin = os.environ['PG_CONFIG']
@@ -71,6 +75,10 @@ def pg_bindir():
 
 
 def pg_config_dir():
+    """Get path to pg_config utility
+
+    :return: string path to pg_config utility
+    """
     distro = platform.linux_distribution()[0]
     try:
         pg_config_bin = os.environ['PG_CONFIG']
@@ -90,6 +98,10 @@ def pg_config_dir():
 
 
 def rmdir(dirname):
+    """Delete directory
+
+    :param dirname: string path to dir
+    """
     for item in os.listdir(dirname):
         path = os.path.join(dirname, item)
         try:
@@ -102,6 +114,12 @@ def rmdir(dirname):
 
 
 def load_pgbench(connstring, params):
+    """
+
+    :param connstring: string with connection params
+    :param params:
+    :return: int exit code
+    """
 
     conn_dict = parse_connstring(connstring)
     conn_params = ["--host", conn_dict['host'], "--username", conn_dict['user']]

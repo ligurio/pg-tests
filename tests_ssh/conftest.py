@@ -61,12 +61,12 @@ def create_environment(request):
 @pytest.mark.usefixtures('create_environment')
 @pytest.fixture(scope='function')
 def install_postgres(request, create_environment):
-    version = request.config.getoption('--product_version')
-    name = request.config.getoption('--product_name')
-    edition = request.config.getoption('--product_edition')
-    product_info = " ".join([dist, name, edition, version])
-    tag_mark = pytest.allure.label(LabelType.TAG, product_info)
-    request.node.add_marker(tag_mark)
+    """Install postgres
+
+    :param request:
+    :param create_environment: object with Environment class
+    :return:
+    """
     if request.config.getoption('--config'):
         environment_info = create_env_info_from_config(request.node.name, request.config.getoption('--config'))
         cluster_name = request.node.name

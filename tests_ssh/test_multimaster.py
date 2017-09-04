@@ -120,9 +120,7 @@ class TestMultimaster():
     def test_upload_data_to_cluster(self, create_environment, install_postgres):
         """Scenario
 
-        :param create_environment:
-        :param install_postgres:
-        :return:
+
         """
         # Step 1
         cluster_name = create_environment.keys()[0]
