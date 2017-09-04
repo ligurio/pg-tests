@@ -4,28 +4,12 @@ import psycopg2
 import pytest
 import settings
 
-from allure_commons.types import LabelType
 
 from helpers.os_helpers import get_directory_size
 from helpers.os_helpers import get_postgres_process_pids
 from helpers.pginstall import delete_packages
 from helpers.sql_helpers import get_pgpro_info
 
-dist = ""
-if platform.system() == 'Linux':
-    dist = " ".join(platform.linux_distribution()[0:2])
-elif platform.system() == 'Windows':
-    dist = 'Windows'
-else:
-    print("Unknown Distro")
-
-version = pytest.config.getoption('--product_version')
-name = pytest.config.getoption('--product_name')
-edition = pytest.config.getoption('--product_edition')
-feature_name = "_".join(["BVT", dist, name, edition, version])
-
-
-@pytest.allure.feature(feature_name)
 @pytest.mark.bvt
 @pytest.mark.test_version
 @pytest.mark.usefixtures('install_postgres')
@@ -36,12 +20,6 @@ def test_version(request, install_postgres):
     2. Check PGPRO edition
     3. Check system default tables
     """
-    version = request.config.getoption('--product_version')
-    name = request.config.getoption('--product_name')
-    edition = request.config.getoption('--product_edition')
-    product_info = " ".join([dist, name, edition, version])
-    tag_mark = pytest.allure.label(LabelType.TAG, product_info)
-    request.node.add_marker(tag_mark)
     conn_string = "host='localhost' user='postgres' "
     conn = psycopg2.connect(conn_string)
     cursor = conn.cursor()
@@ -70,7 +48,6 @@ def test_version(request, install_postgres):
     # TODO add check pgpro_edition()
 
 
-@pytest.allure.feature(feature_name)
 @pytest.mark.bvt
 @pytest.mark.test_extensions
 @pytest.mark.usefixtures('install_postgres')
@@ -83,12 +60,6 @@ def test_extensions(request, install_postgres):
     4. Check that every extension write information about self in table pg_catalog.pg_extension
     5. Drop extension
     """
-    version = request.config.getoption('--product_version')
-    name = request.config.getoption('--product_name')
-    edition = request.config.getoption('--product_edition')
-    product_info = " ".join([dist, name, edition, version])
-    tag_mark = pytest.allure.label(LabelType.TAG, product_info)
-    request.node.add_marker(tag_mark)
     conn_string = "host='localhost' user='postgres' "
     conn = psycopg2.connect(conn_string)
     cursor = conn.cursor()
@@ -128,7 +99,6 @@ def test_extensions(request, install_postgres):
             conn.close()
 
 
-@pytest.allure.feature(feature_name)
 @pytest.mark.bvt
 @pytest.mark.test_plpython
 @pytest.mark.usefixtures('install_postgres')
@@ -142,12 +112,6 @@ def test_plpython(request, install_postgres):
     5. Drop function
     6. Drop extension
     """
-    version = request.config.getoption('--product_version')
-    name = request.config.getoption('--product_name')
-    edition = request.config.getoption('--product_edition')
-    product_info = " ".join([dist, name, edition, version])
-    tag_mark = pytest.allure.label(LabelType.TAG, product_info)
-    request.node.add_marker(tag_mark)
     # Step 1
     install_postgres.load_extension("plpython2u")
     fun = """CREATE FUNCTION py_test_function()
@@ -172,7 +136,6 @@ $$ LANGUAGE plpython2u;"""
     conn.close()
 
 
-@pytest.allure.feature(feature_name)
 @pytest.mark.bvt
 @pytest.mark.test_pltcl
 @pytest.mark.usefixtures('install_postgres')
@@ -186,12 +149,7 @@ def test_pltcl(request, install_postgres):
         5. Drop function
         6. Drop extension
         """
-    version = request.config.getoption('--product_version')
-    name = request.config.getoption('--product_name')
-    edition = request.config.getoption('--product_edition')
-    product_info = " ".join([dist, name, edition, version])
-    tag_mark = pytest.allure.label(LabelType.TAG, product_info)
-    request.node.add_marker(tag_mark)
+
     install_postgres.load_extension("pltcl")
     fun = """CREATE FUNCTION pltcl_test_function()
       RETURNS text
@@ -215,7 +173,6 @@ def test_pltcl(request, install_postgres):
     conn.close()
 
 
-@pytest.allure.feature(feature_name)
 @pytest.mark.bvt
 @pytest.mark.test_plperl
 @pytest.mark.usefixtures('install_postgres')
@@ -229,12 +186,6 @@ def test_plperl(request, install_postgres):
         5. Drop function
         6. Drop extension
         """
-    version = request.config.getoption('--product_version')
-    name = request.config.getoption('--product_name')
-    edition = request.config.getoption('--product_edition')
-    product_info = " ".join([dist, name, edition, version])
-    tag_mark = pytest.allure.label(LabelType.TAG, product_info)
-    request.node.add_marker(tag_mark)
     install_postgres.load_extension("plperl")
     fun = """CREATE FUNCTION plperl_test_function()
       RETURNS text
@@ -258,7 +209,6 @@ def test_plperl(request, install_postgres):
     conn.close()
 
 
-@pytest.allure.feature(feature_name)
 @pytest.mark.bvt
 @pytest.mark.test_plpgsql
 @pytest.mark.usefixtures('install_postgres')
@@ -270,12 +220,6 @@ def test_plpgsql(request, install_postgres):
         3. Check plpgsql function result
         4. Drop  plpgsql function
         """
-    version = request.config.getoption('--product_version')
-    name = request.config.getoption('--product_name')
-    edition = request.config.getoption('--product_edition')
-    product_info = " ".join([dist, name, edition, version])
-    tag_mark = pytest.allure.label(LabelType.TAG, product_info)
-    request.node.add_marker(tag_mark)
     fun = """CREATE OR REPLACE FUNCTION plpgsql_test_function()
     RETURNS text AS
 $$
@@ -302,7 +246,6 @@ LANGUAGE plpgsql """
     conn.close()
 
 
-@pytest.allure.feature(feature_name)
 @pytest.mark.bvt
 @pytest.mark.test_passwordcheck
 @pytest.mark.usefixtures('install_postgres')
@@ -317,12 +260,6 @@ def test_passwordcheck(install_postgres, request):
     :param request:
     :return:
     """
-    version = request.config.getoption('--product_version')
-    name = request.config.getoption('--product_name')
-    edition = request.config.getoption('--product_edition')
-    product_info = " ".join([dist, name, edition, version])
-    tag_mark = pytest.allure.label(LabelType.TAG, product_info)
-    request.node.add_marker(tag_mark)
     if request.config.getoption('--product_edition') != "cert-enterprise":
         pytest.skip("This test only for certified enterprise version.")
     # Step 1
@@ -343,7 +280,6 @@ def test_passwordcheck(install_postgres, request):
     conn.close()
 
 
-@pytest.allure.feature(feature_name)
 @pytest.mark.bvt
 @pytest.mark.test_delete_packages
 @pytest.mark.usefixtures('install_postgres')
@@ -359,9 +295,6 @@ def test_delete_packages(request, install_postgres):
     version = request.config.getoption('--product_version')
     name = request.config.getoption('--product_name')
     edition = request.config.getoption('--product_edition')
-    product_info = " ".join([dist, name, edition, version])
-    tag_mark = pytest.allure.label(LabelType.TAG, product_info)
-    request.node.add_marker(tag_mark)
     data_directory = install_postgres.get_option('data_directory')
     data_dir_size_before_delete_packages = get_directory_size(data_directory)
     pids = get_postgres_process_pids()
