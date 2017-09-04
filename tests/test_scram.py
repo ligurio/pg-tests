@@ -6,7 +6,6 @@ import random
 import string
 
 
-
 @pytest.mark.core_functional
 @pytest.mark.usefixtures('install_postgres')
 class TestScram():
