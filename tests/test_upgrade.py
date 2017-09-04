@@ -179,7 +179,7 @@ enabled=1
             #     cmd = "yum install -y %s-%s" % (pkg_name, "pg_probackup")
             #     command_executor(cmd)
         elif dist_info[0] in DEB_BASED and "ALT" not in dist_info[0]:
-            cmd = "apt-get install -y %s-%s" % ("postgrespro",  ".".join([major, minor]))
+            cmd = "apt-get install -y %s-%s" % ("postgrespro", ".".join([major, minor]))
             command_executor(cmd)
             cmd = "apt-get install -y libpq-dev"
             command_executor(cmd)

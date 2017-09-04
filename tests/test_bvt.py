@@ -10,6 +10,7 @@ from helpers.os_helpers import get_postgres_process_pids
 from helpers.pginstall import delete_packages
 from helpers.sql_helpers import get_pgpro_info
 
+
 @pytest.mark.bvt
 @pytest.mark.test_version
 @pytest.mark.usefixtures('install_postgres')

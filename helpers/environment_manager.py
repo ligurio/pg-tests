@@ -51,9 +51,9 @@ class Environment(object):
                 node_name = gen_name(self.image_name)
                 node_info = create_env(self.image_name, node_name)
                 self.env_info[cluster_name]['nodes'].append({"domname": node_name,
-                                                        "ip": node_info[0],
-                                                        "image_path": node_info[1],
-                                                        "xml_desc": node_info[2]})
+                                                             "ip": node_info[0],
+                                                             "image_path": node_info[1],
+                                                             "xml_desc": node_info[2]})
                 host_record = node_info[0] + ' ' + node_name + '\n'
                 with open("/etc/hosts", "a") as hosts:
                     hosts.write(host_record)

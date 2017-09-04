@@ -247,7 +247,7 @@ class PgInstance:
         cursor.close()
         conn.close()
 
-    def execute_sql(self,  sql_query, conn="host=localhost user=postgres"):
+    def execute_sql(self, sql_query, conn="host=localhost user=postgres"):
         """Execute sql query
 
         :param conn: connection string
@@ -304,7 +304,7 @@ class PgInstance:
 
         :return:
         """
-        self.minor_version = self.execute_sql_command("SELECT pgpro_version()")[0][0].split()[1]
+        self.minor_version = self.execute_sql("SELECT pgpro_version()")[0][0].split()[1]
         return self.minor_version
 
     # TODO add editing repo file for update
@@ -391,7 +391,7 @@ class PgInstance:
         for version in minor_versions:
             if current_minor_version in version:
                 position = minor_versions.index(version)
-        return minor_versions[position+1:]
+        return minor_versions[position + 1:]
 
     def move_data_direcory(self, version, edition="standard", remote=False, host=None):
         """Move data directory from one folder to another

@@ -188,7 +188,7 @@ def pg_set_option(connstring, option, value):
         return pg_manage_psql("restart", pg_get_option(connstring, 'data_directory'))
 
 
-def pg_manage_psql(action, data_dir, version="9.6",  start_script=None, remote=False, host=None):
+def pg_manage_psql(action, data_dir, version="9.6", start_script=None, remote=False, host=None):
         """ Manage Postgres instance
         :param action: start, restart, stop etc
         :param init: Initialization before a first start
