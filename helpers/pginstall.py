@@ -87,7 +87,7 @@ def generate_repo_info(distro, osversion, action="install", **kwargs):
         elif kwargs['edition'] == "cert-standard":
             product_dir = "pgpro-standard-9.6.3.1-cert/repo"
         elif kwargs['edition'] == "cert-enterprise":
-            product_dir = "pgpro-enterprise-9.6.4.1-cert/repo"
+            product_dir = "pgpro-enterprise-9.6.5.1-cert/repo"
         if kwargs['milestone']:
             product_dir = product_dir + "-" + kwargs['milestone']
         gpg_key_url = "https://repo.postgrespro.ru/pgpro-%s/keys/GPG-KEY-POSTGRESPRO" % kwargs['version']
