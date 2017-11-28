@@ -50,11 +50,11 @@ def list_images():
             fp = os.path.splitext(f)
             if fp[1] == '.qcow2':
                 names.append(fp[0])
-        return names
+        return sorted(names)
     images = re.findall('href=[\'"]?([^\'" >]+)\.qcow2', page)
     for i in images:
         names.append(i)
-    return names
+    return sorted(names)
 
 
 def lookupIPbyMac(conn, mac):
