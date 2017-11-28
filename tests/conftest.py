@@ -1,4 +1,3 @@
-import psycopg2
 import glob
 import platform
 import pytest
@@ -10,10 +9,6 @@ import subprocess
 from helpers.os_helpers import delete_data_directory
 from helpers.pginstall import delete_packages
 from helpers.pginstall import delete_repo
-from helpers.pginstance import PgInstance
-from helpers.sql_helpers import drop_test_table
-from helpers.sql_helpers import create_test_table
-from helpers.sql_helpers import execute
 from helpers.os_helpers import download_file
 from tests.settings import TMP_DIR
 
@@ -65,6 +60,9 @@ def install_postgres(request):
     command line variables from pytest_addoption() method
     :return:
     """
+    from helpers.pginstance import PgInstance
+    from helpers.sql_helpers import drop_test_table
+
     skip_install = request.config.getoption("--skip_install")
     version = request.config.getoption('--product_version')
     milestone = request.config.getoption('--product_milestone')
@@ -109,6 +107,10 @@ def create_table(request):
 
     https://www.cri.ensmp.fr/people/coelho/datafiller.html#directives_and_data_generators
     """
+
+    from helpers.sql_helpers import drop_test_table
+    from helpers.sql_helpers import create_test_table
+
     schema, size = request.param
 
     def delete_tables():
@@ -125,6 +127,9 @@ def populate_imdb(request):
 
     http://www.imdb.com/interfaces
     """
+
+    import psycopg2
+    from helpers.sql_helpers import execute
 
     CONN_STRING = "host='localhost' user='postgres'"
 
@@ -208,6 +213,8 @@ def populate_imdb(request):
 def populate_tpch(request):
     """ This method setup tables for TPC-H benchmark.
     """
+
+    from helpers.sql_helpers import execute
 
     CONN_STRING = "host='localhost' user='postgres'"
 

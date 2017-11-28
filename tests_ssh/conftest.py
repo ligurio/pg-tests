@@ -5,7 +5,6 @@ from allure_commons.types import LabelType
 
 from helpers.utils import create_env_info_from_config
 from helpers.environment_manager import Environment
-from helpers.pginstance import PgInstance
 
 if platform.system() == 'Linux':
     dist = " ".join(platform.linux_distribution()[0:2])
@@ -67,6 +66,7 @@ def install_postgres(request, create_environment):
     :param create_environment: object with Environment class
     :return:
     """
+    from helpers.pginstance import PgInstance
     if request.config.getoption('--config'):
         environment_info = create_env_info_from_config(request.node.name, request.config.getoption('--config'))
         cluster_name = request.node.name
