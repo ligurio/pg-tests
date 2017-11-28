@@ -1,0 +1,223 @@
+---
+- hosts: all
+  gather_facts: true
+  vars:
+    win_path: C:\Users\test\Downloads\
+    pg_tests_source: "../"
+
+  tasks:
+
+  - name: Update repos ALT
+    command: apt-get update
+    when: ansible_distribution == 'ALT'
+    become_method: su
+    become: true
+    tags:
+    - skip_ansible_lint
+
+  - name: Wait for automatic system updates
+    shell: while sudo fuser /var/lib/dpkg/lock >/dev/null 2>&1; do sleep 2; done;
+    when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+    become_method: su
+    become: true
+
+  - name: install required packages (YUM)
+    yum: name={{ item }} state=present update_cache=yes
+    with_items:
+        - gcc
+        - python-devel
+    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "yum"
+    become_method: su
+    become: true
+
+  - name: install required packages (APT)
+    apt: name={{ item }} state=present update_cache=yes
+    with_items:
+        - gcc
+        - python-dev
+    when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+    become_method: su
+    become: true
+
+  - name: install required packages (urpmi)
+    urpmi: name={{ item }} state=present update_cache=yes
+    with_items:
+        - gcc
+        - lib64python-devel
+    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "urpmi"
+    become_method: su
+    become: true
+
+  - name: install required packages (Zypper)
+    zypper: name={{ item }} state=present update_cache=yes force=yes
+    with_items:
+        - gcc
+        - python-devel
+    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "zypper"
+    become_method: su
+    become: true
+
+  - name: set up ssh authorized_keys
+    authorized_key: user=test key="{{ item }}" state=present exclusive=yes
+    when: ansible_os_family != "Windows"
+    with_file:
+    - authorized_keys
+
+  - name: download pip
+    get_url:
+      url: https://bootstrap.pypa.io/get-pip.py
+      dest: /tmp
+      validate_certs: no
+    when: ansible_os_family != "Windows"
+
+  - name: install pip
+    command: "python /tmp/get-pip.py"
+    become_method: su
+    become: true
+    tags:
+    - skip_ansible_lint
+    when: ansible_os_family != "Windows"
+
+  - name: delete get-pip.py
+    file: state=absent path=/tmp/get-pip.py
+    when: ansible_os_family != "Windows"
+
+  - name: set http.sslVerify to false in a git config
+    git_config: name=http.sslVerify scope=global value="false"
+    when: ansible_distribution == "\"astra linux se\"" or ansible_distribution == "\"astralinuxse\"" or ansible_distribution == "\"AstraLinuxSE\""
+
+  - name: copy tests
+    copy: src="{{ pg_tests_source }}" dest=/home/test/pg-tests
+    tags:
+    - skip_ansible_lint
+    when: ansible_os_family != "Windows"
+
+  - name: install required pip modules
+    pip:
+      requirements: "/home/test/pg-tests/static/requirements-min.txt"
+    become_method: su
+    become: true
+    when: ansible_os_family != "Windows"
+
+  - name: make sure we have a 'wheel' group
+    group:
+      name: wheel
+      state: present
+    become_method: su
+    become: true
+    when: ansible_os_family != "Windows"
+
+  - name: allow 'wheel' group to have passwordless become_method
+    lineinfile:
+      dest: /etc/sudoers
+      state: present
+      regexp: '^%wheel'
+      line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+    become_method: su
+    become: true
+    when: ansible_os_family != "Windows"
+
+  # see https://bugzilla.redhat.com/show_bug.cgi?id=1020147
+  - name: comment out requiretty option in /etc/sudoers
+    lineinfile:
+      dest: /etc/sudoers
+      regexp: '^Defaults    requiretty'
+      line: '#Defaults    requiretty'
+      state: present
+    when: ansible_os_family == "RedHat"
+    become_method: su
+    become: true
+
+  - name: change secure path in sudoers
+    lineinfile:
+      dest: /etc/sudoers
+      regexp: '^Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin'
+      line: 'Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin'
+      state: present
+    when:
+      - ansible_os_family != "Windows"
+      - ansible_distribution != "ALT"
+    become_method: su
+    become: true
+
+  - name: add user 'test' to the 'wheel' group
+    user:
+      name: "test"
+      groups: wheel
+      append: yes
+    become_method: su
+    become: true
+    when: ansible_os_family != "Windows"
+
+  - name: coredump handling
+    pam_limits: domain={{ item }} limit_type=soft limit_item=core value=unlimited backup=yes
+    with_items:
+      - test
+      - postgres
+    become_method: su
+    become: true
+    when: ansible_os_family != "Windows"
+
+  - name: make a directory for coredumps
+    file: path="/home/test/coredumps" state=directory
+    when: ansible_os_family != "Windows"
+
+  - name: remove unknown keys from sysctl.conf
+    sysctl: name={{ item }} state=absent reload=no
+    with_items:
+        - net.bridge.bridge-nf-call-arptables
+        - net.bridge.bridge-nf-call-iptables
+        - net.bridge.bridge-nf-call-ip6tables
+    become_method: su
+    become: true
+    when: ansible_os_family == "GosLinux" or ansible_os_family == "ROSA"
+
+  - name: change coredump filename pattern
+    sysctl: name="kernel.core_pattern" value="/home/test/coredumps/core-%e-%p-%t" sysctl_set=yes state=present
+    become_method: su
+    become: true
+    when:
+      - ansible_os_family != "Windows"
+      - ansible_os_family != "МСВСфера"
+
+  - name: windows - download git
+    when: ansible_os_family == "Windows"
+    with_items:
+        - { win_url: "https://github.com/git-for-windows/git/releases/download/v2.11.0.windows.3/Git-2.11.0.3-64-bit.exe", win_dest: 'Git-2.11.0.3-64-bit.exe' }
+        - { win_url: "https://www.python.org/ftp/python/2.7.13/python-2.7.13.amd64.msi", win_dest: 'python2-7-13.amd64.msi' }
+        - { win_url: "https://bootstrap.pypa.io/get-pip.py", win_dest: 'get-pip.py' }
+    win_get_url:
+      url: '{{ item.win_url }}'
+      dest: '{{ win_path }}{{ item.win_dest }}'
+
+  - name: windows - install git
+    when: ansible_os_family == "Windows"
+    win_shell: '{{ win_path }}Git-2.11.0.3-64-bit.exe /VERYSILENT'
+
+  - name: windows - install python
+    when: ansible_os_family == "Windows"
+    win_msi:
+      path: '{{ win_path }}python2-7-13.amd64.msi'
+      wait: true
+
+  - name: windows - install pip
+    when: ansible_os_family == "Windows"
+    win_shell: 'C:\Python27\python.exe {{ win_path }}get-pip.py'
+
+  - name: windows - copy tests
+    when: ansible_os_family == "Windows"
+    win_copy: src="{{ pg_tests_source }}" dest=C:\Users\test\pg-tests
+
+  - name: windows - install libraries
+    when: ansible_os_family == "Windows"
+    win_shell: 'C:\Python27\Scripts\pip.exe install -r C:\Users\test\pg-tests\static\requirements-min.txt'
+
+  - name: windows - remove pip, git, python installers
+    when: ansible_os_family == "Windows"
+    with_items:
+        - { win_dest: "Git-2.11.0.3-64-bit.exe" }
+        - { win_dest: "python2-7-13.amd64.msi" }
+        - { win_dest: "get-pip.py" }
+    win_file:
+      path: '{{ win_path }}{{ item.win_dest }}'
+      state: absent
