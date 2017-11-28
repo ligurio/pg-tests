@@ -252,7 +252,7 @@ def export_results(domname, domipaddress, reportname, operating_system=None, pro
                    product_version=None, product_edition=None, tests=None):
     if not os.path.exists('reports'):
         os.makedirs('reports')
-    allure_reports_dir = "/var/www/html/%s/%s/%s/%s/%s" % (time.strftime("/%Y/%m/%d"), product_name,
+    allure_reports_dir = "reports/allure_reports/%s/%s/%s/%s/%s" % (time.strftime("/%Y/%m/%d"), product_name,
                                                            product_version, product_edition, operating_system)
     if not os.path.exists(allure_reports_dir):
         os.makedirs(allure_reports_dir)
