@@ -180,10 +180,17 @@ def setup_env(domipaddress, domname):
     :param domname str: virtual machine name
     :return: int: 0 if all OK and 1 if not
     """
-    try:
-        os.remove(os.path.join(os.environ.get("HOME"), '.ssh/known_hosts'))
-    except OSError:
-        pass
+
+    retcode = call("ssh-keygen -R " + domname, shell=True)
+    if retcode != 0:
+        print "Removing old ssh-key for %s failed." % domname
+        return 1
+
+    retcode = call("ssh-keygen -R " + domipaddress, shell=True)
+    if retcode != 0:
+        print "Removing old ssh-key for %s failed." % domipaddress
+        return 1
+
     shutil.copyfile("/etc/hosts.bckp", "/etc/hosts")
     host_record = domipaddress + ' ' + domname + '\n'
     with open("/etc/hosts", "a") as hosts:
