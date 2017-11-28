@@ -191,11 +191,6 @@ def setup_env(domipaddress, domname):
         print "Removing old ssh-key for %s failed." % domipaddress
         return 1
 
-    shutil.copyfile("/etc/hosts.bckp", "/etc/hosts")
-    host_record = domipaddress + ' ' + domname + '\n'
-    with open("/etc/hosts", "a") as hosts:
-        hosts.write(host_record)
-
     if domname[0:3] != 'win':
         inv = ANSIBLE_INVENTORY % (domname, domipaddress, REMOTE_ROOT_PASSWORD, REMOTE_PASSWORD, REMOTE_LOGIN)
         ansible_cmd = ANSIBLE_CMD % (ANSIBLE_PLAYBOOK, "paramiko", domname)
