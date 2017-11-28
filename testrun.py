@@ -136,7 +136,7 @@ def create_env(name, domname):
                   <devices>
                     <emulator>%s</emulator>
                     <disk type='file' device='disk'>
-                      <driver name='qemu' type='qcow2' cache='none'/>
+                      <driver name='qemu' type='qcow2' cache='unsafe'/>
                       <source file='%s'/>
                       <target dev='vda' bus='virtio'/>
                     </disk>
