@@ -148,7 +148,7 @@ python get-pip.py
 	Debian-based: apt install -y libssl-dev gcc
 	RPM-based: yum install -y openssl-devel gcc
 ```
-- установить Ansible и модули для него: ```pip install ansible pywinrm paramiko```
+- установить Ansible и модули для него: ```sudo pip install ansible pywinrm paramiko```
 - если для запуска ВМ скрипт не найдет шаблон ВМ, то он его загрузит, но можно
 заранее загрузить все шаблоны виртуальных машин. Например так: ```wget -np -nd
 -A qcow2 -r -l 1 http://webdav.l.postgrespro.ru/DIST/vm-images/test/```
