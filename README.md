@@ -154,9 +154,9 @@ python get-pip.py
 -A qcow2 -r -l 1 http://webdav.l.postgrespro.ru/DIST/vm-images/test/```
 - для доступа по SSH ключам в гостевые ОС нужно скопировать ключи из репозитория:
 ```
-	cp static/id_rsa ~/.ssh/id_rsa.pg
+	cp static/id_rsa ~/.ssh/id_rsa.pg-tests
 	cat static/authorized_keys >> ~/.ssh/authorized_keys
-	chmod 700 ~/.ssh/id_rsa
+	chmod 700 ~/.ssh/id_rsa.pg-tests
 ```
 и добавить их вместе с полезными опциями в конфиг ~/.ssh/config:
 ```
@@ -169,7 +169,7 @@ python get-pip.py
 	Host *
         User							test
         UseRoaming=no
-        IdentityFile                    ~/.ssh/id_rsa.pg
+        IdentityFile                    ~/.ssh/id_rsa.pg-tests
 ```
 
 ### Настройки ОС для тестирования
