@@ -43,7 +43,14 @@ REPORT_SERVER_URL = 'http://testrep.l.postgrespro.ru/'
 
 def list_images():
     names = []
-    page = urllib.urlopen(IMAGE_BASE_URL).read()
+    try:
+        page = urllib.urlopen(IMAGE_BASE_URL).read()
+    except IOError:
+        for f in os.listdir(TEMPLATE_DIR):
+            fp = os.path.splitext(f)
+            if fp[1] == '.qcow2':
+                names.append(fp[0])
+        return names
     images = re.findall('href=[\'"]?([^\'" >]+)\.qcow2', page)
     for i in images:
         names.append(i)
