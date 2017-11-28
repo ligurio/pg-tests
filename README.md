@@ -174,7 +174,7 @@ python get-pip.py
 
 ### Настройки ОС для тестирования
 
-Все необходимые настройки выполняются сценарием для Ansible в static/playbooks_prep_env.yml,
+Все необходимые настройки выполняются сценарием для Ansible в static/playbook-prepare-env.yml,
 который запускается скриптом testrun.py перед запуском теста. Но можно запустить и вручную:
 ```
 $ cat static/inventory
