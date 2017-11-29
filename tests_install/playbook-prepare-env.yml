@@ -63,38 +63,31 @@
     with_file:
     - ../static/authorized_keys
 
-  - name: download pip
-    get_url:
-      url: https://bootstrap.pypa.io/get-pip.py
-      dest: /tmp
-      validate_certs: no
+  - name: set http.sslVerify to false in a git config
+    git_config: name=http.sslVerify scope=global value="false"
+    when: ansible_distribution == "\"astra linux se\"" or ansible_distribution == "\"astralinuxse\"" or ansible_distribution == "\"AstraLinuxSE\""
+
+  - name: copy tests payload
+    copy:
+      src:  /tmp/pg-tests.tgz
+      dest: /home/test/
+    when: ansible_os_family != "Windows"
+
+  - name: extract tests
+    shell: "tar xf /home/test/pg-tests.tgz -C /home/test/"
     when: ansible_os_family != "Windows"
 
   - name: install pip
-    command: "python /tmp/get-pip.py"
+    command: "python /home/test/pg-tests/get-pip.py"
     become_method: su
     become: true
     tags:
     - skip_ansible_lint
     when: ansible_os_family != "Windows"
 
-  - name: delete get-pip.py
-    file: state=absent path=/tmp/get-pip.py
-    when: ansible_os_family != "Windows"
-
-  - name: set http.sslVerify to false in a git config
-    git_config: name=http.sslVerify scope=global value="false"
-    when: ansible_distribution == "\"astra linux se\"" or ansible_distribution == "\"astralinuxse\"" or ansible_distribution == "\"AstraLinuxSE\""
-
-  - name: copy tests
-    copy: src="{{ pg_tests_source }}" dest=/home/test/pg-tests
-    tags:
-    - skip_ansible_lint
-    when: ansible_os_family != "Windows"
-
   - name: install required pip modules
     pip:
-      requirements: "/home/test/pg-tests/static/requirements-min.txt"
+      requirements: "/home/test/pg-tests/tests_install/requirements.txt"
     become_method: su
     become: true
     when: ansible_os_family != "Windows"

@@ -13,6 +13,7 @@ import sys
 import time
 import urllib
 import winrm
+import tempfile
 from subprocess import call
 
 from helpers.utils import copy_file, copy_file_win, exec_command_win
@@ -39,6 +40,8 @@ ANSIBLE_INVENTORY_WIN = "%s ansible_host=%s \
                     ansible_port=5985  \
                     ansible_connection=winrm \n"
 REPORT_SERVER_URL = 'http://testrep.l.postgrespro.ru/'
+TESTS_PAYLOAD_TAR = '/tmp/pg-tests.tgz'
+TESTS_PAYLOAD_ZIP = '/tmp/pg-tests.zip'
 
 
 def list_images():
@@ -104,6 +107,29 @@ def create_image(domname, name):
         print "I/O error({0}): {1}".format(e.errno, e.strerror)
 
     return domimage
+
+
+def prepare_payload():
+    tempdir = tempfile.mkdtemp()
+    pgtd = os.path.join(tempdir, 'pg-tests')
+    shutil.copytree('.', pgtd, ignore=shutil.ignore_patterns(('^.git')))
+    retcode = call("wget -q https://bootstrap.pypa.io/get-pip.py", cwd=pgtd, shell=True)
+    if retcode != 0:
+        raise Exception("Downloading get-pip failed.")
+
+    if os.path.exists(TESTS_PAYLOAD_ZIP):
+        os.remove(TESTS_PAYLOAD_ZIP)
+    retcode = call("zip -q -r {0} pg-tests".format(TESTS_PAYLOAD_ZIP),
+                   cwd=tempdir, shell=True)
+    if retcode != 0:
+        raise Exception("Preparing zip payload failed.")
+    if os.path.exists(TESTS_PAYLOAD_TAR):
+        os.remove(TESTS_PAYLOAD_TAR)
+    retcode = call("tar -czf {0} pg-tests".format(TESTS_PAYLOAD_TAR),
+                   cwd=tempdir, shell=True)
+    if retcode != 0:
+        raise Exception("Preparing tar payload failed.")
+    shutil.rmtree(tempdir)
 
 
 def create_env(name, domname):
@@ -368,6 +394,7 @@ def main():
         print "Test(s) '%s' is not found." % args.run_tests
         sys.exit(1)
     tests_dir = args.run_tests if os.path.isdir(args.run_tests) else os.path.dirname(args.run_tests)
+    prepare_payload()
 
     targets = target.split(',')
     for t in targets:
