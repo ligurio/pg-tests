@@ -45,7 +45,7 @@
 
 --export – сохранять ли результаты тестирования в виде отчета
 
---tests – файл тестов, которые будут выполнены (опциональный параметр, если не задан будут выполнены все тесты из каталога /tests)
+--test – имена тестов, которые будут выполнены (опциональный параметр, если не задан, будут выполнены все тесты из каталога tests/)
 
 ## Функции скрипта testrun.py
 
@@ -174,11 +174,11 @@ python get-pip.py
 
 ### Настройки ОС для тестирования
 
-Все необходимые настройки выполняются сценарием для Ansible в static/playbook-prepare-env.yml,
+Все необходимые настройки выполняются сценарием для Ansible в tests/playbook-prepare-env.yml,
 который запускается скриптом testrun.py перед запуском теста. Но можно запустить и вручную:
 ```
 $ cat static/inventory
 ubuntu1604 ansible_host=127.0.0.1 ansible_become_pass=TestRoot1 ansible_ssh_pass=TestPass1 ansible_user=test ansible_become_user=root
-$ ansible-playbook static/playbook-prepare-env.yml -i static/inventory -c paramiko --limit ubuntu1604
+$ ansible-playbook tests/playbook-prepare-env.yml -i static/inventory -c paramiko --limit ubuntu1604
 $ ansible ubuntu1604 -m setup -i static/inventory -c paramiko
 ```
