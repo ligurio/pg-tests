@@ -2,123 +2,14 @@
 - hosts: all
   gather_facts: true
   vars:
-   win_path: C:\Users\test\Downloads\
+    win_path: C:\Users\test\Downloads\
+    pg_tests_source: "../"
 
   tasks:
-
-  - name: subscribe to RHSM
-    redhat_subscription: state=present username=v.wagner@postgrespro.ru password=thuch5Zeik autosubscribe=true force_register=yes
-    become_method: su
-    become: true
-    when: ansible_distribution == "RedHat"
-
-  - name: Remove beta repository RHEL 7 (and clean up left-over metadata)
-    yum_repository:
-       name: rhel-7-server-rt-beta-rpms
-       state: absent
-    notify: yum-clean-metadata
-    become_method: su
-    become: true
-    when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "7"
-
-  - name: Enable optional repo RHEL7
-    command: subscription-manager repos --enable=rhel-7-server-optional-rpms
-    become_method: su
-    become: true
-    when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "7"
-
-  - name: install required packages (YUM)
-    yum: name={{ item }} state=present update_cache=yes
-    with_items:
-        - git
-        - gcc
-        - python-devel
-        - libselinux-python
-        - python-psycopg2
-        - tkinter
-    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "yum"
-    become_method: su
-    become: true
-
-  # TODO: move this to Packer post-install script
-  - name: add Astra Linux 1.4 remote repository
-    apt_repository: repo="deb http://webdav.l.postgrespro.ru/DIST/pool/astra-1.4-smolensk-{{ item }} smolensk main non-free contrib" state=present
-    with_items:
-        - install
-        - developer
-    when: ansible_distribution == "\"astra linux se\"" and ansible_distribution_version == "1.4"
-    become_method: su
-    become: true
-
-  # TODO: move this to Packer post-install script
-  - name: add Astra Linux 1.5 remote repository
-    apt_repository: repo="deb http://webdav.l.postgrespro.ru/DIST/pool/astra-1.5-smolensk-{{ item }} smolensk main non-free contrib" state=present
-    with_items:
-        - install
-        - developer
-    when: ansible_distribution == "\"astralinuxse\"" and ansible_distribution_version == "1.5"
-    become_method: su
-    become: true
-
-  # TODO: move this to Packer post-install script
-  - name: remove cdrom repository
-    file: state=absent path={{ item }}
-    with_items:
-        - /etc/apt/sources.list_astra
-        - /etc/apt/sources.list
-    when: ansible_distribution == "\"astra linux se\"" or ansible_distribution == "\"astralinuxse\""
-    become_method: su
-    become: true
-
-  - name: install required packages (APT)
-    apt: name={{ item }} state=present update_cache=yes
-    with_items:
-        - git
-        - gcc-4.7-base
-        - python-dev
-        - python-selinux
-        - python-psycopg2
-        - python-tk
-#        - libpq-dev
-    when: ansible_distribution == "\"astra linux se\"" or ansible_distribution == "\"astralinuxse\""
-    become_method: su
-    become: true
 
   - name: Update repos ALT
     command: apt-get update
     when: ansible_distribution == 'ALT'
-    become_method: su
-    become: true
-    tags:
-    - skip_ansible_lint
-
-  - name: install python module with APT support (ALTLinux)
-    command: apt-get install -y {{ item }}
-    with_items:
-        - git --fix-missing
-        - gcc4.5 --fix-missing
-        - python-dev --fix-missing
-        - python-module-setools --fix-missing
-        - python-module-psycopg2 --fix-missing
-        - libpq5.4-devel --fix-missing
-        - python-modules-tkinter --fix-missing
-    when: ansible_distribution == 'ALT' and ansible_distribution_major_version != '8'
-    become_method: su
-    become: true
-    tags:
-    - skip_ansible_lint
-
-  - name: install python module with APT support (ALTLinux 8)
-    command: apt-get install -y {{ item }}
-    with_items:
-        - git --fix-missing
-        - gcc4.5 --fix-missing
-        - python-dev --fix-missing
-        - python-module-setools --fix-missing
-        - python-module-psycopg2 --fix-missing
-        - libpq5.9-devel --fix-missing
-        - python-modules-tkinter --fix-missing
-    when: ansible_distribution == 'ALT' and ansible_distribution_major_version == '8'
     become_method: su
     become: true
     tags:
@@ -130,16 +21,20 @@
     become_method: su
     become: true
 
+  - name: install required packages (YUM)
+    yum: name={{ item }} state=present update_cache=yes
+    with_items:
+        - gcc
+        - python-devel
+    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "yum"
+    become_method: su
+    become: true
+
   - name: install required packages (APT)
     apt: name={{ item }} state=present update_cache=yes
     with_items:
-        - git
         - gcc
         - python-dev
-        - python-selinux
-        - python-psycopg2
-        - libpq-dev
-        - python-tk
     when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
     become_method: su
     become: true
@@ -147,11 +42,8 @@
   - name: install required packages (urpmi)
     urpmi: name={{ item }} state=present update_cache=yes
     with_items:
-        - git
         - gcc
-        - python-selinux
         - lib64python-devel
-        - tkinter
     when: ansible_os_family != "Windows" and ansible_pkg_mgr == "urpmi"
     become_method: su
     become: true
@@ -159,10 +51,8 @@
   - name: install required packages (Zypper)
     zypper: name={{ item }} state=present update_cache=yes force=yes
     with_items:
-        - git
         - gcc
         - python-devel
-        - python-selinux
     when: ansible_os_family != "Windows" and ansible_pkg_mgr == "zypper"
     become_method: su
     become: true
@@ -171,7 +61,7 @@
     authorized_key: user=test key="{{ item }}" state=present exclusive=yes
     when: ansible_os_family != "Windows"
     with_file:
-    - authorized_keys
+    - ../static/authorized_keys
 
   - name: download pip
     get_url:
@@ -196,41 +86,18 @@
     git_config: name=http.sslVerify scope=global value="false"
     when: ansible_distribution == "\"astra linux se\"" or ansible_distribution == "\"astralinuxse\"" or ansible_distribution == "\"AstraLinuxSE\""
 
-  - name: checkout latest version of tests
-    git: repo=https://git.postgrespro.ru/automation/pg-tests.git dest=/home/test/pg-tests
+  - name: copy tests
+    copy: src="{{ pg_tests_source }}" dest=/home/test/pg-tests
     tags:
     - skip_ansible_lint
     when: ansible_os_family != "Windows"
 
   - name: install required pip modules
     pip:
-      requirements: "/home/test/pg-tests/static/requirements.txt"
+      requirements: "/home/test/pg-tests/static/requirements-min.txt"
     become_method: su
     become: true
     when: ansible_os_family != "Windows"
-
-  - name: remove postgresql-devel (YUM)
-    yum: name={{ item }} state=absent
-    with_items:
-      - postgresql-devel
-      - postgresql
-    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "yum"
-    become_method: su
-    become: true
-
-  - name: remove libpq-dev (APT)
-    apt: name=libpq-dev state=absent
-    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "apt" and ansible_distribution != "ALT"
-    become_method: su
-    become: true
-
-  - name: set selinux to permissive
-    selinux: policy=targeted state=permissive
-    when: ansible_os_family != "Windows" and ansible_selinux == "Enabled"
-    #when: (ansible_distribution == "Ubuntu" and ansible_distribution_major_version == "15") or
-    #      (ansible_distribution == "Debian" and ansible_distribution_major_version == "7")
-    become_method: su
-    become: true
 
   - name: make sure we have a 'wheel' group
     group:
@@ -337,17 +204,13 @@
     when: ansible_os_family == "Windows"
     win_shell: 'C:\Python27\python.exe {{ win_path }}get-pip.py'
 
-  - name: windows - install pg-tests with git
+  - name: windows - copy tests
     when: ansible_os_family == "Windows"
-    win_shell: 'git clone https://git.postgrespro.ru/automation/pg-tests.git'
+    win_copy: src="{{ pg_tests_source }}" dest=C:\Users\test\pg-tests
 
   - name: windows - install libraries
     when: ansible_os_family == "Windows"
-    win_shell: 'C:\Python27\Scripts\pip.exe install -r C:\Users\test\pg-tests\static\requirements.txt'
-
-  - name: windows - install packages
-    when: ansible_os_family == "Windows"
-    win_shell: 'C:\Python27\Scripts\pip.exe install psycopg2'
+    win_shell: 'C:\Python27\Scripts\pip.exe install -r C:\Users\test\pg-tests\static\requirements-min.txt'
 
   - name: windows - remove pip, git, python installers
     when: ansible_os_family == "Windows"

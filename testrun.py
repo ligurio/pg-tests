@@ -26,7 +26,7 @@ IMAGE_BASE_URL = 'http://webdav.l.postgrespro.ru/DIST/vm-images/test/'
 TEMPLATE_DIR = '/pgpro/templates/'
 WORK_DIR = '/pgpro/test-envs/'
 ANSIBLE_CMD = "ansible-playbook %s -i static/inventory -c %s --limit %s"
-ANSIBLE_PLAYBOOK = 'static/playbook-prepare-env.yml'
+ANSIBLE_PLAYBOOK = 'playbook-prepare-env.yml'
 ANSIBLE_INVENTORY = "%s ansible_host=%s \
                     ansible_become_pass=%s \
                     ansible_ssh_pass=%s \
@@ -180,7 +180,7 @@ def create_env(name, domname):
     return domipaddress, domimage, xmldesc
 
 
-def setup_env(domipaddress, domname):
+def setup_env(domipaddress, domname, tests_dir):
     """Create ansible cmd and run ansible on virtual machine
 
     :param domipaddress str: ip address of virtual machine
@@ -200,10 +200,10 @@ def setup_env(domipaddress, domname):
 
     if domname[0:3] != 'win':
         inv = ANSIBLE_INVENTORY % (domname, domipaddress, REMOTE_ROOT_PASSWORD, REMOTE_PASSWORD, REMOTE_LOGIN)
-        ansible_cmd = ANSIBLE_CMD % (ANSIBLE_PLAYBOOK, "paramiko", domname)
+        ansible_cmd = ANSIBLE_CMD % (os.path.join(tests_dir, ANSIBLE_PLAYBOOK), "paramiko", domname)
     else:
         inv = ANSIBLE_INVENTORY_WIN % (domname, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD)
-        ansible_cmd = ANSIBLE_CMD % (ANSIBLE_PLAYBOOK, "winrm", domname)
+        ansible_cmd = ANSIBLE_CMD % (os.path.join(tests_dir, ANSIBLE_PLAYBOOK), "winrm", domname)
 
     with open("static/inventory", "w") as hosts:
         hosts.write(inv)
@@ -335,8 +335,8 @@ def main():
         epilog='Possible operating systems (images): %s' % ' '.join(names))
     parser.add_argument('--target', dest="target",
                         help='system(s) under test (image(s))')
-    parser.add_argument('--test', dest="run_tests", default="tests",
-                        help='tests to run (default: all)')
+    parser.add_argument('--test', dest="run_tests", default="tests/",
+                        help='tests to run (default: all in tests/)')
     parser.add_argument("--product_name", dest="product_name",
                         help="specify product name", action="store", default="postgrespro")
     parser.add_argument("--product_version", dest="product_version",
@@ -364,12 +364,17 @@ def main():
         print "No target name"
         sys.exit(1)
 
+    if not (os.path.exists(args.run_tests)):
+        print "Test(s) '%s' is not found." % args.run_tests
+        sys.exit(1)
+    tests_dir = args.run_tests if os.path.isdir(args.run_tests) else os.path.dirname(args.run_tests)
+
     targets = target.split(',')
     for t in targets:
         domname = gen_name(t)
         reportname = "report-" + time.strftime('%Y-%b-%d-%H-%M-%S')
         domipaddress = create_env(t, domname)[0]
-        setup_env_result = setup_env(domipaddress, domname)
+        setup_env_result = setup_env(domipaddress, domname, tests_dir)
         if setup_env_result == 0:
             print("Environment deployed without errors. Ready to run tests")
         else:
