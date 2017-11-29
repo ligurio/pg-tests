@@ -204,7 +204,7 @@
 
   - name: install required pip modules
     pip:
-      requirements: "/home/test/pg-tests/static/requirements.txt"
+      requirements: "/home/test/pg-tests/tests/requirements.txt"
     become_method: su
     become: true
     when: ansible_os_family != "Windows"
@@ -343,7 +343,7 @@
 
   - name: windows - install libraries
     when: ansible_os_family == "Windows"
-    win_shell: 'C:\Python27\Scripts\pip.exe install -r C:\Users\test\pg-tests\static\requirements.txt'
+    win_shell: 'C:\Python27\Scripts\pip.exe install -r C:\Users\test\pg-tests\tests\requirements.txt'
 
   - name: windows - install packages
     when: ansible_os_family == "Windows"
