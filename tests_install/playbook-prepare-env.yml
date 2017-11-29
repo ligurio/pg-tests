@@ -43,6 +43,7 @@
     with_items:
         - gcc
         - python-dev
+        - sudo
     when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
     become_method: su
     become: true
