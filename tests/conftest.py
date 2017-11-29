@@ -214,6 +214,7 @@ def populate_tpch(request):
     """ This method setup tables for TPC-H benchmark.
     """
 
+    import psycopg2
     from helpers.sql_helpers import execute
 
     CONN_STRING = "host='localhost' user='postgres'"
