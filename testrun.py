@@ -474,12 +474,12 @@ def main():
 
         if retcode != 0:
             reporturl = os.path.join(REPORT_SERVER_URL, reportname)
-            print("Test return code is not zero - %s. Please check logs in report: %s" % (retcode, reporturl))
+            print("Test return code (for target %s) is not zero - %s. "
+                  "Please check logs in report: %s" % (t, retcode, reporturl))
             print retcode, stdout, stderr
             sys.exit(1)
-        else:
-            print("Test execution finished without errors")
-            sys.exit(0)
+
+    print("Test execution for targets '%s' finished without errors" % targets)
 
 
 if __name__ == "__main__":
