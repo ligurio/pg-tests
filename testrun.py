@@ -88,7 +88,7 @@ def mac_address_generator():
 
 def create_image(domname, name):
 
-    domimage = WORK_DIR + domname + '.qcow2'
+    domimage = WORK_DIR + domname + '-overlay.qcow2'
     image_url = IMAGE_BASE_URL + name + '.qcow2'
     image_original = TEMPLATE_DIR + name + '.qcow2'
 
@@ -100,11 +100,11 @@ def create_image(domname, name):
 
     if not os.path.exists(WORK_DIR):
         os.makedirs(WORK_DIR)
-    print "Copy an original image to %s" % domimage
-    try:
-        shutil.copy(image_original, domimage)
-    except IOError as e:
-        print "I/O error({0}): {1}".format(e.errno, e.strerror)
+
+    retcode = call("qemu-img create -b %s -f qcow2 %s" %
+                   (image_original, domimage), shell=True)
+    if retcode != 0:
+        raise Exception("Could not create qemu image.")
 
     return domimage
 
@@ -370,7 +370,7 @@ def keep_env(domname, keep):
     else:
         if dom.destroy() < 0:
             print('Unable to destroy of %s' % domname)
-        domimage = WORK_DIR + domname + '.qcow2'
+        domimage = WORK_DIR + domname + '-overlay.qcow2'
         if os.path.exists(domimage):
             os.remove(domimage)
 
