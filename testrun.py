@@ -302,7 +302,7 @@ def make_test_cmd(domname, reportname, tests=None,
                                                                                                     pcmd, domname)
 
     if DEBUG:
-        cmd += "--verbose --tb=long --full-trace"
+        cmd += " --verbose --tb=long --full-trace"
 
     return cmd
 
