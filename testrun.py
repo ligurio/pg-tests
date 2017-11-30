@@ -379,6 +379,7 @@ def keep_env(domname, keep):
 
 def main():
 
+    start = time.time()
     names = list_images()
     parser = argparse.ArgumentParser(
         description='PostgreSQL regression tests run script.',
@@ -422,6 +423,8 @@ def main():
 
     targets = target.split(',')
     for t in targets:
+        print("Starting target %s..." % t)
+        target_start = time.time()
         domname = gen_name(t)
         reportname = "report-" + time.strftime('%Y-%b-%d-%H-%M-%S')
         domipaddress = create_env(t, domname)[0]
@@ -478,8 +481,13 @@ def main():
                   "Please check logs in report: %s" % (t, retcode, reporturl))
             print retcode, stdout, stderr
             sys.exit(1)
+        print("Target %s done in %s." %
+              (t, time.strftime("%H:%M:%S",
+                  time.gmtime(time.time() - target_start))))
 
-    print("Test execution for targets '%s' finished without errors" % targets)
+    print("Test execution for targets '%s' finished without errors in %s." %
+          (targets, time.strftime("%H:%M:%S",
+           time.gmtime(time.time() - start))))
 
 
 if __name__ == "__main__":
