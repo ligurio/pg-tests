@@ -109,13 +109,37 @@ def create_image(domname, name):
     return domimage
 
 
-def prepare_payload():
+def prepare_payload(tests_dir):
+    print("Preparing a payload for target VMs...")
     tempdir = tempfile.mkdtemp()
     pgtd = os.path.join(tempdir, 'pg-tests')
     shutil.copytree('.', pgtd, ignore=shutil.ignore_patterns(('^.git')))
     retcode = call("wget -q https://bootstrap.pypa.io/get-pip.py", cwd=pgtd, shell=True)
     if retcode != 0:
         raise Exception("Downloading get-pip failed.")
+    pgtdpp = os.path.join(pgtd, 'pip-packages')
+    os.makedirs(pgtdpp)
+    retcode = call("pip download -q -r %s" %
+                   os.path.abspath(os.path.join(tests_dir, "requirements.txt")),
+                   cwd=pgtdpp, shell=True)
+    if retcode != 0:
+        raise Exception("Downloading pip-requirements failed.")
+
+    retcode = call("pip download -q --no-deps --only-binary=:all:"
+                   " --platform manylinux1_x86_64 --python-version 27"
+                   " --implementation cp --abi cp27m  -r %s" %
+                   os.path.abspath(os.path.join(tests_dir, "requirements-bin.txt")),
+                   cwd=pgtdpp, shell=True)
+    if retcode != 0:
+        raise Exception("Downloading pip-requirements(27m) failed.")
+
+    retcode = call("pip download -q --no-deps --only-binary=:all:"
+                   " --platform manylinux1_x86_64 --python-version 27"
+                   " --implementation cp --abi cp27mu  -r %s" %
+                   os.path.abspath(os.path.join(tests_dir, "requirements-bin.txt")),
+                   cwd=pgtdpp, shell=True)
+    if retcode != 0:
+        raise Exception("Downloading pip-requirements(27mu) failed.")
 
     if os.path.exists(TESTS_PAYLOAD_ZIP):
         os.remove(TESTS_PAYLOAD_ZIP)
@@ -394,7 +418,7 @@ def main():
         print "Test(s) '%s' is not found." % args.run_tests
         sys.exit(1)
     tests_dir = args.run_tests if os.path.isdir(args.run_tests) else os.path.dirname(args.run_tests)
-    prepare_payload()
+    prepare_payload(tests_dir)
 
     targets = target.split(',')
     for t in targets:
