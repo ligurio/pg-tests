@@ -485,7 +485,7 @@ def main():
               (t, time.strftime("%H:%M:%S",
                   time.gmtime(time.time() - target_start))))
 
-    print("Test execution for targets '%s' finished without errors in %s." %
+    print("Test execution for targets %s finished without errors in %s." %
           (targets, time.strftime("%H:%M:%S",
            time.gmtime(time.time() - start))))
 
