@@ -88,7 +88,8 @@
     yum: name={{ item }} state=present update_cache=yes
     with_items:
         - libselinux-python
-    when: ansible_pkg_mgr == "yum" and ansible_selinux is defined and ansible_selinux != False
+    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "yum" and
+          ansible_selinux is defined and ansible_selinux != False
     become_method: su
     become: true
 
