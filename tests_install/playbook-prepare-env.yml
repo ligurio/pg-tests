@@ -42,7 +42,7 @@
     become_method: su
     become: true
 
-  - name: remove Astra Linux Orel stable repository
+  - name: add Astra Linux Orel stable repository
     apt_repository: repo="deb http://mirror.yandex.ru/astra/stable/orel/1.11/repository orel main contrib non-free" state=present
     when: ansible_distribution == 'Astra Linux (Orel)'
     become_method: su
