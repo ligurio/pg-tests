@@ -7,6 +7,27 @@
 
   tasks:
 
+  - name: subscribe to RHSM
+    redhat_subscription: state=present username=v.wagner@postgrespro.ru password=thuch5Zeik autosubscribe=true force_register=yes
+    become_method: su
+    become: true
+    when: ansible_distribution == "RedHat"
+
+  - name: Remove beta repository RHEL 7 (and clean up left-over metadata)
+    yum_repository:
+       name: rhel-7-server-rt-beta-rpms
+       state: absent
+    notify: yum-clean-metadata
+    become_method: su
+    become: true
+    when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "7"
+
+  - name: Enable optional repo RHEL7
+    command: subscription-manager repos --enable=rhel-7-server-optional-rpms
+    become_method: su
+    become: true
+    when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "7"
+
   - name: Update repos ALT
     command: apt-get update
     when: ansible_distribution == 'ALT'
