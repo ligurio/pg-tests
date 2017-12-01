@@ -54,6 +54,12 @@
     become_method: su
     become: true
 
+  - name: Scan cdroms for packages (Astra)
+    shell: apt-cdrom add && apt-get install -qq -y gcc python-dev || apt-get -qq -y -f install #To suppress "Media change: please insert the disc labeled" prompt
+    when: ansible_distribution == 'Astra Linux (Smolensk)'
+    become_method: su
+    become: true
+
   - name: install required packages (YUM)
     yum: name={{ item }} state=present update_cache=yes
     with_items:
@@ -88,7 +94,8 @@
         - gcc
         - python-dev
         - sudo
-    when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+    when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu' or
+          ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux')
     become_method: su
     become: true
 
