@@ -63,6 +63,17 @@
     become_method: su
     become: true
 
+  - name: fix repositories (МСВСфера)
+    shell: if /sbin/blkid /dev/cdrom; then
+             mkdir /media/MSVSphere_6.3_Server &&
+             mount /dev/cdrom /media/MSVSphere_6.3_Server &&
+             sed s/enabled=0/enabled=1/ -i /etc/yum.repos.d/install.repo;
+             sed s/enabled=1/enabled=0/ -i /etc/yum.repos.d/pgpro.repo;
+           fi
+    when: ansible_distribution == "МСВСфера"
+    become_method: su
+    become: true
+
   - name: install selinux required packages (YUM)
     yum: name={{ item }} state=present update_cache=yes
     with_items:
@@ -160,7 +171,7 @@
       regexp: '^Defaults    requiretty'
       line: '#Defaults    requiretty'
       state: present
-    when: ansible_os_family == "RedHat"
+    when: ansible_os_family == "RedHat" or ansible_os_family == "МСВСфера"
     become_method: su
     become: true
 
