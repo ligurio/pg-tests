@@ -23,13 +23,13 @@
 
 Запуск локальных тестов с использованием скрипта testrun.py:
 
-–h - помощь
+-h – помощь
 
 Опции, которые относятся к продукту
 
 --branch –  установка пакетов из бранчи  с указанием имени бранчи
 
- --product_name – имя продукта, доступные значения: postgresql, postgrespro
+--product_name – имя продукта, доступные значения: postgresql, postgrespro
 
 --product_edition – тип продукта, доступные значения: standard, ee, cert, certified-enterprise
 
@@ -63,7 +63,7 @@
 
 Поддерживаемые параметры:
 
- --product_name – имя продукта, доступные значения: postgresql, postgrespro
+--product_name – имя продукта, доступные значения: postgresql, postgrespro
 
 --product_edition – тип продукта, доступные значения: standard, ee, cert, certified-enterprise
 
@@ -94,7 +94,7 @@
 
 --target – операционная система, на которой будут запускаться тесты, невозможно использование с опцией config
 
- --product_name – имя продукта, доступные значения: postgresql, postgrespro
+--product_name – имя продукта, доступные значения: postgresql, postgrespro
 
 --product_edition – тип продукта, доступные значения: standard, ee, cert, certified-enterprise
 
@@ -118,7 +118,7 @@ root_login='root'
 root_password='password'
 
 
-## Системные и требования к окружению.
+## Системные требования к окружению
 
 Необходимо создать каталог /pgpro на диске. В данном каталоге будут хранится виртуальные машины используемые для запуска тестов.
 - пакеты для RPM-based дистрибутивов:
