@@ -7,6 +7,10 @@
 
   tasks:
 
+  - name: Debug message
+    debug:
+      msg: "System {{ inventory_hostname }} has distribution {{ ansible_distribution }}, os_family {{ ansible_os_family }}"
+
   - name: subscribe to RHSM
     redhat_subscription: state=present username=v.wagner@postgrespro.ru password=thuch5Zeik autosubscribe=true force_register=yes
     become_method: su
