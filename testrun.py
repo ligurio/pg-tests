@@ -14,6 +14,7 @@ import time
 import urllib
 import winrm
 import tempfile
+import glob
 from subprocess import call
 
 from helpers.utils import copy_file, copy_file_win, exec_command_win
@@ -175,6 +176,19 @@ def create_env(name, domname):
         network_driver = "e1000"
     else:
         network_driver = "virtio"
+    domisos = glob.glob(TEMPLATE_DIR + name + '*.iso')
+    cdroms = ""
+    cdromletter = "c"
+    for diso in sorted(domisos):
+        cdroms += """
+                    <disk type='file' device='cdrom'>
+                       <driver name='qemu' type='raw'/>
+                       <source file='%s'/>
+                       <target dev='hd%s' bus='ide'/>
+                    </disk>
+                    """ % (diso, cdromletter)
+        cdromletter = chr(ord(cdromletter) + 1)
+
     xmldesc = """<domain type='kvm'>
                   <name>%s</name>
                   <memory unit='GB'>1</memory>
@@ -197,6 +211,7 @@ def create_env(name, domname):
                       <source file='%s'/>
                       <target dev='vda' bus='virtio'/>
                     </disk>
+                    %s
                     <interface type='bridge'>
                       <mac address='%s'/>
                       <source bridge='virbr0'/>
@@ -207,7 +222,8 @@ def create_env(name, domname):
                     <graphics type='vnc' port='-1' listen='0.0.0.0'/>
                   </devices>
                 </domain>
-                """ % (domname, qemu_path, domimage, dommac, network_driver)
+                """ % (domname, qemu_path, domimage,
+                       cdroms, dommac, network_driver)
 
     dom = conn.createLinux(xmldesc, 0)
     if dom is None:
