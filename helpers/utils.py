@@ -1,6 +1,5 @@
 import ConfigParser
 import os
-import paramiko
 import platform
 import random
 import shlex
@@ -8,7 +7,6 @@ import shutil
 import socket
 import subprocess
 import sys
-import winrm
 
 from enum import Enum
 from time import sleep
@@ -73,6 +71,8 @@ def get_virt_ip():
 
 def copy_file(remote_path, local_path, hostname, dir=False, operating_system=None,
               product_name=None, product_version=None, product_edition=None, tests=None):
+    import paramiko
+
     transport = paramiko.Transport((hostname, SSH_PORT))
     transport.connect(username=REMOTE_LOGIN, password=REMOTE_PASSWORD)
     sftp = paramiko.SFTPClient.from_transport(transport)
@@ -119,6 +119,8 @@ def copy_file_win(reportname, domipaddress):
 
 
 def exec_command(cmd, hostname, login, password, skip_ret_code_check=False):
+
+    import paramiko
 
     buff_size = 1024
     stdout = ""
@@ -173,6 +175,8 @@ def exec_command_win(cmd, hostname, user, password, skip_ret_code_check=False):
     :param password:
     :return:
     """
+
+    import winrm
 
     p = winrm.Protocol(endpoint='http://' + hostname + ':5985/wsman', transport='plaintext',
                        username=user,
