@@ -113,6 +113,16 @@
     become_method: su
     become: true
 
+  - name: add extra repository (SUSE)
+    shell: if /sbin/blkid /dev/sr1; then
+              mkdir /tmp/disk1 &&
+              mount /dev/sr1 /tmp/disk1 &&
+              zypper addrepo /tmp/disk1/suse/x86_64/ disk1;
+           fi
+    when: ansible_os_family == 'Suse'
+    become_method: su
+    become: true
+
   - name: install required packages (Zypper)
     zypper: name={{ item }} state=present update_cache=yes force=yes
     with_items:
@@ -149,6 +159,14 @@
     tags:
     - skip_ansible_lint
     when: ansible_os_family != "Windows"
+
+# To workaround an internal compiler error on
+# 'gcc psutil/_psutil_linux.c -O2 -I/usr/include/python2.7 -DPSUTIL_POSIX=1 -DPSUTIL_VERSION=501 -DPSUTIL_LINUX=1'
+  - name: disable all cc1 optimizations on Suse 11
+    shell: "gcc -dumpspecs | sed 's/%{O\\*}//' > /usr/lib64/gcc/x86_64-suse-linux/4.5/defaults.spec"
+    become_method: su
+    become: true
+    when: ansible_os_family == "Suse" and ansible_distribution_major_version == "11"
 
   - name: install required pip modules
     pip:
