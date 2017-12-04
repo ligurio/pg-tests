@@ -11,27 +11,6 @@
     debug:
       msg: "System {{ inventory_hostname }} has distribution {{ ansible_distribution }}, os_family {{ ansible_os_family }}"
 
-  - name: subscribe to RHSM
-    redhat_subscription: state=present username=v.wagner@postgrespro.ru password=thuch5Zeik autosubscribe=true force_register=yes
-    become_method: su
-    become: true
-    when: ansible_distribution == "RedHat"
-
-  - name: Remove beta repository RHEL 7 (and clean up left-over metadata)
-    yum_repository:
-       name: rhel-7-server-rt-beta-rpms
-       state: absent
-    notify: yum-clean-metadata
-    become_method: su
-    become: true
-    when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "7"
-
-  - name: Enable optional repo RHEL7
-    command: subscription-manager repos --enable=rhel-7-server-optional-rpms
-    become_method: su
-    become: true
-    when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "7"
-
   - name: Update repos ALT
     command: apt-get update
     when: ansible_distribution == 'ALT'
@@ -61,6 +40,36 @@
   - name: Scan cdroms for packages (Astra)
     shell: apt-cdrom add && apt-get install -qq -y gcc python-dev || apt-get -qq -y -f install #To suppress "Media change: please insert the disc labeled" prompt
     when: ansible_distribution == 'Astra Linux (Smolensk)'
+    become_method: su
+    become: true
+
+  - name: Setup DVD as yum repository (RHEL) # Based on https://access.redhat.com/solutions/328863
+    shell: if /sbin/blkid /dev/cdrom; then
+             mkdir /media/rhel-dvd &&
+             mount /dev/cdrom /media/rhel-dvd &&
+             cp /media/rhel-dvd/media.repo /etc/yum.repos.d/rhel-dvd.repo &&
+             chmod 644 /etc/yum.repos.d/rhel-dvd.repo &&
+             echo "enabled=1" >> /etc/yum.repos.d/rhel-dvd.repo &&
+             if [ -d /media/rhel-dvd/repodata ]; then echo "baseurl=file:///media/rhel-dvd" >> /etc/yum.repos.d/rhel-dvd.repo; fi;
+             if [ -d /media/rhel-dvd/Server/repodata ]; then echo "baseurl=file:///media/rhel-dvd/Server" >> /etc/yum.repos.d/rhel-dvd.repo; fi;
+           fi
+    when: ansible_distribution == "RedHat"
+    become_method: su
+    become: true
+
+  - name: Downgrade packages to original 6.7 version (RHEL 6) # Needed for libselinux-python
+    shell: yum downgrade -y glibc-2.12-1.166.el6 glibc-headers-2.12-1.166.el6 glibc-common-2.12-1.166.el6 glibc-devel-2.12-1.166.el6 &&
+           yum downgrade -y libselinux-2.0.94-5.8.el6 libselinux-utils-2.0.94-5.8.el6 libselinux-devel-2.0.94-5.8.el6.x86_64
+    when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "6"
+    become_method: su
+    become: true
+
+  - name: install required packages (RedHat 7) # Don't require RedHat subscription
+    yum: name={{ item }} state=present update_cache=yes disablerepo=rhel-7-server-rpms
+    with_items:
+        - gcc
+        - python-devel
+    when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "7"
     become_method: su
     become: true
 
