@@ -9,7 +9,9 @@
 
   - name: Debug message
     debug:
-      msg: "System {{ inventory_hostname }} has distribution {{ ansible_distribution }}, os_family {{ ansible_os_family }}"
+      msg: "System {{ inventory_hostname }}/{{ ansible_host }} \
+            ({{ ansible_connection }}) has os_family {{ ansible_os_family }}, \
+            distribution {{ ansible_distribution }}."
 
   - name: Update repos ALT
     command: apt-get update
