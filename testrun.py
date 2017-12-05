@@ -445,7 +445,7 @@ def main():
         print("Starting target %s..." % t)
         target_start = time.time()
         domname = gen_name(t)
-        reportname = "report-" + time.strftime('%Y-%b-%d-%H-%M-%S')
+        reportname = "report-" + time.strftime('%Y-%m-%d-%H-%M-%S')
         domipaddress = create_env(t, domname)[0]
         setup_env_result = setup_env(domipaddress, domname, tests_dir)
         if setup_env_result == 0:
