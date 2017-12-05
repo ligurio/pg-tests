@@ -64,9 +64,7 @@ def get_virt_ip():
 
     :return: string ip address
     """
-    out, err = subprocess.Popen('ifconfig virbr0|grep "inet addr"',
-                                shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-    return out[20:33]
+    return subprocess.check_output('ip addr show virbr0', shell=True).split("inet ")[1].split("/")[0]
 
 
 def copy_file(remote_path, local_path, hostname, dir=False, operating_system=None,
