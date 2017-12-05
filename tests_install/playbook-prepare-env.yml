@@ -1,11 +1,17 @@
 ---
 - hosts: all
-  gather_facts: true
+  gather_facts: no
   vars:
     win_path: C:\Users\test\Downloads\
     pg_tests_source: "../"
 
   tasks:
+
+  - name: Wait for system to become reachable
+    wait_for_connection: timeout=600
+
+  - name: Gather facts
+    setup:
 
   - name: Debug message
     debug:
