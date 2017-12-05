@@ -17,7 +17,7 @@
     debug:
       msg: "System {{ inventory_hostname }}/{{ ansible_host }} \
             ({{ ansible_connection }}) has os_family {{ ansible_os_family }}, \
-            distribution {{ ansible_distribution }}."
+            distribution {{ ansible_distribution }} {{ ansible_distribution_major_version }}."
 
   - name: Update repos ALT
     command: apt-get update
