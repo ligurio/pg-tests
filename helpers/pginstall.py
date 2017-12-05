@@ -64,16 +64,14 @@ def generate_repo_info(distro, osversion, action="install", **kwargs):
     :param kwargs:
     :return:
     """
-    major = kwargs['version'].split(".")[0]
-    minor = kwargs['version'].split(".")[1]
 
     distname = ""
     product_dir = ""
     gpg_key_url = ""
     if kwargs['name'] == "postgresql":
         if distro in RPM_BASED:
-            gpg_key_url = "https://download.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG-%s%s" % (
-                major, minor)
+            gpg_key_url = "https://download.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG-%s" % \
+                kwargs['version'].replace('.', '')
         elif distro in DEB_BASED or distro == "ALT Linux ":
             gpg_key_url = "https://www.postgresql.org/media/keys/ACCC4CF8.asc"
         product_dir = "/repos/yum/%s/redhat/rhel-$releasever-$basearch" % kwargs['version']
