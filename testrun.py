@@ -118,6 +118,15 @@ def prepare_payload(tests_dir):
     retcode = call("wget -q https://bootstrap.pypa.io/get-pip.py", cwd=pgtd, shell=True)
     if retcode != 0:
         raise Exception("Downloading get-pip failed.")
+
+    if os.path.exists(TESTS_PAYLOAD_ZIP):
+        os.remove(TESTS_PAYLOAD_ZIP)
+    retcode = call("zip -q -r {0} pg-tests".format(TESTS_PAYLOAD_ZIP),
+                   cwd=tempdir, shell=True)
+    if retcode != 0:
+        raise Exception("Preparing zip payload failed.")
+
+    # Preparing pip packages for linux
     pgtdpp = os.path.join(pgtd, 'pip-packages')
     os.makedirs(pgtdpp)
     retcode = call("pip download -q -r %s" %
@@ -142,12 +151,6 @@ def prepare_payload(tests_dir):
     if retcode != 0:
         raise Exception("Downloading pip-requirements(27mu) failed.")
 
-    if os.path.exists(TESTS_PAYLOAD_ZIP):
-        os.remove(TESTS_PAYLOAD_ZIP)
-    retcode = call("zip -q -r {0} pg-tests".format(TESTS_PAYLOAD_ZIP),
-                   cwd=tempdir, shell=True)
-    if retcode != 0:
-        raise Exception("Preparing zip payload failed.")
     if os.path.exists(TESTS_PAYLOAD_TAR):
         os.remove(TESTS_PAYLOAD_TAR)
     retcode = call("tar -czf {0} pg-tests".format(TESTS_PAYLOAD_TAR),
