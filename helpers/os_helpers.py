@@ -1,8 +1,6 @@
-import grp
 import os
 import platform
 import psutil
-import pwd
 import random
 import re
 import shutil
@@ -199,6 +197,10 @@ def create_tablespace_directory():
     """Create new  directory for tablespace
     :return: str path to tablespace
     """
+
+    import pwd
+    import grp
+
     tmp_dir = '/tmp'
     tablespace_catalog = 'tablespace-' + str(random.randint(0, 100))
     tablespace_path = os.path.join(tmp_dir, tablespace_catalog)
