@@ -284,19 +284,13 @@
       - ansible_os_family != "Windows"
       - ansible_os_family != "МСВСфера"
 
-  - name: windows - download git
+  - name: windows - download python
     when: ansible_os_family == "Windows"
     with_items:
-        - { win_url: "https://github.com/git-for-windows/git/releases/download/v2.11.0.windows.3/Git-2.11.0.3-64-bit.exe", win_dest: 'Git-2.11.0.3-64-bit.exe' }
         - { win_url: "https://www.python.org/ftp/python/2.7.13/python-2.7.13.amd64.msi", win_dest: 'python2-7-13.amd64.msi' }
-        - { win_url: "https://bootstrap.pypa.io/get-pip.py", win_dest: 'get-pip.py' }
     win_get_url:
       url: '{{ item.win_url }}'
       dest: '{{ win_path }}{{ item.win_dest }}'
-
-  - name: windows - install git
-    when: ansible_os_family == "Windows"
-    win_shell: '{{ win_path }}Git-2.11.0.3-64-bit.exe /VERYSILENT'
 
   - name: windows - install python
     when: ansible_os_family == "Windows"
@@ -304,24 +298,31 @@
       path: '{{ win_path }}python2-7-13.amd64.msi'
       wait: true
 
+  - name: windows - copy tests payload
+    win_copy:
+      src:  /tmp/pg-tests.zip
+      dest: C:\Users\test\
+    when: ansible_os_family == "Windows"
+
+  - name: windows - extract tests payload
+    win_unzip:
+      src: C:\Users\test\pg-tests.zip
+      dest: C:\Users\test
+      creates: C:\Users\test\pg_tests
+    when: ansible_os_family == "Windows"
+
   - name: windows - install pip
     when: ansible_os_family == "Windows"
-    win_shell: 'C:\Python27\python.exe {{ win_path }}get-pip.py'
+    win_shell: 'C:\Python27\python.exe C:\Users\test\pg-tests\get-pip.py'
 
-  - name: windows - copy tests
+  - name: windows - install python requirements
     when: ansible_os_family == "Windows"
-    win_copy: src="{{ pg_tests_source }}" dest=C:\Users\test\pg-tests
+    win_shell: 'C:\Python27\Scripts\pip.exe install -r C:\Users\test\pg-tests\tests_install\requirements.txt'
 
-  - name: windows - install libraries
-    when: ansible_os_family == "Windows"
-    win_shell: 'C:\Python27\Scripts\pip.exe install -r C:\Users\test\pg-tests\static\requirements-min.txt'
-
-  - name: windows - remove pip, git, python installers
+  - name: windows - remove python installer
     when: ansible_os_family == "Windows"
     with_items:
-        - { win_dest: "Git-2.11.0.3-64-bit.exe" }
         - { win_dest: "python2-7-13.amd64.msi" }
-        - { win_dest: "get-pip.py" }
     win_file:
       path: '{{ win_path }}{{ item.win_dest }}'
       state: absent
