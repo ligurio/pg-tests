@@ -479,7 +479,7 @@ def main():
         if args.export:
             test = args.run_tests.split('/')[1].split('.')[0]
             export_results(domname, domipaddress, reportname,
-                           operating_system=args.target, product_name=args.product_name,
+                           operating_system=t, product_name=args.product_name,
                            product_version=args.product_version, product_edition=args.product_edition,
                            tests=test)
             reporturl = os.path.join(REPORT_SERVER_URL, reportname)
