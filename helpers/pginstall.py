@@ -22,7 +22,8 @@ DEB_PACKAGES = ['plperl', 'plpython', 'plpython3', 'pltcl']
 ALT_PACKAGES = ['server', 'contrib', 'devel', 'docs', 'docs-ru', 'perl', 'python', 'tcl']
 RPM_BASED = ['CentOS Linux', 'RHEL', 'CentOS',
              'Red Hat Enterprise Linux Server', 'Oracle Linux Server', 'SLES',
-             'ROSA Enterprise Linux Server', 'ROSA SX \"COBALT\" ', 'GosLinux',
+             'ROSA Enterprise Linux Server', 'ROSA SX \"COBALT\" ',
+             'ROSA Enterprise Linux Cobalt', 'GosLinux',
              '\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0\xb5\xd1\x80\xd0\xb0 ']
 DEB_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux', 'AstraLinuxSE',
              'Astra Linux SE', "\"Astra Linux SE\"", "\"AstraLinuxSE\"",
@@ -99,7 +100,7 @@ def generate_repo_info(distro, osversion, action="install", **kwargs):
             distname = "rosa-el"
         elif distro == "ROSA Enterprise Linux Server" and osversion == "6.8":
             distname = "rosa-chrome"
-        elif distro == "ROSA SX \"COBALT\" ":
+        elif distro == "ROSA SX \"COBALT\" " or distro == "ROSA Enterprise Linux Cobalt":
             distname = "rosa-sx"
         elif distro == "AstraLinuxSE" or distro == "Astra Linux SE":
             if osversion == "1.4":
@@ -157,6 +158,8 @@ def setup_repo(remote=False, host=None, **kwargs):
         if kwargs['name'] == "postgrespro":
             if dist_info[0] == "ROSA Enterprise Linux Server" and dist_info[1] == "6.8":
                 baseurl = os.path.join(baseurl, "6.8Server/os/$basearch/rpms")
+            elif dist_info[0] == "ROSA Enterprise Linux Cobalt" and dist_info[1] == "7.3":
+                baseurl = os.path.join(baseurl, "7Server/os/$basearch/rpms")
             elif dist_info[0] == "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0\xb5\xd1\x80\xd0\xb0 ":
                 baseurl = os.path.join(baseurl, "6.3Server/os/$basearch/rpms")
             else:
