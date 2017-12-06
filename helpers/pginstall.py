@@ -28,6 +28,7 @@ RPM_BASED = ['CentOS Linux', 'RHEL', 'CentOS',
 DEB_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux', 'AstraLinuxSE',
              'Astra Linux SE', "\"Astra Linux SE\"", "\"AstraLinuxSE\"",
              "ALT Linux ", "ALT "]
+ZYPPER_BASED = ['SUSE Linux Enterprise Server ']
 WIN_BASED = ['2012ServerR2']
 
 dist = {"Oracle Linux Server": 'oraclelinux',
@@ -102,6 +103,8 @@ def generate_repo_info(distro, osversion, action="install", **kwargs):
             distname = "rosa-chrome"
         elif distro == "ROSA SX \"COBALT\" " or distro == "ROSA Enterprise Linux Cobalt":
             distname = "rosa-sx"
+        elif distro == "SUSE Linux Enterprise Server ":
+            distname = "sles"
         elif distro == "AstraLinuxSE" or distro == "Astra Linux SE":
             if osversion == "1.4":
                 distname = "astra-smolensk/1.4"
@@ -211,6 +214,22 @@ enabled=1
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             cmd = "apt-get update -y"
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            return repofile
+    elif dist_info[0] in ZYPPER_BASED:
+        reponame = "%s-%s" % (kwargs['name'], kwargs['version'])
+        repofile = '/etc/zypp/repos.d/%s.repo' % reponame
+        cmd = "wget -nv %s -O gpg.key" % gpg_key_url
+        command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+        cmd = "rpm --import ./gpg.key"
+        command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+        if dist_info[0] == 'SUSE Linux Enterprise Server ' and dist_info[1] == "12":
+            baseurl = os.path.join(baseurl, "12.1")
+        else:
+            baseurl = os.path.join(baseurl, dist_info[1])
+        cmd = "zypper addrepo %s %s" % (baseurl, reponame)
+        command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+        cmd = "zypper refresh"
+        command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         return repofile
     elif dist_info[0] in WIN_BASED:
         windows_installer = urllib.URLopener()
