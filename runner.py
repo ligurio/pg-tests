@@ -13,7 +13,7 @@ import urllib
 import winrm
 from subprocess import call
 
-from helpers.utils import copy_file, copy_file_win, exec_command_win
+from helpers.utils import copy_file, copy_reports_win, exec_command_win
 from helpers.utils import REMOTE_LOGIN, REMOTE_PASSWORD, REMOTE_ROOT_PASSWORD
 from helpers.utils import exec_command
 from helpers.utils import gen_name
@@ -244,41 +244,39 @@ def make_test_cmd(domname, reportname, tests=None,
 
 
 def export_results(domname, domipaddress, reportname, operating_system=None, product_name=None,
-                   product_version=None, product_edition=None):
+                   product_version=None, product_edition=None, tests=None):
     if not os.path.exists('reports'):
         os.makedirs('reports')
-    allure_reports_dir = "/var/www/html/%s" % time.strftime("/%Y/%m/%d")
+        subprocess.check_call('chmod 777 reports', shell=True)
+    rel_allure_reports_dir = "allure_reports/%s/%s/%s/%s/%s" % (time.strftime("/%Y/%m/%d"), product_name,
+                                                           product_version, product_edition, operating_system)
+    allure_reports_dir = 'reports/' + rel_allure_reports_dir
     if not os.path.exists(allure_reports_dir):
         os.makedirs(allure_reports_dir)
+        subprocess.check_call('chmod 777 %s' % allure_reports_dir, shell=True)
 
-    if not os.path.exists('reports/allure_reports'):
-        os.makedirs('reports/allure_reports')
-
-    if domname[0:3] == 'win':
-        copy_file_win(reportname, domipaddress)
-    else:
-        try:
+    try:
+        if domname[0:3] == 'win':
+            copy_reports_win(reportname, rel_allure_reports_dir, 'reports', domipaddress)
+        else:
             copy_file("/home/test/pg-tests/%s.html" % reportname, "reports/%s.html" % reportname, domipaddress)
             copy_file("/home/test/pg-tests/%s.xml" % reportname, "reports/%s.xml" % reportname, domipaddress)
-            copy_file("/home/test/pg-tests/reports", "reports/allure_reports", domipaddress, dir=True)
-            copy_file("/home/test/pg-tests/reports", allure_reports_dir,
-                      domipaddress, dir=True, operating_system=operating_system,
-                      product_name=product_name, product_version=product_version,
-                      product_edition=product_edition)
-        except IOError as e:
-            print("Cannot copy report from virtual machine.")
-            print(e)
-            pass
-        finally:
-            subprocess.Popen(
-                ['curl', '-T', 'reports/%s.html' % reportname, REPORT_SERVER_URL])
-            subprocess.Popen(
-                ['curl', '-T', 'reports/%s.xml' % reportname, REPORT_SERVER_URL])
-            for file in os.listdir('reports/allure_reports'):
-                if '.xml' in file:
-                    subprocess.Popen(['curl', '-T', os.path.join('reports/allure_reports', file), REPORT_SERVER_URL])
-                else:
-                    continue
+            copy_file("/home/test/pg-tests/%s.json" % reportname, "reports/%s.json" % reportname, domipaddress)
+            copy_file("/home/test/pg-tests/reports", allure_reports_dir, domipaddress, dir=True)
+    except IOError as e:
+        print("Cannot copy report from virtual machine.")
+        print(e)
+        pass
+    finally:
+        subprocess.Popen(
+            ['curl', '-T', 'reports/%s.html' % reportname, REPORT_SERVER_URL])
+        subprocess.Popen(
+            ['curl', '-T', 'reports/%s.xml' % reportname, REPORT_SERVER_URL])
+        for file in os.listdir('reports'):
+            if '.json' in file:
+                subprocess.Popen(['curl', '-T', os.path.join('reports', file), REPORT_SERVER_URL])
+            else:
+                continue
 
 
 def keep_env(domname, keep):

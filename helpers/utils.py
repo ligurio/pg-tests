@@ -100,20 +100,29 @@ def copy_file(remote_path, local_path, hostname, dir=False, operating_system=Non
     return 0
 
 
-def copy_file_win(reportname, domipaddress):
+def copy_reports_win(reportname, reportsdir, destreports, domipaddress):
     """ Copy reports
 
     :param reportname:
+    :param reportsdir:
+    :param destreports:
     :param domipaddress:
     :return:
     """
 
-    cmd = r'net use f: "\\%s\reports" &&xcopy .\pg-tests\*.html f:\ /Y' % get_virt_ip()
+    subprocess.call('net usershare list | grep pg-tests-reports && '
+                    'net usershare delete pg-tests-reports', shell=True)
+    subprocess.check_call('net usershare add pg-tests-reports %s '
+                          '"pg-tests reports" everyone:F guest_ok=y' %
+                          os.path.abspath(destreports), shell=True)
+
+    share = r'\\%s\pg-tests-reports' % get_virt_ip()
+    cmd = r'xcopy /Y /F .\pg-tests\{0}.* {1}\\'.format(reportname, share)
     exec_command_win(cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD)
-    cmd = r'net use f: "\\%s\reports" &&xcopy .\pg-tests\*.xml f:\ /Y' % get_virt_ip()
+    cmd = r'xcopy /Y /F .\pg-tests\reports {0}\\{1}\\'.format(
+        share, reportsdir.replace('/', '\\'))
     exec_command_win(cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD)
-    shutil.copy(r'/reports/%s.html' % reportname, r'reports')
-    shutil.copy(r'/reports/%s.xml' % reportname, r'reports')
+    subprocess.check_call('net usershare delete pg-tests-reports', shell=True)
 
 
 def exec_command(cmd, hostname, login, password, skip_ret_code_check=False):
