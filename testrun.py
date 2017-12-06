@@ -309,16 +309,15 @@ def make_test_cmd(domname, reportname, tests=None,
     if product_build:
         pcmd = "%s --product_build %s " % (pcmd, product_build)
 
+    pytest_cmd = 'pytest {0} --self-contained-html --html={1}.html ' \
+                 '--junit-xml={1}.xml --json={1}.json --maxfail=1 ' \
+                 '--alluredir=reports {2} --target={3}'.format(tests,
+                                                         reportname,
+                                                         pcmd, domname)
     if domname[0:3] == 'win':
-        cmd = r'cd C:\Users\test\pg-tests && pytest %s --self-contained-html --html=%s.html --junit-xml=%s.xml \
-                  --maxfail=1 --alluredir=reports %s --target=%s' % (tests, reportname, reportname, pcmd, domname)
+        cmd = r'cd C:\Users\test\pg-tests && ' + pytest_cmd
     else:
-        cmd = 'cd /home/test/pg-tests && sudo pytest %s --self-contained-html --html=%s.html ' \
-              '--junit-xml=%s.xml --json=%s.json --maxfail=1 --alluredir=reports %s --target=%s' % (tests,
-                                                                                                    reportname,
-                                                                                                    reportname,
-                                                                                                    reportname,
-                                                                                                    pcmd, domname)
+        cmd = 'cd /home/test/pg-tests && sudo ' + pytest_cmd
 
     if DEBUG:
         cmd += " --verbose --tb=long --full-trace"
