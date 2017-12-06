@@ -114,7 +114,7 @@ def prepare_payload(tests_dir):
     print("Preparing a payload for target VMs...")
     tempdir = tempfile.mkdtemp()
     pgtd = os.path.join(tempdir, 'pg-tests')
-    shutil.copytree('.', pgtd, ignore=shutil.ignore_patterns(('^.git')))
+    shutil.copytree('.', pgtd, ignore=shutil.ignore_patterns('.git', 'reports'))
     retcode = call("wget -q https://bootstrap.pypa.io/get-pip.py", cwd=pgtd, shell=True)
     if retcode != 0:
         raise Exception("Downloading get-pip failed.")
