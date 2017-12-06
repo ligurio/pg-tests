@@ -78,6 +78,7 @@ def generate_repo_info(distro, osversion, action="install", **kwargs):
         baseurl = PSQL_HOST + product_dir
         return baseurl, gpg_key_url
     elif kwargs['name'] == "postgrespro":
+        gpg_key_dir = "pgpro-" + kwargs['version']
         if kwargs['edition'] == "ee":
             product_dir = "pgproee-%s" % kwargs['version']
         elif kwargs['edition'] == "standard":
@@ -87,8 +88,9 @@ def generate_repo_info(distro, osversion, action="install", **kwargs):
         elif kwargs['edition'] == "cert-enterprise":
             product_dir = "pgpro-enterprise-9.6.5.1-cert/repo"
         if kwargs['milestone']:
-            product_dir = product_dir + "-" + kwargs['milestone']
-        gpg_key_url = "https://repo.postgrespro.ru/pgpro-%s/keys/GPG-KEY-POSTGRESPRO" % kwargs['version']
+            product_dir += "-" + kwargs['milestone']
+            gpg_key_dir += "-" + kwargs['milestone']
+        gpg_key_url = "https://repo.postgrespro.ru/%s/keys/GPG-KEY-POSTGRESPRO" % gpg_key_dir
         if distro == "ALT Linux " and osversion in ["7.0.4", "6.0.1"]:
             distname = "altlinux-spt"
         elif distro == "ALT Linux " and osversion == "7.0.5":
