@@ -125,14 +125,13 @@ def copy_reports_win(reportname, reportsdir, destreports, domipaddress):
     subprocess.check_call('net usershare delete pg-tests-reports', shell=True)
 
 
-def exec_command(cmd, hostname, login, password, skip_ret_code_check=False):
+def exec_command(cmd, hostname, login, password, skip_ret_code_check=False, connect_retry_count=3):
 
     import paramiko
 
     buff_size = 1024
     stdout = ""
     stderr = ""
-    connect_retry_count = 3
     for _ in range(connect_retry_count):
         try:
             client = paramiko.SSHClient()
@@ -145,8 +144,9 @@ def exec_command(cmd, hostname, login, password, skip_ret_code_check=False):
                 paramiko.SSHException,
                 socket.error,
                 Exception) as e:
-            print(e)
             sleep(10)
+    if cmd is None:
+        return
 
     chan = client.get_transport().open_session()
     print "Executing '%s' on '%s'" % (cmd, hostname)
@@ -206,6 +206,14 @@ def exec_command_win(cmd, hostname, user, password, skip_ret_code_check=False):
             sys.exit(1)
         else:
             return retcode, stdout, stderr
+
+def wait_for_boot(host, time=300, linux=True):
+    if linux:
+        print("wait_for_boot")
+        exec_command(None, host, REMOTE_LOGIN, REMOTE_PASSWORD,
+                     connect_retry_count=time/10)
+    else:
+        raise Exception('Not implemented')
 
 
 def gen_name(name):
