@@ -45,12 +45,6 @@
     become_method: su
     become: true
 
-  - name: Scan cdroms for packages (Astra)
-    shell: apt-cdrom add && apt-get install -qq -y gcc python-dev || apt-get -qq -y -f install #To suppress "Media change: please insert the disc labeled" prompt
-    when: ansible_distribution == 'Astra Linux (Smolensk)'
-    become_method: su
-    become: true
-
   - name: Mount DVD(s) (if available)
     shell: needmount=false;
            if /sbin/blkid /dev/sr0; then
@@ -65,6 +59,18 @@
            fi;
            if [ "$needmount" = true ]; then mount -a; fi
     when: ansible_distribution != "Windows"
+    become_method: su
+    become: true
+
+  - name: Setup DVDs as apt repositories and install some packages (Astra)
+    shell: if [ -d /mnt/dvd/dists ]; then
+             echo "deb file:///mnt/dvd smolensk contrib main non-free" >> /etc/apt/sources.list.d/repo-dvd.list;
+           fi;
+           if [ -d /mnt/dvd2/dists ]; then
+             echo "deb file:///mnt/dvd2 smolensk contrib main non-free" >> /etc/apt/sources.list.d/repo-dvd.list;
+           fi;
+           apt-get update
+    when: ansible_distribution == 'Astra Linux (Smolensk)'
     become_method: su
     become: true
 
