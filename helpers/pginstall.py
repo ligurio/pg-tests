@@ -258,7 +258,7 @@ def install_package(pkg_name, remote=False, host=None):
         cmd = "apt-get install -y %s" % pkg_name
         command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
     elif dist_info[0] in ZYPPER_BASED:
-        cmd = "zypper install -y %s" % pkg_name
+        cmd = "zypper install -y -l --force-resolution %s" % pkg_name
         command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
     elif dist_info[0] in WIN_BASED:
         pass
