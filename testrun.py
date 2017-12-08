@@ -17,7 +17,7 @@ import tempfile
 import glob
 from subprocess import call
 
-from helpers.utils import copy_file, copy_reports_win, exec_command_win
+from helpers.utils import copy_file, copy_reports_win, exec_command_win, wait_for_boot
 from helpers.utils import REMOTE_LOGIN, REMOTE_PASSWORD, REMOTE_ROOT_PASSWORD
 from helpers.utils import exec_command
 from helpers.utils import gen_name
@@ -87,9 +87,12 @@ def mac_address_generator():
     return ':'.join(map(lambda x: "%02x" % x, mac))
 
 
+def get_dom_disk(domname):
+    return os.path.join(WORK_DIR, domname + '-overlay.qcow2')
+
 def create_image(domname, name):
 
-    domimage = WORK_DIR + domname + '-overlay.qcow2'
+    domimage = get_dom_disk(domname)
     image_url = IMAGE_BASE_URL + name + '.qcow2'
     image_original = TEMPLATE_DIR + name + '.qcow2'
 
@@ -160,7 +163,7 @@ def prepare_payload(tests_dir):
     shutil.rmtree(tempdir)
 
 
-def create_env(name, domname):
+def create_env(name, domname, domimage=None):
     try:
         import libvirt
         conn = libvirt.open(None)
@@ -168,7 +171,8 @@ def create_env(name, domname):
         print 'LibVirt connect error: ', e
         sys.exit(1)
 
-    domimage = create_image(domname, name)
+    if not domimage:
+        domimage = create_image(domname, name)
     dommac = mac_address_generator()
     qemu_path = ""
     if platform.linux_distribution()[0] == 'Ubuntu' or platform.linux_distribution()[0] == 'debian':
@@ -361,31 +365,64 @@ def export_results(domname, domipaddress, reportname, operating_system=None, pro
                 continue
 
 
-def keep_env(domname, keep):
-    try:
-        import libvirt
-        conn = libvirt.open(None)
-    except libvirt.libvirtError, e:
-        print 'LibVirt connect error: ', e
-        sys.exit(1)
+def save_env(domname):
+    import libvirt
+    conn = libvirt.open(None)
+    dom = conn.lookupByName(domname)
+    print('Shutting target down...')
+    if dom.shutdown() < 0:
+        raise Exception('Unable to shutdown %s.' % domname)
+    timeout = 0
+    while timeout < 60:
+        try:
+            if not dom.isActive():
+                break
+            timeout += 5
+            time.sleep(timeout)
+            print "Waiting for domain shutdown...%d" % timeout
+        except libvirt.libvirtError, e:
+            print(e, dir(e))
+            break
+    conn.close()
+    diskfile = get_dom_disk(domname)
+    shutil.copy(diskfile, diskfile + '.s0')
 
+
+def restore_env(domname):
+    import libvirt
+    conn = libvirt.open(None)
     try:
         dom = conn.lookupByName(domname)
-    except:
-        print 'Failed to find the domain %s' % domname
+        dom.destroy()
+    except libvirt.libvirtError, e:
+        pass
+    conn.close()
 
-    if keep:
-        save_image = os.path.join(WORK_DIR, domname + ".img")
-        if dom.save(save_image) < 0:
-            print('Unable to save state of %s to %s' % (domname, save_image))
+    diskfile = get_dom_disk(domname)
+    os.remove(diskfile)
+    print('Restoring target...')
+    shutil.copy(diskfile + '.s0', diskfile)
+
+
+def close_env(domname, saveimg=False, destroys0=False):
+    import libvirt
+    conn = libvirt.open(None)
+    dom = conn.lookupByName(domname)
+    imgfile = os.path.join(WORK_DIR, domname + '.img')
+
+    if saveimg:
+        if dom.save(imgfile) < 0:
+            print('Unable to save state of %s to %s.' % (domname, imgfile))
         else:
-            print('Domain %s state saved to %s' % (domname, save_image))
+            print('Domain %s state saved to %s.' % (domname, imgfile))
     else:
         if dom.destroy() < 0:
-            print('Unable to destroy of %s' % domname)
-        domimage = WORK_DIR + domname + '-overlay.qcow2'
-        if os.path.exists(domimage):
-            os.remove(domimage)
+            print('Unable to destroy %s.' % domname)
+        diskfile = get_dom_disk(domname)
+        os.remove(diskfile)
+        if destroys0:
+            if os.path.exists(diskfile + '.s0'):
+                os.remove(diskfile + '.s0')
 
     conn.close()
 
@@ -422,78 +459,96 @@ def main():
         parser.print_help()
         sys.exit(0)
 
-    if args.target is not None:
-        target = args.target
-    else:
+    if args.target is None:
         print "No target name"
         sys.exit(1)
 
     if not (os.path.exists(args.run_tests)):
         print "Test(s) '%s' is not found." % args.run_tests
         sys.exit(1)
+    tests = []
+    for test in args.run_tests.split(','):
+        if os.path.isdir(test):
+            for tf in os.listdir(test):
+                if tf.startswith('test') and tf.endswith('.py'):
+                    tests.append(os.path.join(test, tf))
+        else:
+            tests.append(test)
+    if not tests:
+        print "No tests scripts found in %s." % args.run_tests
+        sys.exit(1)
+
     tests_dir = args.run_tests if os.path.isdir(args.run_tests) else os.path.dirname(args.run_tests)
     prepare_payload(tests_dir)
 
-    targets = target.split(',')
+    targets = args.target.split(',')
     for t in targets:
         print("Starting target %s..." % t)
         target_start = time.time()
         domname = gen_name(t)
-        reportname = "report-" + time.strftime('%Y-%m-%d-%H-%M-%S')
         domipaddress = create_env(t, domname)[0]
         setup_env_result = setup_env(domipaddress, domname, tests_dir)
         if setup_env_result == 0:
             print("Environment deployed without errors. Ready to run tests")
         else:
             sys.exit(1)
-        cmd = make_test_cmd(domname, reportname, args.run_tests,
+        if len(tests) > 1:
+            save_env(domname)
+
+        for test in sorted(tests):
+            if len(tests) > 1:
+                restore_env(domname)
+                domipaddress = create_env(t, domname, get_dom_disk(domname))[0]
+                wait_for_boot(domipaddress, linux=(domname[0:3] != 'win'))
+            reportname = "report-" + time.strftime('%Y-%m-%d-%H-%M-%S')
+            cmd = make_test_cmd(domname, reportname, test,
                             args.product_name,
                             args.product_version,
                             args.product_edition,
                             args.product_milestone,
                             args.branch)
-        if domname[0:3] == 'win':
-            s = winrm.Session(domipaddress, auth=(REMOTE_LOGIN, REMOTE_PASSWORD))
-            ps_script = """
-                Set-ExecutionPolicy Unrestricted
-                [Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Python27",
-                [EnvironmentVariableTarget]::Machine)
-                [Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Python27\Scripts",
-                [EnvironmentVariableTarget]::Machine)
-                """
-            s.run_ps(ps_script)
-            print "Added path for python and python scripts. \n"
-            retcode, stdout, stderr = exec_command_win(cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD,
-                                                       skip_ret_code_check=True)
-            # export_results(domname, domipaddress, reportname)
-        else:
-            retcode, stdout, stderr = exec_command(cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD,
-                                                   skip_ret_code_check=True)
-
-        if args.export:
-            test = args.run_tests.split('/')[1].split('.')[0]
-            export_results(domname, domipaddress, reportname,
-                           operating_system=t, product_name=args.product_name,
-                           product_version=args.product_version, product_edition=args.product_edition,
-                           tests=test)
-            reporturl = os.path.join(REPORT_SERVER_URL, reportname)
-            print "Link to the html report - %s.html" % reporturl
-            print "Link to the xml report - %s.xml" % reporturl
-
-        if args.keep:
-            print('Domain %s (IP address %s)' % (domname, domipaddress))
-        else:
-            if retcode != 0:
-                keep_env(domname, True)
+            if domname[0:3] == 'win':
+                s = winrm.Session(domipaddress, auth=(REMOTE_LOGIN, REMOTE_PASSWORD))
+                ps_script = """
+                    Set-ExecutionPolicy Unrestricted
+                    [Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Python27",
+                    [EnvironmentVariableTarget]::Machine)
+                    [Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Python27\Scripts",
+                    [EnvironmentVariableTarget]::Machine)
+                    """
+                s.run_ps(ps_script)
+                print "Added path for python and python scripts. \n"
+                retcode, stdout, stderr = exec_command_win(cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD,
+                                                        skip_ret_code_check=True)
+                # export_results(domname, domipaddress, reportname)
             else:
-                keep_env(domname, False)
+                retcode, stdout, stderr = exec_command(cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD,
+                                                    skip_ret_code_check=True)
 
-        if retcode != 0:
-            reporturl = os.path.join(REPORT_SERVER_URL, reportname)
-            print("Test return code (for target %s) is not zero - %s. "
-                  "Please check logs in report: %s" % (t, retcode, reporturl))
-            print retcode, stdout, stderr
-            sys.exit(1)
+            if args.export:
+                testname = test.split('/')[1].split('.')[0]
+                export_results(domname, domipaddress, reportname,
+                            operating_system=t, product_name=args.product_name,
+                            product_version=args.product_version, product_edition=args.product_edition,
+                            tests=testname)
+                reporturl = os.path.join(REPORT_SERVER_URL, reportname)
+                print "Link to the html report - %s.html" % reporturl
+                print "Link to the xml report - %s.xml" % reporturl
+
+            if retcode != 0:
+                reporturl = os.path.join(REPORT_SERVER_URL, reportname)
+                print("Test return code (for target: %s, domain: %s, IP address: %s) "
+                      "is not zero - %s.\n"
+                      "Please check logs in report: %s" % \
+                      (t, domname, domipaddress, retcode, reporturl))
+                print retcode, stdout, stderr
+                sys.exit(1)
+
+        if not args.keep:
+            close_env(domname, saveimg=False, destroys0=True)
+        else:
+            close_env(domname, saveimg=True, destroys0=False)
+
         print("Target %s done in %s." %
               (t, time.strftime("%H:%M:%S",
                   time.gmtime(time.time() - target_start))))
