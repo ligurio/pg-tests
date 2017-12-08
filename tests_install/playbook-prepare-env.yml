@@ -49,21 +49,24 @@
     shell: needmount=false;
            if /sbin/blkid /dev/sr0; then
              mkdir /mnt/dvd &&
-             echo "/dev/sr0       /mnt/dvd   auto    ro,user,exec,utf8        0    0" >> /etc/fstab;
-             needmount=true;
+             echo "/dev/sr0       /mnt/dvd   auto    ro,user,exec,utf8        0    0" >> /etc/fstab &&
+             mount /dev/sr0;
            fi;
            if /sbin/blkid /dev/sr1; then
              mkdir /mnt/dvd2 &&
-             echo "/dev/sr1       /mnt/dvd2  auto    ro,user,exec,utf8        0    0" >> /etc/fstab;
-             needmount=true;
+             echo "/dev/sr1       /mnt/dvd2  auto    ro,user,exec,utf8        0    0" >> /etc/fstab &&
+             mount /dev/sr1;
            fi;
-           if [ "$needmount" = true ]; then mount -a; fi
     when: ansible_distribution != "Windows"
     become_method: su
     become: true
 
   - name: Setup DVDs as apt repositories and install some packages (Astra)
-    shell: if [ -d /mnt/dvd/dists ]; then
+    shell: if [ -d /media/cdrom/dists ]; then
+             rmdir /mnt/dvd;
+             ln -s /media/cdrom /mnt/dvd;
+           fi;
+           if [ -d /mnt/dvd/dists ]; then
              echo "deb file:///mnt/dvd smolensk contrib main non-free" >> /etc/apt/sources.list.d/repo-dvd.list;
            fi;
            if [ -d /mnt/dvd2/dists ]; then
