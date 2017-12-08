@@ -208,8 +208,10 @@
 
 # To workaround an internal compiler error on
 # 'gcc psutil/_psutil_linux.c -O2 -I/usr/include/python2.7 -DPSUTIL_POSIX=1 -DPSUTIL_VERSION=501 -DPSUTIL_LINUX=1'
+# and to allow for new libicu installation
   - name: disable all cc1 optimizations on Suse 11
-    shell: "gcc -dumpspecs | sed 's/%{O\\*}//' > /usr/lib64/gcc/x86_64-suse-linux/4.5/defaults.spec"
+    shell:  gcc -dumpspecs | sed 's/%{O\*}//' > /usr/lib64/gcc/x86_64-suse-linux/4.5/defaults.spec &&
+            zypper remove -y libboost_regex1_36_0
     become_method: su
     become: true
     when: ansible_os_family == "Suse" and ansible_distribution_major_version == "11"
