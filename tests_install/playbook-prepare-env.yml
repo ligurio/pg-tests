@@ -57,7 +57,7 @@
              echo "/dev/sr1       /mnt/dvd2  auto    ro,user,exec,utf8        0    0" >> /etc/fstab &&
              mount /dev/sr1;
            fi;
-    when: ansible_distribution != "Windows"
+    when: ansible_os_family != "Windows"
     become_method: su
     become: true
 
