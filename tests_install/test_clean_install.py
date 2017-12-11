@@ -8,26 +8,13 @@ import settings
 from allure_commons.types import LabelType
 from helpers.pginstall import setup_repo
 from helpers.pginstall import install_package
+from helpers.pginstall import get_server_version
+from helpers.pginstall import get_psql_version
 
 @pytest.mark.clean_install
 class TestCleanInstall():
 
     os = ""
-
-    def get_server_version(self):
-        """ Get server version
-        """
-        if (self.os == 'Linux'):
-            cmd = 'sudo -u postgres psql -t -P format=unaligned -c "select version();"'
-        else:
-            cmd = 'psql -t -P format=unaligned -c "select version();"'
-        return subprocess.check_output(cmd, shell=True, cwd="/").strip()
-
-    def get_psql_version(self):
-        """ Get client version
-        """
-        cmd = 'psql --version'
-        return subprocess.check_output(cmd, shell=True).strip()
 
     @pytest.mark.test_clean_install
     def test_clean_install(self, request):
@@ -73,8 +60,9 @@ class TestCleanInstall():
                 edtn = '-std'
             else:
                 raise Exception('Edition %s is not supported.')
+        print("Running on %s." % target)
         install_package('%s%s-%s' % (name, edtn, version))
-        server_version = self.get_server_version()
-        client_version = self.get_psql_version()
+        server_version = get_server_version()
+        client_version = get_psql_version()
         print("Server version:\n%s\nClient version:\n%s" % (server_version, client_version))
         print("OK")
