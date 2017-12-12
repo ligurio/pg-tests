@@ -45,15 +45,16 @@ def command_executor(cmd, remote=False, host=None, login=None, password=None, st
             first_command = cmd[:cmd.index("|")]
             second_command = cmd[cmd.index("|") + 1:]
             first_command_execute = subprocess.Popen(
-                shlex.split(first_command), stdout=subprocess.PIPE)
-            return subprocess.check_output(shlex.split(second_command), stdin=first_command_execute.stdout)
+                shlex.split(first_command, posix=not(windows)), stdout=subprocess.PIPE)
+            return subprocess.check_output(shlex.split(second_command, posix=not(windows)),
+                                           stdin=first_command_execute.stdout)
         else:
             if stdout:
-                out = subprocess.Popen((shlex.split(cmd)), stdout=subprocess.PIPE)
+                out = subprocess.Popen((shlex.split(cmd, posix=not(windows))), stdout=subprocess.PIPE)
                 return out.stdout.readline().rstrip()
             else:
                 if windows:
-                    return subprocess.check_output(shlex.split(cmd), shell=True)
+                    return subprocess.check_output(shlex.split(cmd, posix=False), shell=True)
                 else:
                     print(cmd)
                     return subprocess.check_call(shlex.split(cmd))
