@@ -496,6 +496,7 @@ def main():
             save_env(domname)
 
         for test in sorted(tests):
+            print("Running test %s..." % test)
             if len(tests) > 1:
                 restore_env(domname)
                 domipaddress = create_env(t, domname, get_dom_disk(domname))[0]
@@ -507,6 +508,8 @@ def main():
                             args.product_edition,
                             args.product_milestone,
                             args.branch)
+            if DEBUG:
+                print("Test command:\n%s" % cmd)
             if domname[0:3] == 'win':
                 s = winrm.Session(domipaddress, auth=(REMOTE_LOGIN, REMOTE_PASSWORD))
                 ps_script = """
