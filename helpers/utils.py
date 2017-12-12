@@ -16,6 +16,7 @@ REMOTE_ROOT = 'root'
 REMOTE_PASSWORD = 'TestPass1'
 REMOTE_ROOT_PASSWORD = 'TestRoot1'
 SSH_PORT = 22
+CONNECT_RETRY_DELAY = 10
 
 
 class MySuites(Enum):
@@ -133,20 +134,25 @@ def exec_command(cmd, hostname, login, password, skip_ret_code_check=False, conn
     buff_size = 1024
     stdout = ""
     stderr = ""
-    for _ in range(connect_retry_count):
+    for trc in range(connect_retry_count):
         try:
             client = paramiko.SSHClient()
             client.load_system_host_keys()
             client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             client.connect(hostname=hostname, username=login, password=password, port=SSH_PORT, look_for_keys=False,
-                           timeout=10)
+                           timeout=CONNECT_RETRY_DELAY)
+            break
         except (paramiko.AuthenticationException,
                 paramiko.BadHostKeyException,
                 paramiko.SSHException,
                 socket.error,
                 Exception) as e:
-            sleep(10)
+            if trc == connect_retry_count:
+                raise e
+            sleep(CONNECT_RETRY_DELAY)
+
     if cmd is None:
+        client.close()
         return
 
     chan = client.get_transport().open_session()
@@ -174,7 +180,7 @@ def exec_command(cmd, hostname, login, password, skip_ret_code_check=False, conn
             return retcode, stdout, stderr
 
 
-def exec_command_win(cmd, hostname, user, password, skip_ret_code_check=False):
+def exec_command_win(cmd, hostname, user, password, skip_ret_code_check=False, connect_retry_count=3):
     """ Execute command on windows remote host
 
     :param cmd:
@@ -186,10 +192,25 @@ def exec_command_win(cmd, hostname, user, password, skip_ret_code_check=False):
 
     import winrm
 
-    p = winrm.Protocol(endpoint='http://' + hostname + ':5985/wsman', transport='plaintext',
-                       username=user,
-                       password=password)
-    shell_id = p.open_shell()
+    for trc in range(connect_retry_count):
+        try:
+            p = winrm.Protocol(endpoint='http://' + hostname + ':5985/wsman', transport='plaintext',
+                            username=user,
+                            password=password)
+            shell_id = p.open_shell()
+            break
+        except (winrm.exceptions.WinRMOperationTimeoutError,
+                winrm.exceptions.WinRMTransportError,
+                socket.error,
+                ) as e:
+            if trc == connect_retry_count:
+                raise e
+            sleep(CONNECT_RETRY_DELAY)
+
+    if cmd is None:
+        p.close_shell(shell_id)
+        return
+
     command_id = p.run_command(shell_id, cmd)
     stdout, stderr, retcode = p.get_command_output(shell_id, command_id)
     p.cleanup_command(shell_id, command_id)
@@ -209,12 +230,13 @@ def exec_command_win(cmd, hostname, user, password, skip_ret_code_check=False):
             return retcode, stdout, stderr
 
 def wait_for_boot(host, time=300, linux=True):
+    print("Waiting for control protocol availability.")
     if linux:
-        print("wait_for_boot")
         exec_command(None, host, REMOTE_LOGIN, REMOTE_PASSWORD,
-                     connect_retry_count=time/10)
+                     connect_retry_count=time/CONNECT_RETRY_DELAY)
     else:
-        raise Exception('Not implemented')
+        exec_command_win(None, host, REMOTE_LOGIN, REMOTE_PASSWORD,
+                         connect_retry_count=time/CONNECT_RETRY_DELAY)
 
 
 def gen_name(name):
