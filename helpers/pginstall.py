@@ -12,6 +12,7 @@ from helpers.utils import get_distro
 from helpers.utils import REMOTE_ROOT
 from helpers.utils import REMOTE_ROOT_PASSWORD
 from helpers.utils import write_file
+from helpers.utils import refresh_env_win
 
 PGPRO_ARCHIVE_STANDARD = "http://repo.postgrespro.ru/pgpro-archive/"
 PGPRO_ARCHIVE_ENTERPRISE = "http://repoee.l.postgrespro.ru/archive/"
@@ -233,11 +234,13 @@ enabled=1
         command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         return repofile
     elif dist_info[0] in WIN_BASED:
-        windows_installer = urllib.URLopener()
-        installer_name = get_last_windows_installer_file(baseurl)
+        installer_name = get_last_windows_installer_file(baseurl, dist_info[2])
         windows_installer_url = baseurl + installer_name
-        windows_installer.retrieve(windows_installer_url, "./" + installer_name)
-        install_windows_console(installer_name)
+        windows_installer = urllib.URLopener()
+        os.mkdir("./pg_installer")
+        print(baseurl + installer_name)
+        windows_installer.retrieve(windows_installer_url, "./pg_installer/" +
+                                   installer_name)
     else:
         print "Unsupported distro %s" % dist_info[0]
         sys.exit(1)
@@ -261,10 +264,24 @@ def install_package(pkg_name, remote=False, host=None):
         cmd = "zypper install -y -l --force-resolution %s" % pkg_name
         command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
     elif dist_info[0] in WIN_BASED:
-        pass
+        pginstdir = "C:\\Users\\test\\pg-tests\\pg_installer"
+        exename = None
+        for f in os.listdir(pginstdir):
+            if os.path.splitext(f)[1] == '.exe':
+                exename = f
+                break
+        if not exename:
+            raise Exception("Executable installer not found in %s." % pginstdir)
+        ininame = os.path.join(pginstdir, "pgpro.ini")
+        with open(ininame, "w") as ini:
+            ini.write("[options]\nenvvar=1\n")
+        cmd = "%s /S /init=%s" % (os.path.join(pginstdir, exename), ininame)
+        command_executor(cmd, windows=True)
+        refresh_env_win()
     else:
         print "Unsupported system: %s" % dist_info[0]
         sys.exit(1)
+
 
 def remove_package(pkg_name, remote=False, host=None):
     """
@@ -410,7 +427,7 @@ def install_windows_console(installer):
     return command_executor(cmd, windows=True)
 
 
-def get_last_windows_installer_file(url):
+def get_last_windows_installer_file(url, arch):
     """Get last uploaded postgrespro installation file from postgrespro repo
 
     :param url: str:
@@ -418,11 +435,15 @@ def get_last_windows_installer_file(url):
     """
     f = urllib.urlopen(url)
     soup = BeautifulSoup(f)
-    postgres_files = []
+    exe_arch = '_X64bit_' if arch == 'AMD64' else '_X86bit_'
+    setup_files = []
     for link in soup.findAll('a'):
-        if "Postgres" in link.get('href'):
-            postgres_files.append(link.get('href'))
-    return postgres_files[-1]
+        href = link.get('href')
+        if "Postgres" in href and exe_arch in href:
+            setup_files.append(href)
+    if not setup_files:
+        raise Exception("No Postgres (%s) setup files found in %s." % (exe_arch, url))
+    return setup_files[-1]
 
 
 def delete_repo(remote=False, host=None, **kwargs):
