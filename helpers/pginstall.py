@@ -513,15 +513,17 @@ def delete_packages(remote=False, host=None, **kwargs):
             cmd = "apt-get remove -y pgbouncer"
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
+
 def get_server_version():
     """ Get server version
     """
     dist_info = get_distro()
     if dist_info[0] in WIN_BASED:
-        cmd = 'psql -t -P format=unaligned -c "select version();"'
+        cmd = 'psql -t -P format=unaligned -c "select version()"'
     else:
-        cmd = 'sudo -u postgres psql -t -P format=unaligned -c "select version();"'
+        cmd = 'sudo -u postgres psql -t -P format=unaligned -c "select version()"'
     return subprocess.check_output(cmd, shell=True, cwd="/").strip()
+
 
 def get_psql_version():
     """ Get client version
