@@ -322,6 +322,26 @@ def create_env_info_from_config(env_name, config):
     return env_info
 
 
+def refresh_env_win():
+    if sys.hexversion > 0x03000000:
+        import winreg
+    else:
+        import _winreg as winreg
+
+    regkey = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
+            r"System\CurrentControlSet\Control\Session Manager\Environment",
+            0, winreg.KEY_READ)
+    i = 0
+    while True:
+        try:
+            envvar, envval, valtype = winreg.EnumValue(regkey, i)
+        except WindowsError as e:
+            break
+        i += 1
+        if envvar.upper() == 'PATH' or envvar.upper().startswith('PG'):
+            os.environ[envvar] = envval
+
+
 # def check_systemd(remote=False, host=None):
 #     """Check systemd or not in system
 #
