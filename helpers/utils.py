@@ -236,22 +236,22 @@ def write_file(file, text, remote=False, host=None):
 
 
 def get_distro(remote=False, ip=None):
-    """ Get linux distribution and os version
+    """ Get os distribution, version, and architecture
 
     :param remote:
     :param ip:
-    :return: tuple: linux distribution and os version
+    :return: tuple: os distribution, version, and architecture
     """
     if remote:
         host_info = {}
         while len(host_info) == 0:
             host_info = get_os_type(ip)
-        return host_info['NAME'].strip('"'), host_info['VERSION_ID'].strip('"')
+        return host_info['NAME'].strip('"'), host_info['VERSION_ID'].strip('"'), None
     else:
         if "Linux" in platform.platform():
-            return platform.linux_distribution()[0].strip('"'), platform.linux_distribution()[1]
+            return platform.linux_distribution()[0].strip('"'), platform.linux_distribution()[1], platform.machine()
         elif "Windows" in platform.platform():
-            return platform.win32_ver()[0], platform.win32_ver()[1]
+            return platform.win32_ver()[0], platform.win32_ver()[1], platform.machine()
         else:
             print("Unknown distro")
             sys.exit(1)
