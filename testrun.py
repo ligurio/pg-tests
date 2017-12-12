@@ -514,9 +514,8 @@ def main():
                 s = winrm.Session(domipaddress, auth=(REMOTE_LOGIN, REMOTE_PASSWORD))
                 ps_script = """
                     Set-ExecutionPolicy Unrestricted
-                    [Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Python27",
-                    [EnvironmentVariableTarget]::Machine)
-                    [Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Python27\Scripts",
+                    [Environment]::SetEnvironmentVariable("Path", $env:Path +
+                    ";C:\Python27;C:\Python27\Scripts",
                     [EnvironmentVariableTarget]::Machine)
                     """
                 s.run_ps(ps_script)
