@@ -141,6 +141,7 @@ def exec_command(cmd, hostname, login, password, skip_ret_code_check=False, conn
             client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             client.connect(hostname=hostname, username=login, password=password, port=SSH_PORT, look_for_keys=False,
                            timeout=CONNECT_RETRY_DELAY)
+            chan = client.get_transport().open_session()
             break
         except (paramiko.AuthenticationException,
                 paramiko.BadHostKeyException,
@@ -152,10 +153,10 @@ def exec_command(cmd, hostname, login, password, skip_ret_code_check=False, conn
             sleep(CONNECT_RETRY_DELAY)
 
     if cmd is None:
+        chan.close()
         client.close()
         return
 
-    chan = client.get_transport().open_session()
     print "Executing '%s' on '%s'" % (cmd, hostname)
     chan.exec_command(cmd)
     retcode = chan.recv_exit_status()
