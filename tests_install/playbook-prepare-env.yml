@@ -104,6 +104,14 @@
     become_method: su
     become: true
 
+  - name: Disable automatic updates (Debian-based)
+    shell: for aptconf in `grep -E '^\s*APT::Periodic::(Update-Package-Lists|Unattended-Upgrade)' -l -r /etc/apt/apt.conf.d/`;
+             do sed -e 's#^\(\s*APT::Periodic::\(Update-Package-Lists\|Unattended-Upgrade\)\)#// \1#' -i $aptconf; done
+    when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu' or
+          ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux')
+    become_method: su
+    become: true
+
   - name: install required packages (RedHat 7) # Don't require RedHat subscription
     yum: name={{ item }} state=present update_cache=yes disablerepo=rhel-7-server-rpms
     with_items:
