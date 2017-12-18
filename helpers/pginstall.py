@@ -435,7 +435,7 @@ def get_last_windows_installer_file(url, arch):
     """
     f = urllib.urlopen(url)
     soup = BeautifulSoup(f)
-    exe_arch = '_X64bit_' if arch == 'AMD64' else '_X86bit_'
+    exe_arch = '_64bit_' if arch == 'AMD64' else '_32bit_'
     setup_files = []
     for link in soup.findAll('a'):
         href = link.get('href')
