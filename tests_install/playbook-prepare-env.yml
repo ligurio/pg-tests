@@ -40,7 +40,9 @@
     become: true
 
   - name: Wait for automatic system updates
-    shell: while fuser /var/lib/dpkg/lock >/dev/null 2>&1; do sleep 2; done;
+    shell: sleep 2;
+           while fuser /var/lib/dpkg/lock >/dev/null 2>&1; do sleep 2; done;
+           while fuser /var/lib/apt/lists/lock >/dev/null 2>&1; do sleep 2; done;
     when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
     become_method: su
     become: true
