@@ -535,19 +535,66 @@ def delete_packages(remote=False, host=None, **kwargs):
             command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
 
-def get_server_version():
-    """ Get server version
-    """
+def exec_psql(query, options='', binpath=None):
     dist_info = get_distro()
-    if dist_info[0] in WIN_BASED:
-        cmd = 'psql -t -P format=unaligned -c "select version()"'
-    else:
-        cmd = 'sudo -u postgres psql -t -P format=unaligned -c "select version()"'
+    cmd = '%s%spsql %s -c "%s"' % \
+           (
+            ('' if dist_info[0] in WIN_BASED else 'sudo -u postgres '),
+            ('' if binpath is None else (binpath  + os.sep)),
+            options, query
+           )
     return subprocess.check_output(cmd, shell=True, cwd="/").strip()
 
 
-def get_psql_version():
+def get_server_version(binpath=None):
+    return exec_psql("SELECT version()", '-t -P format=unaligned', binpath)
+
+
+def get_psql_version(binpath=None):
     """ Get client version
     """
-    cmd = 'psql --version'
+    cmd = '%spsql --version' % \
+        ('' if binpath is None else (binpath  + os.sep))
     return subprocess.check_output(cmd, shell=True).strip()
+
+
+def get_initdb_props(binpath=None):
+    """ Get properties returned by initdb
+    """
+
+    dist_info = get_distro()
+    cmd = '%s%sinitdb -s -D .' % \
+           (
+            ('' if dist_info[0] in WIN_BASED else 'sudo -u postgres '),
+            ('' if binpath is None else (binpath  + os.sep))
+           )
+    props = {}
+    for line in subprocess.check_output(cmd, shell=True,
+                                        stderr=subprocess.STDOUT,
+                                        cwd="/").split('\n'):
+        if '=' in line:
+            (name, val) = line.split('=', 1)
+            props[name] = val
+    return props
+
+def get_pg_setting(setting, binpath=None):
+    return exec_psql("SELECT setting FROM pg_settings WHERE name='%s'" % setting,
+                     '-t -P format=unaligned',
+                     binpath)
+
+def pg_control(action, data_dir, binpath=None, remote=False, host=None):
+    """ Manage Postgres instance
+    :param action: start, restart, stop etc
+    :param init: Initialization before a first start
+    :return:
+    """
+    dist_info = get_distro()
+    cmd = '%s%spg_ctl -w -D %s %s' % \
+           (
+            ('' if dist_info[0] in WIN_BASED else 'sudo -u postgres '),
+            ('' if binpath is None else (binpath  + os.sep)),
+            data_dir,
+            action
+           )
+    print(cmd)
+    return command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
