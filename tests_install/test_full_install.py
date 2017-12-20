@@ -25,7 +25,7 @@ PRELOAD_LIBRARIES = ['auth_delay', 'auto_explain', 'pg_pathman', 'plantuner', 's
 @pytest.mark.full_install
 class TestFullInstall():
 
-    os = ""
+    os = platform.system()
 
     @pytest.mark.test_full_install
     def test_full_install(self, request):
@@ -37,7 +37,6 @@ class TestFullInstall():
         :return:
         """
         dist = ""
-        self.os = platform.system()
         if self.os == 'Linux':
             dist = " ".join(platform.linux_distribution()[0:2])
         elif self.os == 'Windows':
