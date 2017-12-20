@@ -102,7 +102,7 @@ class TestFullInstall():
         edtn = ''
         if edition:
             if edition == 'standard':
-                edtn = '-std'
+                edtn = 'std'
             else:
                 raise Exception('Edition %s is not supported.' % edition)
-        remove_package('%s%s-%s*' % (name, edtn, version))
+        remove_package('%s-%s-%s*' % (name, edtn, version))
