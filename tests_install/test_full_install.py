@@ -7,14 +7,17 @@ import pytest
 import settings
 
 from allure_commons.types import LabelType
-from helpers.pginstall import setup_repo
-from helpers.pginstall import install_package, remove_package
-from helpers.pginstall import (exec_psql,
+from helpers.pginstall import (setup_repo,
+                               install_package,
+                               install_postgres_win,
+                               remove_package,
+                               install_perl_win,
+                               exec_psql,
                                get_server_version,
                                get_psql_version,
                                get_initdb_props,
                                get_pg_setting,
-                               pg_control)
+                               restart_service)
 
 PRELOAD_LIBRARIES = ['auth_delay', 'auto_explain', 'pg_pathman', 'plantuner', 'shared_ispell']
 
@@ -39,6 +42,7 @@ class TestFullInstall():
             dist = " ".join(platform.linux_distribution()[0:2])
         elif self.os == 'Windows':
             dist = 'Windows'
+            install_perl_win()
         else:
             raise Exception("OS %s is not supported." % self.os)
         version = request.config.getoption('--product_version')
@@ -59,11 +63,14 @@ class TestFullInstall():
         edtn = ''
         if edition:
             if edition == 'standard':
-                edtn = '-std'
+                edtn = 'std'
             else:
                 raise Exception('Edition %s is not supported.' % edition)
         print("Running on %s." % target)
-        install_package('%s%s-%s*' % (name, edtn, version))
+        if self.os != 'Windows':
+            install_package('%s-%s-%s' % (name, edtn, version))
+        else:
+            install_postgres_win()
         server_version = get_server_version()
         client_version = get_psql_version()
         print("Server version:\n%s\nClient version:\n%s" % (server_version, client_version))
@@ -71,19 +78,21 @@ class TestFullInstall():
 
     @pytest.mark.test_all_extensions
     def test_all_extensions(self, request):
+        version = request.config.getoption('--product_version')
+        name = request.config.getoption('--product_name')
+        edition = request.config.getoption('--product_edition')
+
         iprops = get_initdb_props()
         exec_psql("ALTER SYSTEM SET shared_preload_libraries = %s" %
                   ','.join(PRELOAD_LIBRARIES))
         data_directory = get_pg_setting('data_directory')
-        pg_control("restart", data_directory)
-        controls = glob.glob(os.path.join(iprops['share_path'], 'extension', '*.control'))
+        restart_service(name=name, version=version, edition=edition)
+        share_path = iprops['share_path'].replace('/', os.sep)
+        controls = glob.glob(os.path.join(share_path, 'extension', '*.control'))
         for ctrl in sorted(controls):
             extension = os.path.splitext(os.path.basename(ctrl))[0]
-            print("CREATE EXTENSION:", extension)
+            print("CREATE EXTENSION %s" % extension)
             exec_psql("CREATE EXTENSION IF NOT EXISTS \\\"%s\\\" CASCADE" % extension)
-        #if self.os == 'Linux':
-            #subprocess.check_call("/home/test/pg-tests/tests_install/test_extensions.sh",
-                                  #cwd="/tmp", shell=True)
 
     @pytest.mark.test_full_remove
     def test_full_remove(self, request):
