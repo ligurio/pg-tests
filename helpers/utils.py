@@ -55,7 +55,7 @@ def command_executor(cmd, remote=False, host=None, login=None, password=None, st
                 return out.stdout.readline().rstrip()
             else:
                 if windows:
-                    return subprocess.check_output(shlex.split(cmd, posix=False), shell=True)
+                    return subprocess.check_call(shlex.split(cmd, posix=False), shell=True)
                 else:
                     print(cmd)
                     return subprocess.check_call(shlex.split(cmd))
