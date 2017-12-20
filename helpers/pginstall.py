@@ -577,10 +577,43 @@ def get_initdb_props(binpath=None):
             props[name] = val.strip()
     return props
 
+
 def get_pg_setting(setting, binpath=None):
     return exec_psql("SELECT setting FROM pg_settings WHERE name='%s'" % setting,
                      '-t -P format=unaligned',
                      binpath)
+
+
+def get_default_service_name(**kwargs):
+    dist_info = get_distro()
+    if dist_info[0] in WIN_BASED:
+        if kwargs['name'] == "postgrespro":
+            return 'postgrespro' + '-'  + \
+                   ('X64' if dist_info[2] == 'AMD64' else 'X32') + '-'  + \
+                   kwargs['version']
+        else:
+            raise Exception('Product %s is not supported.' % kwargs['name'])
+    else:
+        if kwargs['name'] == "postgrespro":
+            if (kwargs['edition'] == 'standard'):
+                edtn = 'std'
+            else:
+                raise Exception('Edition %s is not supported.' % edition)
+            return  ('%s-%s-%s' % (kwargs['name'], edtn, kwargs['version']))
+        else:
+            raise Exception('Product %s is not supported.' % kwargs['name'])
+
+
+def restart_service(service_name=None, **kwargs):
+    if not service_name:
+        service_name = get_default_service_name(**kwargs)
+    dist_info = get_distro()
+    if dist_info[0] in WIN_BASED:
+        cmd = 'net stop "{0}" & net start "{0}"'.format(service_name)
+    else:
+        cmd = 'service "%s" restart' % service_name
+    subprocess.check_call(cmd, shell=True)
+
 
 def pg_control(action, data_dir, binpath=None, remote=False, host=None):
     """ Manage Postgres instance
