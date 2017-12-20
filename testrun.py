@@ -373,16 +373,18 @@ def save_env(domname):
     if dom.shutdown() < 0:
         raise Exception('Unable to shutdown %s.' % domname)
     timeout = 0
-    while timeout < 60:
+    while True:
+        timeout += 5
         try:
+            print "Waiting for domain shutdown...%d" % timeout
+            time.sleep(timeout)
             if not dom.isActive():
                 break
-            timeout += 5
-            time.sleep(timeout)
-            print "Waiting for domain shutdown...%d" % timeout
         except libvirt.libvirtError, e:
             print(e, dir(e))
             break
+        if timeout == 60:
+            raise Exception('Could not shutdown domain %s.' % domname)
     conn.close()
     diskfile = get_dom_disk(domname)
     shutil.copy(diskfile, diskfile + '.s0')
