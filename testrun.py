@@ -102,6 +102,21 @@ def create_image(domname, name):
         image = urllib.URLopener()
         image.retrieve(image_url, image_original)
 
+    page = ''
+    try:
+        page = urllib.urlopen(IMAGE_BASE_URL).read()
+    except IOError:
+        print("%s is not available, no *.iso will be downloaded." % IMAGE_BASE_URL)
+    isos = re.findall('href=[\'"]?([^\'" >]+)\.iso', page)
+    for isoname in isos:
+        if isoname.startswith(name):
+            iso_url = IMAGE_BASE_URL + isoname + '.iso'
+            target_iso = TEMPLATE_DIR + isoname + '.iso'
+            if not os.path.isfile(target_iso):
+                print("Downloading %s.iso..." % isoname)
+                iso = urllib.URLopener()
+                iso.retrieve(iso_url, target_iso)
+
     if not os.path.exists(WORK_DIR):
         os.makedirs(WORK_DIR)
 
