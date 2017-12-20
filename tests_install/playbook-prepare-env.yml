@@ -75,7 +75,8 @@
            if [ -d /mnt/dvd2/dists ]; then
              echo "deb file:///mnt/dvd2 smolensk contrib main non-free" >> /etc/apt/sources.list.d/repo-dvd.list;
            fi;
-           apt-get update
+           apt-get update;
+           sed -e 's|^#\s*\(/sbin/shutdown\)|\1|' -i /etc/acpi/powerbtn-acpi-support.sh
     when: ansible_distribution == 'Astra Linux (Smolensk)'
     become_method: su
     become: true
