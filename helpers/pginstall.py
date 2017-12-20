@@ -574,7 +574,7 @@ def get_initdb_props(binpath=None):
                                         cwd="/").split('\n'):
         if '=' in line:
             (name, val) = line.split('=', 1)
-            props[name] = val
+            props[name] = val.strip()
     return props
 
 def get_pg_setting(setting, binpath=None):
