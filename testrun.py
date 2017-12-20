@@ -441,7 +441,7 @@ def main():
     parser.add_argument("--product_name", dest="product_name",
                         help="specify product name", action="store", default="postgrespro")
     parser.add_argument("--product_version", dest="product_version",
-                        help="specify product version", action="store", default="9.6")
+                        help="specify product version", action="store", default="10")
     parser.add_argument("--product_edition", dest="product_edition",
                         help="specify product edition", action="store")
     parser.add_argument("--product_milestone", dest="product_milestone",
