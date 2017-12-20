@@ -47,6 +47,7 @@ TESTS_PAYLOAD_ZIP = '/tmp/pg-tests.zip'
 
 def list_images():
     names = []
+    page = ''
     try:
         page = urllib.urlopen(IMAGE_BASE_URL).read()
     except IOError:
