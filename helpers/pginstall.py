@@ -419,14 +419,6 @@ def package_mgmt(remote=False, host=None, action="install", **kwargs):
                 command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
 
-def install_windows_console(installer):
-    """Run shell command for silent installation
-    :return:
-    """
-    cmd = "C:/Users/test/pg-tests/{installer} /S".format(installer=installer)
-    return command_executor(cmd, windows=True)
-
-
 def get_last_windows_installer_file(url, arch):
     """Get last uploaded postgrespro installation file from postgrespro repo
 
