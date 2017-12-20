@@ -519,13 +519,12 @@ def main():
                     [EnvironmentVariableTarget]::Machine)
                     """
                 s.run_ps(ps_script)
-                print "Added path for python and python scripts. \n"
+                print "Added path for python and python scripts.\n"
                 retcode, stdout, stderr = exec_command_win(cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD,
-                                                        skip_ret_code_check=True)
-                # export_results(domname, domipaddress, reportname)
+                                                           skip_ret_code_check=True)
             else:
                 retcode, stdout, stderr = exec_command(cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD,
-                                                    skip_ret_code_check=True)
+                                                       skip_ret_code_check=True)
 
             if args.export:
                 testname = test.split('/')[1].split('.')[0]
