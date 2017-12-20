@@ -19,6 +19,7 @@ PGPRO_ARCHIVE_ENTERPRISE = "http://repoee.l.postgrespro.ru/archive/"
 PGPRO_BRANCH_HOST = "http://localrepo.l.postgrespro.ru/branches/"
 PGPRO_HOST = "http://repo.postgrespro.ru/"
 PSQL_HOST = "https://download.postgresql.org/pub"
+WIN_INST_DIR = "C:\\Users\\test\\pg-tests\\pg_installer"
 PACKAGES = ['server', 'contrib', 'libs', 'docs', 'docs-ru', 'plperl', 'plpython', 'pltcl']
 DEB_PACKAGES = ['plperl', 'plpython', 'plpython3', 'pltcl']
 ALT_PACKAGES = ['server', 'contrib', 'devel', 'docs', 'docs-ru', 'perl', 'python', 'tcl']
@@ -237,10 +238,11 @@ enabled=1
         installer_name = get_last_windows_installer_file(baseurl, dist_info[2])
         windows_installer_url = baseurl + installer_name
         windows_installer = urllib.URLopener()
-        os.mkdir("./pg_installer")
+        if not os.path.exists(WIN_INST_DIR):
+            os.mkdir(WIN_INST_DIR)
         print(baseurl + installer_name)
-        windows_installer.retrieve(windows_installer_url, "./pg_installer/" +
-                                   installer_name)
+        windows_installer.retrieve(windows_installer_url,
+                                   os.path.join(WIN_INST_DIR, installer_name))
     else:
         print "Unsupported distro %s" % dist_info[0]
         sys.exit(1)
@@ -263,24 +265,25 @@ def install_package(pkg_name, remote=False, host=None):
     elif dist_info[0] in ZYPPER_BASED:
         cmd = "zypper install -y -l --force-resolution %s" % pkg_name
         command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-    elif dist_info[0] in WIN_BASED:
-        pginstdir = "C:\\Users\\test\\pg-tests\\pg_installer"
-        exename = None
-        for f in os.listdir(pginstdir):
-            if os.path.splitext(f)[1] == '.exe':
-                exename = f
-                break
-        if not exename:
-            raise Exception("Executable installer not found in %s." % pginstdir)
-        ininame = os.path.join(pginstdir, "pgpro.ini")
-        with open(ininame, "w") as ini:
-            ini.write("[options]\nenvvar=1\n")
-        cmd = "%s /S /init=%s" % (os.path.join(pginstdir, exename), ininame)
-        command_executor(cmd, windows=True)
-        refresh_env_win()
     else:
         print "Unsupported system: %s" % dist_info[0]
         sys.exit(1)
+
+
+def install_postgres_win(remote=False, host=None):
+    exename = None
+    for f in os.listdir(WIN_INST_DIR):
+        if os.path.splitext(f)[1] == '.exe' and f.upper().startswith('POSTGRES'):
+            exename = f
+            break
+    if not exename:
+        raise Exception("Executable installer not found in %s." % WIN_INST_DIR)
+    ininame = os.path.join(WIN_INST_DIR, "pgpro.ini")
+    with open(ininame, "w") as ini:
+        ini.write("[options]\nenvvar=1\n")
+    cmd = "%s /S /init=%s" % (os.path.join(WIN_INST_DIR, exename), ininame)
+    command_executor(cmd, windows=True)
+    refresh_env_win()
 
 
 def remove_package(pkg_name, remote=False, host=None):
