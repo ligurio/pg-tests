@@ -445,7 +445,7 @@ def main():
     parser.add_argument("--product_edition", dest="product_edition",
                         help="specify product edition", action="store")
     parser.add_argument("--product_milestone", dest="product_milestone",
-                        help="specify target milestone", action="store", default="beta")
+                        help="specify target milestone", action="store")
     parser.add_argument("--branch", dest="branch",
                         help="specify product branch for package", action="store")
     parser.add_argument('--keep', dest="keep", action='store_true',
