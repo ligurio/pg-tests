@@ -8,6 +8,7 @@ import settings
 from allure_commons.types import LabelType
 from helpers.pginstall import setup_repo
 from helpers.pginstall import install_package
+from helpers.pginstall import install_postgres_win
 from helpers.pginstall import get_server_version
 from helpers.pginstall import get_psql_version
 
@@ -57,11 +58,14 @@ class TestCleanInstall():
         edtn = ''
         if edition:
             if edition == 'standard':
-                edtn = '-std'
+                edtn = 'std'
             else:
                 raise Exception('Edition %s is not supported.')
         print("Running on %s." % target)
-        install_package('%s%s-%s' % (name, edtn, version))
+        if dist != 'Windows':
+            install_package('%s-%s-%s' % (name, edtn, version))
+        else:
+            install_postgres_win()
         server_version = get_server_version()
         client_version = get_psql_version()
         print("Server version:\n%s\nClient version:\n%s" % (server_version, client_version))
