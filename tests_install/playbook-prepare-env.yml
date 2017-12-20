@@ -19,8 +19,9 @@
             ({{ ansible_connection }}) has os_family {{ ansible_os_family }}, \
             distribution {{ ansible_distribution }} {{ ansible_distribution_major_version }}."
 
-  - name: Update repos ALT
-    command: apt-get update
+  - name: Update repos and install acpi-events-power (ALT)
+    shell: apt-get update &&
+           apt-get install acpid-events-power
     when: ansible_distribution == 'ALT'
     become_method: su
     become: true
