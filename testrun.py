@@ -396,7 +396,6 @@ def save_env(domname):
             if not dom.isActive():
                 break
         except libvirt.libvirtError, e:
-            print(e, dir(e))
             break
         if timeout == 60:
             raise Exception('Could not shutdown domain %s.' % domname)
