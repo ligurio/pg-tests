@@ -21,7 +21,7 @@
 
   - name: Update repos and install acpid-events-power (ALT)
     shell: apt-get update &&
-           apt-get install acpid-events-power && service acpid restart
+           apt-get install acpid-events-power && /sbin/service acpid restart
     when: ansible_distribution == 'ALT'
     become_method: su
     become: true
