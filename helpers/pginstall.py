@@ -286,6 +286,26 @@ def install_postgres_win(remote=False, host=None):
     refresh_env_win()
 
 
+def install_perl_win(arch=None):
+    if not arch:
+        dist_info = get_distro()
+        arch = dist_info[2]
+    if arch == 'AMD64':
+        exename = 'ActivePerl-5.24.2.2403-MSWin32-x64-403863.exe'
+    else:
+        exename = 'ActivePerl-5.24.2.2403-MSWin32-x86-64int-403863.exe'
+    url = 'https://downloads.activestate.com/ActivePerl/releases/5.24.2.2403/' + exename
+    if not os.path.exists(WIN_INST_DIR):
+        os.mkdir(WIN_INST_DIR)
+    perl_installer = urllib.URLopener()
+    target_path = os.path.join(WIN_INST_DIR, exename)
+    perl_installer.retrieve(url, target_path)
+
+    cmd = "%s /quiet PERL_PATH=Yes PERL_EXT=Yes ADDLOCAL=PERL" % target_path
+    command_executor(cmd, windows=True)
+    refresh_env_win()
+
+
 def remove_package(pkg_name, remote=False, host=None):
     """
     :param pkg_name
