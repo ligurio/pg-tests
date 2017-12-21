@@ -2,3 +2,4 @@ reports/
 *.pyc
 static/inventory
 *.retry
+*/resources/

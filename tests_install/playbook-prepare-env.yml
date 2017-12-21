@@ -3,6 +3,8 @@
   gather_facts: no
   vars:
     win_path: C:\Users\test\Downloads\
+    payload_linux: resources/pg-tests.tgz
+    payload_win: resources/pg_tests.zip
 
   tasks:
 
@@ -223,7 +225,7 @@
 
   - name: copy tests payload
     copy:
-      src:  /tmp/pg-tests.tgz
+      src:  "{{ payload_linux }}"
       dest: /home/test/
     when: ansible_os_family != "Windows"
 
@@ -356,7 +358,7 @@
 
   - name: windows - copy tests payload
     win_copy:
-      src:  /tmp/pg-tests.zip
+      src:  "{{ payload_win }}"
       dest: C:\Users\test\
     when: ansible_os_family == "Windows"
 

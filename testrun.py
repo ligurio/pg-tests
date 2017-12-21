@@ -41,8 +41,9 @@ ANSIBLE_INVENTORY_WIN = "%s ansible_host=%s \
                     ansible_port=5985  \
                     ansible_connection=winrm \n"
 REPORT_SERVER_URL = 'http://testrep.l.postgrespro.ru/'
-TESTS_PAYLOAD_TAR = '/tmp/pg-tests.tgz'
-TESTS_PAYLOAD_ZIP = '/tmp/pg-tests.zip'
+TESTS_PAYLOAD_DIR = 'resources'
+TESTS_PAYLOAD_TAR = 'pg-tests.tgz'
+TESTS_PAYLOAD_ZIP = 'pg-tests.zip'
 
 
 def list_images():
@@ -131,6 +132,20 @@ def create_image(domname, name):
 
 
 def prepare_payload(tests_dir):
+    rsrcdir = os.path.join(tests_dir, TESTS_PAYLOAD_DIR)
+    tar_path = os.path.join(rsrcdir, TESTS_PAYLOAD_TAR)
+    zip_path = os.path.join(rsrcdir, TESTS_PAYLOAD_ZIP)
+    if os.path.isdir(rsrcdir):
+        timeout = 0
+        while not(os.path.exists(tar_path)) or not(os.path.exists(zip_path)):
+            timeout += 5
+            print "Waiting for parallel tar and zip creation...%d" % timeout
+            time.sleep(timeout)
+            if timeout == 60:
+                raise Exception('Could not find tar and zip in "%s".' % rsrcdir)
+        return
+
+    os.makedirs(rsrcdir)
     print("Preparing a payload for target VMs...")
     tempdir = tempfile.mkdtemp()
     pgtd = os.path.join(tempdir, 'pg-tests')
@@ -139,10 +154,7 @@ def prepare_payload(tests_dir):
     if retcode != 0:
         raise Exception("Downloading get-pip failed.")
 
-    if os.path.exists(TESTS_PAYLOAD_ZIP):
-        os.remove(TESTS_PAYLOAD_ZIP)
-    retcode = call("zip -q -r {0} pg-tests".format(TESTS_PAYLOAD_ZIP),
-                   cwd=tempdir, shell=True)
+    retcode = call("zip -q -r _%s pg-tests" % TESTS_PAYLOAD_ZIP, cwd=tempdir, shell=True)
     if retcode != 0:
         raise Exception("Preparing zip payload failed.")
 
@@ -150,33 +162,39 @@ def prepare_payload(tests_dir):
     pgtdpp = os.path.join(pgtd, 'pip-packages')
     os.makedirs(pgtdpp)
     retcode = call("pip download -q -r %s" %
-                   os.path.abspath(os.path.join(tests_dir, "requirements.txt")),
-                   cwd=pgtdpp, shell=True)
+                os.path.abspath(os.path.join(tests_dir, "requirements.txt")),
+                cwd=pgtdpp, shell=True)
     if retcode != 0:
         raise Exception("Downloading pip-requirements failed.")
 
     retcode = call("pip download -q --no-deps --only-binary=:all:"
-                   " --platform manylinux1_x86_64 --python-version 27"
-                   " --implementation cp --abi cp27m  -r %s" %
-                   os.path.abspath(os.path.join(tests_dir, "requirements-bin.txt")),
-                   cwd=pgtdpp, shell=True)
+                " --platform manylinux1_x86_64 --python-version 27"
+                " --implementation cp --abi cp27m  -r %s" %
+                os.path.abspath(os.path.join(tests_dir, "requirements-bin.txt")),
+                cwd=pgtdpp, shell=True)
     if retcode != 0:
         raise Exception("Downloading pip-requirements(27m) failed.")
 
     retcode = call("pip download -q --no-deps --only-binary=:all:"
-                   " --platform manylinux1_x86_64 --python-version 27"
-                   " --implementation cp --abi cp27mu  -r %s" %
-                   os.path.abspath(os.path.join(tests_dir, "requirements-bin.txt")),
-                   cwd=pgtdpp, shell=True)
+                " --platform manylinux1_x86_64 --python-version 27"
+                " --implementation cp --abi cp27mu  -r %s" %
+                os.path.abspath(os.path.join(tests_dir, "requirements-bin.txt")),
+                cwd=pgtdpp, shell=True)
     if retcode != 0:
         raise Exception("Downloading pip-requirements(27mu) failed.")
 
-    if os.path.exists(TESTS_PAYLOAD_TAR):
-        os.remove(TESTS_PAYLOAD_TAR)
-    retcode = call("tar -czf {0} pg-tests".format(TESTS_PAYLOAD_TAR),
+    retcode = call("tar -czf _%s pg-tests" % TESTS_PAYLOAD_TAR,
                    cwd=tempdir, shell=True)
     if retcode != 0:
         raise Exception("Preparing tar payload failed.")
+    #First move to the target directory to prepare for atomic rename
+    # (if tempdir is on different filesystem)
+    shutil.move(os.path.join(tempdir, '_' + TESTS_PAYLOAD_ZIP), rsrcdir)
+    shutil.move(os.path.join(tempdir, '_' + TESTS_PAYLOAD_TAR), rsrcdir)
+
+    # Atomic rename
+    os.rename(os.path.join(rsrcdir, '_' + TESTS_PAYLOAD_ZIP), zip_path)
+    os.rename(os.path.join(rsrcdir, '_' + TESTS_PAYLOAD_TAR), tar_path)
     shutil.rmtree(tempdir)
 
 
@@ -500,11 +518,11 @@ def main():
     prepare_payload(tests_dir)
 
     targets = args.target.split(',')
-    for t in targets:
-        print("Starting target %s..." % t)
+    for target in targets:
+        print("Starting target %s..." % target)
         target_start = time.time()
-        domname = gen_name(t)
-        domipaddress = create_env(t, domname)[0]
+        domname = gen_name(target)
+        domipaddress = create_env(target, domname)[0]
         setup_env_result = setup_env(domipaddress, domname, tests_dir)
         if setup_env_result == 0:
             print("Environment deployed without errors. Ready to run tests")
@@ -515,11 +533,13 @@ def main():
 
         for test in sorted(tests):
             print("Running test %s..." % test)
+            testname = test.split('/')[1].split('.')[0]
             if len(tests) > 1:
                 restore_env(domname)
-                domipaddress = create_env(t, domname, get_dom_disk(domname))[0]
+                domipaddress = create_env(target, domname, get_dom_disk(domname))[0]
                 wait_for_boot(domipaddress, linux=(domname[0:3] != 'win'))
-            reportname = "report-" + time.strftime('%Y-%m-%d-%H-%M-%S')
+            reportname = "report-%s_%s_%s" % (time.strftime('%Y-%m-%d-%H-%M-%S'),
+                                              testname, target)
             cmd = make_test_cmd(domname, reportname, test,
                             args.product_name,
                             args.product_version,
@@ -545,9 +565,8 @@ def main():
                                                        skip_ret_code_check=True)
 
             if args.export:
-                testname = test.split('/')[1].split('.')[0]
                 export_results(domname, domipaddress, reportname,
-                            operating_system=t, product_name=args.product_name,
+                            operating_system=target, product_name=args.product_name,
                             product_version=args.product_version, product_edition=args.product_edition,
                             tests=testname)
                 reporturl = os.path.join(REPORT_SERVER_URL, reportname)
@@ -559,7 +578,7 @@ def main():
                 print("Test return code (for target: %s, domain: %s, IP address: %s) "
                       "is not zero - %s.\n"
                       "Please check logs in report: %s" % \
-                      (t, domname, domipaddress, retcode, reporturl))
+                      (target, domname, domipaddress, retcode, reporturl))
                 print retcode, stdout, stderr
                 sys.exit(1)
 
@@ -569,7 +588,7 @@ def main():
             close_env(domname, saveimg=True, destroys0=False)
 
         print("Target %s done in %s." %
-              (t, time.strftime("%H:%M:%S",
+              (target, time.strftime("%H:%M:%S",
                   time.gmtime(time.time() - target_start))))
 
     print("Test execution for targets %s finished without errors in %s." %
