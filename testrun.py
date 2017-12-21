@@ -313,7 +313,7 @@ def setup_env(domipaddress, domname, tests_dir):
         inv = ANSIBLE_INVENTORY_WIN % (domname, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD)
         ansible_cmd = ANSIBLE_CMD % (os.path.join(tests_dir, ANSIBLE_PLAYBOOK), "winrm", domname)
 
-    with open("static/inventory", "w") as hosts:
+    with open("static/inventory", "a") as hosts:
         hosts.write(inv)
 
     os.environ['ANSIBLE_HOST_KEY_CHECKING'] = 'False'
