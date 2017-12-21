@@ -389,13 +389,13 @@ def export_results(domname, domipaddress, reportname, operating_system=None, pro
         print(e)
         pass
     finally:
-        subprocess.Popen(
-            ['curl', '-T', 'reports/%s.html' % reportname, REPORT_SERVER_URL])
-        subprocess.Popen(
-            ['curl', '-T', 'reports/%s.xml' % reportname, REPORT_SERVER_URL])
+        subprocess.call(
+            ['curl', '-s', '-S', '-T', 'reports/%s.html' % reportname, REPORT_SERVER_URL])
+        subprocess.call(
+            ['curl', '-s', '-S', '-T', 'reports/%s.xml' % reportname, REPORT_SERVER_URL])
         for file in os.listdir('reports'):
             if '.json' in file:
-                subprocess.Popen(['curl', '-T', os.path.join('reports', file), REPORT_SERVER_URL])
+                subprocess.call(['curl', '-s', '-S', '-T', os.path.join('reports', file), REPORT_SERVER_URL])
             else:
                 continue
 
