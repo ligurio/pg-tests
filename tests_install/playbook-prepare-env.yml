@@ -4,7 +4,7 @@
   vars:
     win_path: C:\Users\test\Downloads\
     payload_linux: resources/pg-tests.tgz
-    payload_win: resources/pg_tests.zip
+    payload_win: resources/pg-tests.zip
 
   tasks:
 
