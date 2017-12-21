@@ -100,6 +100,7 @@ def create_image(domname, name):
     if not os.path.isfile(image_original):
         if not os.path.exists(TEMPLATE_DIR):
             os.makedirs(TEMPLATE_DIR)
+        print("Downloading %s.qcow2..." % name)
         image = urllib.URLopener()
         image.retrieve(image_url, image_original)
 
