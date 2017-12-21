@@ -148,7 +148,7 @@ def exec_command(cmd, hostname, login, password, skip_ret_code_check=False, conn
                 paramiko.SSHException,
                 socket.error,
                 Exception) as e:
-            if trc == connect_retry_count:
+            if trc >= connect_retry_count - 1:
                 raise e
             sleep(CONNECT_RETRY_DELAY)
 
