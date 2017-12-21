@@ -3,7 +3,6 @@
   gather_facts: no
   vars:
     win_path: C:\Users\test\Downloads\
-    pg_tests_source: "../"
 
   tasks:
 
