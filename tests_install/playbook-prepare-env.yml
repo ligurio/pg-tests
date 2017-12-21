@@ -219,7 +219,7 @@
       enabled: yes
     become_method: su
     become: true
-    when: ansible_os_family != "Windows"
+    when: ansible_os_family != "Windows" and ansible_os_family != 'Suse'
 
   - name: copy tests payload
     copy:
