@@ -115,11 +115,10 @@
     become_method: su
     become: true
 
-  - name: install required packages (RedHat 7) # Don't require RedHat subscription
-    yum: name={{ item }} state=present update_cache=yes disablerepo=rhel-7-server-rpms
-    with_items:
-        - gcc
-        - python-devel
+  - name: Disable RedHat subscription (RedHat 7)
+    shell: subscription-manager remove --all;
+           subscription-manager unregister;
+           subscription-manager clean
     when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "7"
     become_method: su
     become: true
