@@ -126,6 +126,7 @@
   - name: install required packages (YUM)
     yum: name={{ item }} state=present update_cache=yes
     with_items:
+        - acpid
         - gcc
         - python-devel
     when: ansible_os_family != "Windows" and ansible_pkg_mgr == "yum"
@@ -154,6 +155,7 @@
   - name: install required packages (APT)
     apt: name={{ item }} state=present update_cache=yes
     with_items:
+        - acpid
         - gcc
         - python-dev
         - sudo
@@ -200,6 +202,15 @@
   - name: set http.sslVerify to false in a git config
     git_config: name=http.sslVerify scope=global value="false"
     when: ansible_distribution == "\"astra linux se\"" or ansible_distribution == "\"astralinuxse\"" or ansible_distribution == "\"AstraLinuxSE\""
+
+  - name: start acpid
+    service:
+      name: acpid
+      state: started
+      enabled: yes
+    become_method: su
+    become: true
+    when: ansible_os_family != "Windows"
 
   - name: copy tests payload
     copy:
