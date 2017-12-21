@@ -123,7 +123,7 @@ root_password='password'
 Необходимо создать каталог /pgpro на диске. В данном каталоге будут хранится виртуальные машины используемые для запуска тестов.
 - пакеты для RPM-based дистрибутивов:
 ```
-yum install -y git libvirt libvirt-python qemu-kvm gcc openssl-devel python-devel python-cffi vim
+yum install -y git libvirt libvirt-python qemu-kvm gcc openssl-devel python-devel python-cffi vim samba
 ```
 Версия пакета libvirt должна быть не ниже 2.0.
 
@@ -135,7 +135,7 @@ yum install -y git libvirt libvirt-python qemu-kvm gcc openssl-devel python-deve
 
 - пакеты для RPM-based дистрибутивов:
 ```
-yum install -y git libvirt libvirt-python qemu-kvm gcc openssl-devel python-devel python-cffi vim
+yum install -y git libvirt libvirt-python qemu-kvm gcc openssl-devel python-devel python-cffi vim samba
 ```
 - установить PyPA:
 ```
