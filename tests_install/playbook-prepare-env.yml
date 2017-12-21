@@ -203,6 +203,15 @@
     git_config: name=http.sslVerify scope=global value="false"
     when: ansible_distribution == "\"astra linux se\"" or ansible_distribution == "\"astralinuxse\"" or ansible_distribution == "\"AstraLinuxSE\""
 
+  - name: disable haldaemon (МСВСфера)
+    service:
+      name: haldaemon
+      state: stopped
+      enabled: no
+    when: ansible_os_family == "МСВСфера"
+    become_method: su
+    become: true
+
   - name: start acpid
     service:
       name: acpid
