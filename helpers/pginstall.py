@@ -245,8 +245,7 @@ enabled=1
         windows_installer.retrieve(windows_installer_url,
                                    os.path.join(WIN_INST_DIR, installer_name))
     else:
-        print "Unsupported distro %s" % dist_info[0]
-        sys.exit(1)
+        raise Exception("Unsupported distro %s" % dist_info[0])
 
 
 def install_package(pkg_name, remote=False, host=None):
@@ -267,8 +266,7 @@ def install_package(pkg_name, remote=False, host=None):
         cmd = "zypper install -y -l --force-resolution %s" % pkg_name
         command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
     else:
-        print "Unsupported system: %s" % dist_info[0]
-        sys.exit(1)
+        raise Exception("Unsupported system: %s" % dist_info[0])
 
 
 def install_postgres_win(remote=False, host=None):
@@ -327,8 +325,7 @@ def remove_package(pkg_name, remote=False, host=None):
     elif dist_info[0] in WIN_BASED:
         pass
     else:
-        print "Unsupported system: %s" % dist_info[0]
-        sys.exit(1)
+        raise Exception("Unsupported system: %s." % dist_info[0])
 
 
 def package_mgmt(remote=False, host=None, action="install", **kwargs):
@@ -480,8 +477,7 @@ def delete_repo(remote=False, host=None, **kwargs):
         cmd = "apt-get update -y && apt-get clean cache"
         command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
     else:
-        print "Unsupported distro %s" % dist_info[0]
-        sys.exit(1)
+        raise Exception("Unsupported distro %s." % dist_info[0])
 
 
 def delete_packages(remote=False, host=None, **kwargs):

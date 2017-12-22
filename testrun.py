@@ -199,12 +199,8 @@ def prepare_payload(tests_dir):
 
 
 def create_env(name, domname, domimage=None):
-    try:
-        import libvirt
-        conn = libvirt.open(None)
-    except libvirt.libvirtError, e:
-        print 'LibVirt connect error: ', e
-        sys.exit(1)
+    import libvirt
+    conn = libvirt.open(None)
 
     if not domimage:
         domimage = create_image(domname, name)
@@ -279,8 +275,8 @@ def create_env(name, domname, domimage=None):
         time.sleep(timeout)
         domipaddress = lookupIPbyMac(conn, dommac)
         if timeout == 60:
-            print "Failed to obtain an IP address inside domain"
-            sys.exit(1)
+            raise Exception(
+                "Failed to obtain an IP address in domain %s." % domname)
 
     print "Domain name: %s\nIP address: %s" % (dom.name(), domipaddress)
     conn.close()
@@ -296,15 +292,15 @@ def setup_env(domipaddress, domname, tests_dir):
     :return: int: 0 if all OK and 1 if not
     """
 
-    retcode = call("ssh-keygen -R " + domname, shell=True)
+    retcode = call("ssh-keygen -R " + domname,
+                   stderr=subprocess.STDOUT, shell=True)
     if retcode != 0:
-        print "Removing old ssh-key for %s failed." % domname
-        return 1
+        raise Exception("Could not remove old ssh key for %s." % domname)
 
-    retcode = call("ssh-keygen -R " + domipaddress, shell=True)
+    retcode = call("ssh-keygen -R " + domipaddress,
+                   stderr=subprocess.STDOUT, shell=True)
     if retcode != 0:
-        print "Removing old ssh-key for %s failed." % domipaddress
-        return 1
+        raise Exception("Could not remove old ssh key for %s." % domipaddress)
 
     if domname[0:3] != 'win':
         inv = ANSIBLE_INVENTORY % (domname, domipaddress, REMOTE_ROOT_PASSWORD, REMOTE_PASSWORD, REMOTE_LOGIN)
@@ -321,12 +317,9 @@ def setup_env(domipaddress, domname, tests_dir):
     if DEBUG:
         ansible_cmd += " -vvv"
     print ansible_cmd
-    time.sleep(5)    # GosLinux starts a bit slowly than other distros
     retcode = call(ansible_cmd.split(' '))
     if retcode != 0:
-        print "Setup of the test environment %s is failed." % domname
-        return 1
-    return 0
+        raise Exception("Setup of the test environment %s failed." % domname)
 
 
 def make_test_cmd(domname, reportname, tests=None,
@@ -493,15 +486,15 @@ def main():
 
     if len(sys.argv) == 1:
         parser.print_help()
-        sys.exit(0)
+        return 0
 
     if args.target is None:
         print "No target name"
-        sys.exit(1)
+        return 1
 
     if not (os.path.exists(args.run_tests)):
         print "Test(s) '%s' is not found." % args.run_tests
-        sys.exit(1)
+        return 1
     tests = []
     for test in args.run_tests.split(','):
         if os.path.isdir(test):
@@ -512,7 +505,7 @@ def main():
             tests.append(test)
     if not tests:
         print "No tests scripts found in %s." % args.run_tests
-        sys.exit(1)
+        return 1
 
     tests_dir = args.run_tests if os.path.isdir(args.run_tests) else os.path.dirname(args.run_tests)
     prepare_payload(tests_dir)
@@ -523,11 +516,8 @@ def main():
         target_start = time.time()
         domname = gen_name(target)
         domipaddress = create_env(target, domname)[0]
-        setup_env_result = setup_env(domipaddress, domname, tests_dir)
-        if setup_env_result == 0:
-            print("Environment deployed without errors. Ready to run tests")
-        else:
-            sys.exit(1)
+        setup_env(domipaddress, domname, tests_dir)
+        print("Environment deployed without errors. Ready to run tests")
         if len(tests) > 1:
             save_env(domname)
 
@@ -580,7 +570,7 @@ def main():
                       "Please check logs in report: %s" % \
                       (target, domname, domipaddress, retcode, reporturl))
                 print retcode, stdout, stderr
-                sys.exit(1)
+                return 1
 
         if not args.keep:
             close_env(domname, saveimg=False, destroys0=True)

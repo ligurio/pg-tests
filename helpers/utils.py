@@ -171,12 +171,10 @@ def exec_command(cmd, hostname, login, password, skip_ret_code_check=False, conn
         return retcode, stdout, stderr
     else:
         if retcode != 0:
-            print("Return code for command  \'%s\' is not zero\n" % cmd)
-            print("Stdout for command \'%s\'\n" % cmd)
-            print(stdout)
-            print("Stderror for command \'%s\'\n" % cmd)
-            print(stderr)
-            sys.exit(1)
+            print("Return code for command  \'%s\' is %d.\n" % (cmd, retcode))
+            print("The command stdout:\n%s" % stdout)
+            print("The command stderr:\n%s" % stder)
+            raise Exception('Command "%s" failed.'  % cmd)
         else:
             return retcode, stdout, stderr
 
@@ -222,12 +220,10 @@ def exec_command_win(cmd, hostname, user, password, skip_ret_code_check=False, c
         return retcode, stdout, stderr
     else:
         if retcode != 0:
-            print("Return code for command  \'%s\' is not zero\n" % cmd)
-            print("Stdout for command \'%s\'\n" % cmd)
-            print(stdout)
-            print("Stderror for command \'%s\'\n" % cmd)
-            print(stderr)
-            sys.exit(1)
+            print("Return code for command  \'%s\' is %d.\n" % (cmd, retcode))
+            print("The command stdout:\n%s" % stdout)
+            print("The command stderr:\n%s" % stder)
+            raise Exception('Command "%s" failed.'  % cmd)
         else:
             return retcode, stdout, stderr
 
@@ -272,13 +268,13 @@ def get_distro(remote=False, ip=None):
             host_info = get_os_type(ip)
         return host_info['NAME'].strip('"'), host_info['VERSION_ID'].strip('"'), None
     else:
-        if "Linux" in platform.platform():
+        os = platform.platform()
+        if "Linux" in os:
             return platform.linux_distribution()[0].strip('"'), platform.linux_distribution()[1], platform.machine()
-        elif "Windows" in platform.platform():
+        elif "Windows" in os:
             return platform.win32_ver()[0], platform.win32_ver()[1], platform.machine()
         else:
-            print("Unknown distro")
-            sys.exit(1)
+            raise Exception("Unknown OS platform (%s)." % os)
 
 
 def get_os_type(ip):
