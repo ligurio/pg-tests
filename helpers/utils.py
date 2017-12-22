@@ -333,6 +333,7 @@ def refresh_env_win():
     while True:
         try:
             envvar, envval, valtype = winreg.EnumValue(regkey, i)
+        # pylint: disable=undefined-variable
         except WindowsError as e:
             break
         i += 1
