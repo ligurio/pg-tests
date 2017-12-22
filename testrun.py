@@ -92,6 +92,7 @@ def mac_address_generator():
 def get_dom_disk(domname):
     return os.path.join(WORK_DIR, domname + '-overlay.qcow2')
 
+
 def create_image(domname, name):
 
     domimage = get_dom_disk(domname)
@@ -150,36 +151,41 @@ def prepare_payload(tests_dir):
     tempdir = tempfile.mkdtemp()
     pgtd = os.path.join(tempdir, 'pg-tests')
     shutil.copytree('.', pgtd, ignore=shutil.ignore_patterns('.git', 'reports'))
-    retcode = call("wget -q https://bootstrap.pypa.io/get-pip.py", cwd=pgtd, shell=True)
+    retcode = call("wget -q https://bootstrap.pypa.io/get-pip.py",
+                   cwd=pgtd, shell=True)
     if retcode != 0:
         raise Exception("Downloading get-pip failed.")
 
-    retcode = call("zip -q -r _%s pg-tests" % TESTS_PAYLOAD_ZIP, cwd=tempdir, shell=True)
+    retcode = call("zip -q -r _%s pg-tests" % TESTS_PAYLOAD_ZIP,
+                   cwd=tempdir, shell=True)
     if retcode != 0:
         raise Exception("Preparing zip payload failed.")
 
     # Preparing pip packages for linux
     pgtdpp = os.path.join(pgtd, 'pip-packages')
     os.makedirs(pgtdpp)
-    retcode = call("pip download -q -r %s" %
-                os.path.abspath(os.path.join(tests_dir, "requirements.txt")),
-                cwd=pgtdpp, shell=True)
+    retcode = call(
+        "pip download -q -r %s" %
+        os.path.abspath(os.path.join(tests_dir, "requirements.txt")),
+        cwd=pgtdpp, shell=True)
     if retcode != 0:
         raise Exception("Downloading pip-requirements failed.")
 
-    retcode = call("pip download -q --no-deps --only-binary=:all:"
-                " --platform manylinux1_x86_64 --python-version 27"
-                " --implementation cp --abi cp27m  -r %s" %
-                os.path.abspath(os.path.join(tests_dir, "requirements-bin.txt")),
-                cwd=pgtdpp, shell=True)
+    retcode = call(
+        "pip download -q --no-deps --only-binary=:all:"
+        " --platform manylinux1_x86_64 --python-version 27"
+        " --implementation cp --abi cp27m  -r %s" %
+        os.path.abspath(os.path.join(tests_dir, "requirements-bin.txt")),
+        cwd=pgtdpp, shell=True)
     if retcode != 0:
         raise Exception("Downloading pip-requirements(27m) failed.")
 
-    retcode = call("pip download -q --no-deps --only-binary=:all:"
-                " --platform manylinux1_x86_64 --python-version 27"
-                " --implementation cp --abi cp27mu  -r %s" %
-                os.path.abspath(os.path.join(tests_dir, "requirements-bin.txt")),
-                cwd=pgtdpp, shell=True)
+    retcode = call(
+        "pip download -q --no-deps --only-binary=:all:"
+        " --platform manylinux1_x86_64 --python-version 27"
+        " --implementation cp --abi cp27mu  -r %s" %
+        os.path.abspath(os.path.join(tests_dir, "requirements-bin.txt")),
+        cwd=pgtdpp, shell=True)
     if retcode != 0:
         raise Exception("Downloading pip-requirements(27mu) failed.")
 
@@ -187,8 +193,8 @@ def prepare_payload(tests_dir):
                    cwd=tempdir, shell=True)
     if retcode != 0:
         raise Exception("Preparing tar payload failed.")
-    #First move to the target directory to prepare for atomic rename
-    # (if tempdir is on different filesystem)
+    # First move to the target directory to prepare for atomic rename
+    #  (if tempdir is on different filesystem)
     shutil.move(os.path.join(tempdir, '_' + TESTS_PAYLOAD_ZIP), rsrcdir)
     shutil.move(os.path.join(tempdir, '_' + TESTS_PAYLOAD_TAR), rsrcdir)
 
@@ -344,8 +350,8 @@ def make_test_cmd(domname, reportname, tests=None,
     pytest_cmd = 'pytest {0} --self-contained-html --html={1}.html ' \
                  '--junit-xml={1}.xml --json={1}.json --maxfail=1 ' \
                  '--alluredir=reports {2} --target={3}'.format(tests,
-                                                         reportname,
-                                                         pcmd, domname)
+                                                               reportname,
+                                                               pcmd, domname)
     if domname[0:3] == 'win':
         cmd = r'cd C:\Users\test\pg-tests && ' + pytest_cmd
     else:
@@ -362,8 +368,9 @@ def export_results(domname, domipaddress, reportname, operating_system=None, pro
     if not os.path.exists('reports'):
         os.makedirs('reports')
         subprocess.check_call('chmod 777 reports', shell=True)
-    rel_allure_reports_dir = "allure_reports/%s/%s/%s/%s/%s" % (time.strftime("/%Y/%m/%d"), product_name,
-                                                           product_version, product_edition, operating_system)
+    rel_allure_reports_dir = "allure_reports/%s/%s/%s/%s/%s" % (
+        time.strftime("/%Y/%m/%d"), product_name,
+        product_version, product_edition, operating_system)
     allure_reports_dir = 'reports/' + rel_allure_reports_dir
     if not os.path.exists(allure_reports_dir):
         os.makedirs(allure_reports_dir)
@@ -530,12 +537,13 @@ def main():
                 wait_for_boot(domipaddress, linux=(domname[0:3] != 'win'))
             reportname = "report-%s_%s_%s" % (time.strftime('%Y-%m-%d-%H-%M-%S'),
                                               testname, target)
-            cmd = make_test_cmd(domname, reportname, test,
-                            args.product_name,
-                            args.product_version,
-                            args.product_edition,
-                            args.product_milestone,
-                            args.branch)
+            cmd = make_test_cmd(
+                domname, reportname, test,
+                args.product_name,
+                args.product_version,
+                args.product_edition,
+                args.product_milestone,
+                args.branch)
             if DEBUG:
                 print("Test command:\n%s" % cmd)
             if domname[0:3] == 'win':
@@ -555,10 +563,13 @@ def main():
                                                        skip_ret_code_check=True)
 
             if args.export:
-                export_results(domname, domipaddress, reportname,
-                            operating_system=target, product_name=args.product_name,
-                            product_version=args.product_version, product_edition=args.product_edition,
-                            tests=testname)
+                export_results(
+                    domname, domipaddress, reportname,
+                    operating_system=target,
+                    product_name=args.product_name,
+                    product_version=args.product_version,
+                    product_edition=args.product_edition,
+                    tests=testname)
                 reporturl = os.path.join(REPORT_SERVER_URL, reportname)
                 print "Link to the html report - %s.html" % reporturl
                 print "Link to the xml report - %s.xml" % reporturl
@@ -567,7 +578,7 @@ def main():
                 reporturl = os.path.join(REPORT_SERVER_URL, reportname)
                 print("Test return code (for target: %s, domain: %s, IP address: %s) "
                       "is not zero - %s.\n"
-                      "Please check logs in report: %s" % \
+                      "Please check logs in report: %s" %
                       (target, domname, domipaddress, retcode, reporturl))
                 print retcode, stdout, stderr
                 return 1
@@ -578,7 +589,8 @@ def main():
             close_env(domname, saveimg=True, destroys0=False)
 
         print("Target %s done in %s." %
-              (target, time.strftime("%H:%M:%S",
+              (target, time.strftime(
+                  "%H:%M:%S",
                   time.gmtime(time.time() - target_start))))
 
     print("Test execution for targets %s finished without errors in %s." %
