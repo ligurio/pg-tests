@@ -23,6 +23,7 @@ before_script:
   - pip install ansible-lint
   - pip install pep8
   - pip install psycopg2
+  - pip install allure-pytest
 
 ansible-lint:
   stage: test
