@@ -12,6 +12,7 @@ from helpers.pginstall import install_postgres_win
 from helpers.pginstall import get_server_version
 from helpers.pginstall import get_psql_version
 
+
 @pytest.mark.clean_install
 class TestCleanInstall():
 
