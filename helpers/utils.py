@@ -174,7 +174,7 @@ def exec_command(cmd, hostname, login, password, skip_ret_code_check=False, conn
             print("Return code for command  \'%s\' is %d.\n" % (cmd, retcode))
             print("The command stdout:\n%s" % stdout)
             print("The command stderr:\n%s" % stderr)
-            raise Exception('Command "%s" failed.'  % cmd)
+            raise Exception('Command "%s" failed.' % cmd)
         else:
             return retcode, stdout, stderr
 
@@ -223,18 +223,19 @@ def exec_command_win(cmd, hostname, user, password, skip_ret_code_check=False, c
             print("Return code for command  \'%s\' is %d.\n" % (cmd, retcode))
             print("The command stdout:\n%s" % stdout)
             print("The command stderr:\n%s" % stderr)
-            raise Exception('Command "%s" failed.'  % cmd)
+            raise Exception('Command "%s" failed.' % cmd)
         else:
             return retcode, stdout, stderr
+
 
 def wait_for_boot(host, time=300, linux=True):
     print("Waiting for control protocol availability.")
     if linux:
         exec_command(None, host, REMOTE_LOGIN, REMOTE_PASSWORD,
-                     connect_retry_count=time/CONNECT_RETRY_DELAY)
+                     connect_retry_count=(time / CONNECT_RETRY_DELAY))
     else:
         exec_command_win(None, host, REMOTE_LOGIN, REMOTE_PASSWORD,
-                         connect_retry_count=time/CONNECT_RETRY_DELAY)
+                         connect_retry_count=(time / CONNECT_RETRY_DELAY))
 
 
 def gen_name(name):
