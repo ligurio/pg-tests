@@ -112,11 +112,14 @@ class TestCompression():
         cursor = conn.cursor()
         # TODO add check that PGPRO edition is enterprise
         if compression:
-            cursor.execute('CREATE TABLESPACE {0} LOCATION \'{1}\' WITH (compression=true);'.format(
-                tablespace_name,
-                tablespace_location))
+            cursor.execute(
+                'CREATE TABLESPACE {0} LOCATION \'{1}\''
+                ' WITH (compression=true);'.format(
+                    tablespace_name, tablespace_location))
         else:
-            cursor.execute('CREATE TABLESPACE {0} LOCATION \'{1}\';'.format(tablespace_name, tablespace_location))
+            cursor.execute(
+                'CREATE TABLESPACE {0} LOCATION \'{1}\';'.format(
+                    tablespace_name, tablespace_location))
         return tablespace_location
 
     @pytest.mark.test_compression_standalone_positive
@@ -125,31 +128,37 @@ class TestCompression():
         Scenario:
         1. Create test tables
         1. Create tablespace with compression
-        2. Save size of created tables by fixture in file system (count and size of files)
+        2. Save size of created tables by fixture in file system
+            (count and size of files)
         3. Run data generator for tablespace with compression
         4. Save size of table with compression
-        5. Check that files for table in tablespace without compression > that files in tablespace with compression
+        5. Check that files for table in tablespace without compression >
+            that files in tablespace with compression
         6. Check tablespace folder for files with *.cfm extension
         7. Check that tables has some data
         """
         # Step 1
         create_test_table('20', 'pgbench')
         # Step 2
-        compression_files_directory = self.create_tablespace('compression', compression=True)
+        compression_files_directory = self.create_tablespace(
+            'compression', compression=True)
         # Step 3
-        data_size_without_compression = self.get_directory_size(install_postgres.get_option('data_directory'))
+        data_size_without_compression = self.get_directory_size(
+            install_postgres.get_option('data_directory'))
         # Step 4
         print(data_size_without_compression)
         install_postgres.set_option('default_tablespace', 'compression')
         create_test_table(size='20', schema='pgbench')
         # Step 5
-        data_size_with_compression = self.get_directory_size(install_postgres.get_option('data_directory'))
+        data_size_with_compression = self.get_directory_size(
+            install_postgres.get_option('data_directory'))
         print(data_size_with_compression)
         print(compression_files_directory)
         # Step 6
         assert data_size_with_compression < data_size_without_compression
         # Step 7
-        compression_files = self.get_filenames(compression_files_directory)
+        compression_files = self.get_filenames(
+            compression_files_directory)
         assert '.cfm' in compression_files
         # Step 8
         conn_string = "host='localhost' user='postgres' "
@@ -171,10 +180,12 @@ class TestCompression():
         3. Check tablespace folder for files with *.cfm extension
         """
         # Step 1
-        compression_files_directory = self.create_tablespace('compression_unlogged_tables', compression=True)
+        compression_files_directory = self.create_tablespace(
+            'compression_unlogged_tables', compression=True)
         print compression_files_directory
         # Step 2
-        install_postgres.set_option('default_tablespace', 'compression_unlogged_tables')
+        install_postgres.set_option(
+            'default_tablespace', 'compression_unlogged_tables')
         create_test_table(size='20', schema=self.PGBENCH_SCHEMA_UNLOGGED)
         # Step 3
         compression_files = self.get_filenames(compression_files_directory)
@@ -193,8 +204,9 @@ class TestCompression():
         """ Test for compression feature.
         Scenario:
         1. Create tablespace with compression
-        2. Run pgbench for tablespace with compression and kill postgres process
-        3. Run postgres process and check that postgress is successfully runninng
+        2. Run pgbench for tablespace with compression and
+            kill postgres process
+        3. Run postgres process and check that postgres is running
         4. Check that cfm files created
         5. Check that pgbench tables don't created
         """
@@ -206,34 +218,42 @@ class TestCompression():
         tag_mark = pytest.allure.label(LabelType.TAG, product_info)
         request.node.add_marker(tag_mark)
         # Step 1
-        compression_files_directory = self.create_tablespace('compression_negative', compression=True)
+        compression_files_directory = self.create_tablespace(
+            'compression_negative', compression=True)
         print(compression_files_directory)
-        install_postgres.set_option('default_tablespace', 'compression_negative')
+        install_postgres.set_option(
+            'default_tablespace', 'compression_negative')
         postgres_pid = install_postgres.get_postmaster_pid()
         print(postgres_pid)
         # Step 2
-        create_table_process = Process(target=create_test_table, args=('20', 'pgbench',))
+        create_table_process = Process(target=create_test_table,
+                                       args=('20', 'pgbench',))
         create_table_process.start()
         time.sleep(10)
         # Step 3
         if create_table_process.is_alive():
             process = psutil.Process(postgres_pid)
             process.kill()
-        compression_files = self.get_filenames(compression_files_directory)
+        compression_files = self.get_filenames(
+            compression_files_directory)
         # Step 4
-        # Files for tables created but no any table was created because transaction was corruped
+        # Files for tables created but no any table was created
+        #  because transaction was corruped
         assert '.cfm' in compression_files
         install_postgres.manage_psql('start')
         # Step 5
         conn_string = "host='localhost' user='postgres' "
         conn = psycopg2.connect(conn_string)
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM pg_tables WHERE tablespace=\'compression_negative\';")
+        cursor.execute(
+            "SELECT * FROM pg_tables"
+            " WHERE tablespace=\'compression_negative\';")
         assert len(cursor.fetchall()) == 0
         drop_test_table(conn_string)
 
     @pytest.mark.test_compression_unlogged_tables_negative
-    def test_compression_unlogged_tables_negative(self, request, install_postgres):
+    def test_compression_unlogged_tables_negative(self, request,
+                                                  install_postgres):
         """ Test for compression feature.
         Scenario:
         1. Create tablespace with compression for test
@@ -244,9 +264,11 @@ class TestCompression():
         6. Check tablespace folder for files with *.cfm extension
         """
         # Step 1
-        compression_files_directory = self.create_tablespace('compression_unlogged_tables_negative', compression=True)
+        compression_files_directory = self.create_tablespace(
+            'compression_unlogged_tables_negative', compression=True)
         # Step 2
-        install_postgres.set_option('default_tablespace', 'compression_unlogged_tables_negative')
+        install_postgres.set_option(
+            'default_tablespace', 'compression_unlogged_tables_negative')
         create_test_table(size='20', schema=self.PGBENCH_SCHEMA_UNLOGGED)
         # Step 3
         conn_string = "host='localhost' user='postgres' "
@@ -262,7 +284,9 @@ class TestCompression():
         conn_string = "host='localhost' user='postgres' "
         conn = psycopg2.connect(conn_string)
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM pg_tables WHERE tablespace=\'compression_unlogged_tables_negative\';")
+        cursor.execute(
+            "SELECT * FROM pg_tables"
+            " WHERE tablespace=\'compression_unlogged_tables_negative\';")
         assert len(cursor.fetchall()) != 0
         conn_string = "host='localhost' user='postgres' "
         conn = psycopg2.connect(conn_string)
@@ -286,7 +310,8 @@ class TestCompression():
         5. Check that rows count before and after moving the same
         """
         # Step 1
-        self.create_tablespace('compression_alter_tablepsace', compression=True)
+        self.create_tablespace(
+            'compression_alter_tablepsace', compression=True)
         # Step 2
         conn_string = "host=localhost user=postgres"
         load_pgbench(conn_string, ["-i", "-s", "10"])
@@ -302,7 +327,9 @@ class TestCompression():
         conn_string = "host='localhost' user='postgres' "
         conn = psycopg2.connect(conn_string)
         cursor = conn.cursor()
-        cursor.execute("ALTER TABLE pgbench_history SET TABLESPACE compression_alter_tablepsace")
+        cursor.execute(
+            "ALTER TABLE pgbench_history"
+            " SET TABLESPACE compression_alter_tablepsace")
         cursor.execute("select count(*) from pgbench_history")
         rows_after_move = cursor.fetchall()[0][0]
         conn.commit()
@@ -321,7 +348,8 @@ class TestCompression():
         5. Check that rows count before and after moving the same
         """
         # Step 1
-        self.create_tablespace('compression_alter_from_tablepsace', compression=True)
+        self.create_tablespace(
+            'compression_alter_from_tablepsace', compression=True)
         # Step 2
         conn_string = "host=localhost user=postgres"
         load_pgbench(conn_string, ["-i", "-s", "10"])
@@ -337,7 +365,9 @@ class TestCompression():
         conn_string = "host='localhost' user='postgres' "
         conn = psycopg2.connect(conn_string)
         cursor = conn.cursor()
-        cursor.execute("ALTER TABLE pgbench_history SET TABLESPACE compression_alter_from_tablepsace")
+        cursor.execute(
+            "ALTER TABLE pgbench_history"
+            " SET TABLESPACE compression_alter_from_tablepsace")
         cursor.execute("select count(*) from pgbench_history")
         rows_after_move = cursor.fetchall()[0][0]
         conn.commit()
