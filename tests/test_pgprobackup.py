@@ -41,7 +41,9 @@ host    all             all             ::0/0                   trust"""
         :param out:
         :return:
         """
-        return dict(v.split("=") for v in out.replace('\t', ' ').strip().split('\n') if v.strip() and "=" in v)
+        return dict(v.split("=") for v in
+                    out.replace('\t', ' ').strip().split('\n')
+                    if v.strip() and "=" in v)
 
     @staticmethod
     def create_backup_directory():
@@ -67,7 +69,8 @@ host    all             all             ::0/0                   trust"""
 
     @pytest.mark.test_install_pgprobackup
     def test_install_pgprobackup(self, request):
-        """ Install pg_probackup utility and configure postgresql for running pg_probackup.
+        """ Install pg_probackup utility and configure postgresql
+             for running pg_probackup.
         Scenario:
         1. Check version function
         2. Check help function
@@ -77,10 +80,14 @@ host    all             all             ::0/0                   trust"""
         # Step 2
         assert self.execute_pg_probackup("--help") is not None
 
-    @pytest.mark.xfail(reason="Implementation of feature was changed", strict=True)
+    @pytest.mark.xfail(reason="Implementation of feature was changed",
+                       strict=True)
     @pytest.mark.test_pgprobackup_compression_continious_backup
-    def test_pgprobackup_compression_continious_backup(self, request, install_postgres):
-        """Test pg_probackup with compression feature and full continious backup
+    def test_pgprobackup_compression_continious_backup(self,
+                                                       request,
+                                                       install_postgres):
+        """Test pg_probackup with compression feature
+            and full continous backup
         Scenario:
         1. Create backup dir
         2. Set data dir to environment variables
@@ -106,15 +113,21 @@ host    all             all             ::0/0                   trust"""
         self.execute_pg_probackup("init")
         for root, dirs, files in os.walk(backup_dir):
             for d in dirs:
-                os.chown(os.path.join(root, d), pwd.getpwnam("postgres").pw_uid, grp.getgrnam("postgres").gr_gid)
+                os.chown(os.path.join(root, d),
+                         pwd.getpwnam("postgres").pw_uid,
+                         grp.getgrnam("postgres").gr_gid)
             for f in files:
-                os.chown(os.path.join(root, f), pwd.getpwnam("postgres").pw_uid, grp.getgrnam("postgres").gr_gid)
+                os.chown(os.path.join(root, f),
+                         pwd.getpwnam("postgres").pw_uid,
+                         grp.getgrnam("postgres").gr_gid)
         # Step 5
         install_postgres.set_option("ptrack_enable", "on")
         install_postgres.set_option("wal_level", "archive")
         install_postgres.set_option("archive_mode", "on")
-        install_postgres.set_option("archive_command",
-                                    "test ! -f {0}/wal/%f && cp %p {1}/wal/%f".format(backup_dir, backup_dir))
+        install_postgres.set_option(
+            "archive_command",
+            "test ! -f {0}/wal/%f && cp %p {1}/wal/%f".format(
+                backup_dir, backup_dir))
         install_postgres.set_option("cfs_gc_workers", "0")
         # Step 6
         tablespace_path = os.path.join(TMP_DIR, 'pgprobackup_compression')
@@ -123,29 +136,37 @@ host    all             all             ::0/0                   trust"""
                  pwd.getpwnam("postgres").pw_uid,
                  grp.getgrnam("postgres").gr_gid)
         conn = psycopg2.connect(install_postgres.connstring)
-        execute(conn,
-                'CREATE TABLESPACE pgprobackup_compression LOCATION \'%s\' WITH(compression = true);' % tablespace_path)
+        execute(
+            conn,
+            'CREATE TABLESPACE pgprobackup_compression'
+            ' LOCATION \'%s\' WITH(compression = true);' % tablespace_path)
         # Step 7
         execute(conn,
                 'CREATE TABLE tbl TABLESPACE pgprobackup_compression'
-                ' AS SELECT i, md5(random()::text) FROM generate_series(0,1e05) AS i;')
+                ' AS SELECT i, md5(random()::text)'
+                ' FROM generate_series(0,1e05) AS i;')
         # Step 8
-        self.execute_pg_probackup("backup", "-b", "full", "-d", "postgres", "-U", "postgres")
+        self.execute_pg_probackup("backup", "-b", "full",
+                                  "-d", "postgres", "-U", "postgres")
         # Step 9
         # Get last backup id and get out for show command with this backup
-        pgprobackup_show = subprocess.Popen(["%s/pg_probackup" % pg_bindir(), "show", "-U", "postgres"],
-                                            stdout=subprocess.PIPE)
-        awk_backup_id = subprocess.Popen(["awk", "FNR == 4 {print $1}"], stdin=pgprobackup_show.stdout,
-                                         stdout=subprocess.PIPE)
+        pgprobackup_show = subprocess.Popen(
+            ["%s/pg_probackup" % pg_bindir(), "show", "-U", "postgres"],
+            stdout=subprocess.PIPE)
+        awk_backup_id = subprocess.Popen(
+            ["awk", "FNR == 4 {print $1}"], stdin=pgprobackup_show.stdout,
+            stdout=subprocess.PIPE)
         backup_id = awk_backup_id.communicate()[0].strip()
         pgprobackup_show.stdout.close()
         # Step 10
-        backup_info = self.parse_pgprobackup_show_command_out(self.execute_pg_probackup("show", backup_id))
+        backup_info = self.parse_pgprobackup_show_command_out(
+            self.execute_pg_probackup("show", backup_id))
         assert backup_info['STATUS'] == 'OK'
         # Step 11
         self.execute_pg_probackup("validate", backup_id)
 
-    @pytest.mark.xfail(reason="Implementation of feature was changed", strict=True)
+    @pytest.mark.xfail(reason="Implementation of feature was changed",
+                       strict=True)
     @pytest.mark.test_pgprobackup_retention_policy_options
     def test_pgprobackup_retention_policy_options(self, request):
         """Scenario
@@ -163,41 +184,51 @@ host    all             all             ::0/0                   trust"""
         """
         # Step 1
         for i in range(3):
-            self.execute_pg_probackup("backup", "-b", "full", "-d", "postgres", "-U", "postgres")
+            self.execute_pg_probackup("backup", "-b", "full",
+                                      "-d", "postgres", "-U", "postgres")
         # Step 2
         self.execute_pg_probackup("retention", "--redundancy=1", "purge")
         # Step 3
-        pgprobackup_show = subprocess.Popen(["%s/pg_probackup" % pg_bindir(), "show", "-U", "postgres"],
-                                            stdout=subprocess.PIPE)
-        awk_backup_ids = subprocess.Popen(["awk", "NR > 3 {print $1}"], stdin=pgprobackup_show.stdout,
-                                          stdout=subprocess.PIPE)
+        pgprobackup_show = subprocess.Popen(
+            ["%s/pg_probackup" % pg_bindir(), "show", "-U", "postgres"],
+            stdout=subprocess.PIPE)
+        awk_backup_ids = subprocess.Popen(
+            ["awk", "NR > 3 {print $1}"], stdin=pgprobackup_show.stdout,
+            stdout=subprocess.PIPE)
         assert len(awk_backup_ids.communicate()[0].strip().split()) == 1
         # Step 4
         for i in range(2):
-            self.execute_pg_probackup("backup", "-b", "full", "-d", "postgres", "-U", "postgres")
+            self.execute_pg_probackup("backup", "-b", "full",
+                                      "-d", "postgres", "-U", "postgres")
         # Step 5
         new_time = datetime.datetime.now() + datetime.timedelta(days=3)
         subprocess.check_output(["sudo", "date", "-s", str(new_time)])
         # Step 6
         self.execute_pg_probackup("retention", "--window=1", "purge")
         # Step 7
-        pgprobackup_show = subprocess.Popen(["%s/pg_probackup" % pg_bindir(), "show", "-U", "postgres"],
-                                            stdout=subprocess.PIPE)
-        awk_backup_ids = subprocess.Popen(["awk", "NR > 3 {print $1}"], stdin=pgprobackup_show.stdout,
-                                          stdout=subprocess.PIPE)
+        pgprobackup_show = subprocess.Popen(
+            ["%s/pg_probackup" % pg_bindir(), "show", "-U", "postgres"],
+            stdout=subprocess.PIPE)
+        awk_backup_ids = subprocess.Popen(
+            ["awk", "NR > 3 {print $1}"], stdin=pgprobackup_show.stdout,
+            stdout=subprocess.PIPE)
         assert len(awk_backup_ids.communicate()[0].strip().split()) == 1
         # Step 8
         for i in range(2):
-            self.execute_pg_probackup("backup", "-b", "full", "-d", "postgres", "-U", "postgres")
+            self.execute_pg_probackup("backup", "-b", "full",
+                                      "-d", "postgres", "-U", "postgres")
         # Step 9
         new_time = datetime.datetime.now() + datetime.timedelta(days=3)
         subprocess.check_output(["sudo", "date", "-s", str(new_time)])
 
         # Step 10
-        self.execute_pg_probackup("retention", "--window=1", "--redundancy=2", "purge")
+        self.execute_pg_probackup("retention", "--window=1",
+                                  "--redundancy=2", "purge")
         # Step 11
-        pgprobackup_show = subprocess.Popen(["%s/pg_probackup" % pg_bindir(), "show", "-U", "postgres"],
-                                            stdout=subprocess.PIPE)
-        awk_backup_ids = subprocess.Popen(["awk", "NR > 3 {print $1}"], stdin=pgprobackup_show.stdout,
-                                          stdout=subprocess.PIPE)
+        pgprobackup_show = subprocess.Popen(
+            ["%s/pg_probackup" % pg_bindir(), "show", "-U", "postgres"],
+            stdout=subprocess.PIPE)
+        awk_backup_ids = subprocess.Popen(
+            ["awk", "NR > 3 {print $1}"], stdin=pgprobackup_show.stdout,
+            stdout=subprocess.PIPE)
         assert len(awk_backup_ids.communicate()[0].strip().split()) == 2
