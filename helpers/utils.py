@@ -243,6 +243,8 @@ def gen_name(name):
 
 def write_file(file, text, remote=False, host=None):
     if remote:
+        import paramiko
+
         transport = paramiko.Transport((host, 22))
         transport.connect(username=REMOTE_ROOT, password=REMOTE_ROOT_PASSWORD)
         sftp = paramiko.SFTPClient.from_transport(transport)
