@@ -17,9 +17,11 @@ CHECK_TIMEOUT = 10
 GITLAB_TOKEN = "8BZ5DaaLycAe5AGGTERb"
 JENKINS_LOGIN = "jenkins"
 JENKINS_PWORD = "jenkins"
-JENKINS_URL = "http://bldfrm0.l.postgrespro.ru:8080/view/%s/job/%s-hub/lastBuild/api/json"
+JENKINS_URL = "http://bldfrm0.l.postgrespro.ru:8080/" \
+    "view/%s/job/%s-hub/lastBuild/api/json"
 TESTRUN_CMD = "./testrun.py --target %s --product_name postgrespro" \
-              " --product_version %s --product_edition %s --product_milestone beta --export"
+    " --product_version %s --product_edition %s" \
+    " --product_milestone beta --export"
 DEBUG = False
 
 if len(sys.argv) > 1:
@@ -77,7 +79,8 @@ def get_build_info(branch):
 
 
 def check_commits(last_commit):
-    url = 'https://git.postgrespro.ru/api/v3/projects/193/repository/commits?since=%s' % last_commit
+    url = 'https://git.postgrespro.ru/api/v3/projects/193' \
+        '/repository/commits?since=' + last_commit
     request = urllib2.Request(url, headers={"PRIVATE-TOKEN": GITLAB_TOKEN})
 
     try:
@@ -137,15 +140,16 @@ while True:
             if p.returncode != 0:
                 subject = "[FAIL]"
                 if out != "":
-                    print " ====================== stdout ========================="
+                    print " =================== stdout ======================"
                     print out
                 if err != "":
-                    print " ====================== stderr ========================="
+                    print " =================== stderr ======================"
                     print err
             else:
                 subject = "[PASS]"
             output = "\n\nstdout\n\n%s\n\nstderr\n%s" % (out, err)
-            subject += " %s build %s -- %s" % (branch, build_status["number"], t)
+            subject += " %s build %s -- %s" % (branch,
+                                               build_status["number"], t)
             send_mail(output, subject)
             print "[" + branch + "] Done %s" % t
 
