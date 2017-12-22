@@ -2,6 +2,7 @@ import logging
 import os
 import sys
 import subprocess
+import tempfile
 import urllib
 
 from BeautifulSoup import BeautifulSoup
@@ -630,19 +631,19 @@ def restart_service(service_name=None, **kwargs):
     subprocess.check_call(cmd, shell=True)
 
 
-def pg_control(action, data_dir, binpath=None, remote=False, host=None):
+def pg_control(action, data_dir, binpath=None):
     """ Manage Postgres instance
     :param action: start, restart, stop etc
-    :param init: Initialization before a first start
+    :param data_dir: data directory of the Postgres instance
     :return:
     """
     dist_info = get_distro()
-    cmd = '%s%spg_ctl -w -D %s %s' % \
+    cmd = '%s%spg_ctl -w -D "%s" %s >pg_ctl.out 2>&1' % \
            (
             ('' if dist_info[0] in WIN_BASED else 'sudo -u postgres '),
             ('' if binpath is None else (binpath  + os.sep)),
             data_dir,
             action
            )
-    print(cmd)
-    return command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+    # sys.stdout.encoding = 'cp866'?
+    subprocess.check_call(cmd, shell=True, cwd=tempfile.gettempdir())
