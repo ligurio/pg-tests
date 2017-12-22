@@ -69,7 +69,7 @@ def get_build_info(branch):
 
     try:
         buildStatusJson = json.load(result)
-    except:
+    except ValueError, e:
         print "Failed to parse JSON"
         return e
 
@@ -88,7 +88,7 @@ def check_commits(last_commit):
 
     try:
         commits = json.load(result)
-    except:
+    except ValueError:
         print "Failed to parse JSON"
         return False
 
@@ -96,6 +96,7 @@ def check_commits(last_commit):
         return True
     else:
         return False
+
 
 product_info = branch.split('-')
 if product_info[0] == "pgproee":
