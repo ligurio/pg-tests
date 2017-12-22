@@ -173,7 +173,7 @@ def exec_command(cmd, hostname, login, password, skip_ret_code_check=False, conn
         if retcode != 0:
             print("Return code for command  \'%s\' is %d.\n" % (cmd, retcode))
             print("The command stdout:\n%s" % stdout)
-            print("The command stderr:\n%s" % stder)
+            print("The command stderr:\n%s" % stderr)
             raise Exception('Command "%s" failed.'  % cmd)
         else:
             return retcode, stdout, stderr
@@ -222,7 +222,7 @@ def exec_command_win(cmd, hostname, user, password, skip_ret_code_check=False, c
         if retcode != 0:
             print("Return code for command  \'%s\' is %d.\n" % (cmd, retcode))
             print("The command stdout:\n%s" % stdout)
-            print("The command stderr:\n%s" % stder)
+            print("The command stderr:\n%s" % stderr)
             raise Exception('Command "%s" failed.'  % cmd)
         else:
             return retcode, stdout, stderr
