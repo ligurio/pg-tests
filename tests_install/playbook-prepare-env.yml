@@ -50,8 +50,7 @@
     become: true
 
   - name: Mount DVD(s) (if available)
-    shell: needmount=false;
-           if /sbin/blkid /dev/sr0; then
+    shell: if /sbin/blkid /dev/sr0; then
              mkdir /mnt/dvd &&
              echo "/dev/sr0       /mnt/dvd   auto    ro,user,exec,utf8        0    0" >> /etc/fstab &&
              mount /dev/sr0;
