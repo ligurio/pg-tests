@@ -29,7 +29,7 @@ ansible-lint:
   stage: test
   script:
     - ansible-lint tests/playbook-prepare-env.yml
-    - ansible-lint tests_install/playbook-prepare-env.yml
+    - ansible-lint -x ANSIBLE0006 tests_install/playbook-prepare-env.yml
   when: always
 
 pycodestyle-check:
