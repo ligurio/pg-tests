@@ -42,4 +42,3 @@ def pytest_addoption(parser):
     parser.addoption("--branch", action="store",
                      help="Specify branch")
     parser.addoption("--skip_install", action="store_true")
-
