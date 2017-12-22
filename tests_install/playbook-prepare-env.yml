@@ -230,7 +230,7 @@
     when: ansible_os_family != "Windows"
 
   - name: extract tests
-    shell: "tar xf /home/test/pg-tests.tgz -C /home/test/"
+    shell: tar xf /home/test/pg-tests.tgz -C /home/test/ warn=no
     when: ansible_os_family != "Windows"
 
   - name: install pip
