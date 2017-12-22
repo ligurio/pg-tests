@@ -550,11 +550,11 @@ def delete_packages(remote=False, host=None, **kwargs):
 def exec_psql(query, options='', binpath=None):
     dist_info = get_distro()
     cmd = '%s%spsql %s -c "%s"' % \
-           (
+        (
             ('' if dist_info[0] in WIN_BASED else 'sudo -u postgres '),
             ('' if binpath is None else (binpath  + os.sep)),
             options, query
-           )
+        )
     return subprocess.check_output(cmd, shell=True, cwd="/").strip()
 
 
@@ -576,10 +576,10 @@ def get_initdb_props(binpath=None):
 
     dist_info = get_distro()
     cmd = '%s%sinitdb -s -D .' % \
-           (
+        (
             ('' if dist_info[0] in WIN_BASED else 'sudo -u postgres '),
             ('' if binpath is None else (binpath  + os.sep))
-           )
+        )
     props = {}
     for line in subprocess.check_output(cmd, shell=True,
                                         stderr=subprocess.STDOUT,
@@ -635,11 +635,11 @@ def pg_control(action, data_dir, binpath=None):
     """
     dist_info = get_distro()
     cmd = '%s%spg_ctl -w -D "%s" %s >pg_ctl.out 2>&1' % \
-           (
+        (
             ('' if dist_info[0] in WIN_BASED else 'sudo -u postgres '),
-            ('' if binpath is None else (binpath  + os.sep)),
+            ('' if binpath is None else (binpath + os.sep)),
             data_dir,
             action
-           )
+        )
     # sys.stdout.encoding = 'cp866'?
     subprocess.check_call(cmd, shell=True, cwd=tempfile.gettempdir())
