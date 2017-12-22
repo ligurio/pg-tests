@@ -41,7 +41,8 @@ def learn_aqo(sql_query, connstring, number=AQO_AUTO_TUNING_MAX_ITERATIONS):
     pg_set_option(connstring, 'aqo.mode', aqo_mode)
     aqo_stat = []
     for i in range(0, number):
-        use_aqo = get_query_aqo_param(sql_query_analyze, 'use_aqo', connstring)
+        use_aqo = get_query_aqo_param(
+            sql_query_analyze, 'use_aqo', connstring)
         learn_aqo = get_query_aqo_param(
             sql_query_analyze, 'learn_aqo', connstring)
         auto_tuning = get_query_aqo_param(
@@ -55,10 +56,12 @@ def learn_aqo(sql_query, connstring, number=AQO_AUTO_TUNING_MAX_ITERATIONS):
                 stats['learn_aqo_true'] = i
             if use_aqo:
                 cardinality_error = get_query_aqo_stat(
-                    sql_query_analyze, 'cardinality_error_with_aqo', connstring)[0][0][-1]
+                    sql_query_analyze, 'cardinality_error_with_aqo',
+                    connstring)[0][0][-1]
             else:
                 cardinality_error = get_query_aqo_stat(
-                    sql_query_analyze, 'cardinality_error_without_aqo', connstring)[0][0][-1]
+                    sql_query_analyze, 'cardinality_error_without_aqo',
+                    connstring)[0][0][-1]
         else:
             if stats['learn_aqo_false']:
                 stats['learn_aqo_false'] = i
@@ -68,14 +71,18 @@ def learn_aqo(sql_query, connstring, number=AQO_AUTO_TUNING_MAX_ITERATIONS):
             if stats['use_aqo_true'] == '':
                 stats['use_aqo_true'] = i
             execution_time = get_query_aqo_stat(
-                sql_query_analyze, 'execution_time_with_aqo', connstring)[0][0][-1]
+                sql_query_analyze,
+                'execution_time_with_aqo', connstring)[0][0][-1]
             planning_time = get_query_aqo_stat(
-                sql_query_analyze, 'planning_time_with_aqo', connstring)[0][0][-1]
+                sql_query_analyze,
+                'planning_time_with_aqo', connstring)[0][0][-1]
         elif learn_aqo or auto_tuning:
             execution_time = get_query_aqo_stat(
-                sql_query_analyze, 'execution_time_without_aqo', connstring)[0][0][-1]
+                sql_query_analyze,
+                'execution_time_without_aqo', connstring)[0][0][-1]
             planning_time = get_query_aqo_stat(
-                sql_query_analyze, 'planning_time_without_aqo', connstring)[0][0][-1]
+                sql_query_analyze,
+                'planning_time_without_aqo', connstring)[0][0][-1]
         else:
             if stats['use_aqo_false'] == '':
                 stats['use_aqo_false'] = i
@@ -112,7 +119,8 @@ def parse_explain_analyze_stat(explain_output):
 
     # Like 'Seq Scan on pg_class  (cost=0.00..14.56 rows=356 width=228)
     #       (actual time=0.013..0.077 rows=356 loops=1)'
-    REGEX_CARDINALITY = '.*\(cost.*rows=([0-9]*).*\)\s{1}\(actual\s{1}time.*rows=([0-9]*).*\)'
+    REGEX_CARDINALITY = r'.*\(cost.*rows=([0-9]*).*\)\s{1}' \
+        '\(actual\s{1}time.*rows=([0-9]*).*\)'
     REGEX_TIME = '\w+\s{1}time:\s{1}([0-9]+\.[0-9]+)\s{1}ms'
 
     try:
@@ -215,9 +223,10 @@ def get_query_aqo_stat(sql_query, param_name, connstring):
     conn = psycopg2.connect(connstring)
 
     response = execute(conn, "SELECT %s FROM aqo_query_stat \
-                            WHERE query_hash = \
-                            (SELECT query_hash from aqo_query_texts \
-                            WHERE query_text = '%s')" % (param_name, sql_query))
+                       WHERE query_hash = \
+                       (SELECT query_hash from aqo_query_texts \
+                       WHERE query_text = '%s')" %
+                       (param_name, sql_query))
     conn.close()
 
     return response
@@ -288,7 +297,8 @@ def plot_stats(stats, connstring):
         y_series = [x + y for x, y in zip(execution_time, planning_time)]
         plot.plot(x_series, y_series, label="%s total time" % type)
 
-    for p in ['learn_aqo_true', 'learn_aqo_false', 'use_aqo_true', 'use_aqo_false']:
+    for p in ['learn_aqo_true', 'learn_aqo_false', 'use_aqo_true',
+              'use_aqo_false']:
         if stats[p]:
             plot.axvline(stats[p], label=p, color='r')
 
@@ -315,7 +325,8 @@ def plot_stats(stats, connstring):
         y_series = [float(x['cardinality_error']) for x in stats[type]]
         plot.plot(x_series, y_series, label="%s cardinality error" % type)
 
-    for p in ['learn_aqo_true', 'learn_aqo_false', 'use_aqo_true', 'use_aqo_false']:
+    for p in ['learn_aqo_true', 'learn_aqo_false', 'use_aqo_true',
+              'use_aqo_false']:
         if stats[p]:
             plot.axvline(stats[p], label=p, color='r')
 
@@ -371,13 +382,15 @@ def evaluate_aqo(stats):
         execution_time = [float(x['execution_time']) for x in stats[k]]
         planning_time = [float(x['planning_time']) for x in stats[k]]
         dict[k]['total_time'] = [x + y for x,
-                                 y in zip(execution_time[-IGNORE_ITER:], planning_time[-IGNORE_ITER:])]
+                                 y in zip(execution_time[-IGNORE_ITER:],
+                                          planning_time[-IGNORE_ITER:])]
         dict[k]['cardinality_error'] = [
             float(x['cardinality_error']) for x in stats[k]]
 
     assert len(dict['aqo']) == len(dict['aqo_stat'])
     # FIXME:
-    # assert (numpy.mean(dict['default']['total_time']) < numpy.mean(dict['aqo_stat']['total_time']))
+    # assert (numpy.mean(dict['default']['total_time']) <
+    #  numpy.mean(dict['aqo_stat']['total_time']))
     assert (numpy.mean(dict['aqo']['total_time']) /
             numpy.mean(dict['aqo_stat']['total_time'])) < 0.15
     diff = numpy.mean(dict['default']['cardinality_error']) - \
@@ -391,7 +404,8 @@ def evaluate_aqo(stats):
             execution_time = [float(x['execution_time']) for x in stats[k]]
             planning_time = [float(x['planning_time']) for x in stats[k]]
             dict[k]['total_time'] = [
-                x + y for x, y in zip(execution_time[-IGNORE_ITER:], planning_time[-IGNORE_ITER:])]
+                x + y for x, y in zip(execution_time[-IGNORE_ITER:],
+                                      planning_time[-IGNORE_ITER:])]
             dict[k]['cardinality_error'] = [
                 float(x['cardinality_error']) for x in stats[k]]
 
@@ -429,10 +443,14 @@ def test_similar_queries(install_postgres):
     conn = psycopg2.connect(install_postgres.connstring)
     execute(conn, 'SELECT 1')
     num1 = execute(
-        conn, "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = 'SELECT 1'")[0][0]
+        conn,
+        "SELECT COUNT(*) FROM aqo_query_texts"
+        " WHERE query_text = 'SELECT 1'")[0][0]
     execute(conn, 'SELECT 2')
     num2 = execute(
-        conn, "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = 'SELECT 2'")[0][0]
+        conn,
+        "SELECT COUNT(*) FROM aqo_query_texts"
+        " WHERE query_text = 'SELECT 2'")[0][0]
     conn.close()
 
     assert num1 == 1
@@ -464,7 +482,8 @@ def test_aqo_mode(aqo_mode, install_postgres):
     """
 
     OLD_SQL_QUERY = "SELECT * FROM pg_class WHERE relpages > 455"
-    NEW_SQL_QUERY = "SELECT * FROM pg_class WHERE reltablespace != reltoastrelid"
+    NEW_SQL_QUERY = "SELECT * FROM pg_class" \
+        " WHERE reltablespace != reltoastrelid"
     old_sql_query_explain = 'EXPLAIN ANALYZE ' + OLD_SQL_QUERY
     new_sql_query_explain = 'EXPLAIN ANALYZE ' + NEW_SQL_QUERY
 
@@ -478,38 +497,53 @@ def test_aqo_mode(aqo_mode, install_postgres):
     learn_aqo(NEW_SQL_QUERY, connstring)
 
     conn = psycopg2.connect(install_postgres.connstring)
-    num_old_sql_query = execute(conn,
-                                "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = '%s'" % old_sql_query_explain)[0][0]
-    num_new_sql_query = execute(conn,
-                                "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = '%s'" % new_sql_query_explain)[0][0]
+    num_old_sql_query = execute(
+        conn,
+        "SELECT COUNT(*) FROM aqo_query_texts"
+        " WHERE query_text = '%s'" % old_sql_query_explain)[0][0]
+    num_new_sql_query = execute(
+        conn,
+        "SELECT COUNT(*) FROM aqo_query_texts"
+        " WHERE query_text = '%s'" % new_sql_query_explain)[0][0]
 
     if aqo_mode == 'forced' or aqo_mode == 'disabled':
-        executions_w_aqo = execute(conn,
-                                   "SELECT executions_with_aqo FROM aqo_query_stat WHERE query_hash = 0;")
-        executions_wo_aqo = execute(conn,
-                                    "SELECT executions_without_aqo FROM aqo_query_stat WHERE query_hash = 0;")
+        executions_w_aqo = execute(
+            conn,
+            "SELECT executions_with_aqo FROM aqo_query_stat"
+            " WHERE query_hash = 0;")
+        executions_wo_aqo = execute(
+            conn,
+            "SELECT executions_without_aqo FROM aqo_query_stat"
+            " WHERE query_hash = 0;")
     elif aqo_mode == 'intelligent':
-        new_executions_w_aqo = get_query_aqo_stat(new_sql_query_explain,
-                                                  'executions_with_aqo', connstring)[0][0]
-        new_executions_wo_aqo = get_query_aqo_stat(new_sql_query_explain,
-                                                   'executions_without_aqo', connstring)[0][0]
-        old_executions_w_aqo = get_query_aqo_stat(old_sql_query_explain,
-                                                  'executions_with_aqo', connstring)
-        old_executions_wo_aqo = get_query_aqo_stat(old_sql_query_explain,
-                                                   'executions_without_aqo', connstring)
+        new_executions_w_aqo = get_query_aqo_stat(
+            new_sql_query_explain,
+            'executions_with_aqo', connstring)[0][0]
+        new_executions_wo_aqo = get_query_aqo_stat(
+            new_sql_query_explain,
+            'executions_without_aqo', connstring)[0][0]
+        old_executions_w_aqo = get_query_aqo_stat(
+            old_sql_query_explain,
+            'executions_with_aqo', connstring)
+        old_executions_wo_aqo = get_query_aqo_stat(
+            old_sql_query_explain,
+            'executions_without_aqo', connstring)
     conn.close()
 
     if aqo_mode == 'intelligent':
         assert num_old_sql_query == 1
         assert num_new_sql_query == 1
-        assert new_executions_w_aqo + new_executions_wo_aqo == AQO_AUTO_TUNING_MAX_ITERATIONS
-        assert old_executions_w_aqo + old_executions_wo_aqo == AQO_AUTO_TUNING_MAX_ITERATIONS
+        assert new_executions_w_aqo + new_executions_wo_aqo == \
+            AQO_AUTO_TUNING_MAX_ITERATIONS
+        assert old_executions_w_aqo + old_executions_wo_aqo == \
+            AQO_AUTO_TUNING_MAX_ITERATIONS
         # TODO: check optimization of old query
         # TODO: check optimization of new query
     elif aqo_mode == 'forced':
         assert num_old_sql_query == 1
         assert num_new_sql_query == 0
-        assert executions_w_aqo + executions_wo_aqo == AQO_AUTO_TUNING_MAX_ITERATIONS
+        assert executions_w_aqo + executions_wo_aqo == \
+            AQO_AUTO_TUNING_MAX_ITERATIONS
         # TODO: check optimization of old query
         # TODO: check optimization of new query
     elif aqo_mode == 'manual':
@@ -579,10 +613,12 @@ def test_tuning_max_iterations(install_postgres):
     conn = psycopg2.connect(install_postgres.connstring)
     execute(conn, 'SELECT 1')
     num1 = execute(
-        conn, "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = 'SELECT 1'")[0][0]
+        conn, "SELECT COUNT(*) FROM aqo_query_texts"
+        " WHERE query_text = 'SELECT 1'")[0][0]
     execute(conn, 'SELECT 2')
     num2 = execute(
-        conn, "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = 'SELECT 2'")[0][0]
+        conn, "SELECT COUNT(*) FROM aqo_query_texts "
+        "WHERE query_text = 'SELECT 2'")[0][0]
     conn.close()
 
     assert num1 == 1
@@ -676,7 +712,8 @@ COALESCE(_AccRgAT31043._Value3_RRRef,'\\377'::bytea)) AND
      (_AccRgAT31043._Fld995 = 271602);
 """
 
-    DUMP_URL = "http://webdav.l.postgrespro.ru/DIST/vm-images/test/blobs/pg.sql.bz"
+    DUMP_URL = "http://webdav.l.postgrespro.ru/DIST/vm-images/" \
+        "test/blobs/pg.sql.bz"
 
     archive_path = os.path.join(TMP_DIR, "pg.sql.gz")
     plain_path = os.path.join(TMP_DIR, "pg.sql")
@@ -736,7 +773,8 @@ def test_join_order_benchmark(optimizer, install_postgres, populate_imdb):
 
     job_file = os.path.join(TMP_DIR, "join-order-benchmark.tar.gz")
     job_dir = os.path.join(TMP_DIR, "join-order-benchmark-0.1")
-    job_url = "https://codeload.github.com/ligurio/join-order-benchmark/tar.gz/0.1"
+    job_url = "https://codeload.github.com/ligurio/" \
+        "join-order-benchmark/tar.gz/0.1"
     if not os.path.exists(job_file):
         download_file(job_url, job_file)
 
@@ -788,13 +826,16 @@ def test_tpch_benchmark(install_postgres):
     # GETTING A BENCHMARK
 
     COMMIT_HASH = "c5cd7711cc35"
-    TPCH_BENCHMARK = "https://bitbucket.org/tigvarts/tpch-dbgen/get/%s.zip" % COMMIT_HASH
+    TPCH_BENCHMARK = "https://bitbucket.org/tigvarts/" \
+        "tpch-dbgen/get/%s.zip" % COMMIT_HASH
 
-    tpch_archive = os.path.join(TMP_DIR, "tpch-benchmark-%s.zip" % COMMIT_HASH)
+    tpch_archive = os.path.join(
+        TMP_DIR, "tpch-benchmark-%s.zip" % COMMIT_HASH)
     if not os.path.exists(tpch_archive):
         download_file(TPCH_BENCHMARK, tpch_archive)
 
-    tpch_dir = os.path.join(TMP_DIR, "tigvarts-tpch-dbgen-%s" % COMMIT_HASH)
+    tpch_dir = os.path.join(
+        TMP_DIR, "tigvarts-tpch-dbgen-%s" % COMMIT_HASH)
     if not os.path.exists(tpch_dir):
         os.mkdir(tpch_dir)
         subprocess.check_output(["unzip", tpch_archive, "-d", TMP_DIR])
@@ -911,13 +952,19 @@ def test_broken_aqo_tables(install_postgres):
     execute(conn, SQL_QUERY)
 
     num = execute(
-        conn, "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = '%s'" % SQL_QUERY)[0][0]
+        conn,
+        "SELECT COUNT(*) FROM aqo_query_texts"
+        " WHERE query_text = '%s'" % SQL_QUERY)[0][0]
     assert num == 1
 
-    execute(conn, "DELETE FROM aqo_query_texts WHERE query_text = '%s'" % SQL_QUERY)
+    execute(
+        conn,
+        "DELETE FROM aqo_query_texts WHERE query_text = '%s'" % SQL_QUERY)
     execute(conn, SQL_QUERY)
     num = execute(
-        conn, "SELECT COUNT(*) FROM aqo_query_texts WHERE query_text = '%s'" % SQL_QUERY)[0][0]
+        conn,
+        "SELECT COUNT(*) FROM aqo_query_texts"
+        "WHERE query_text = '%s'" % SQL_QUERY)[0][0]
 
     assert num == 1
     # TODO: make sure stats is the same as before deletion
