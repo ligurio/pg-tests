@@ -21,7 +21,7 @@ before_script:
   - pip install pyasn1
   - pip install cffi
   - pip install ansible-lint
-  - pip install pep8
+  - pip install pycodestyle
   - pip install psycopg2
   - pip install allure-pytest
 
@@ -32,10 +32,10 @@ ansible-lint:
     - ansible-lint tests_install/playbook-prepare-env.yml
   when: always
 
-pep8-check:
+pycodestyle-check:
   stage: test
   script:
-    - pep8 --exclude helpers/datafiller.py --filename=*.py --ignore=W293,E201,E202,E501 --count .
+    - pycodestyle --exclude helpers/datafiller.py --filename=*.py --ignore=W293,E201,E202,E501 --count .
   when: always
 
 pylint-check:
