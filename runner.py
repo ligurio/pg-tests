@@ -248,8 +248,9 @@ def export_results(domname, domipaddress, reportname, operating_system=None, pro
     if not os.path.exists('reports'):
         os.makedirs('reports')
         subprocess.check_call('chmod 777 reports', shell=True)
-    rel_allure_reports_dir = "allure_reports/%s/%s/%s/%s/%s" % (time.strftime("/%Y/%m/%d"), product_name,
-                                                           product_version, product_edition, operating_system)
+    rel_allure_reports_dir = "allure_reports/%s/%s/%s/%s/%s" % (
+        time.strftime("/%Y/%m/%d"), product_name,
+        product_version, product_edition, operating_system)
     allure_reports_dir = 'reports/' + rel_allure_reports_dir
     if not os.path.exists(allure_reports_dir):
         os.makedirs(allure_reports_dir)
