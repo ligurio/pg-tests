@@ -17,10 +17,11 @@ import tempfile
 import glob
 from subprocess import call
 
-from helpers.utils import copy_file, copy_reports_win, exec_command_win, wait_for_boot
-from helpers.utils import REMOTE_LOGIN, REMOTE_PASSWORD, REMOTE_ROOT_PASSWORD
-from helpers.utils import exec_command
-from helpers.utils import gen_name
+from helpers.utils import (copy_file, copy_reports_win,
+                           exec_command, gen_name,
+                           exec_command_win, wait_for_boot,
+                           REMOTE_LOGIN, REMOTE_PASSWORD,
+                           REMOTE_ROOT_PASSWORD)
 
 DEBUG = False
 
@@ -110,7 +111,8 @@ def create_image(domname, name):
     try:
         page = urllib.urlopen(IMAGE_BASE_URL).read()
     except IOError:
-        print("%s is not available, no *.iso will be downloaded." % IMAGE_BASE_URL)
+        print("%s is not available, no *.iso will be downloaded." %
+              IMAGE_BASE_URL)
     isos = re.findall('href=[\'"]?([^\'" >]+)\.iso', page)
     for isoname in isos:
         if isoname.startswith(name):
@@ -143,14 +145,16 @@ def prepare_payload(tests_dir):
             print "Waiting for parallel tar and zip creation...%d" % timeout
             time.sleep(timeout)
             if timeout == 60:
-                raise Exception('Could not find tar and zip in "%s".' % rsrcdir)
+                raise Exception('Could not find tar and zip in "%s".' %
+                                rsrcdir)
         return
 
     os.makedirs(rsrcdir)
     print("Preparing a payload for target VMs...")
     tempdir = tempfile.mkdtemp()
     pgtd = os.path.join(tempdir, 'pg-tests')
-    shutil.copytree('.', pgtd, ignore=shutil.ignore_patterns('.git', 'reports'))
+    shutil.copytree('.', pgtd,
+                    ignore=shutil.ignore_patterns('.git', 'reports'))
     retcode = call("wget -q https://bootstrap.pypa.io/get-pip.py",
                    cwd=pgtd, shell=True)
     if retcode != 0:
@@ -212,10 +216,11 @@ def create_env(name, domname, domimage=None):
         domimage = create_image(domname, name)
     dommac = mac_address_generator()
     qemu_path = ""
-    if platform.linux_distribution()[0] == 'Ubuntu' or platform.linux_distribution()[0] == 'debian':
-        qemu_path = """/usr/bin/qemu-system-x86_64"""
+    if platform.linux_distribution()[0] == 'Ubuntu' or \
+       platform.linux_distribution()[0] == 'debian':
+        qemu_path = "/usr/bin/qemu-system-x86_64"
     elif platform.linux_distribution()[0] == 'CentOS Linux':
-        qemu_path = """/usr/libexec/qemu-kvm"""
+        qemu_path = "/usr/libexec/qemu-kvm"
     if domname[0:3] == 'win':
         network_driver = "e1000"
     else:
@@ -309,11 +314,18 @@ def setup_env(domipaddress, domname, tests_dir):
         raise Exception("Could not remove old ssh key for %s." % domipaddress)
 
     if domname[0:3] != 'win':
-        inv = ANSIBLE_INVENTORY % (domname, domipaddress, REMOTE_ROOT_PASSWORD, REMOTE_PASSWORD, REMOTE_LOGIN)
-        ansible_cmd = ANSIBLE_CMD % (os.path.join(tests_dir, ANSIBLE_PLAYBOOK), "paramiko", domname)
+        inv = ANSIBLE_INVENTORY % (domname, domipaddress,
+                                   REMOTE_ROOT_PASSWORD,
+                                   REMOTE_PASSWORD,
+                                   REMOTE_LOGIN)
+        ansible_cmd = ANSIBLE_CMD % (
+            os.path.join(tests_dir, ANSIBLE_PLAYBOOK), "paramiko", domname)
     else:
-        inv = ANSIBLE_INVENTORY_WIN % (domname, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD)
-        ansible_cmd = ANSIBLE_CMD % (os.path.join(tests_dir, ANSIBLE_PLAYBOOK), "winrm", domname)
+        inv = ANSIBLE_INVENTORY_WIN % (domname, domipaddress,
+                                       REMOTE_LOGIN,
+                                       REMOTE_PASSWORD)
+        ansible_cmd = ANSIBLE_CMD % (
+            os.path.join(tests_dir, ANSIBLE_PLAYBOOK), "winrm", domname)
 
     with open("static/inventory", "a") as hosts:
         hosts.write(inv)
@@ -349,9 +361,8 @@ def make_test_cmd(domname, reportname, tests=None,
 
     pytest_cmd = 'pytest {0} --self-contained-html --html={1}.html ' \
                  '--junit-xml={1}.xml --json={1}.json --maxfail=1 ' \
-                 '--alluredir=reports {2} --target={3}'.format(tests,
-                                                               reportname,
-                                                               pcmd, domname)
+                 '--alluredir=reports {2} --target={3}'.format(
+                     tests, reportname, pcmd, domname)
     if domname[0:3] == 'win':
         cmd = r'cd C:\Users\test\pg-tests && ' + pytest_cmd
     else:
@@ -363,8 +374,9 @@ def make_test_cmd(domname, reportname, tests=None,
     return cmd
 
 
-def export_results(domname, domipaddress, reportname, operating_system=None, product_name=None,
-                   product_version=None, product_edition=None, tests=None):
+def export_results(domname, domipaddress, reportname, operating_system=None,
+                   product_name=None, product_version=None,
+                   product_edition=None, tests=None):
     if not os.path.exists('reports'):
         os.makedirs('reports')
         subprocess.check_call('chmod 777 reports', shell=True)
@@ -378,24 +390,33 @@ def export_results(domname, domipaddress, reportname, operating_system=None, pro
 
     try:
         if domname[0:3] == 'win':
-            copy_reports_win(reportname, rel_allure_reports_dir, 'reports', domipaddress)
+            copy_reports_win(reportname, rel_allure_reports_dir, 'reports',
+                             domipaddress)
         else:
-            copy_file("/home/test/pg-tests/%s.html" % reportname, "reports/%s.html" % reportname, domipaddress)
-            copy_file("/home/test/pg-tests/%s.xml" % reportname, "reports/%s.xml" % reportname, domipaddress)
-            copy_file("/home/test/pg-tests/%s.json" % reportname, "reports/%s.json" % reportname, domipaddress)
-            copy_file("/home/test/pg-tests/reports", allure_reports_dir, domipaddress, dir=True)
+            copy_file("/home/test/pg-tests/%s.html" % reportname,
+                      "reports/%s.html" % reportname, domipaddress)
+            copy_file("/home/test/pg-tests/%s.xml" % reportname,
+                      "reports/%s.xml" % reportname, domipaddress)
+            copy_file("/home/test/pg-tests/%s.json" % reportname,
+                      "reports/%s.json" % reportname, domipaddress)
+            copy_file("/home/test/pg-tests/reports", allure_reports_dir,
+                      domipaddress, dir=True)
     except IOError as e:
         print("Cannot copy report from virtual machine.")
         print(e)
         pass
     finally:
         subprocess.call(
-            ['curl', '-s', '-S', '-T', 'reports/%s.html' % reportname, REPORT_SERVER_URL])
+            ['curl', '-s', '-S', '-T', 'reports/%s.html' % reportname,
+             REPORT_SERVER_URL])
         subprocess.call(
-            ['curl', '-s', '-S', '-T', 'reports/%s.xml' % reportname, REPORT_SERVER_URL])
+            ['curl', '-s', '-S', '-T', 'reports/%s.xml' % reportname,
+             REPORT_SERVER_URL])
         for file in os.listdir('reports'):
             if '.json' in file:
-                subprocess.call(['curl', '-s', '-S', '-T', os.path.join('reports', file), REPORT_SERVER_URL])
+                subprocess.call(['curl', '-s', '-S', '-T',
+                                 os.path.join('reports', file),
+                                 REPORT_SERVER_URL])
             else:
                 continue
 
@@ -475,15 +496,18 @@ def main():
     parser.add_argument('--test', dest="run_tests", default="tests/",
                         help='tests to run (default: all in tests/)')
     parser.add_argument("--product_name", dest="product_name",
-                        help="specify product name", action="store", default="postgrespro")
+                        help="specify product name", action="store",
+                        default="postgrespro")
     parser.add_argument("--product_version", dest="product_version",
-                        help="specify product version", action="store", default="10")
+                        help="specify product version", action="store",
+                        default="10")
     parser.add_argument("--product_edition", dest="product_edition",
                         help="specify product edition", action="store")
     parser.add_argument("--product_milestone", dest="product_milestone",
                         help="specify target milestone", action="store")
     parser.add_argument("--branch", dest="branch",
-                        help="specify product branch for package", action="store")
+                        help="specify product branch for package",
+                        action="store")
     parser.add_argument('--keep', dest="keep", action='store_true',
                         help='what to do with env after testing')
     parser.add_argument('--export', dest="export",
@@ -514,7 +538,8 @@ def main():
         print "No tests scripts found in %s." % args.run_tests
         return 1
 
-    tests_dir = args.run_tests if os.path.isdir(args.run_tests) else os.path.dirname(args.run_tests)
+    tests_dir = args.run_tests if os.path.isdir(args.run_tests) else \
+        os.path.dirname(args.run_tests)
     prepare_payload(tests_dir)
 
     targets = args.target.split(',')
@@ -533,10 +558,11 @@ def main():
             testname = test.split('/')[1].split('.')[0]
             if len(tests) > 1:
                 restore_env(domname)
-                domipaddress = create_env(target, domname, get_dom_disk(domname))[0]
+                domipaddress = create_env(
+                    target, domname, get_dom_disk(domname))[0]
                 wait_for_boot(domipaddress, linux=(domname[0:3] != 'win'))
-            reportname = "report-%s_%s_%s" % (time.strftime('%Y-%m-%d-%H-%M-%S'),
-                                              testname, target)
+            reportname = "report-%s_%s_%s" % (
+                time.strftime('%Y-%m-%d-%H-%M-%S'), testname, target)
             cmd = make_test_cmd(
                 domname, reportname, test,
                 args.product_name,
@@ -547,7 +573,8 @@ def main():
             if DEBUG:
                 print("Test command:\n%s" % cmd)
             if domname[0:3] == 'win':
-                s = winrm.Session(domipaddress, auth=(REMOTE_LOGIN, REMOTE_PASSWORD))
+                s = winrm.Session(domipaddress,
+                                  auth=(REMOTE_LOGIN, REMOTE_PASSWORD))
                 ps_script = """
                     Set-ExecutionPolicy Unrestricted
                     [Environment]::SetEnvironmentVariable("Path", $env:Path +
@@ -556,11 +583,13 @@ def main():
                     """
                 s.run_ps(ps_script)
                 print "Added path for python and python scripts.\n"
-                retcode, stdout, stderr = exec_command_win(cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD,
-                                                           skip_ret_code_check=True)
+                retcode, stdout, stderr = exec_command_win(
+                    cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD,
+                    skip_ret_code_check=True)
             else:
-                retcode, stdout, stderr = exec_command(cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD,
-                                                       skip_ret_code_check=True)
+                retcode, stdout, stderr = exec_command(
+                    cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD,
+                    skip_ret_code_check=True)
 
             if args.export:
                 export_results(
@@ -576,9 +605,9 @@ def main():
 
             if retcode != 0:
                 reporturl = os.path.join(REPORT_SERVER_URL, reportname)
-                print("Test return code (for target: %s, domain: %s, IP address: %s) "
-                      "is not zero - %s.\n"
-                      "Please check logs in report: %s" %
+                print("Test return code (for target: %s, domain: %s,"
+                      " IP address: %s) is not zero - %s.\n"
+                      "Please check report: %s" %
                       (target, domname, domipaddress, retcode, reporturl))
                 print retcode, stdout, stderr
                 return 1
