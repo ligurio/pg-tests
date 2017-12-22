@@ -35,7 +35,7 @@ ansible-lint:
 pycodestyle-check:
   stage: test
   script:
-    - pycodestyle --exclude helpers/datafiller.py --filename=*.py --ignore=W293,E201,E202 --count .
+    - pycodestyle --exclude helpers/datafiller.py --filename=*.py --ignore=W293,E201 --count .
   when: always
 
 pylint-check:
