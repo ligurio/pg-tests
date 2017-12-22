@@ -157,7 +157,7 @@ def exec_command(cmd, hostname, login, password, skip_ret_code_check=False, conn
         client.close()
         return
 
-    print "Executing '%s' on '%s'" % (cmd, hostname)
+    print "Executing '%s' on %s..." % (cmd, hostname)
     chan.exec_command(cmd)
     retcode = chan.recv_exit_status()
     while chan.recv_ready():
@@ -212,6 +212,7 @@ def exec_command_win(cmd, hostname, user, password, skip_ret_code_check=False, c
         p.close_shell(shell_id)
         return
 
+    print "Executing '%s' on %s..." % (cmd, hostname)
     command_id = p.run_command(shell_id, cmd)
     stdout, stderr, retcode = p.get_command_output(shell_id, command_id)
     p.cleanup_command(shell_id, command_id)
