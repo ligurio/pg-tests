@@ -23,13 +23,7 @@ class TestCleanInstall():
         """
         Scenario:
         1. Install current version
-        2. Check that setup successfull (postgres run and we can create test table)
-        3. Create tablespace
-        4. Rewrite repoinfo and update package
-        5. Check that update was successfull (postgres run and we can execute select 1)
-        6. Check that we can read information from tablespace
-        7. Download and install beta version or version from branch
-        8. Check that we can read information from tablespace
+        2. Check that setup successfull (select version)
 
         :return:
         """
@@ -54,7 +48,8 @@ class TestCleanInstall():
         branch = request.config.getoption('--branch')
 
         # Step 1
-        setup_repo(name=name, version=version, edition=edition, milestone=milestone, branch=branch)
+        setup_repo(name=name, version=version, edition=edition,
+                   milestone=milestone, branch=branch)
         edtn = ''
         if edition:
             if edition == 'standard':
@@ -68,5 +63,6 @@ class TestCleanInstall():
             install_postgres_win()
         server_version = get_server_version()
         client_version = get_psql_version()
-        print("Server version:\n%s\nClient version:\n%s" % (server_version, client_version))
+        print("Server version:\n%s\nClient version:\n%s" %
+              (server_version, client_version))
         print("OK")

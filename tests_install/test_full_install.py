@@ -19,7 +19,8 @@ from helpers.pginstall import (setup_repo,
                                get_pg_setting,
                                restart_service)
 
-PRELOAD_LIBRARIES = ['auth_delay', 'auto_explain', 'pg_pathman', 'plantuner', 'shared_ispell']
+PRELOAD_LIBRARIES = ['auth_delay', 'auto_explain', 'pg_pathman',
+                     'plantuner', 'shared_ispell']
 
 
 @pytest.mark.full_install
@@ -57,7 +58,8 @@ class TestFullInstall():
         branch = request.config.getoption('--branch')
 
         # Step 1
-        setup_repo(name=name, version=version, edition=edition, milestone=milestone, branch=branch)
+        setup_repo(name=name, version=version, edition=edition,
+                   milestone=milestone, branch=branch)
         edtn = ''
         if edition:
             if edition == 'standard':
@@ -71,7 +73,8 @@ class TestFullInstall():
             install_postgres_win()
         server_version = get_server_version()
         client_version = get_psql_version()
-        print("Server version:\n%s\nClient version:\n%s" % (server_version, client_version))
+        print("Server version:\n%s\nClient version:\n%s" %
+              (server_version, client_version))
         print("OK")
 
     @pytest.mark.test_all_extensions
@@ -86,7 +89,8 @@ class TestFullInstall():
         data_directory = get_pg_setting('data_directory')
         restart_service(name=name, version=version, edition=edition)
         share_path = iprops['share_path'].replace('/', os.sep)
-        controls = glob.glob(os.path.join(share_path, 'extension', '*.control'))
+        controls = glob.glob(os.path.join(share_path,
+                                          'extension', '*.control'))
         for ctrl in sorted(controls):
             extension = os.path.splitext(os.path.basename(ctrl))[0]
             # TODO: Remove
@@ -117,7 +121,8 @@ class TestFullInstall():
                 print("CREATE EXTENSION %s skipped (PGPRO-1253)" % extension)
                 continue
             print("CREATE EXTENSION %s" % extension)
-            exec_psql("CREATE EXTENSION IF NOT EXISTS \\\"%s\\\" CASCADE" % extension)
+            exec_psql("CREATE EXTENSION IF NOT EXISTS \\\"%s\\\" CASCADE" %
+                      extension)
 
     @pytest.mark.test_full_remove
     def test_full_remove(self, request):
