@@ -27,18 +27,25 @@ def pytest_addoption(parser):
     :param parser pytest default param for command line args:
     :return:
     """
-    parser.addoption("--target", action="store", default='linux',
-                     help="Operating system")
-    parser.addoption("--product_version", action="store", default='9.6',
-                     help="Specify product version. Available values: 9.5, 9.6")
-    parser.addoption("--product_name", action="store", default='postgrespro',
-                     help="Specify product name. Available values: postgrespro, postresql")
-    parser.addoption("--product_edition", action="store", default='ee',
-                     help="Specify product edition. Available values: ee, standard")
-    parser.addoption("--product_milestone", action="store",
-                     help="Specify product milestone. Available values: beta")
-    parser.addoption("--product_build", action="store",
-                     help="Specify product build.")
-    parser.addoption("--branch", action="store",
-                     help="Specify branch")
+    parser.addoption(
+        "--target", action="store", default='linux',
+        help="Operating system")
+    parser.addoption(
+        "--product_version", action="store", default='9.6',
+        help="Specify product version. Available values: 9.5, 9.6")
+    parser.addoption(
+        "--product_name", action="store", default='postgrespro',
+        help="Specify product name. Available values: postgrespro, postresql")
+    parser.addoption(
+        "--product_edition", action="store", default='ee',
+        help="Specify product edition. Available values: ee, standard")
+    parser.addoption(
+        "--product_milestone", action="store",
+        help="Specify product milestone. Available values: beta")
+    parser.addoption(
+        "--product_build", action="store",
+        help="Specify product build.")
+    parser.addoption(
+        "--branch", action="store",
+        help="Specify branch")
     parser.addoption("--skip_install", action="store_true")
