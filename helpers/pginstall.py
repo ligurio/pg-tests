@@ -552,7 +552,7 @@ def exec_psql(query, options='', binpath=None):
     cmd = '%s%spsql %s -c "%s"' % \
         (
             ('' if dist_info[0] in WIN_BASED else 'sudo -u postgres '),
-            ('' if binpath is None else (binpath  + os.sep)),
+            ('' if binpath is None else (binpath + os.sep)),
             options, query
         )
     return subprocess.check_output(cmd, shell=True, cwd="/").strip()
@@ -566,7 +566,7 @@ def get_psql_version(binpath=None):
     """ Get client version
     """
     cmd = '%spsql --version' % \
-        ('' if binpath is None else (binpath  + os.sep))
+        ('' if binpath is None else (binpath + os.sep))
     return subprocess.check_output(cmd, shell=True).strip()
 
 
@@ -578,7 +578,7 @@ def get_initdb_props(binpath=None):
     cmd = '%s%sinitdb -s -D .' % \
         (
             ('' if dist_info[0] in WIN_BASED else 'sudo -u postgres '),
-            ('' if binpath is None else (binpath  + os.sep))
+            ('' if binpath is None else (binpath + os.sep))
         )
     props = {}
     for line in subprocess.check_output(cmd, shell=True,
@@ -600,8 +600,9 @@ def get_default_service_name(**kwargs):
     dist_info = get_distro()
     if dist_info[0] in WIN_BASED:
         if kwargs['name'] == "postgrespro":
-            return 'postgrespro' + '-'  + \
-                   ('X64' if dist_info[2] == 'AMD64' else 'X32') + '-'  + \
+
+            return 'postgrespro' + '-' + \
+                   ('X64' if dist_info[2] == 'AMD64' else 'X32') + '-' + \
                    kwargs['version']
         else:
             raise Exception('Product %s is not supported.' % kwargs['name'])
