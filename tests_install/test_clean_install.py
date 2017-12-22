@@ -47,13 +47,12 @@ class TestCleanInstall():
         milestone = request.config.getoption('--product_milestone')
         target = request.config.getoption('--target')
         product_info = " ".join([dist, name, edition, version])
+        # pylint: disable=no-member
         tag_mark = pytest.allure.label(LabelType.TAG, product_info)
         request.node.add_marker(tag_mark)
         branch = request.config.getoption('--branch')
 
         # Step 1
-        tag_mark = pytest.allure.label(LabelType.TAG, product_info)
-        request.node.add_marker(tag_mark)
         setup_repo(name=name, version=version, edition=edition, milestone=milestone, branch=branch)
         edtn = ''
         if edition:

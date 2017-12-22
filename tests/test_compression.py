@@ -202,6 +202,7 @@ class TestCompression():
         name = request.config.getoption('--product_name')
         edition = request.config.getoption('--product_edition')
         product_info = " ".join([self.dist, name, edition, version])
+        # pylint: disable=no-member
         tag_mark = pytest.allure.label(LabelType.TAG, product_info)
         request.node.add_marker(tag_mark)
         # Step 1

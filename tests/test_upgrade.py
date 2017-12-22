@@ -439,13 +439,12 @@ enabled=1
         build = request.config.getoption('--product_build')
         milestone = request.config.getoption('--product_milestone')
         product_info = " ".join([dist, name, edition, version])
+        # pylint: disable=no-member
         tag_mark = pytest.allure.label(LabelType.TAG, product_info)
         request.node.add_marker(tag_mark)
         branch = request.config.getoption('--branch')
         local = False
         # Step 1
-        tag_mark = pytest.allure.label(LabelType.TAG, product_info)
-        request.node.add_marker(tag_mark)
         earliest_pgpro_version = self.get_pgpro_earliest_minor_version(request.config.getoption('--product_version'),
                                                                        edition)
         minor_versions = self.get_pgpro_minor_versions(request.config.getoption('--product_version'), edition)[1:]
