@@ -290,7 +290,7 @@ def keep_env(domname, keep):
 
     try:
         dom = conn.lookupByName(domname)
-    except:
+    except libvirt.libvirtError, e:
         print 'Failed to find the domain %s' % domname
 
     if keep:
@@ -431,6 +431,7 @@ def main():
         # Step 3 - run tests
         # Step 4 - export reports and etc
         pass
+
 
 if __name__ == "__main__":
     exit(main())

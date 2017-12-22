@@ -96,6 +96,7 @@ def createTask(server_base_url, user, password,
     issue = json.loads(response.read())
     return issue
 
+
 if __name__ == '__main__':
 
     server_url = 'https://jira.postgrespro.ru'
