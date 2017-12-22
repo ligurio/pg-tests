@@ -352,9 +352,9 @@
 
   - name: windows - install python
     when: ansible_os_family == "Windows"
-    win_msi:
+    win_package:
       path: '{{ win_path }}python2-7-13.amd64.msi'
-      wait: true
+      state: present
 
   - name: windows - copy tests payload
     win_copy:
