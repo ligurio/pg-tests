@@ -612,7 +612,7 @@ def get_default_service_name(**kwargs):
                 edtn = 'std'
             else:
                 raise Exception('Edition %s is not supported.' % kwargs['edition'])
-            return  ('%s-%s-%s' % (kwargs['name'], edtn, kwargs['version']))
+            return '%s-%s-%s' % (kwargs['name'], edtn, kwargs['version'])
         else:
             raise Exception('Product %s is not supported.' % kwargs['name'])
 
