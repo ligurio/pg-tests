@@ -61,8 +61,8 @@ def create_environment(request):
         environment.create_environment()
         yield environment
         if request.config.getoption('--config'):
-            print("Cluster was deployed from config." \
-                " No teardown actions for this type of cluster deploy")
+            print("Cluster was deployed from config."
+                  " No teardown actions for this type of cluster deploy")
         else:
             environment.delete_env()
 
@@ -107,7 +107,7 @@ def install_postgres(request, create_environment):
     yield cluster_nodes
     if request.config.getoption('--config'):
         print("Cluster was deployed from config."
-            " No teardown actions for this type of cluster deploy")
+              " No teardown actions for this type of cluster deploy")
     else:
         create_environment.delete_env()
 
