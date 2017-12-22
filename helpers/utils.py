@@ -193,15 +193,15 @@ def exec_command_win(cmd, hostname, user, password, skip_ret_code_check=False, c
 
     for trc in range(connect_retry_count):
         try:
-            p = winrm.Protocol(endpoint='http://' + hostname + ':5985/wsman', transport='plaintext',
-                            username=user,
-                            password=password)
+            p = winrm.Protocol(
+                endpoint='http://' + hostname + ':5985/wsman', transport='plaintext',
+                username=user,
+                password=password)
             shell_id = p.open_shell()
             break
         except (winrm.exceptions.WinRMOperationTimeoutError,
                 winrm.exceptions.WinRMTransportError,
-                socket.error,
-                ) as e:
+                socket.error) as e:
             if trc == connect_retry_count:
                 raise e
             sleep(CONNECT_RETRY_DELAY)
@@ -328,9 +328,10 @@ def refresh_env_win():
     else:
         import _winreg as winreg
 
-    regkey = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
-            r"System\CurrentControlSet\Control\Session Manager\Environment",
-            0, winreg.KEY_READ)
+    regkey = winreg.OpenKey(
+        winreg.HKEY_LOCAL_MACHINE,
+        r"System\CurrentControlSet\Control\Session Manager\Environment",
+        0, winreg.KEY_READ)
     i = 0
     while True:
         try:
