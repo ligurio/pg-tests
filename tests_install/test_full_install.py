@@ -19,8 +19,14 @@ from helpers.pginstall import (setup_repo,
                                get_pg_setting,
                                restart_service)
 
-PRELOAD_LIBRARIES = ['auth_delay', 'auto_explain', 'pg_pathman',
-                     'plantuner', 'shared_ispell']
+PRELOAD_LIBRARIES = {
+    'standard':
+        ['auth_delay', 'auto_explain', 'pg_pathman',  'plantuner',
+         'shared_ispell'],
+    'ee':
+        ['auth_delay', 'auto_explain', 'in_memory', 'pg_pathman',
+         'pgpro_scheduler', 'plantuner', 'shared_ispell'],
+}
 
 
 @pytest.mark.full_install
@@ -64,6 +70,8 @@ class TestFullInstall():
         if edition:
             if edition == 'standard':
                 edtn = 'std'
+            elif edition == 'ee':
+                edtn = 'ent'
             else:
                 raise Exception('Edition %s is not supported.' % edition)
         print("Running on %s." % target)
@@ -85,7 +93,7 @@ class TestFullInstall():
 
         iprops = get_initdb_props()
         exec_psql("ALTER SYSTEM SET shared_preload_libraries = %s" %
-                  ','.join(PRELOAD_LIBRARIES))
+                  ','.join(PRELOAD_LIBRARIES[edition]))
         data_directory = get_pg_setting('data_directory')
         restart_service(name=name, version=version, edition=edition)
         share_path = iprops['share_path'].replace('/', os.sep)
@@ -134,6 +142,8 @@ class TestFullInstall():
         if edition:
             if edition == 'standard':
                 edtn = 'std'
+            elif edition == 'ee':
+                edtn = 'ent'
             else:
                 raise Exception('Edition %s is not supported.' % edition)
         remove_package('%s-%s-%s*' % (name, edtn, version))

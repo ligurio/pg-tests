@@ -54,6 +54,8 @@ class TestCleanInstall():
         if edition:
             if edition == 'standard':
                 edtn = 'std'
+            elif edition == 'ee':
+                edtn = 'ent'
             else:
                 raise Exception('Edition %s is not supported.')
         print("Running on %s." % target)

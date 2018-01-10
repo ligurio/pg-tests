@@ -722,6 +722,8 @@ def get_default_service_name(**kwargs):
         if kwargs['name'] == "postgrespro":
 
             return 'postgrespro' + '-' + \
+                   ('enterprise-' if kwargs['edition'] == 'ee'
+                    else '') + \
                    ('X64' if dist_info[2] == 'AMD64' else 'X32') + '-' + \
                    kwargs['version']
         else:
@@ -730,6 +732,8 @@ def get_default_service_name(**kwargs):
         if kwargs['name'] == "postgrespro":
             if (kwargs['edition'] == 'standard'):
                 edtn = 'std'
+            elif (kwargs['edition'] == 'ee'):
+                edtn = 'ent'
             else:
                 raise Exception('Edition %s is not supported.' %
                                 kwargs['edition'])
