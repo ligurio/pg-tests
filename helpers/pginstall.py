@@ -254,7 +254,10 @@ enabled=1
             cmd = "apt-get install -y wget ca-certificates"
             command_executor(cmd, remote, host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-            cmd = "wget --quiet -O - %s | apt-key add -" % gpg_key_url
+            cmd = "wget -nv %s -O gpg.key" % gpg_key_url
+            command_executor(cmd, remote, host,
+                             REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            cmd = "apt-key add gpg.key"
             command_executor(cmd, remote, host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             cmd = "apt-get update -y"
