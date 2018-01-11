@@ -287,7 +287,8 @@ def create_env(name, domname, domimage=None):
         domipaddress = lookupIPbyMac(conn, dommac)
         if timeout == 60:
             raise Exception(
-                "Failed to obtain an IP address in domain %s." % domname)
+                "Failed to obtain IP address (for MAC %s) in domain %s." %
+                (dommac, domname))
 
     print "Domain name: %s\nIP address: %s" % (dom.name(), domipaddress)
     conn.close()
