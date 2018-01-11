@@ -65,6 +65,7 @@ def get_os_type(ip):
     else:
         return None
 
+
 def get_product_dir(**kwargs):
     product_dir = ""
     if kwargs['name'] == "postgrespro":
@@ -79,6 +80,7 @@ def get_product_dir(**kwargs):
         if kwargs['milestone']:
             product_dir += "-" + kwargs['milestone']
     return product_dir
+
 
 def generate_repo_info(distro, osversion, action="install", **kwargs):
     """Generate information about repository: url to packages
@@ -314,17 +316,16 @@ def download_source(remote=False, host=None, **kwargs):
         baseurl = os.path.join(PGPRO_HOST, product_dir, 'src')
     f = urllib.urlopen(baseurl)
     soup = BeautifulSoup(f)
-    print(str(soup.findAll('a')));
     for link in soup.findAll('a'):
         href = link.get('href')
-        print("href:::", href)
         if re.search(r'^postgres', href, re.I) and \
-            re.search(r'\.tar\b', href, re.I):
+           re.search(r'\.tar\b', href, re.I):
             sourcetar = urllib.URLopener()
+            print("source: ", os.path.join(baseurl, href), "target:", href)
             sourcetar.retrieve(os.path.join(baseurl, href), href)
-            print("source: ", os.path.join(baseurl, href), "target:", href);
             return
     raise Exception("Source tarball is not found at %s" % baseurl)
+
 
 def install_package(pkg_name, remote=False, host=None):
     """
