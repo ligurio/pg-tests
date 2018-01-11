@@ -292,6 +292,16 @@ def create_env(name, domname, domimage=None):
     print "Domain name: %s\nIP address: %s" % (dom.name(), domipaddress)
     conn.close()
 
+    retcode = call("ssh-keygen -R " + domname,
+                   stderr=subprocess.STDOUT, shell=True)
+    if retcode != 0:
+        raise Exception("Could not remove old ssh key for %s." % domname)
+
+    retcode = call("ssh-keygen -R " + domipaddress,
+                   stderr=subprocess.STDOUT, shell=True)
+    if retcode != 0:
+        raise Exception("Could not remove old ssh key for %s." % domipaddress)
+
     return domipaddress, domimage, xmldesc
 
 
@@ -302,16 +312,6 @@ def setup_env(domipaddress, domname, tests_dir):
     :param domname str: virtual machine name
     :return: int: 0 if all OK and 1 if not
     """
-
-    retcode = call("ssh-keygen -R " + domname,
-                   stderr=subprocess.STDOUT, shell=True)
-    if retcode != 0:
-        raise Exception("Could not remove old ssh key for %s." % domname)
-
-    retcode = call("ssh-keygen -R " + domipaddress,
-                   stderr=subprocess.STDOUT, shell=True)
-    if retcode != 0:
-        raise Exception("Could not remove old ssh key for %s." % domipaddress)
 
     if domname[0:3] != 'win':
         inv = ANSIBLE_INVENTORY % (domname, domipaddress,
