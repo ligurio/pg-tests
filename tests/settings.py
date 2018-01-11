@@ -8,8 +8,10 @@ EXTENSIONS_EE = ["pg_pathman", "pg_trgm", "pg_variables", "sr_plan",
                  "fulleq", "fasttrun", "aqo", "multimaster", "pg_transfer",
                  "pg_wait_sampling", "pg_hint_plan"]
 
-EXTENSIONS_OS = ["pg_pathman", "pg_trgm", "pg_variables", "sr_plan", "pg_query_state", "pg_tsparser", "dump_stat",
-                 "hunspell_en_us", "hunspell_fr", "hunspell_nl_nl", "mchar", "fasttrun", "fulleq", "shared_ispell",
+EXTENSIONS_OS = ["pg_pathman", "pg_trgm", "pg_variables", "sr_plan",
+                 "pg_query_state", "pg_tsparser", "dump_stat",
+                 "hunspell_en_us", "hunspell_fr", "hunspell_nl_nl",
+                 "mchar", "fasttrun", "fulleq", "shared_ispell",
                  "jsquery", "pg_variables", "hunspell_ru_ru"]
 
 MIXED_SCHEMA = """

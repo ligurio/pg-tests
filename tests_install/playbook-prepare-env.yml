@@ -1,0 +1,388 @@
+---
+- hosts: all
+  gather_facts: no
+  vars:
+    win_path: C:\Users\test\Downloads\
+    payload_linux: resources/pg-tests.tgz
+    payload_win: resources/pg-tests.zip
+
+  tasks:
+
+  - name: Wait for system to become reachable
+    wait_for_connection: timeout=600
+
+  - name: Gather facts
+    setup:
+
+  - name: Debug message
+    debug:
+      msg: "System {{ inventory_hostname }}/{{ ansible_host }} \
+            ({{ ansible_connection }}) has os_family {{ ansible_os_family }}, \
+            distribution {{ ansible_distribution }} {{ ansible_distribution_major_version }}."
+
+  - name: Update repos and install acpid-events-power (ALT)
+    shell: apt-get update &&
+           apt-get install acpid-events-power && /sbin/service acpid restart
+    when: ansible_distribution == 'ALT'
+    become_method: su
+    become: true
+    tags:
+    - skip_ansible_lint
+
+  - name: remove Astra Linux Orel frozen repository
+    apt_repository: repo="deb http://mirror.yandex.ru/astra/frozen/orel/1.11/repository orel main contrib non-free" state=absent
+    when: ansible_distribution == 'Astra Linux (Orel)'
+    become_method: su
+    become: true
+
+  - name: add Astra Linux Orel stable repository
+    apt_repository: repo="deb http://mirror.yandex.ru/astra/stable/orel/1.11/repository orel main contrib non-free" state=present
+    when: ansible_distribution == 'Astra Linux (Orel)'
+    become_method: su
+    become: true
+
+  - name: Wait for automatic system updates
+    shell: sleep 2;
+           while fuser /var/lib/dpkg/lock >/dev/null 2>&1; do sleep 2; done;
+           while fuser /var/lib/apt/lists/lock >/dev/null 2>&1; do sleep 2; done;
+    when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+    become_method: su
+    become: true
+
+  - name: Mount DVD(s) (if available)
+    shell: if /sbin/blkid /dev/sr0; then
+             mkdir /mnt/dvd &&
+             echo "/dev/sr0       /mnt/dvd   auto    ro,user,exec,utf8        0    0" >> /etc/fstab &&
+             mount /dev/sr0;
+           fi;
+           if /sbin/blkid /dev/sr1; then
+             mkdir /mnt/dvd2 &&
+             echo "/dev/sr1       /mnt/dvd2  auto    ro,user,exec,utf8        0    0" >> /etc/fstab &&
+             mount /dev/sr1;
+           fi;
+    when: ansible_os_family != "Windows"
+    become_method: su
+    become: true
+
+  - name: Setup DVDs as apt repositories and install some packages (Astra)
+    shell: if [ -d /media/cdrom/dists ]; then
+             rmdir /mnt/dvd;
+             ln -s /media/cdrom /mnt/dvd;
+           fi;
+           if [ -d /mnt/dvd/dists ]; then
+             echo "deb file:///mnt/dvd smolensk contrib main non-free" >> /etc/apt/sources.list.d/repo-dvd.list;
+           fi;
+           if [ -d /mnt/dvd2/dists ]; then
+             echo "deb file:///mnt/dvd2 smolensk contrib main non-free" >> /etc/apt/sources.list.d/repo-dvd.list;
+           fi;
+           apt-get update;
+           sed -e 's|^#\s*\(/sbin/shutdown\)|\1|' -i /etc/acpi/powerbtn-acpi-support.sh
+    when: ansible_distribution == 'Astra Linux (Smolensk)'
+    become_method: su
+    become: true
+
+  - name: Setup DVD as yum repository (RHEL) # Based on https://access.redhat.com/solutions/328863
+    shell: if [ -f /mnt/dvd/media.repo ]; then
+             cp /mnt/dvd/media.repo /etc/yum.repos.d/rhel-dvd.repo &&
+             chmod 644 /etc/yum.repos.d/rhel-dvd.repo &&
+             echo "enabled=1" >> /etc/yum.repos.d/rhel-dvd.repo &&
+             if [ -d /mnt/dvd/repodata ]; then echo "baseurl=file:///mnt/dvd" >> /etc/yum.repos.d/rhel-dvd.repo; fi;
+             if [ -d /mnt/dvd/Server/repodata ]; then echo "baseurl=file:///mnt/dvd/Server" >> /etc/yum.repos.d/rhel-dvd.repo; fi;
+           fi
+    when: ansible_distribution == "RedHat"
+    become_method: su
+    become: true
+
+  - name: Setup DVD as yum repository (ROSA)
+    shell: if [ -d /mnt/dvd/repodata ]; then
+             printf "[InstallMedia]\nname=DVD\nmetadata_expire=-1\ngpgcheck=0\nenabled=1\nbaseurl=file:///mnt/dvd" > /etc/yum.repos.d/dvd.repo;
+           fi
+    when: ansible_distribution == "ROSA"
+    become_method: su
+    become: true
+
+  - name: Downgrade packages to original 6.7 version (RHEL 6) # Needed for libselinux-python
+    shell: yum downgrade -y glibc-2.12-1.166.el6 glibc-headers-2.12-1.166.el6 glibc-common-2.12-1.166.el6 glibc-devel-2.12-1.166.el6 &&
+           yum downgrade -y libselinux-2.0.94-5.8.el6 libselinux-utils-2.0.94-5.8.el6 libselinux-devel-2.0.94-5.8.el6.x86_64
+    when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "6"
+    become_method: su
+    become: true
+
+  - name: Disable automatic updates (Debian-based)
+    shell: for aptconf in `grep -E '^\s*APT::Periodic::(Update-Package-Lists|Unattended-Upgrade)' -l -r /etc/apt/apt.conf.d/`;
+             do sed -e 's#^\(\s*APT::Periodic::\(Update-Package-Lists\|Unattended-Upgrade\)\)#// \1#' -i $aptconf; done
+    when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu' or
+          ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux')
+    become_method: su
+    become: true
+
+  - name: Disable RedHat subscription (RedHat 7)
+    shell: subscription-manager remove --all;
+           subscription-manager unregister;
+           subscription-manager clean
+    when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "7"
+    become_method: su
+    become: true
+
+  - name: fix repositories (МСВСфера)
+    shell: if [ -d /mnt/dvd/repodata ]; then
+             ln -s /mnt/dvd /media/MSVSphere_6.3_Server &&
+             sed s/enabled=0/enabled=1/ -i /etc/yum.repos.d/install.repo;
+             sed s/enabled=1/enabled=0/ -i /etc/yum.repos.d/pgpro.repo;
+           fi
+    when: ansible_distribution == "МСВСфера"
+    become_method: su
+    become: true
+
+  - name: install required packages (YUM)
+    yum: name={{ item }} state=present update_cache=yes
+    with_items:
+        - acpid
+        - gcc
+        - python-devel
+    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "yum"
+    become_method: su
+    become: true
+
+  - name: install selinux required packages (YUM)
+    yum: name={{ item }} state=present update_cache=yes
+    with_items:
+        - libselinux-python
+    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "yum" and
+          ansible_selinux is defined and ansible_selinux != False
+    become_method: su
+    become: true
+
+  - name: install required packages (APT)
+    apt: name={{ item }} state=present update_cache=yes
+    with_items:
+        - acpid
+        - gcc
+        - python-dev
+        - sudo
+    when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu' or
+          ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux')
+    become_method: su
+    become: true
+
+  - name: install required packages (urpmi)
+    urpmi: name={{ item }} state=present update_cache=yes
+    with_items:
+        - gcc
+        - lib64python-devel
+    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "urpmi"
+    become_method: su
+    become: true
+
+  - name: add extra repository (SUSE)
+    shell: if [ -d /mnt/dvd/suse ]; then
+              zypper addrepo /mnt/dvd/suse/x86_64/ disk1;
+           fi;
+           if [ -d /mnt/dvd2/suse ]; then
+              zypper addrepo /mnt/dvd2/suse/x86_64/ disk2;
+           fi
+    when: ansible_os_family == 'Suse'
+    become_method: su
+    become: true
+
+  - name: install required packages (Zypper)
+    zypper: name={{ item }} state=present update_cache=yes force=yes
+    with_items:
+        - gcc
+        - python-devel
+    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "zypper"
+    become_method: su
+    become: true
+
+  - name: set up ssh authorized_keys
+    authorized_key: user=test key="{{ item }}" state=present exclusive=yes
+    when: ansible_os_family != "Windows"
+    with_file:
+    - ../static/authorized_keys
+
+  - name: set http.sslVerify to false in a git config
+    git_config: name=http.sslVerify scope=global value="false"
+    when: ansible_distribution == "\"astra linux se\"" or ansible_distribution == "\"astralinuxse\"" or ansible_distribution == "\"AstraLinuxSE\""
+
+  - name: disable haldaemon (МСВСфера)
+    service:
+      name: haldaemon
+      state: stopped
+      enabled: no
+    when: ansible_os_family == "МСВСфера"
+    become_method: su
+    become: true
+
+  - name: start acpid
+    service:
+      name: acpid
+      state: started
+      enabled: yes
+    become_method: su
+    become: true
+    when: ansible_os_family != "Windows" and ansible_os_family != 'Suse'
+
+  - name: copy tests payload
+    copy:
+      src:  "{{ payload_linux }}"
+      dest: /home/test/
+    when: ansible_os_family != "Windows"
+
+  - name: extract tests
+    unarchive:
+      src: /home/test/pg-tests.tgz
+      dest: /home/test
+      remote_src: yes
+    when: ansible_os_family != "Windows"
+
+  - name: install pip
+    command: "python /home/test/pg-tests/get-pip.py"
+    become_method: su
+    become: true
+    tags:
+    - skip_ansible_lint
+    when: ansible_os_family != "Windows"
+
+# To workaround an internal compiler error on
+# 'gcc psutil/_psutil_linux.c -O2 -I/usr/include/python2.7 -DPSUTIL_POSIX=1 -DPSUTIL_VERSION=501 -DPSUTIL_LINUX=1'
+# and to allow for new libicu installation
+# and to workaround PGPRO-1223
+  - name: disable all cc1 optimizations on Suse 11
+    shell:  gcc -dumpspecs | sed 's/%{O\*}//' > /usr/lib64/gcc/x86_64-suse-linux/4.5/defaults.spec &&
+            zypper remove -y libboost_regex1_36_0 &&
+            zypper install -y --force --force-resolution perl=5.10.0
+    become_method: su
+    become: true
+    when: ansible_os_family == "Suse" and ansible_distribution_major_version == "11"
+
+  - name: install required pip modules
+    pip:
+      requirements: "/home/test/pg-tests/tests_install/requirements.txt"
+      extra_args:  --no-index --find-links file:///home/test/pg-tests/pip-packages
+    become_method: su
+    become: true
+    when: ansible_os_family != "Windows"
+
+  - name: make sure we have a 'wheel' group
+    group:
+      name: wheel
+      state: present
+    become_method: su
+    become: true
+    when: ansible_os_family != "Windows"
+
+  - name: allow 'wheel' group to have passwordless become_method
+    lineinfile:
+      dest: /etc/sudoers
+      state: present
+      regexp: '^%wheel'
+      line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+    become_method: su
+    become: true
+    when: ansible_os_family != "Windows"
+
+  # see https://bugzilla.redhat.com/show_bug.cgi?id=1020147
+  - name: comment out requiretty option in /etc/sudoers
+    lineinfile:
+      dest: /etc/sudoers
+      regexp: '^Defaults    requiretty'
+      line: '#Defaults    requiretty'
+      state: present
+    when: ansible_os_family == "RedHat" or ansible_os_family == "МСВСфера"
+    become_method: su
+    become: true
+
+  - name: change secure path in sudoers
+    lineinfile:
+      dest: /etc/sudoers
+      regexp: '^Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin'
+      line: 'Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin'
+      state: present
+    when:
+      - ansible_os_family != "Windows"
+      - ansible_distribution != "ALT"
+    become_method: su
+    become: true
+
+  - name: add user 'test' to the 'wheel' group
+    user:
+      name: "test"
+      groups: wheel
+      append: yes
+    become_method: su
+    become: true
+    when: ansible_os_family != "Windows"
+
+  - name: coredump handling
+    pam_limits: domain={{ item }} limit_type=soft limit_item=core value=unlimited backup=yes
+    with_items:
+      - test
+      - postgres
+    become_method: su
+    become: true
+    when: ansible_os_family != "Windows"
+
+  - name: make a directory for coredumps
+    file: path="/home/test/coredumps" state=directory
+    when: ansible_os_family != "Windows"
+
+  - name: remove unknown keys from sysctl.conf
+    sysctl: name={{ item }} state=absent reload=no
+    with_items:
+        - net.bridge.bridge-nf-call-arptables
+        - net.bridge.bridge-nf-call-iptables
+        - net.bridge.bridge-nf-call-ip6tables
+    become_method: su
+    become: true
+    when: ansible_os_family == "GosLinux" or ansible_os_family == "ROSA"
+
+  - name: change coredump filename pattern
+    sysctl: name="kernel.core_pattern" value="/home/test/coredumps/core-%e-%p-%t" sysctl_set=yes state=present
+    become_method: su
+    become: true
+    when:
+      - ansible_os_family != "Windows"
+      - ansible_os_family != "МСВСфера"
+
+  - name: windows - download python
+    when: ansible_os_family == "Windows"
+    with_items:
+        - { win_url: "https://www.python.org/ftp/python/2.7.13/python-2.7.13.amd64.msi", win_dest: 'python2-7-13.amd64.msi' }
+    win_get_url:
+      url: '{{ item.win_url }}'
+      dest: '{{ win_path }}{{ item.win_dest }}'
+
+  - name: windows - install python
+    when: ansible_os_family == "Windows"
+    win_package:
+      path: '{{ win_path }}python2-7-13.amd64.msi'
+      state: present
+
+  - name: windows - copy tests payload
+    win_copy:
+      src:  "{{ payload_win }}"
+      dest: C:\Users\test\
+    when: ansible_os_family == "Windows"
+
+  - name: windows - extract tests payload
+    win_unzip:
+      src: C:\Users\test\pg-tests.zip
+      dest: C:\Users\test
+      creates: C:\Users\test\pg_tests
+    when: ansible_os_family == "Windows"
+
+  - name: windows - install pip
+    when: ansible_os_family == "Windows"
+    win_shell: 'C:\Python27\python.exe C:\Users\test\pg-tests\get-pip.py'
+
+  - name: windows - install python requirements
+    when: ansible_os_family == "Windows"
+    win_shell: 'C:\Python27\Scripts\pip.exe install -r C:\Users\test\pg-tests\tests_install\requirements.txt'
+
+  - name: windows - remove python installer
+    when: ansible_os_family == "Windows"
+    with_items:
+        - { win_dest: "python2-7-13.amd64.msi" }
+    win_file:
+      path: '{{ win_path }}{{ item.win_dest }}'
+      state: absent

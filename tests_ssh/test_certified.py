@@ -1,7 +1,7 @@
 import pytest
 
 
-@pytest.makr.test_pgaudit
+@pytest.mark.test_pgaudit
 class TestPgaudit():
     pass
 

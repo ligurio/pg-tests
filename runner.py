@@ -13,7 +13,7 @@ import urllib
 import winrm
 from subprocess import call
 
-from helpers.utils import copy_file, copy_file_win, exec_command_win
+from helpers.utils import copy_file, copy_reports_win, exec_command_win
 from helpers.utils import REMOTE_LOGIN, REMOTE_PASSWORD, REMOTE_ROOT_PASSWORD
 from helpers.utils import exec_command
 from helpers.utils import gen_name
@@ -42,7 +42,7 @@ REPORT_SERVER_URL = 'http://testrep.l.postgrespro.ru/'
 def list_images():
     names = []
     page = urllib.urlopen(IMAGE_BASE_URL).read()
-    images = re.findall('href=[\'"]?([^\'" >]+)\.qcow2', page)
+    images = re.findall(r'href=[\'"]?([^\'" >]+)\.qcow2', page)
     for i in images:
         names.append(i)
     return names
@@ -108,10 +108,11 @@ def create_vm(name, domname):
     domimage = create_image(domname, name)
     dommac = mac_address_generator()
     qemu_path = ""
-    if platform.linux_distribution()[0] == 'Ubuntu' or platform.linux_distribution()[0] == 'debian':
-        qemu_path = """/usr/bin/qemu-system-x86_64"""
+    if platform.linux_distribution()[0] == 'Ubuntu' or \
+       platform.linux_distribution()[0] == 'debian':
+        qemu_path = "/usr/bin/qemu-system-x86_64"
     elif platform.linux_distribution()[0] == 'CentOS Linux':
-        qemu_path = """/usr/libexec/qemu-kvm"""
+        qemu_path = "/usr/libexec/qemu-kvm"
     if domname[0:3] == 'win':
         network_driver = "e1000"
     else:
@@ -188,10 +189,15 @@ def setup_env(domipaddress, domname):
         hosts.write(host_record)
 
     if domname[0:3] != 'win':
-        inv = ANSIBLE_INVENTORY % (domname, domipaddress, REMOTE_ROOT_PASSWORD, REMOTE_PASSWORD, REMOTE_LOGIN)
+        inv = ANSIBLE_INVENTORY % (domname, domipaddress,
+                                   REMOTE_ROOT_PASSWORD,
+                                   REMOTE_PASSWORD,
+                                   REMOTE_LOGIN)
         ansible_cmd = ANSIBLE_CMD % (ANSIBLE_PLAYBOOK, "paramiko", domname)
     else:
-        inv = ANSIBLE_INVENTORY_WIN % (domname, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD)
+        inv = ANSIBLE_INVENTORY_WIN % (domname, domipaddress,
+                                       REMOTE_LOGIN,
+                                       REMOTE_PASSWORD)
         ansible_cmd = ANSIBLE_CMD % (ANSIBLE_PLAYBOOK, "winrm", domname)
 
     with open("static/inventory", "w") as hosts:
@@ -230,12 +236,15 @@ def make_test_cmd(domname, reportname, tests=None,
         pcmd = "%s --product_build %s " % (pcmd, product_build)
 
     if domname[0:3] == 'win':
-        cmd = r'cd C:\Users\test\pg-tests && pytest %s --self-contained-html --html=%s.html --junit-xml=%s.xml \
-                  --maxfail=1 --alluredir=reports %s --target=%s' % (tests, reportname, reportname, pcmd, domname)
+        cmd = r'cd C:\Users\test\pg-tests && pytest %s' \
+            ' --self-contained-html --html=%s.html --junit-xml=%s.xml' \
+            ' --maxfail=1 --alluredir=reports %s --target=%s' % (
+                tests, reportname, reportname, pcmd, domname)
     else:
-        cmd = 'cd /home/test/pg-tests && sudo pytest %s --self-contained-html --html=%s.html ' \
-              '--junit-xml=%s.xml --maxfail=1 --alluredir=reports %s --target=%s' % (tests, reportname,
-                                                                                     reportname, pcmd, domname)
+        cmd = 'cd /home/test/pg-tests && sudo pytest %s ' \
+            ' --self-contained-html --html=%s.html --junit-xml=%s.xml' \
+            ' --maxfail=1 --alluredir=reports %s --target=%s' % (
+                tests, reportname, reportname, pcmd, domname)
 
     if DEBUG:
         cmd += "--verbose --tb=long --full-trace"
@@ -243,42 +252,49 @@ def make_test_cmd(domname, reportname, tests=None,
     return cmd
 
 
-def export_results(domname, domipaddress, reportname, operating_system=None, product_name=None,
-                   product_version=None, product_edition=None):
+def export_results(domname, domipaddress, reportname, operating_system=None,
+                   product_name=None, product_version=None,
+                   product_edition=None, tests=None):
     if not os.path.exists('reports'):
         os.makedirs('reports')
-    allure_reports_dir = "/var/www/html/%s" % time.strftime("/%Y/%m/%d")
+        subprocess.check_call('chmod 777 reports', shell=True)
+    rel_allure_reports_dir = "allure_reports/%s/%s/%s/%s/%s" % (
+        time.strftime("/%Y/%m/%d"), product_name,
+        product_version, product_edition, operating_system)
+    allure_reports_dir = 'reports/' + rel_allure_reports_dir
     if not os.path.exists(allure_reports_dir):
         os.makedirs(allure_reports_dir)
+        subprocess.check_call('chmod 777 %s' % allure_reports_dir, shell=True)
 
-    if not os.path.exists('reports/allure_reports'):
-        os.makedirs('reports/allure_reports')
-
-    if domname[0:3] == 'win':
-        copy_file_win(reportname, domipaddress)
-    else:
-        try:
-            copy_file("/home/test/pg-tests/%s.html" % reportname, "reports/%s.html" % reportname, domipaddress)
-            copy_file("/home/test/pg-tests/%s.xml" % reportname, "reports/%s.xml" % reportname, domipaddress)
-            copy_file("/home/test/pg-tests/reports", "reports/allure_reports", domipaddress, dir=True)
+    try:
+        if domname[0:3] == 'win':
+            copy_reports_win(reportname, rel_allure_reports_dir, 'reports',
+                             domipaddress)
+        else:
+            copy_file("/home/test/pg-tests/%s.html" % reportname,
+                      "reports/%s.html" % reportname, domipaddress)
+            copy_file("/home/test/pg-tests/%s.xml" % reportname,
+                      "reports/%s.xml" % reportname, domipaddress)
+            copy_file("/home/test/pg-tests/%s.json" % reportname,
+                      "reports/%s.json" % reportname, domipaddress)
             copy_file("/home/test/pg-tests/reports", allure_reports_dir,
-                      domipaddress, dir=True, operating_system=operating_system,
-                      product_name=product_name, product_version=product_version,
-                      product_edition=product_edition)
-        except IOError as e:
-            print("Cannot copy report from virtual machine.")
-            print(e)
-            pass
-        finally:
-            subprocess.Popen(
-                ['curl', '-T', 'reports/%s.html' % reportname, REPORT_SERVER_URL])
-            subprocess.Popen(
-                ['curl', '-T', 'reports/%s.xml' % reportname, REPORT_SERVER_URL])
-            for file in os.listdir('reports/allure_reports'):
-                if '.xml' in file:
-                    subprocess.Popen(['curl', '-T', os.path.join('reports/allure_reports', file), REPORT_SERVER_URL])
-                else:
-                    continue
+                      domipaddress, dir=True)
+    except IOError as e:
+        print("Cannot copy report from virtual machine.")
+        print(e)
+        pass
+    finally:
+        subprocess.Popen(
+            ['curl', '-T', 'reports/%s.html' % reportname, REPORT_SERVER_URL])
+        subprocess.Popen(
+            ['curl', '-T', 'reports/%s.xml' % reportname, REPORT_SERVER_URL])
+        for file in os.listdir('reports'):
+            if '.json' in file:
+                subprocess.Popen(
+                    ['curl', '-T', os.path.join('reports', file),
+                     REPORT_SERVER_URL])
+            else:
+                continue
 
 
 def keep_env(domname, keep):
@@ -291,7 +307,7 @@ def keep_env(domname, keep):
 
     try:
         dom = conn.lookupByName(domname)
-    except:
+    except libvirt.libvirtError, e:
         print 'Failed to find the domain %s' % domname
 
     if keep:
@@ -312,36 +328,55 @@ def keep_env(domname, keep):
 
 def main():
     names = list_images()
-    parser = argparse.ArgumentParser(description='PostgreSQL regression tests run script.',
-                                     epilog='Possible operating systems (images): %s' % ' '.join(names))
-    parser.add_argument("--target", dest="target", help='system(s) under test (image(s))')
-    parser.add_argument("--test", dest="run_tests", default="tests", help='tests to run (default: all)')
-    parser.add_argument("--config", dest="config", help='Path to config')
-    parser.add_argument("--remote", dest="remote", help='Run tests on remote machines.'
-                                                        ' Available values: vm, config, lxc, docker')
-    parser.add_argument("--local", dest="local", help='Upload framework to remote machine and run tests.'
-                                                      'Available values: vm, docker, lxc, config, localhost')
+    parser = argparse.ArgumentParser(
+        description='PostgreSQL regression tests run script.',
+        epilog='Possible operating systems (images): %s' % ' '.join(names))
+    parser.add_argument("--target", dest="target",
+                        help='system(s) under test (image(s))')
+    parser.add_argument("--test", dest="run_tests", default="tests",
+                        help='tests to run (default: all)')
+    parser.add_argument("--config", dest="config",
+                        help='Path to config')
+    parser.add_argument("--remote", dest="remote",
+                        help='Run tests on remote machines.'
+                        ' Available values: vm, config, lxc, docker')
+    parser.add_argument("--local", dest="local",
+                        help='Upload framework to remote machine and '
+                        'run tests. Available values: '
+                        'vm, docker, lxc, config, localhost.')
     parser.add_argument("--skip_install", action="store_true")
-    parser.add_argument("--keep", dest="keep", action='store_true', help='what to do with env after testing')
-    parser.add_argument("--export", dest="export", help='export results', action='store_true')
+    parser.add_argument("--keep", dest="keep", action='store_true',
+                        help='what to do with env after testing')
+    parser.add_argument("--export", dest="export",
+                        help='export results', action='store_true')
     subparser = parser.add_subparsers()
     branch_install = subparser.add_parser("sources_install")
-    branch_install.add_argument("--name", dest="name", help="From which branch take source code for install",
-                                default={})
-    branch_install.add_argument("--configure_options", dest="configure_options", help="Options for configure stage",
-                                default={})
+    branch_install.add_argument(
+        "--name", dest="name",
+        help="From which branch take source code for install", default={})
+    branch_install.add_argument(
+        "--configure_options", dest="configure_options",
+        help="Options for configure stage", default={})
 
     package_install = subparser.add_parser("package_install")
-    package_install.add_argument("--product_name", dest="product_name", help="specify product name", action="store")
-    package_install.add_argument("--product_version", dest="product_version", help="specify product version",
+    package_install.add_argument("--product_name", dest="product_name",
+                                 help="specify product name", action="store")
+    package_install.add_argument("--product_version", dest="product_version",
+                                 help="specify product version",
                                  action="store")
-    package_install.add_argument("--product_edition", dest="product_edition", help="specify product edition",
+    package_install.add_argument("--product_edition", dest="product_edition",
+                                 help="specify product edition",
                                  action="store")
-    package_install.add_argument("--product_milestone", dest="product_milestone", help="specify target milestone",
+    package_install.add_argument("--product_milestone",
+                                 dest="product_milestone",
+                                 help="specify target milestone",
                                  action="store")
-    package_install.add_argument("--product_build", dest="product_build", help="specify product build",
+    package_install.add_argument("--product_build", dest="product_build",
+                                 help="specify product build",
                                  action="store")
-    package_install.add_argument("--branch", dest="branch", help="specify product branch for package", action="store")
+    package_install.add_argument("--branch", dest="branch",
+                                 help="specify product branch for package",
+                                 action="store")
 
     args = parser.parse_args()
     if len(sys.argv) == 1:
@@ -359,14 +394,18 @@ def main():
         target = args.target
 
     if args.remote == "vm":
-        pytest.main(args=[args.run_tests, "--target=%s" % args.target, "--alluredir=reports",
-                          "--product_name=%s" % args.product_name, "--product_version=%s" % args.product_name,
+        pytest.main(args=[args.run_tests, "--target=%s" % args.target,
+                          "--alluredir=reports",
+                          "--product_name=%s" % args.product_name,
+                          "--product_version=%s" % args.product_name,
                           "--product_edition=%s" % args.product_edition,
                           "--product_milestone=%s" % args.product_milestone])
 
     elif args.remote == "config":
-        pytest.main(args=[args.run_tests, "--config=%s" % args.config, "--alluredir=reports",
-                          "--product_name=%s" % args.product_name, "--product_version=%s" % args.product_version,
+        pytest.main(args=[args.run_tests, "--config=%s" % args.config,
+                          "--alluredir=reports",
+                          "--product_name=%s" % args.product_name,
+                          "--product_version=%s" % args.product_version,
                           "--product_edition=%s" % args.product_edition,
                           "--product_milestone=%s" % args.product_milestone])
     if args.local == "vm":
@@ -377,7 +416,8 @@ def main():
             domipaddress = create_vm(t, domname)[0]
             setup_env_result = setup_env(domipaddress, domname)
             if setup_env_result == 0:
-                print("Environment deployed without errors. Ready to run tests")
+                print('Environment deployed without errors. '
+                      'Ready to run tests')
             else:
                 sys.exit(1)
             cmd = make_test_cmd(domname, reportname, args.run_tests,
@@ -387,25 +427,32 @@ def main():
                                 args.product_milestone,
                                 args.product_build)
             if domname[0:3] == 'win':
-                s = winrm.Session(domipaddress, auth=(REMOTE_LOGIN, REMOTE_PASSWORD))
+                s = winrm.Session(domipaddress,
+                                  auth=(REMOTE_LOGIN, REMOTE_PASSWORD))
                 ps_script = """
                         Set-ExecutionPolicy Unrestricted
-                        [Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Python27",
+                        [Environment]::SetEnvironmentVariable(
+                        "Path", $env:Path + ";C:\Python27",
                         [EnvironmentVariableTarget]::Machine)
-                        [Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Python27\Scripts",
+                        [Environment]::SetEnvironmentVariable(
+                        "Path", $env:Path + ";C:\Python27\Scripts",
                         [EnvironmentVariableTarget]::Machine)
                         """
                 s.run_ps(ps_script)
                 print "Added path for python and python scripts. \n"
-                retcode, stdout, stderr = exec_command_win(cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD)
+                retcode, stdout, stderr = exec_command_win(
+                    cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD)
                 # export_results(domname, domipaddress, reportname)
             else:
-                retcode, stdout, stderr = exec_command(cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD)
+                retcode, stdout, stderr = exec_command(
+                    cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD)
 
             if args.export:
                 export_results(domname, domipaddress, reportname,
-                               operating_system=args.target, product_name=args.product_name,
-                               product_version=args.product_version, product_edition=args.product_edition)
+                               operating_system=args.target,
+                               product_name=args.product_name,
+                               product_version=args.product_version,
+                               product_edition=args.product_edition)
                 reporturl = os.path.join(REPORT_SERVER_URL, reportname)
                 print "Link to the html report - %s.html" % reporturl
                 print "Link to the xml report - %s.xml" % reporturl
@@ -420,7 +467,8 @@ def main():
 
             if retcode != 0:
                 reporturl = os.path.join(REPORT_SERVER_URL, reportname)
-                print("Test return code is not zero - %s. Please check logs in report: %s" % (retcode, reporturl))
+                print("Test return code is not zero - %s. "
+                      "Please check report: %s" % (retcode, reporturl))
                 print retcode, stdout, stderr
                 sys.exit(1)
             else:
@@ -432,6 +480,7 @@ def main():
         # Step 3 - run tests
         # Step 4 - export reports and etc
         pass
+
 
 if __name__ == "__main__":
     exit(main())

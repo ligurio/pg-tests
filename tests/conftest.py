@@ -1,4 +1,3 @@
-import psycopg2
 import glob
 import platform
 import pytest
@@ -10,10 +9,6 @@ import subprocess
 from helpers.os_helpers import delete_data_directory
 from helpers.pginstall import delete_packages
 from helpers.pginstall import delete_repo
-from helpers.pginstance import PgInstance
-from helpers.sql_helpers import drop_test_table
-from helpers.sql_helpers import create_test_table
-from helpers.sql_helpers import execute
 from helpers.os_helpers import download_file
 from tests.settings import TMP_DIR
 
@@ -33,22 +28,30 @@ def pytest_addoption(parser):
     :param parser pytest default param for command line args:
     :return:
     """
-    parser.addoption("--target", action="store", default='linux',
-                     help="Operating system")
-    parser.addoption("--product_version", action="store", default='9.6',
-                     help="Specify product version. Available values: 9.5, 9.6")
-    parser.addoption("--product_name", action="store", default='postgrespro',
-                     help="Specify product name. Available values: postgrespro, postresql")
-    parser.addoption("--product_edition", action="store", default='ee',
-                     help="Specify product edition. Available values: ee, standard")
-    parser.addoption("--product_milestone", action="store",
-                     help="Specify product milestone. Available values: beta")
-    parser.addoption("--product_build", action="store",
-                     help="Specify product build.")
-    parser.addoption("--branch", action="store",
-                     help="Specify branch")
-    parser.addoption("--sqlsmith-queries", action="store", default=10000,
-                     help="Number of sqlsmith queries.")
+    parser.addoption(
+        "--target", action="store", default='linux',
+        help="Operating system")
+    parser.addoption(
+        "--product_version", action="store", default='9.6',
+        help="Specify product version. Available values: 9.5, 9.6")
+    parser.addoption(
+        "--product_name", action="store", default='postgrespro',
+        help="Specify product name. Available values: postgrespro, postresql")
+    parser.addoption(
+        "--product_edition", action="store", default='ee',
+        help="Specify product edition. Available values: ee, standard")
+    parser.addoption(
+        "--product_milestone", action="store",
+        help="Specify product milestone. Available values: beta")
+    parser.addoption(
+        "--product_build", action="store",
+        help="Specify product build.")
+    parser.addoption(
+        "--branch", action="store",
+        help="Specify branch")
+    parser.addoption(
+        "--sqlsmith-queries", action="store", default=10000,
+        help="Number of sqlsmith queries.")
     parser.addoption("--skip_install", action="store_true")
 
 
@@ -65,6 +68,9 @@ def install_postgres(request):
     command line variables from pytest_addoption() method
     :return:
     """
+    from helpers.pginstance import PgInstance
+    from helpers.sql_helpers import drop_test_table
+
     skip_install = request.config.getoption("--skip_install")
     version = request.config.getoption('--product_version')
     milestone = request.config.getoption('--product_milestone')
@@ -74,26 +80,32 @@ def install_postgres(request):
     if skip_install:
         local = True
         windows = False
-        yield PgInstance(version, milestone, name, edition, local, branch, windows=windows)
+        yield PgInstance(version, milestone, name, edition, local, branch,
+                         windows=windows)
         if request.node.name != "test_delete_packages":
             drop_test_table("host='localhost' user='postgres'")
     else:
         if request.config.getoption('--target')[0:3] == 'win':
             local = False
             windows = True
-            pginstance = PgInstance(version=version, milestone=milestone, name=name, edition=edition,
-                                    skip_install=local, branch=branch, windows=windows)
-            pginstance.install_product(version=version, milestone=milestone, name=name, edition=edition,
-                                       branch=branch, windows=windows)
+            pginstance = PgInstance(
+                version=version, milestone=milestone, name=name,
+                edition=edition, skip_install=local, branch=branch,
+                windows=windows)
+            pginstance.install_product(
+                version=version, milestone=milestone, name=name,
+                edition=edition, branch=branch, windows=windows)
             yield pginstance
             if request.node.name != "test_delete_packages":
                 drop_test_table("host='localhost' user='postgres'")
         else:
             local = False
             windows = False
-            pginstance = PgInstance(version, milestone, name, edition, local, branch, windows=windows)
-            pginstance.install_product(version=version, milestone=milestone, name=name, edition=edition,
-                                       branch=branch, windows=windows)
+            pginstance = PgInstance(version, milestone, name, edition,
+                                    local, branch, windows=windows)
+            pginstance.install_product(
+                version=version, milestone=milestone, name=name,
+                edition=edition, branch=branch, windows=windows)
             yield pginstance
             if request.node.name != "test_delete_packages":
                 drop_test_table("host='localhost' user='postgres'")
@@ -101,14 +113,21 @@ def install_postgres(request):
 
 @pytest.fixture
 def create_table(request):
-    """ This method needed for creating table with fake data. After test execution all test data will be droped
+    """ This method needed for creating table with fake data.
+        After test execution all test data will be dropped.
 
-    :param schema - SQL schema, the default schema includes almost all available data types:
-    :param size - number of rows to insert, default value is 10000:
+    :param schema - SQL schema, the default schema includes
+                    almost all available data types:
+    :param size - number of rows to insert, default value is 10000
     :return:
 
-    https://www.cri.ensmp.fr/people/coelho/datafiller.html#directives_and_data_generators
+    https://www.cri.ensmp.fr/people/coelho/datafiller.html
+     #directives_and_data_generators
     """
+
+    from helpers.sql_helpers import drop_test_table
+    from helpers.sql_helpers import create_test_table
+
     schema, size = request.param
 
     def delete_tables():
@@ -121,16 +140,21 @@ def create_table(request):
 
 @pytest.fixture(scope="module")
 def populate_imdb(request):
-    """ This method needed for creating tables and populate them with IMDb dataset.
+    """ This method needed for creating tables and populate
+        them with IMDb dataset.
 
     http://www.imdb.com/interfaces
     """
+
+    import psycopg2
+    from helpers.sql_helpers import execute
 
     CONN_STRING = "host='localhost' user='postgres'"
 
     job_file = os.path.join(TMP_DIR, "join-order-benchmark.tar.gz")
     job_dir = os.path.join(TMP_DIR, "join-order-benchmark-0.1")
-    job_url = "https://codeload.github.com/ligurio/join-order-benchmark/tar.gz/0.1"
+    job_url = "https://codeload.github.com/" \
+        "ligurio/join-order-benchmark/tar.gz/0.1"
     if not os.path.exists(job_file):
         download_file(job_url, job_file)
 
@@ -209,18 +233,23 @@ def populate_tpch(request):
     """ This method setup tables for TPC-H benchmark.
     """
 
+    import psycopg2
+    from helpers.sql_helpers import execute
+
     CONN_STRING = "host='localhost' user='postgres'"
 
     # GETTING A BENCHMARK
 
     TPCH_SCALE = "1"    # 1, 10, 100, 300, 1000, 3000, 10000, 30000, 100000
     COMMIT_HASH = "c5cd7711cc35"
-    TPCH_BENCHMARK = "https://bitbucket.org/tigvarts/tpch-dbgen/get/%s.zip" % COMMIT_HASH
+    TPCH_BENCHMARK = "https://bitbucket.org/tigvarts/tpch-dbgen/get/" \
+        "%s.zip" % COMMIT_HASH
     tbls = ["region.tbl", "nation.tbl", "customer.tbl", "supplier.tbl",
             "part.tbl", "partsupp.tbl", "orders.tbl", "lineitem.tbl"]
     sqls = ["postgres_dll.sql", "postgres_load.sql", "postgres_ri.sql"]
 
-    tpch_archive = os.path.join(TMP_DIR, "tpch-benchmark-%s.zip" % COMMIT_HASH)
+    tpch_archive = os.path.join(TMP_DIR,
+                                "tpch-benchmark-%s.zip" % COMMIT_HASH)
     if not os.path.exists(tpch_archive):
         download_file(TPCH_BENCHMARK, tpch_archive)
 
@@ -232,7 +261,8 @@ def populate_tpch(request):
 
     # SETUP DATABASE (see ./install.sh)
     subprocess.check_output(["make"])
-    # TODO: run multiple parallel streams when generating large amounts of data
+    # TODO: run multiple parallel streams when
+    #  generating large amounts of data
     subprocess.check_output(["./dbgen", "-s", TPCH_SCALE, "-vf"])
 
     assert TMP_DIR == '/tmp'

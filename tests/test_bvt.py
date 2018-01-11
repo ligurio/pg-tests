@@ -41,7 +41,8 @@ def test_version(request, install_postgres):
         #     assert pgpro_info["edition"] == "standard-certification"
         # elif edition == "cert-enterprise":
         #     assert pgpro_info["edition"] == "enterprise-certification"
-    print("What must be installed:", request.config.getoption('--product_name'),
+    print("What must be installed:",
+          request.config.getoption('--product_name'),
           request.config.getoption('--product_version'))
     print("Information about installed PostgresPro ", pgpro_info)
     assert install_postgres.name == pgpro_info['name'].lower()
@@ -58,7 +59,8 @@ def test_extensions(request, install_postgres):
     1. Check postgrespro edition
     2. Check that extension for right edition available
     3. Try to load extension
-    4. Check that every extension write information about self in table pg_catalog.pg_extension
+    4. Check that every extension writes information about itself
+        in table pg_catalog.pg_extension
     5. Drop extension
     """
     conn_string = "host='localhost' user='postgres' "
@@ -77,22 +79,27 @@ def test_extensions(request, install_postgres):
     if "standard" in edition:
         extensions = settings.EXTENSIONS_OS + settings.EXTENSIONS_POSTGRES
     elif edition == "enterprise":
-        extensions = settings.EXTENSIONS_EE + settings.EXTENSIONS_OS + settings.EXTENSIONS_POSTGRES
+        extensions = settings.EXTENSIONS_EE + settings.EXTENSIONS_OS + \
+            settings.EXTENSIONS_POSTGRES
     elif edition == "enterprise-certified":
-        extensions = settings.EXTENSIONS_EE + settings.EXTENSIONS_OS + settings.EXTENSIONS_POSTGRES + ["pgaudit"]
+        extensions = settings.EXTENSIONS_EE + settings.EXTENSIONS_OS + \
+            settings.EXTENSIONS_POSTGRES + ["pgaudit"]
     else:
         pytest.fail("Unknown PostgresPro edition: %s" % edition)
 
     for e in extensions:
         print("Trying to check extension %s" % e)
-        if e in ["aqo", "multimaster", "hunspell_en_us", "hunspell_nl_nl", "hunspell_fr", "hunspell_ru_ru"]:
+        if e in ["aqo", "multimaster", "hunspell_en_us", "hunspell_nl_nl",
+                 "hunspell_fr", "hunspell_ru_ru"]:
             assert e in available_extensions
         else:
             assert e in available_extensions
             install_postgres.load_extension(e)
             conn = psycopg2.connect(conn_string)
             cursor = conn.cursor()
-            cursor.execute("SELECT extname FROM pg_catalog.pg_extension WHERE extname = \'%s\';" % e)
+            cursor.execute(
+                "SELECT extname FROM pg_catalog.pg_extension"
+                " WHERE extname = \'%s\';" % e)
             assert cursor.fetchall()[0][0] == e
             cursor.execute("DROP EXTENSION IF EXISTS %s" % e)
             # TODO add check that in pg_catalog extension was deleted
@@ -300,10 +307,12 @@ def test_delete_packages(request, install_postgres):
     data_dir_size_before_delete_packages = get_directory_size(data_directory)
     pids = get_postgres_process_pids()
     # Step 1
-    delete_packages(remote=False, host=None, name=name, version=version, edition=edition)
+    delete_packages(remote=False, host=None, name=name,
+                    version=version, edition=edition)
     data_dir_size_after_delete_packages = get_directory_size(data_directory)
     # Step 2
-    # assert data_dir_size_before_delete_packages == data_dir_size_after_delete_packages
+    # assert data_dir_size_before_delete_packages ==
+    #  data_dir_size_after_delete_packages
     # Step 3
     print(pids)
     # for pid in pids:

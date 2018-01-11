@@ -15,25 +15,28 @@ before_script:
   - df -h
   - echo $CI_RUNNER_ID $CI_RUNNER_DESCRIPTION $CI_RUNNER_TAGS
   - export DEBIAN_FRONTEND=noninteractive
-  - apt-get -yqq update
-  - apt-get install -yqq python python-dev libyaml-dev python-pip libssl-dev libffi-dev pylint python-beautifulsoup
-  - pip install --upgrade setuptools
-  - pip install --upgrade pyasn1
-  - pip install --upgrade cffi
+  - echo 'do "apt-get -yqq update"' # don't require root to execute this script
+  - echo 'do "apt-get install -yqq python python-dev libyaml-dev python-pip libssl-dev libffi-dev pylint python-beautifulsoup"' # don't require root to execute this script
+  - pip install setuptools
+  - pip install pyasn1
+  - pip install cffi
   - pip install ansible-lint
-  - pip install pep8
+  - pip install pycodestyle
   - pip install psycopg2
+  - pip install allure-pytest
+  - pip install psutil
 
 ansible-lint:
   stage: test
   script:
-    - ansible-lint static/playbook-prepare-env.yml
+    - ansible-lint tests/playbook-prepare-env.yml
+    - ansible-lint -x ANSIBLE0006 tests_install/playbook-prepare-env.yml
   when: always
 
-pep8-check:
+pycodestyle-check:
   stage: test
   script:
-    - pep8 --exclude helpers/datafiller.py --filename=*.py --ignore=W293,E201,E202,E501 --count .
+    - pycodestyle --exclude helpers/datafiller.py --filename=*.py --count .
   when: always
 
 pylint-check:

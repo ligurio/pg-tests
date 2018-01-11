@@ -9,7 +9,10 @@ from helpers.pginstall import RPM_BASED
 from helpers.os_helpers import create_tablespace_directory
 from helpers.os_helpers import pg_bindir
 from helpers.os_helpers import rmdir
-from helpers.utils import command_executor, get_distro, REMOTE_ROOT, REMOTE_ROOT_PASSWORD
+from helpers.utils import (command_executor,
+                           get_distro,
+                           REMOTE_ROOT,
+                           REMOTE_ROOT_PASSWORD)
 from tests import settings
 
 # TODO Change to class  all methods
@@ -44,7 +47,8 @@ def create_test_database(db_name):
 
 def create_test_table(size, schema):
     """ This method needed for creating table with fake data.
-    :param schema - SQL schema, the default schema includes almost all available data types:
+    :param schema - SQL schema, the default schema includes
+                     almost all available data types:
     :param size - number of rows to insert, default value is 10000:
     :return: string as exit code
     """
@@ -64,7 +68,8 @@ def create_test_table(size, schema):
     p.stdin.write(sqlschema)
     p.stdin.close()
 
-    psql = subprocess.Popen(["sudo", "-u", "postgres", "psql"], stdin=p.stdout)
+    psql = subprocess.Popen(["sudo", "-u", "postgres", "psql"],
+                            stdin=p.stdout)
     psql.wait()
 
     return psql.returncode
@@ -144,7 +149,8 @@ def pg_check_option(connstring, option):
     conn = psycopg2.connect(connstring)
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT exists (SELECT 1 FROM pg_settings WHERE name = '%s' LIMIT 1)" % option)
+        "SELECT exists (SELECT 1 FROM pg_settings"
+        " WHERE name = '%s' LIMIT 1)" % option)
 
     if not cursor.fetchall()[0][0]:
         return False
@@ -180,15 +186,18 @@ def pg_set_option(connstring, option, value):
         cursor.execute("ALTER SYSTEM SET %s = '%s'" % (option, value))
         cursor.close()
         conn.close()
-        return pg_manage_psql("reload", pg_get_option(connstring, 'data_directory'))
+        return pg_manage_psql("reload",
+                              pg_get_option(connstring, 'data_directory'))
     elif context in restart_contexts:
         cursor.execute("ALTER SYSTEM SET %s = '%s'" % (option, value))
         cursor.close()
         conn.close()
-        return pg_manage_psql("restart", pg_get_option(connstring, 'data_directory'))
+        return pg_manage_psql("restart",
+                              pg_get_option(connstring, 'data_directory'))
 
 
-def pg_manage_psql(action, data_dir, version="9.6", start_script=None, remote=False, host=None):
+def pg_manage_psql(action, data_dir, version="9.6", start_script=None,
+                   remote=False, host=None):
         """ Manage Postgres instance
         :param action: start, restart, stop etc
         :param init: Initialization before a first start
@@ -198,12 +207,15 @@ def pg_manage_psql(action, data_dir, version="9.6", start_script=None, remote=Fa
         if start_script is None:
             pg_ctl = os.path.join(pg_bindir(), "pg_ctl")
             # cmd = ["sudo", "-u", "postgres", pg_ctl, "-D", data_dir, action]
-            cmd = "sudo -u postgres %s -w -D %s %s" % (pg_ctl, data_dir, action)
+            cmd = "sudo -u postgres %s -w -D %s %s" % (
+                pg_ctl, data_dir, action)
             print(cmd)
-            return command_executor(cmd, remote, host, REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            return command_executor(cmd, remote, host,
+                                    REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         else:
             # TODO add check that systemd enabled or not
-            # TODO if /run/systemd and binary file systemctl in file system we need to execute via /etc/init.d
+            # TODO if /run/systemd and binary file systemctl in file system
+            #       we need to execute via /etc/init.d
             if distro[0] == "ALT ":
                 cmd = "/etc/init.d/%s %s" % (start_script, action)
             elif version < "9.6.2.1" and distro[0] in RPM_BASED:
@@ -211,7 +223,9 @@ def pg_manage_psql(action, data_dir, version="9.6", start_script=None, remote=Fa
             else:
                 cmd = "service %s %s" % (start_script, action)
             print(cmd)
-            return command_executor(cmd, remote=remote, host=host, login=REMOTE_ROOT, password=REMOTE_ROOT_PASSWORD)
+            return command_executor(cmd, remote=remote, host=host,
+                                    login=REMOTE_ROOT,
+                                    password=REMOTE_ROOT_PASSWORD)
 
         # retcode = subprocess.check_call(cmd)
         # time.sleep(2)
@@ -284,9 +298,13 @@ def create_tablespace(tablespace_name, compression=False):
     cursor = conn.cursor()
     # TODO add check that PGPRO edition is enterprise
     if compression:
-        cursor.execute('CREATE TABLESPACE {0} LOCATION \'{1}\' WITH (compression=true);'.format(
-            tablespace_name,
-            tablespace_location))
+        cursor.execute(
+            'CREATE TABLESPACE {0}'
+            ' LOCATION \'{1}\' WITH (compression=true);'.format(
+                tablespace_name, tablespace_location))
     else:
-        cursor.execute('CREATE TABLESPACE {0} LOCATION \'{1}\';'.format(tablespace_name, tablespace_location))
+        cursor.execute(
+            'CREATE TABLESPACE {0}'
+            ' LOCATION \'{1}\';'.format(
+                tablespace_name, tablespace_location))
     return tablespace_location

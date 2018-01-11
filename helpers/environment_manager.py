@@ -50,29 +50,36 @@ class Environment(object):
             for node in (range(1, self.nodes_count + 1)):
                 node_name = gen_name(self.image_name)
                 node_info = create_env(self.image_name, node_name)
-                self.env_info[cluster_name]['nodes'].append({"domname": node_name,
-                                                             "ip": node_info[0],
-                                                             "image_path": node_info[1],
-                                                             "xml_desc": node_info[2]})
+                self.env_info[cluster_name]['nodes'].append(
+                    {"domname": node_name, "ip": node_info[0],
+                     "image_path": node_info[1], "xml_desc": node_info[2]})
                 host_record = node_info[0] + ' ' + node_name + '\n'
                 with open("/etc/hosts", "a") as hosts:
                     hosts.write(host_record)
-                cmd = 'echo \"%s %s\" >> /etc/hosts ' % (node_name, node_info[0])
-                exec_command(cmd, node_info[0], REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                cmd = 'echo \"%s %s\" >> /etc/hosts ' % (
+                    node_name, node_info[0])
+                exec_command(cmd, node_info[0],
+                             REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
                 cmd = 'hostname %s' % node_name
-                exec_command(cmd, node_info[0], REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-                cmd = 'sed -i \'s/^Defaults    requiretty/#Defaults    requiretty/\' /etc/sudoers'
-                exec_command(cmd, node_info[0], REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                exec_command(cmd, node_info[0],
+                             REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                cmd = 'sed -i \'s/^Defaults    requiretty/' \
+                    '#Defaults    requiretty/\' /etc/sudoers'
+                exec_command(cmd, node_info[0],
+                             REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
                 cmd = 'iptables -F'
-                exec_command(cmd, node_info[0], REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                exec_command(cmd, node_info[0],
+                             REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             mode = 'a' if os.path.exists(self.CLUSTER_SETTING) else 'w'
             with open(self.CLUSTER_SETTING, mode) as f:
                 json.dump(self.env_info, f, indent=4, sort_keys=True)
 
-            logging.debug("Was created cluster with following nodes: %s" % self.env_info)
+            logging.debug("Cluster created with following nodes: %s" %
+                          self.env_info)
             return self.env_info
         else:
-            logging.error("We haven't image with name %s" % self.image_name)
+            logging.error("We haven't image with name %s" %
+                          self.image_name)
 
     def start_env(self):
         """
@@ -119,7 +126,8 @@ class Environment(object):
         os.remove(self.CLUSTER_SETTING)
 
     def get_cluster_config(self):
-        """Read from config file and return cluster config for current instance
+        """Read from config file and return cluster config
+            for current instance
 
         :return: dict
         """

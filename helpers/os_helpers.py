@@ -1,8 +1,6 @@
-import grp
 import os
 import platform
 import psutil
-import pwd
 import random
 import re
 import shutil
@@ -51,23 +49,28 @@ def pg_bindir():
             try:
                 print("Trying to execute pg_config for enterprise version")
                 os.environ['PG_CONFIG'] = '/usr/pgproee-9.6/bin/pg_config'
-                return subprocess.check_output(['/usr/pgproee-9.6/bin/pg_config', "--bindir"]).strip()
+                return subprocess.check_output(
+                    ['/usr/pgproee-9.6/bin/pg_config', "--bindir"]).strip()
             except OSError as e:
                 print(e)
                 print("Cannot find pg_config for enterprise version")
                 print("Trying to execute pg_config for standard version")
                 try:
                     os.environ['PG_CONFIG'] = '/usr/pgpro-9.6/bin/pg_config'
-                    return subprocess.check_output(['/usr/pgpro-9.6/bin/pg_config', "--bindir"]).strip()
+                    return subprocess.check_output(
+                        ['/usr/pgpro-9.6/bin/pg_config', "--bindir"]).strip()
                 except OSError as e:
                     print(e)
                     print("Cannot find pg_config for standard newest versions")
-                    print("Trying to execute pg_config for standard old version")
+                    print("Trying to execute pg_config for "
+                          "standard old version")
                     os.environ['PG_CONFIG'] = '/usr/pgsql-9.6/bin/pg_config'
-                    return subprocess.check_output(['/usr/pgsql-9.6/bin/pg_config', "--bindir"]).strip()
+                    return subprocess.check_output(
+                        ['/usr/pgsql-9.6/bin/pg_config', "--bindir"]).strip()
         elif distro in DEB_BASED:
             os.environ['PG_CONFIG'] = '/usr/bin/pg_config'
-            a = subprocess.check_output(['/usr/bin/pg_config', "--bindir"]).strip()
+            a = subprocess.check_output(
+                ['/usr/bin/pg_config', "--bindir"]).strip()
             print(a)
             return a
     else:
@@ -122,7 +125,8 @@ def load_pgbench(connstring, params):
     """
 
     conn_dict = parse_connstring(connstring)
-    conn_params = ["--host", conn_dict['host'], "--username", conn_dict['user']]
+    conn_params = ["--host", conn_dict['host'], "--username",
+                   conn_dict['user']]
     pgbench = os.path.join(pg_bindir(), "pgbench")
     cmd = ["sudo", "-u", "postgres", pgbench]
 
@@ -199,6 +203,10 @@ def create_tablespace_directory():
     """Create new  directory for tablespace
     :return: str path to tablespace
     """
+
+    import pwd
+    import grp
+
     tmp_dir = '/tmp'
     tablespace_catalog = 'tablespace-' + str(random.randint(0, 100))
     tablespace_path = os.path.join(tmp_dir, tablespace_catalog)

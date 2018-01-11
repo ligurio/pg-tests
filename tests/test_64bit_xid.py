@@ -51,12 +51,18 @@ def test_xid_boundary_values(install_postgres):
     load_pgbench(connstring, ["-i", "-n", "-s", "100"])
 
 
-testdata = [("autovacuum_freeze_max_age", 100000, 9223372036854775807),
-            ("autovacuum_multixact_freeze_max_age", 10000, 9223372036854775807),
-            ("vacuum_freeze_min_age", 0, 9223372036854775807),
-            ("vacuum_freeze_table_age", 0, 9223372036854775807),
-            ("vacuum_multixact_freeze_min_age", 0, 9223372036854775807),
-            ("vacuum_multixact_freeze_table_age", 0, 9223372036854775807)]
+testdata = [("autovacuum_freeze_max_age", 100000,
+             9223372036854775807),
+            ("autovacuum_multixact_freeze_max_age", 10000,
+             9223372036854775807),
+            ("vacuum_freeze_min_age", 0,
+             9223372036854775807),
+            ("vacuum_freeze_table_age", 0,
+             9223372036854775807),
+            ("vacuum_multixact_freeze_min_age", 0,
+             9223372036854775807),
+            ("vacuum_multixact_freeze_table_age", 0,
+             9223372036854775807)]
 
 gucs = [("autovacuum_freeze_max_age"),
         ("autovacuum_multixact_freeze_max_age"),

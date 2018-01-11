@@ -23,13 +23,13 @@
 
 Запуск локальных тестов с использованием скрипта testrun.py:
 
-–h - помощь
+-h – помощь
 
 Опции, которые относятся к продукту
 
 --branch –  установка пакетов из бранчи  с указанием имени бранчи
 
- --product_name – имя продукта, доступные значения: postgresql, postgrespro
+--product_name – имя продукта, доступные значения: postgresql, postgrespro
 
 --product_edition – тип продукта, доступные значения: standard, ee, cert, certified-enterprise
 
@@ -45,7 +45,7 @@
 
 --export – сохранять ли результаты тестирования в виде отчета
 
---tests – файл тестов, которые будут выполнены (опциональный параметр, если не задан будут выполнены все тесты из каталога /tests)
+--test – имена тестов, которые будут выполнены (опциональный параметр, если не задан, будут выполнены все тесты из каталога tests/)
 
 ## Функции скрипта testrun.py
 
@@ -63,7 +63,7 @@
 
 Поддерживаемые параметры:
 
- --product_name – имя продукта, доступные значения: postgresql, postgrespro
+--product_name – имя продукта, доступные значения: postgresql, postgrespro
 
 --product_edition – тип продукта, доступные значения: standard, ee, cert, certified-enterprise
 
@@ -82,7 +82,7 @@
 Так же поддерживаются все дополнительные параметры, которые есть в pytest.
 
 
-## Запуск тестов без заливки фреймвокра на виртуальную машину.
+## Запуск тестов без заливки фреймворка на виртуальную машину.
 
 Нужен для запуска кластерных тестов (multimaster, replica). Так же этот запуск более просто в обслуживании, в этот режим можно и удобно писать одиночные тесты (не требующие кластера).
 
@@ -94,7 +94,7 @@
 
 --target – операционная система, на которой будут запускаться тесты, невозможно использование с опцией config
 
- --product_name – имя продукта, доступные значения: postgresql, postgrespro
+--product_name – имя продукта, доступные значения: postgresql, postgrespro
 
 --product_edition – тип продукта, доступные значения: standard, ee, cert, certified-enterprise
 
@@ -118,12 +118,12 @@ root_login='root'
 root_password='password'
 
 
-## Системные и требования к окружению.
+## Системные требования к окружению
 
 Необходимо создать каталог /pgpro на диске. В данном каталоге будут хранится виртуальные машины используемые для запуска тестов.
 - пакеты для RPM-based дистрибутивов:
 ```
-yum install -y git libvirt libvirt-python qemu-kvm gcc openssl-devel python-devel python-cffi vim
+yum install -y git libvirt libvirt-python qemu-kvm gcc openssl-devel python-devel python-cffi vim samba
 ```
 Версия пакета libvirt должна быть не ниже 2.0.
 
@@ -135,7 +135,7 @@ yum install -y git libvirt libvirt-python qemu-kvm gcc openssl-devel python-deve
 
 - пакеты для RPM-based дистрибутивов:
 ```
-yum install -y git libvirt libvirt-python qemu-kvm gcc openssl-devel python-devel python-cffi vim
+yum install -y git libvirt libvirt-python qemu-kvm gcc openssl-devel python-devel python-cffi vim samba
 ```
 - установить PyPA:
 ```
@@ -148,15 +148,15 @@ python get-pip.py
 	Debian-based: apt install -y libssl-dev gcc
 	RPM-based: yum install -y openssl-devel gcc
 ```
-- установить Ansible и модули для него: ```pip install ansible pywinrm paramiko```
+- установить Ansible и модули для него: ```sudo pip install ansible pywinrm paramiko```
 - если для запуска ВМ скрипт не найдет шаблон ВМ, то он его загрузит, но можно
 заранее загрузить все шаблоны виртуальных машин. Например так: ```wget -np -nd
 -A qcow2 -r -l 1 http://webdav.l.postgrespro.ru/DIST/vm-images/test/```
 - для доступа по SSH ключам в гостевые ОС нужно скопировать ключи из репозитория:
 ```
-	cp static/id_rsa ~/.ssh/id_rsa.pg
+	cp static/id_rsa ~/.ssh/id_rsa.pg-tests
 	cat static/authorized_keys >> ~/.ssh/authorized_keys
-	chmod 700 ~/.ssh/id_rsa
+	chmod 700 ~/.ssh/id_rsa.pg-tests
 ```
 и добавить их вместе с полезными опциями в конфиг ~/.ssh/config:
 ```
@@ -169,16 +169,16 @@ python get-pip.py
 	Host *
         User							test
         UseRoaming=no
-        IdentityFile                    ~/.ssh/id_rsa.pg
+        IdentityFile                    ~/.ssh/id_rsa.pg-tests
 ```
 
 ### Настройки ОС для тестирования
 
-Все необходимые настройки выполняются сценарием для Ansible в static/playbooks_prep_env.yml,
+Все необходимые настройки выполняются сценарием для Ansible в tests/playbook-prepare-env.yml,
 который запускается скриптом testrun.py перед запуском теста. Но можно запустить и вручную:
 ```
 $ cat static/inventory
 ubuntu1604 ansible_host=127.0.0.1 ansible_become_pass=TestRoot1 ansible_ssh_pass=TestPass1 ansible_user=test ansible_become_user=root
-$ ansible-playbook static/playbook-prepare-env.yml -i static/inventory -c paramiko --limit ubuntu1604
+$ ansible-playbook tests/playbook-prepare-env.yml -i static/inventory -c paramiko --limit ubuntu1604
 $ ansible ubuntu1604 -m setup -i static/inventory -c paramiko
 ```
