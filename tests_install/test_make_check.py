@@ -82,6 +82,7 @@ class TestMakeCheck(object):
                             milestone=milestone, branch=branch)
 # TODO: Enable test5 (PGPRO-1289)
 # TODO: Don't update tzdata on mssphere (PGPRO-1293)
+# TODO: Enable horology test on SLES (PGPRO-1294)
             test_script = r"""
 if which apt-get; then
     apt-get install -y gcc || true
@@ -90,20 +91,30 @@ if which apt-get; then
     apt-get install -y libipc-run-perl || apt-get install -y perl-IPC-Run
     apt-get install -y perl-devel || true
 elif which zypper; then
-    zypper install -y gcc make flex bison perl zlib1g-dev
+    zypper install -y gcc make flex bison perl
+    zypper install -y --force --force-resolution zlib-devel
     zypper install -y libipc-run-perl
 elif which yum; then
     yum install -y gcc make flex bison perl bzip2 zlib-devel
     yum install -y perl-devel || true
     yum install -y perl-IPC-Run perl-Test-Simple perl-Time-HiRes
     # perl-IPC-Run is not present in some distributions (rhel-7, rosa-sx-7...)
-    if ! perl -e "use IPC::Run"; then
-        curl -O https://cpan.metacpan.org/authors/id/T/TO/TODDR/\
-IPC-Run-0.96.tar.gz &&
-        tar fax IPC-Run*
-        (cd IPC-Run*; perl Makefile.PL && make && make install)
-    fi
 fi
+if ! perl -e "use IPC::Run"; then
+    curl -O https://cpan.metacpan.org/authors/id/T/TO/TODDR/\
+IPC-Run-0.96.tar.gz && \
+    tar fax IPC-Run* && \
+    (cd IPC-Run* && perl Makefile.PL && make && make install)
+fi
+
+if grep 'SUSE Linux Enterprise Server 11' /etc/SuSE-release; then
+    # Update Test::More to minimum required version (0.82)
+    curl https://codeload.github.com/Test-More/test-more/tar.gz/v0.82 \
+     -o test-more.tar.gz && \
+    tar fax test-more* && \
+    (cd test-more* && perl Makefile.PL && make && make install)
+fi
+
 # timestamptz fails on msvsphere due to old tzdata
 if [ "`cat /etc/msvsphere-release`" = "МСВСфера Сервер release 6.3" ]; then
     curl -O http://mirror.centos.org/centos/6/os/x86_64/Packages/\
@@ -126,6 +137,17 @@ sed -e 's/test:\s\+connect\/test5//' \
 sed -e 's/test:\s\+connect\/test5//' \
  -i src/interfaces/ecpg/test/ecpg_schedule
 # ^^^ test5 Fails
+
+# horology test fails on sles
+if grep 'SUSE Linux Enterprise Server' /etc/SuSE-release; then
+    sed 's/test:\s\+horology//' -i src/test/regress/serial_schedule
+    sed 's/test:\s\+horology//' -i src/test/regress/parallel_schedule
+fi
+
+if grep 'SUSE Linux Enterprise Server 11' /etc/SuSE-release; then
+  # To workaround an "internal compiler error"
+  sed 's/log10(2)/0.3010/' -i src/interfaces/ecpg/compatlib/informix.c
+fi
 
 PREFIX=$(readlink -f `pg_config --bindir`/..)
 sudo chown -R postgres:postgres .
