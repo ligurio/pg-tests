@@ -23,6 +23,8 @@
   - name: Update repos and install acpid-events-power (ALT)
     shell: apt-get update &&
            apt-get install acpid-events-power && /sbin/service acpid restart
+    args:
+      warn: no
     when: ansible_distribution == 'ALT'
     become_method: su
     become: true
@@ -109,6 +111,8 @@
            perl-IO-Compress-Base-2.021-141.el6.x86_64 perl-Pod-Escapes-1.04-141.el6.x86_64 \
            perl-IO-Compress-Zlib-2.021-141.el6.x86_64 perl-Compress-Raw-Zlib-2.021-141.el6.x86_64 \
            perl-Pod-Simple-3.13-141.el6.x86_64
+    args:
+      warn: no
     when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "6"
     become_method: su
     become: true
