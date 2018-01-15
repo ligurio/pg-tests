@@ -21,7 +21,7 @@ from helpers.pginstall import (setup_repo,
 
 PRELOAD_LIBRARIES = {
     'standard':
-        ['auth_delay', 'auto_explain', 'pg_pathman',  'plantuner',
+        ['auth_delay', 'auto_explain', 'pg_pathman', 'plantuner',
          'shared_ispell'],
     'ee':
         ['auth_delay', 'auto_explain', 'in_memory', 'pg_pathman',

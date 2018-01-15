@@ -4,6 +4,7 @@ import sys
 import subprocess
 import tempfile
 import urllib
+import re
 
 from BeautifulSoup import BeautifulSoup
 
@@ -65,6 +66,22 @@ def get_os_type(ip):
         return None
 
 
+def get_product_dir(**kwargs):
+    product_dir = ""
+    if kwargs['name'] == "postgrespro":
+        if kwargs['edition'] == "ee":
+            product_dir = "pgproee-%s" % kwargs['version']
+        elif kwargs['edition'] == "standard":
+            product_dir = "pgpro-%s" % kwargs['version']
+        elif kwargs['edition'] == "cert-standard":
+            product_dir = "pgpro-standard-9.6.3.1-cert/repo"
+        elif kwargs['edition'] == "cert-enterprise":
+            product_dir = "pgpro-enterprise-9.6.5.1-cert/repo"
+        if kwargs['milestone']:
+            product_dir += "-" + kwargs['milestone']
+    return product_dir
+
+
 def generate_repo_info(distro, osversion, action="install", **kwargs):
     """Generate information about repository: url to packages
         and path to gpg key
@@ -91,17 +108,9 @@ def generate_repo_info(distro, osversion, action="install", **kwargs):
         baseurl = PSQL_HOST + product_dir
         return baseurl, gpg_key_url
     elif kwargs['name'] == "postgrespro":
+        product_dir = get_product_dir(**kwargs)
         gpg_key_dir = "pgpro-" + kwargs['version']
-        if kwargs['edition'] == "ee":
-            product_dir = "pgproee-%s" % kwargs['version']
-        elif kwargs['edition'] == "standard":
-            product_dir = "pgpro-%s" % kwargs['version']
-        elif kwargs['edition'] == "cert-standard":
-            product_dir = "pgpro-standard-9.6.3.1-cert/repo"
-        elif kwargs['edition'] == "cert-enterprise":
-            product_dir = "pgpro-enterprise-9.6.5.1-cert/repo"
         if kwargs['milestone']:
-            product_dir += "-" + kwargs['milestone']
             gpg_key_dir += "-" + kwargs['milestone']
         gpg_key_url = "https://repo.postgrespro.ru/%s/" \
             "keys/GPG-KEY-POSTGRESPRO" % gpg_key_dir
@@ -297,6 +306,25 @@ enabled=1
                                    os.path.join(WIN_INST_DIR, installer_name))
     else:
         raise Exception("Unsupported distro %s" % dist_info[0])
+
+
+def download_source(remote=False, host=None, **kwargs):
+    if kwargs['name'] == "postgresql":
+        pass
+    elif kwargs['name'] == "postgrespro":
+        product_dir = get_product_dir(**kwargs)
+        baseurl = os.path.join(PGPRO_HOST, product_dir, 'src')
+    f = urllib.urlopen(baseurl)
+    soup = BeautifulSoup(f)
+    for link in soup.findAll('a'):
+        href = link.get('href')
+        if re.search(r'^postgres', href, re.I) and \
+           re.search(r'\.tar\b', href, re.I):
+            sourcetar = urllib.URLopener()
+            print("source: ", os.path.join(baseurl, href), "target:", href)
+            sourcetar.retrieve(os.path.join(baseurl, href), href)
+            return
+    raise Exception("Source tarball is not found at %s" % baseurl)
 
 
 def install_package(pkg_name, remote=False, host=None):
