@@ -247,7 +247,7 @@ def wait_for_boot(host, time=300, linux=True):
 
 
 def gen_name(name):
-    return name + '-' + str(random.getrandbits(15))
+    return 'pgt--' + name + '-' + str(random.getrandbits(15))
 
 
 def write_file(file, text, remote=False, host=None):
