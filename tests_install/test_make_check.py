@@ -101,7 +101,7 @@ elif which yum; then
     # perl-IPC-Run is not present in some distributions (rhel-7, rosa-sx-7...)
 fi
 if ! perl -e "use IPC::Run"; then
-    curl -O https://cpan.metacpan.org/authors/id/T/TO/TODDR/\
+    curl -O http://cpan.metacpan.org/authors/id/T/TO/TODDR/\
 IPC-Run-0.96.tar.gz && \
     tar fax IPC-Run* && \
     (cd IPC-Run* && perl Makefile.PL && make && make install)
