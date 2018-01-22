@@ -221,7 +221,7 @@ def create_env(name, domname, domimage=None):
         qemu_path = "/usr/bin/qemu-system-x86_64"
     elif platform.linux_distribution()[0] == 'CentOS Linux':
         qemu_path = "/usr/libexec/qemu-kvm"
-    if domname[0:3] == 'win':
+    if name[0:3] == 'win':
         network_driver = "e1000"
     else:
         network_driver = "virtio"
@@ -306,7 +306,7 @@ def create_env(name, domname, domimage=None):
     return domipaddress, domimage, xmldesc
 
 
-def setup_env(domipaddress, domname, tests_dir):
+def setup_env(domipaddress, domname, linux_os, tests_dir):
     """Create ansible cmd and run ansible on virtual machine
 
     :param domipaddress str: ip address of virtual machine
@@ -314,7 +314,7 @@ def setup_env(domipaddress, domname, tests_dir):
     :return: int: 0 if all OK and 1 if not
     """
 
-    if domname[0:3] != 'win':
+    if linux_os:
         inv = ANSIBLE_INVENTORY % (domname, domipaddress,
                                    REMOTE_ROOT_PASSWORD,
                                    REMOTE_PASSWORD,
@@ -341,7 +341,7 @@ def setup_env(domipaddress, domname, tests_dir):
         raise Exception("Setup of the test environment %s failed." % domname)
 
 
-def make_test_cmd(domname, reportname, tests=None,
+def make_test_cmd(domname, linux_os, reportname, tests=None,
                   product_name=None,
                   product_version=None,
                   product_edition=None,
@@ -364,7 +364,7 @@ def make_test_cmd(domname, reportname, tests=None,
                  '--junit-xml={1}.xml --json={1}.json --maxfail=1 ' \
                  '--alluredir=reports {2} --target={3}'.format(
                      tests, reportname, pcmd, domname)
-    if domname[0:3] == 'win':
+    if not linux_os:
         cmd = r'cd C:\Users\test\pg-tests && ' + pytest_cmd
     else:
         cmd = 'cd /home/test/pg-tests && sudo ' + pytest_cmd
@@ -375,7 +375,8 @@ def make_test_cmd(domname, reportname, tests=None,
     return cmd
 
 
-def export_results(domname, domipaddress, reportname, operating_system=None,
+def export_results(domname, linux_os, domipaddress, reportname,
+                   operating_system=None,
                    product_name=None, product_version=None,
                    product_edition=None, tests=None):
     if not os.path.exists('reports'):
@@ -390,7 +391,7 @@ def export_results(domname, domipaddress, reportname, operating_system=None,
         subprocess.check_call('chmod 777 %s' % allure_reports_dir, shell=True)
 
     try:
-        if domname[0:3] == 'win':
+        if not linux_os:
             copy_reports_win(reportname, rel_allure_reports_dir, 'reports',
                              domipaddress)
         else:
@@ -546,10 +547,11 @@ def main():
     targets = args.target.split(',')
     for target in targets:
         print("Starting target %s..." % target)
+        linux_os = target[0:3] != 'win'
         target_start = time.time()
         domname = gen_name(target)
         domipaddress = create_env(target, domname)[0]
-        setup_env(domipaddress, domname, tests_dir)
+        setup_env(domipaddress, domname, linux_os, tests_dir)
         print("Environment deployed without errors. Ready to run tests")
         if len(tests) > 1:
             save_env(domname)
@@ -561,11 +563,11 @@ def main():
                 restore_env(domname)
                 domipaddress = create_env(
                     target, domname, get_dom_disk(domname))[0]
-                wait_for_boot(domipaddress, linux=(domname[0:3] != 'win'))
+                wait_for_boot(domipaddress, linux=linux_os)
             reportname = "report-%s_%s_%s" % (
                 time.strftime('%Y-%m-%d-%H-%M-%S'), testname, target)
             cmd = make_test_cmd(
-                domname, reportname, test,
+                domname, linux_os, reportname, test,
                 args.product_name,
                 args.product_version,
                 args.product_edition,
@@ -573,7 +575,7 @@ def main():
                 args.branch)
             if DEBUG:
                 print("Test command:\n%s" % cmd)
-            if domname[0:3] == 'win':
+            if not linux_os:
                 s = winrm.Session(domipaddress,
                                   auth=(REMOTE_LOGIN, REMOTE_PASSWORD))
                 ps_script = """
@@ -594,7 +596,7 @@ def main():
 
             if args.export:
                 export_results(
-                    domname, domipaddress, reportname,
+                    domname, linux_os, domipaddress, reportname,
                     operating_system=target,
                     product_name=args.product_name,
                     product_version=args.product_version,
