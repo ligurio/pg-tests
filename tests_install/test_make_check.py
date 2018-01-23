@@ -132,6 +132,7 @@ cd postgres*/
 rm src/interfaces/ecpg/test/connect/test5*
 sed -e 's/\(\s*test5\s\+test5\)/#\1/' \
  -i src/interfaces/ecpg/test/connect/Makefile
+[ -f src/interfaces/ecpg/test/ecpg_schedule_tcp ] && \
 sed -e 's/test:\s\+connect\/test5//' \
  -i src/interfaces/ecpg/test/ecpg_schedule_tcp
 sed -e 's/test:\s\+connect\/test5//' \
