@@ -316,15 +316,18 @@ def download_source(remote=False, host=None, **kwargs):
         baseurl = os.path.join(PGPRO_HOST, product_dir, 'src')
     f = urllib.urlopen(baseurl)
     soup = BeautifulSoup(f)
+    tar_href = None
+    # TODO: Download exactly installed version (using apt-get source or alike)
     for link in soup.findAll('a'):
         href = link.get('href')
         if re.search(r'^postgres', href, re.I) and \
            re.search(r'\.tar\b', href, re.I):
-            sourcetar = urllib.URLopener()
-            print("source: ", os.path.join(baseurl, href), "target:", href)
-            sourcetar.retrieve(os.path.join(baseurl, href), href)
-            return
-    raise Exception("Source tarball is not found at %s" % baseurl)
+            print("source:", os.path.join(baseurl, href), "target:", href)
+            tar_href = href
+    if not tar_href:
+        raise Exception("Source tarball is not found at %s." % baseurl)
+    sourcetar = urllib.URLopener()
+    sourcetar.retrieve(os.path.join(baseurl, tar_href), tar_href)
 
 
 def install_package(pkg_name, remote=False, host=None):
