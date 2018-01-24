@@ -33,6 +33,8 @@ RPM_BASED = ['CentOS Linux', 'RHEL', 'CentOS',
              'ROSA Enterprise Linux Cobalt', 'GosLinux',
              '\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1'
              '\xd1\x84\xd0\xb5\xd1\x80\xd0\xb0 ']
+DEBIAN_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux', 'AstraLinuxSE',
+                'Astra Linux SE', "\"Astra Linux SE\"", "\"AstraLinuxSE\""]
 DEB_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux', 'AstraLinuxSE',
              'Astra Linux SE', "\"Astra Linux SE\"", "\"AstraLinuxSE\"",
              "ALT Linux ", "ALT "]
@@ -80,6 +82,11 @@ def get_product_dir(**kwargs):
         if kwargs['milestone']:
             product_dir += "-" + kwargs['milestone']
     return product_dir
+
+
+def is_os_debian_based(remote=False, host=None):
+    dist_info = get_distro(remote, host)
+    return dist_info[0] in DEBIAN_BASED
 
 
 def generate_repo_info(distro, osversion, action="install", **kwargs):
