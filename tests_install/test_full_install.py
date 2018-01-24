@@ -76,7 +76,7 @@ class TestFullInstall():
                 raise Exception('Edition %s is not supported.' % edition)
         print("Running on %s." % target)
         if self.os != 'Windows':
-            install_package('%s-%s-%s' % (name, edtn, version))
+            install_package('%s-%s-%s*' % (name, edtn, version))
         else:
             install_postgres_win()
         server_version = get_server_version()
