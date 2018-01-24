@@ -76,6 +76,7 @@ set -e
 if which apt-get; then
     apt-get install -y gcc || true
     apt-get install -y make
+    grep 'Debian GNU/Linux 9' /etc/os-release && apt install -y libdpkg-perl
 elif which zypper; then
     zypper install -y gcc make
 elif which yum; then
