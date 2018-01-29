@@ -43,14 +43,6 @@
     become_method: su
     become: true
 
-  - name: Wait for automatic system updates
-    shell: sleep 2;
-           while fuser /var/lib/dpkg/lock >/dev/null 2>&1; do sleep 2; done;
-           while fuser /var/lib/apt/lists/lock >/dev/null 2>&1; do sleep 2; done;
-    when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
-    become_method: su
-    become: true
-
   - name: Mount DVD(s) (if available)
     shell: if /sbin/blkid /dev/sr0; then
              mkdir /mnt/dvd &&
@@ -127,7 +119,13 @@
 
   - name: Disable automatic updates (Debian-based)
     shell: for aptconf in `grep -E '^\s*APT::Periodic::(Update-Package-Lists|Unattended-Upgrade)' -l -r /etc/apt/apt.conf.d/`;
-             do sed -e 's#^\(\s*APT::Periodic::\(Update-Package-Lists\|Unattended-Upgrade\)\)#// \1#' -i $aptconf; done
+             do sed -e 's#^\(\s*APT::Periodic::\(Update-Package-Lists\|Unattended-Upgrade\)\)#// \1#' -i $aptconf; done; \
+           if which systemctl; then \
+             systemctl mask apt-daily.timer; \
+             systemctl mask apt-daily-upgrade.timer; \
+             systemctl mask apt-daily.service; systemctl stop apt-daily.service; \
+             systemctl mask apt-daily-upgrade.service; systemctl stop apt-daily-upgrade.service; \
+           fi
     when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu' or
           ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux')
     become_method: su

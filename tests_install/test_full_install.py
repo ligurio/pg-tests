@@ -8,7 +8,9 @@ import settings
 
 from allure_commons.types import LabelType
 from helpers.pginstall import (setup_repo,
+                               get_all_packages_name,
                                install_package,
+                               initdb_start,
                                install_postgres_win,
                                remove_package,
                                install_perl_win,
@@ -16,7 +18,6 @@ from helpers.pginstall import (setup_repo,
                                get_server_version,
                                get_psql_version,
                                get_initdb_props,
-                               get_pg_setting,
                                restart_service)
 
 PRELOAD_LIBRARIES = {
@@ -54,7 +55,6 @@ class TestFullInstall():
         version = request.config.getoption('--product_version')
         name = request.config.getoption('--product_name')
         edition = request.config.getoption('--product_edition')
-        build = request.config.getoption('--product_build')
         milestone = request.config.getoption('--product_milestone')
         target = request.config.getoption('--target')
         product_info = " ".join([dist, name, edition, version])
@@ -66,17 +66,11 @@ class TestFullInstall():
         # Step 1
         setup_repo(name=name, version=version, edition=edition,
                    milestone=milestone, branch=branch)
-        edtn = ''
-        if edition:
-            if edition == 'standard':
-                edtn = 'std'
-            elif edition == 'ee':
-                edtn = 'ent'
-            else:
-                raise Exception('Edition %s is not supported.' % edition)
         print("Running on %s." % target)
         if self.os != 'Windows':
-            install_package('%s-%s-%s*' % (name, edtn, version))
+            package_name = get_all_packages_name(name, edition, version)
+            install_package(package_name)
+            initdb_start(name=name, version=version, edition=edition)
         else:
             install_postgres_win()
         server_version = get_server_version()
@@ -94,7 +88,6 @@ class TestFullInstall():
         iprops = get_initdb_props()
         exec_psql("ALTER SYSTEM SET shared_preload_libraries = %s" %
                   ','.join(PRELOAD_LIBRARIES[edition]))
-        data_directory = get_pg_setting('data_directory')
         restart_service(name=name, version=version, edition=edition)
         share_path = iprops['share_path'].replace('/', os.sep)
         controls = glob.glob(os.path.join(share_path,
@@ -135,15 +128,8 @@ class TestFullInstall():
 
     @pytest.mark.test_full_remove
     def test_full_remove(self, request):
-        version = request.config.getoption('--product_version')
         name = request.config.getoption('--product_name')
         edition = request.config.getoption('--product_edition')
-        edtn = ''
-        if edition:
-            if edition == 'standard':
-                edtn = 'std'
-            elif edition == 'ee':
-                edtn = 'ent'
-            else:
-                raise Exception('Edition %s is not supported.' % edition)
-        remove_package('%s-%s-%s*' % (name, edtn, version))
+        version = request.config.getoption('--product_version')
+        package_name = get_all_packages_name(name, edition, version)
+        remove_package(package_name)

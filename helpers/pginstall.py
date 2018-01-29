@@ -68,6 +68,14 @@ def get_os_type(ip):
         return None
 
 
+def alt_edtn(edition):
+    if edition == 'standard':
+        return 'std'
+    elif edition == 'ee':
+        return 'ent'
+    return edition
+
+
 def get_product_dir(**kwargs):
     product_dir = ""
     if kwargs['name'] == "postgrespro":
@@ -82,6 +90,47 @@ def get_product_dir(**kwargs):
         if kwargs['milestone']:
             product_dir += "-" + kwargs['milestone']
     return product_dir
+
+
+def get_base_package_name(name, edition, version):
+    if name == 'postgrespro':
+        if version == '9.5' or version == '9.6':
+            if is_os_redhat_based():
+                return '%s%s' % (name, version.replace('.', ''))
+            return '%s-%s' % (name, version)
+        return '%s-%s-%s' % (name, alt_edtn(edition), version)
+    return '%s-%s' % (name, version.replace('.', '')) if version \
+        else '%s' % (name)
+
+
+def get_server_package_name(name, edition, version):
+    base_package = get_base_package_name(name, edition, version)
+    if name == 'postgrespro':
+        if version == '9.5' or version == '9.6':
+            if is_os_debian_based():
+                return base_package
+    return base_package
+
+
+def get_dev_package_name(name, edition, version):
+    base_package = get_base_package_name(name, edition, version)
+    if name == 'postgrespro':
+        if version == '9.5' or version == '9.6':
+            if is_os_debian_based():
+                return base_package
+        else:
+            return base_package + (
+                '-dev' if is_os_debian_based() else '-devel')
+    return base_package
+
+
+def get_all_packages_name(name, edition, version):
+    return get_base_package_name(name, edition, version) + '*'
+
+
+def is_os_redhat_based(remote=False, host=None):
+    dist_info = get_distro(remote, host)
+    return dist_info[0] in RPM_BASED
 
 
 def is_os_debian_based(remote=False, host=None):
@@ -423,6 +472,7 @@ def remove_package(pkg_name, remote=False, host=None):
         command_executor(cmd, remote, host,
                          REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
     elif dist_info[0] in WIN_BASED:
+        # TODO: Implement uninstall in windows
         pass
     else:
         raise Exception("Unsupported system: %s." % dist_info[0])
@@ -761,7 +811,6 @@ def get_default_service_name(**kwargs):
     dist_info = get_distro()
     if dist_info[0] in WIN_BASED:
         if kwargs['name'] == "postgrespro":
-
             return 'postgrespro' + '-' + \
                    ('enterprise-' if kwargs['edition'] == 'ee'
                     else '') + \
@@ -771,16 +820,76 @@ def get_default_service_name(**kwargs):
             raise Exception('Product %s is not supported.' % kwargs['name'])
     else:
         if kwargs['name'] == "postgrespro":
-            if (kwargs['edition'] == 'standard'):
-                edtn = 'std'
-            elif (kwargs['edition'] == 'ee'):
-                edtn = 'ent'
-            else:
-                raise Exception('Edition %s is not supported.' %
-                                kwargs['edition'])
-            return '%s-%s-%s' % (kwargs['name'], edtn, kwargs['version'])
+            if kwargs['version'] == '9.5' or kwargs['version'] == '9.6':
+                if dist_info[0] in ZYPPER_BASED:
+                    return 'postgresql'
+                return '%s-%s' % (kwargs['name'],
+                                  kwargs['version'])
+            return '%s-%s-%s' % (kwargs['name'],
+                                 alt_edtn(kwargs['edition']),
+                                 kwargs['version'])
         else:
             raise Exception('Product %s is not supported.' % kwargs['name'])
+
+
+def get_default_bin_path(**kwargs):
+    dist_info = get_distro()
+    if dist_info[0] not in WIN_BASED:
+        if kwargs['name'] == 'postgrespro':
+            if kwargs['version'] == '9.5' or kwargs['version'] == '9.6':
+                return '/usr/pgpro-%s/bin/' % (kwargs['version'])
+            return '/opt/pgpro/%s-%s/bin/' % (alt_edtn(kwargs['edition']),
+                                              kwargs['version'])
+    else:
+        raise Exception('OS %s is not supported.' % dist_info[0])
+
+
+def get_default_datadir(**kwargs):
+    dist_info = get_distro()
+    if dist_info[0] not in WIN_BASED:
+        if kwargs['name'] == 'postgrespro':
+            if kwargs['version'] == '9.5' or kwargs['version'] == '9.6':
+                return '/var/lib/pgpro/%s/data' % (kwargs['version'])
+            return ' /var/lib/pgpro/%s-%s/data' % (alt_edtn(kwargs['edition']),
+                                                   kwargs['version'])
+        raise Exception('Product %s is not supported.' % kwargs['name'])
+    else:
+        raise Exception('OS %s is not supported.' % dist_info[0])
+
+
+def initdb_start_9_6(**kwargs):
+    dist_info = get_distro()
+    if dist_info[0] in DEBIAN_BASED:
+        return
+    if dist_info[0] in RPM_BASED:
+        service_name = get_default_service_name(**kwargs)
+        if subprocess.call("which systemctl", shell=True) == 0:
+            binpath = get_default_bin_path(**kwargs)
+            cmd = '%spg-setup initdb' % binpath
+        else:
+            cmd = 'service "%s" initdb' % service_name
+        subprocess.check_call(cmd, shell=True)
+        start_service(**kwargs)
+    elif dist_info[0] in ZYPPER_BASED:
+        start_service(**kwargs)
+    else:
+        raise Exception('OS %s is not supported.' % dist_info[0])
+
+
+def initdb_start(server_only_install=False, **kwargs):
+    if kwargs['name'] == 'postgrespro' and kwargs['version'] == '9.6':
+        initdb_start_9_6(**kwargs)
+
+
+def start_service(service_name=None, **kwargs):
+    if not service_name:
+        service_name = get_default_service_name(**kwargs)
+    dist_info = get_distro()
+    if dist_info[0] in WIN_BASED:
+        cmd = 'net start "{0}"'.format(service_name)
+    else:
+        cmd = 'service "%s" start' % service_name
+    subprocess.check_call(cmd, shell=True)
 
 
 def restart_service(service_name=None, **kwargs):
@@ -792,6 +901,16 @@ def restart_service(service_name=None, **kwargs):
     else:
         cmd = 'service "%s" restart' % service_name
     subprocess.check_call(cmd, shell=True)
+
+
+def pg_isready(binpath=None):
+    dist_info = get_distro()
+    cmd = '%s%spg_isready' % \
+        (
+            ('' if dist_info[0] in WIN_BASED else 'sudo -u postgres '),
+            ('' if binpath is None else (binpath + os.sep))
+        )
+    return (subprocess.call(cmd) == 0)
 
 
 def pg_control(action, data_dir, binpath=None):

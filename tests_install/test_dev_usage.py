@@ -7,12 +7,15 @@ import pytest
 
 from allure_commons.types import LabelType
 from helpers.pginstall import (setup_repo,
+                               get_dev_package_name,
+                               get_all_packages_name,
                                install_package,
                                install_postgres_win,
                                install_perl_win,
+                               initdb_start,
+                               get_default_bin_path,
                                exec_psql,
-                               restart_service,
-                               is_os_debian_based)
+                               restart_service)
 
 
 @pytest.mark.dev_usage
@@ -55,22 +58,13 @@ class TestDevUsage(object):
         # Step 1
         setup_repo(name=name, version=version, edition=edition,
                    milestone=milestone, branch=branch)
-        edtn = ''
-        if edition:
-            if edition == 'standard':
-                edtn = 'std'
-            elif edition == 'ee':
-                edtn = 'ent'
-            else:
-                raise Exception('Edition %s is not supported.' % edition)
         print("Running on %s." % target)
         if self.system != 'Windows':
-            install_package('%s-%s-%s-%s' % (
-                name, edtn, version,
-                'dev' if is_os_debian_based() else 'devel'))
-            pg_bin_path = ''
-            if version == '10' and name == 'postgrespro':
-                pg_bin_path = '/opt/pgpro/%s-%s/bin' % (edtn, version)
+            package_name = get_dev_package_name(name, edition, version)
+            install_package(package_name)
+            pg_bin_path = get_default_bin_path(name=name,
+                                               version=version,
+                                               edition=edition)
             test_script = r"""
 set -e
 if which apt-get; then
@@ -96,8 +90,9 @@ make USE_PGXS=1 install
 chmod 777 .
 """ % (pg_bin_path)
             subprocess.check_call(test_script, shell=True)
-            install_package('%s-%s-%s*' % (
-                name, edtn, version))
+            package_name = get_all_packages_name(name, edition, version)
+            install_package(package_name)
+            initdb_start(name=name, version=version, edition=edition)
             exec_psql('ALTER SYSTEM SET shared_preload_libraries = '
                       'pg_wait_sampling')
             restart_service(name=name, version=version, edition=edition)
