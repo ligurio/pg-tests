@@ -1,16 +1,17 @@
-import os
 import platform
-import subprocess
 
 import pytest
 import settings
 
 from allure_commons.types import LabelType
-from helpers.pginstall import setup_repo
-from helpers.pginstall import install_package
-from helpers.pginstall import install_postgres_win
-from helpers.pginstall import get_server_version
-from helpers.pginstall import get_psql_version
+from helpers.pginstall import (setup_repo,
+                               get_base_package_name,
+                               install_package,
+                               initdb_start,
+                               install_postgres_win,
+                               get_server_version,
+                               get_psql_version,
+                               get_server_package_name)
 
 
 @pytest.mark.clean_install
@@ -50,17 +51,11 @@ class TestCleanInstall():
         # Step 1
         setup_repo(name=name, version=version, edition=edition,
                    milestone=milestone, branch=branch)
-        edtn = ''
-        if edition:
-            if edition == 'standard':
-                edtn = 'std'
-            elif edition == 'ee':
-                edtn = 'ent'
-            else:
-                raise Exception('Edition %s is not supported.')
         print("Running on %s." % target)
         if dist != 'Windows':
-            install_package('%s-%s-%s' % (name, edtn, version))
+            package_name = get_base_package_name(name, edition, version)
+            install_package(package_name)
+            initdb_start(name=name, version=version, edition=edition)
         else:
             install_postgres_win()
         server_version = get_server_version()

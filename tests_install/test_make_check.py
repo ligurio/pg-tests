@@ -7,6 +7,8 @@ import pytest
 
 from allure_commons.types import LabelType
 from helpers.pginstall import (setup_repo,
+                               get_all_packages_name,
+                               initdb_start,
                                install_package,
                                install_postgres_win,
                                install_perl_win,
@@ -64,17 +66,11 @@ class TestMakeCheck(object):
         # Step 1
         setup_repo(name=name, version=version, edition=edition,
                    milestone=milestone, branch=branch)
-        edtn = ''
-        if edition:
-            if edition == 'standard':
-                edtn = 'std'
-            elif edition == 'ee':
-                edtn = 'ent'
-            else:
-                raise Exception('Edition %s is not supported.' % edition)
         print("Running on %s." % target)
         if self.system != 'Windows':
-            install_package('%s-%s-%s*' % (name, edtn, version))
+            package_name = get_all_packages_name(name, edition, version)
+            install_package(package_name)
+            initdb_start(name=name, version=version, edition=edition)
             exec_psql("ALTER SYSTEM SET shared_preload_libraries = %s" %
                       ','.join(PRELOAD_LIBRARIES[edition]))
             restart_service(name=name, version=version, edition=edition)
