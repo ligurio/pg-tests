@@ -475,8 +475,24 @@ def close_env(domname, saveimg=False, destroys0=False):
         else:
             print('Domain %s state saved to %s.' % (domname, imgfile))
     else:
-        if dom.destroy() < 0:
-            print('Unable to destroy %s.' % domname)
+        timeout = 0
+        while True:
+            # To workaround: libvirt.libvirtError: Failed to terminate \
+            #   process PID with SIGKILL: Device or resource busy
+            try:
+                if dom.destroy() == 0:
+                    break
+            except libvirt.libvirtError, e:
+                pass
+            timeout += 5
+            if timeout == 60:
+                raise Exception('Unable to destroy %s.' % domname)
+            time.sleep(timeout)
+            try:
+                dom = conn.lookupByName(domname)
+            except libvirt.libvirtError, e:
+                break
+
         diskfile = get_dom_disk(domname)
         os.remove(diskfile)
         if destroys0:
