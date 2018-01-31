@@ -17,7 +17,8 @@
     debug:
       msg: "System {{ inventory_hostname }}/{{ ansible_host }} \
             ({{ ansible_connection }}) has os_family {{ ansible_os_family }}, \
-            distribution {{ ansible_distribution }} {{ ansible_distribution_major_version }}."
+            distribution {{ ansible_distribution }} {{ ansible_distribution_major_version }} \
+            ({{ ansible_architecture }})."
 
   - name: Update repos and install acpid-events-power (ALT)
     shell: apt-get update &&
