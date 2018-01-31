@@ -367,6 +367,13 @@
       - ansible_os_family != "Windows"
       - ansible_os_family != "МСВСфера"
 
+  - name: windows - install Visual C++ Compiler for Python
+    when: ansible_os_family == "Windows"
+    win_package:
+      path: https://download.microsoft.com/download/7/9/6/796EF2E4-801B-4FC4-AB28-B59FBF6D907B/VCForPython27.msi
+      product_id: '{692514A8-5484-45FC-B0AE-BE2DF7A75891}'
+      state: present
+
   - name: windows - download python
     when: ansible_os_family == "Windows"
     with_items:
