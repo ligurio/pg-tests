@@ -438,6 +438,7 @@ def save_env(domname):
             time.sleep(timeout)
             if not dom.isActive():
                 break
+            dom.shutdown()
         except libvirt.libvirtError, e:
             break
         if timeout == 60:
