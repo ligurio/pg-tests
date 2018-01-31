@@ -438,7 +438,7 @@ def install_perl_win(arch=None):
         exename = 'ActivePerl-5.24.2.2403-MSWin32-x64-403863.exe'
     else:
         exename = 'ActivePerl-5.24.2.2403-MSWin32-x86-64int-403863.exe'
-    url = 'https://downloads.activestate.com/ActivePerl/' \
+    url = 'http://downloads.activestate.com/ActivePerl/' \
           'releases/5.24.2.2403/' + exename
     if not os.path.exists(WIN_INST_DIR):
         os.mkdir(WIN_INST_DIR)
