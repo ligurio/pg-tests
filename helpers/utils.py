@@ -120,10 +120,10 @@ def copy_reports_win(reportname, reportsdir, destreports, domipaddress):
                           os.path.abspath(destreports), shell=True)
 
     share = r'\\%s\pg-tests-reports' % get_virt_ip()
-    cmd = r'xcopy /Y /F .\pg-tests\{0}.* {1}\\'.format(reportname, share)
-    exec_command_win(cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD)
-    cmd = r'xcopy /Y /F .\pg-tests\reports {0}\\{1}\\'.format(
-        share, reportsdir.replace('/', '\\'))
+    cmd = r'net use {0} /user:test test & ' \
+          r'xcopy /Y /F .\pg-tests\{1}.* {0}\ & ' \
+          r'xcopy /Y /F .\pg-tests\reports {0}\{2}\ '. \
+          format(share, reportname, reportsdir.replace('/', '\\'))
     exec_command_win(cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD)
     subprocess.check_call('net usershare delete pg-tests-reports',
                           shell=True)
