@@ -2,7 +2,6 @@
 - hosts: all
   gather_facts: no
   vars:
-    win_path: C:\Users\test\Downloads\
     payload_linux: resources/pg-tests.tgz
     payload_win: resources/pg-tests.zip
 
@@ -18,7 +17,8 @@
     debug:
       msg: "System {{ inventory_hostname }}/{{ ansible_host }} \
             ({{ ansible_connection }}) has os_family {{ ansible_os_family }}, \
-            distribution {{ ansible_distribution }} {{ ansible_distribution_major_version }}."
+            distribution {{ ansible_distribution }} {{ ansible_distribution_major_version }} \
+            ({{ ansible_architecture }})."
 
   - name: Update repos and install acpid-events-power (ALT)
     shell: apt-get update &&
@@ -367,18 +367,27 @@
       - ansible_os_family != "Windows"
       - ansible_os_family != "МСВСфера"
 
-  - name: windows - download python
-    when: ansible_os_family == "Windows"
-    with_items:
-        - { win_url: "https://www.python.org/ftp/python/2.7.13/python-2.7.13.amd64.msi", win_dest: 'python2-7-13.amd64.msi' }
-    win_get_url:
-      url: '{{ item.win_url }}'
-      dest: '{{ win_path }}{{ item.win_dest }}'
-
-  - name: windows - install python
+  - name: windows - install Visual C++ Compiler for Python
     when: ansible_os_family == "Windows"
     win_package:
-      path: '{{ win_path }}python2-7-13.amd64.msi'
+      path: https://download.microsoft.com/download/7/9/6/796EF2E4-801B-4FC4-AB28-B59FBF6D907B/VCForPython27.msi
+      product_id: '{692514A8-5484-45FC-B0AE-BE2DF7A75891}'
+      state: present
+
+  - name: windows - install Python 2.7 (32 bit)
+    when: ansible_os_family == "Windows" and
+          (ansible_architecture == "32-bit" or ansible_architecture == "32-разрядная")
+    win_package:
+      path: https://www.python.org/ftp/python/2.7.13/python-2.7.13.msi
+      product_id: '{4A656C6C-D24A-473F-9747-3A8D00907A03}'
+      state: present
+
+  - name: windows - install Python 2.7 (64 bit)
+    when: ansible_os_family == "Windows" and
+          (ansible_architecture == "64-bit" or ansible_architecture == "64-разрядная")
+    win_package:
+      path: https://www.python.org/ftp/python/2.7.13/python-2.7.13.amd64.msi
+      product_id: '{4A656C6C-D24A-473F-9747-3A8D00907A04}'
       state: present
 
   - name: windows - copy tests payload
@@ -402,10 +411,3 @@
     when: ansible_os_family == "Windows"
     win_shell: 'C:\Python27\Scripts\pip.exe install -r C:\Users\test\pg-tests\tests_install\requirements.txt'
 
-  - name: windows - remove python installer
-    when: ansible_os_family == "Windows"
-    with_items:
-        - { win_dest: "python2-7-13.amd64.msi" }
-    win_file:
-      path: '{{ win_path }}{{ item.win_dest }}'
-      state: absent

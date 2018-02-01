@@ -223,8 +223,10 @@ def create_env(name, domname, domimage=None):
         qemu_path = "/usr/libexec/qemu-kvm"
     if name[0:3] == 'win':
         network_driver = "e1000"
+        ram_size = 2
     else:
         network_driver = "virtio"
+        ram_size = 1
     domisos = glob.glob(TEMPLATE_DIR + name + '*.iso')
     cdroms = ""
     cdromletter = "c"
@@ -240,7 +242,7 @@ def create_env(name, domname, domimage=None):
 
     xmldesc = """<domain type='kvm'>
                   <name>%s</name>
-                  <memory unit='GB'>1</memory>
+                  <memory unit='GB'>%d</memory>
                   <vcpu>1</vcpu>
                   <os>
                     <type>hvm</type>
@@ -271,7 +273,7 @@ def create_env(name, domname, domimage=None):
                     <graphics type='vnc' port='-1' listen='0.0.0.0'/>
                   </devices>
                 </domain>
-                """ % (domname, qemu_path, domimage,
+                """ % (domname, ram_size, qemu_path, domimage,
                        cdroms, dommac, network_driver)
 
     dom = conn.createLinux(xmldesc, 0)
@@ -280,15 +282,17 @@ def create_env(name, domname, domimage=None):
 
     domipaddress = None
     timeout = 0
-    while not domipaddress:
-        timeout += 5
-        print "Waiting for IP address...%d" % timeout
-        time.sleep(timeout)
+    while True:
         domipaddress = lookupIPbyMac(conn, dommac)
-        if timeout == 60:
+        if domipaddress:
+            break
+        timeout += 5
+        if timeout > 60:
             raise Exception(
                 "Failed to obtain IP address (for MAC %s) in domain %s." %
                 (dommac, domname))
+        print "Waiting for IP address...%d" % timeout
+        time.sleep(timeout)
 
     print "Domain name: %s\nIP address: %s" % (dom.name(), domipaddress)
     conn.close()
@@ -438,6 +442,7 @@ def save_env(domname):
             time.sleep(timeout)
             if not dom.isActive():
                 break
+            dom.shutdown()
         except libvirt.libvirtError, e:
             break
         if timeout == 60:
