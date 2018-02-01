@@ -282,15 +282,17 @@ def create_env(name, domname, domimage=None):
 
     domipaddress = None
     timeout = 0
-    while not domipaddress:
-        timeout += 5
-        print "Waiting for IP address...%d" % timeout
-        time.sleep(timeout)
+    while True:
         domipaddress = lookupIPbyMac(conn, dommac)
-        if timeout == 60:
+        if domipaddress:
+            break
+        timeout += 5
+        if timeout > 60:
             raise Exception(
                 "Failed to obtain IP address (for MAC %s) in domain %s." %
                 (dommac, domname))
+        print "Waiting for IP address...%d" % timeout
+        time.sleep(timeout)
 
     print "Domain name: %s\nIP address: %s" % (dom.name(), domipaddress)
     conn.close()
