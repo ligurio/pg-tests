@@ -39,7 +39,7 @@ DEB_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux', 'AstraLinuxSE',
              'Astra Linux SE', "\"Astra Linux SE\"", "\"AstraLinuxSE\"",
              "ALT Linux ", "ALT "]
 ZYPPER_BASED = ['SUSE Linux Enterprise Server ']
-WIN_BASED = ['2012ServerR2']
+WIN_BASED = ['Windows-2012ServerR2', 'Windows-10']
 
 dist = {"Oracle Linux Server": 'oraclelinux',
         "CentOS Linux": 'centos',
@@ -191,7 +191,7 @@ def generate_repo_info(distro, osversion, action="install", **kwargs):
         elif distro == "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1" \
                 "\xd1\x84\xd0\xb5\xd1\x80\xd0\xb0 ":
             distname = "msvsphere"
-        elif distro == "2012ServerR2":
+        elif distro in WIN_BASED:
             distname = "Windows"
         else:
             distname = dist[distro].lower()

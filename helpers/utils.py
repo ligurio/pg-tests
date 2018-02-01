@@ -286,7 +286,7 @@ def get_distro(remote=False, ip=None):
                 platform.linux_distribution()[1], \
                 platform.machine()
         elif "Windows" in os:
-            return platform.win32_ver()[0], \
+            return 'Windows-' + platform.win32_ver()[0], \
                 platform.win32_ver()[1], \
                 platform.machine()
         else:
