@@ -39,7 +39,7 @@ DEB_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux', 'AstraLinuxSE',
              'Astra Linux SE', "\"Astra Linux SE\"", "\"AstraLinuxSE\"",
              "ALT Linux ", "ALT "]
 ZYPPER_BASED = ['SUSE Linux Enterprise Server ']
-WIN_BASED = ['Windows-2012ServerR2', 'Windows-10']
+WIN_BASED = ['Windows-2012ServerR2', 'Windows-10', 'Windows-8.1']
 
 dist = {"Oracle Linux Server": 'oraclelinux',
         "CentOS Linux": 'centos',
@@ -814,7 +814,7 @@ def get_default_service_name(**kwargs):
             return 'postgrespro' + '-' + \
                    ('enterprise-' if kwargs['edition'] == 'ee'
                     else '') + \
-                   ('X64' if dist_info[2] == 'AMD64' else 'X32') + '-' + \
+                   ('X64' if dist_info[2] == 'AMD64' else 'X86') + '-' + \
                    kwargs['version']
         else:
             raise Exception('Product %s is not supported.' % kwargs['name'])
