@@ -26,7 +26,7 @@ PRELOAD_LIBRARIES = {
          'shared_ispell'],
     'ee':
         ['auth_delay', 'auto_explain', 'in_memory', 'pg_pathman',
-         'pgpro_scheduler', 'plantuner', 'shared_ispell'],
+         'pg_shardman', 'pgpro_scheduler', 'plantuner', 'shared_ispell'],
 }
 
 
@@ -121,6 +121,9 @@ class TestFullInstall():
                                          extension.endswith('_plpythonu') or
                                          extension.endswith('_plpython2u')):
                 print("CREATE EXTENSION %s skipped (PGPRO-1253)" % extension)
+                continue
+            # multimaster requires a special setup
+            if extension == 'multimaster':
                 continue
             print("CREATE EXTENSION %s" % extension)
             exec_psql("CREATE EXTENSION IF NOT EXISTS \\\"%s\\\" CASCADE" %
