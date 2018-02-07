@@ -138,18 +138,27 @@ def prepare_payload(tests_dir):
     rsrcdir = os.path.join(tests_dir, TESTS_PAYLOAD_DIR)
     tar_path = os.path.join(rsrcdir, TESTS_PAYLOAD_TAR)
     zip_path = os.path.join(rsrcdir, TESTS_PAYLOAD_ZIP)
-    if os.path.isdir(rsrcdir):
-        timeout = 0
-        while not(os.path.exists(tar_path)) or not(os.path.exists(zip_path)):
-            timeout += 5
-            print "Waiting for parallel tar and zip creation...%d" % timeout
-            time.sleep(timeout)
-            if timeout == 60:
-                raise Exception('Could not find tar and zip in "%s".' %
-                                rsrcdir)
-        return
+    while True:
+        if os.path.isdir(rsrcdir):
+            timeout = 0
+            while not(os.path.exists(tar_path)) or \
+                    not(os.path.exists(zip_path)):
+                timeout += 5
+                if timeout == 60:
+                    raise Exception('Could not find tar and zip in "%s".' %
+                                    rsrcdir)
+                print("Waiting for parallel tar and zip creation...%d" %
+                      timeout)
+                time.sleep(timeout)
+            return
+        try:
+            os.makedirs(rsrcdir)
+        except OSError as exc:
+            if exc.errno == os.errno.EEXIST:
+                continue
+            raise exc
+        break
 
-    os.makedirs(rsrcdir)
     print("Preparing a payload for target VMs...")
     tempdir = tempfile.mkdtemp()
     pgtd = os.path.join(tempdir, 'pg-tests')
@@ -206,6 +215,9 @@ def prepare_payload(tests_dir):
     os.rename(os.path.join(rsrcdir, '_' + TESTS_PAYLOAD_ZIP), zip_path)
     os.rename(os.path.join(rsrcdir, '_' + TESTS_PAYLOAD_TAR), tar_path)
     shutil.rmtree(tempdir)
+
+    # Clear inventory
+    os.remove('static/inventory')
 
 
 def create_env(name, domname, domimage=None):
