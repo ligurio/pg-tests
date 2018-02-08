@@ -99,23 +99,6 @@ class TestFullInstall():
                 print("CREATE EXTENSION %s skipped (PGPRO-1252)" % extension)
                 continue
             # TODO: Remove
-            if self.os == 'Windows' and extension == 'test_ext7':
-                print("CREATE EXTENSION %s skipped (PGPRO-1256)" % extension)
-                continue
-            # TODO: Remove
-            if self.os == 'Windows' and \
-               extension.startswith('test_ext_cyclic'):
-                print("CREATE EXTENSION %s skipped (PGPRO-1257)" % extension)
-                continue
-            # TODO: Remove
-            if self.os == 'Windows' and extension == 'test_pg_dump':
-                print("CREATE EXTENSION %s skipped (PGPRO-1258)" % extension)
-                continue
-            # TODO: Remove
-            if self.os == 'Windows' and extension == 'test_rls_hooks':
-                print("CREATE EXTENSION %s skipped (PGPRO-1260)" % extension)
-                continue
-            # TODO: Remove
             if self.os != 'Windows' and (extension.endswith('_plperl') or
                                          extension.endswith('_plperlu') or
                                          extension.endswith('_plpythonu') or
