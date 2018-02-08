@@ -39,7 +39,7 @@ DEB_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux', 'AstraLinuxSE',
              'Astra Linux SE', "\"Astra Linux SE\"", "\"AstraLinuxSE\"",
              "ALT Linux ", "ALT "]
 ZYPPER_BASED = ['SUSE Linux Enterprise Server ']
-WIN_BASED = ['Windows-2012ServerR2', 'Windows-10', 'Windows-8.1']
+WIN_BASED = ['Windows-2012ServerR2', 'Windows-10', 'Windows-8.1', 'Windows-7']
 
 dist = {"Oracle Linux Server": 'oraclelinux',
         "CentOS Linux": 'centos',
