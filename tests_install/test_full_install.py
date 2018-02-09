@@ -98,13 +98,6 @@ class TestFullInstall():
             if self.os == 'Windows' and extension.endswith('plpython3u'):
                 print("CREATE EXTENSION %s skipped (PGPRO-1252)" % extension)
                 continue
-            # TODO: Remove
-            if self.os != 'Windows' and (extension.endswith('_plperl') or
-                                         extension.endswith('_plperlu') or
-                                         extension.endswith('_plpythonu') or
-                                         extension.endswith('_plpython2u')):
-                print("CREATE EXTENSION %s skipped (PGPRO-1253)" % extension)
-                continue
             # multimaster requires a special setup
             if extension == 'multimaster':
                 continue
