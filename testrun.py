@@ -217,7 +217,10 @@ def prepare_payload(tests_dir):
     shutil.rmtree(tempdir)
 
     # Clear inventory
-    os.remove('static/inventory')
+    try:
+        os.remove('static/inventory')
+    except OSError:
+        pass
 
 
 def create_env(name, domname, domimage=None):
