@@ -94,10 +94,6 @@ class TestFullInstall():
                                           'extension', '*.control'))
         for ctrl in sorted(controls):
             extension = os.path.splitext(os.path.basename(ctrl))[0]
-            # TODO: Remove
-            if self.os == 'Windows' and extension.endswith('plpython3u'):
-                print("CREATE EXTENSION %s skipped (PGPRO-1252)" % extension)
-                continue
             # multimaster requires a special setup
             if extension == 'multimaster':
                 continue
