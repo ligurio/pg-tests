@@ -27,6 +27,8 @@ PRELOAD_LIBRARIES = {
     'ee':
         ['auth_delay', 'auto_explain', 'in_memory', 'pg_pathman',
          'pg_shardman', 'pgpro_scheduler', 'plantuner', 'shared_ispell'],
+    '1c':
+        ['auth_delay', 'auto_explain', 'plantuner'],
 }
 
 
@@ -85,7 +87,7 @@ class TestFullInstall():
         name = request.config.getoption('--product_name')
         edition = request.config.getoption('--product_edition')
 
-        iprops = get_initdb_props()
+        iprops = get_initdb_props(name=name, version=version, edition=edition)
         exec_psql("ALTER SYSTEM SET shared_preload_libraries = %s" %
                   ','.join(PRELOAD_LIBRARIES[edition]))
         restart_service(name=name, version=version, edition=edition)
@@ -94,10 +96,6 @@ class TestFullInstall():
                                           'extension', '*.control'))
         for ctrl in sorted(controls):
             extension = os.path.splitext(os.path.basename(ctrl))[0]
-            # TODO: Remove
-            if self.os == 'Windows' and extension.endswith('plpython3u'):
-                print("CREATE EXTENSION %s skipped (PGPRO-1252)" % extension)
-                continue
             # multimaster requires a special setup
             if extension == 'multimaster':
                 continue

@@ -87,6 +87,8 @@ def get_product_dir(**kwargs):
             product_dir = "pgpro-standard-9.6.3.1-cert/repo"
         elif kwargs['edition'] == "cert-enterprise":
             product_dir = "pgpro-enterprise-9.6.5.1-cert/repo"
+        elif kwargs['edition'] == "1c":
+            product_dir = "1c-%s" % kwargs['version']
         if kwargs['milestone']:
             product_dir += "-" + kwargs['milestone']
     return product_dir
@@ -117,7 +119,7 @@ def get_dev_package_name(name, edition, version):
     if name == 'postgrespro':
         if version == '9.5' or version == '9.6':
             if is_os_debian_based():
-                return base_package
+                return '%s-server-dev-%s' % (name, version)
         else:
             return base_package + (
                 '-dev' if is_os_debian_based() else '-devel')
@@ -165,7 +167,10 @@ def generate_repo_info(distro, osversion, action="install", **kwargs):
         return baseurl, gpg_key_url
     elif kwargs['name'] == "postgrespro":
         product_dir = get_product_dir(**kwargs)
-        gpg_key_dir = "pgpro-" + kwargs['version']
+        if kwargs['edition'] == "1c":
+            gpg_key_dir = "1c-" + kwargs['version']
+        else:
+            gpg_key_dir = "pgpro-" + kwargs['version']
         if kwargs['milestone']:
             gpg_key_dir += "-" + kwargs['milestone']
         gpg_key_url = "https://repo.postgrespro.ru/%s/" \
@@ -378,6 +383,8 @@ def download_source(remote=False, host=None, **kwargs):
         href = link.get('href')
         if re.search(r'^postgres', href, re.I) and \
            re.search(r'\.tar\b', href, re.I):
+            if re.search(r'-common-', href):  # 9.5, 9.6 (Debian)
+                continue
             print("source:", os.path.join(baseurl, href), "target:", href)
             tar_href = href
     if not tar_href:
@@ -780,11 +787,17 @@ def get_psql_version(binpath=None):
     return subprocess.check_output(cmd, shell=True).strip()
 
 
-def get_initdb_props(binpath=None):
+def get_initdb_props(binpath=None, **kwargs):
     """ Get properties returned by initdb
     """
 
     dist_info = get_distro()
+    if binpath is None:
+        if kwargs['name'] == "postgrespro":
+            if kwargs['version'] == '9.5' or kwargs['version'] == '9.6':
+                if dist_info[0] in DEBIAN_BASED:
+                    binpath = get_default_bin_path(**kwargs)
+
     cmd = '%s%sinitdb -s -D .' % \
         (
             ('' if dist_info[0] in WIN_BASED else 'sudo -u postgres '),
@@ -823,6 +836,8 @@ def get_default_service_name(**kwargs):
             if kwargs['version'] == '9.5' or kwargs['version'] == '9.6':
                 if dist_info[0] in ZYPPER_BASED:
                     return 'postgresql'
+                elif dist_info[0] in DEBIAN_BASED:
+                    return 'postgresql@%s-main' % kwargs['version']
                 return '%s-%s' % (kwargs['name'],
                                   kwargs['version'])
             return '%s-%s-%s' % (kwargs['name'],
@@ -837,9 +852,11 @@ def get_default_bin_path(**kwargs):
     if dist_info[0] not in WIN_BASED:
         if kwargs['name'] == 'postgrespro':
             if kwargs['version'] == '9.5' or kwargs['version'] == '9.6':
-                return '/usr/pgpro-%s/bin/' % (kwargs['version'])
-            return '/opt/pgpro/%s-%s/bin/' % (alt_edtn(kwargs['edition']),
-                                              kwargs['version'])
+                if dist_info[0] in DEBIAN_BASED:
+                    return '/usr/lib/postgresql/%s/bin' % (kwargs['version'])
+                return '/usr/pgpro-%s/bin' % (kwargs['version'])
+            return '/opt/pgpro/%s-%s/bin' % (alt_edtn(kwargs['edition']),
+                                             kwargs['version'])
     else:
         raise Exception('OS %s is not supported.' % dist_info[0])
 
@@ -849,6 +866,8 @@ def get_default_datadir(**kwargs):
     if dist_info[0] not in WIN_BASED:
         if kwargs['name'] == 'postgrespro':
             if kwargs['version'] == '9.5' or kwargs['version'] == '9.6':
+                if dist_info[0] in DEBIAN_BASED:
+                    return '/var/lib/postgresql/%s/main' % (kwargs['version'])
                 return '/var/lib/pgpro/%s/data' % (kwargs['version'])
             return ' /var/lib/pgpro/%s-%s/data' % (alt_edtn(kwargs['edition']),
                                                    kwargs['version'])

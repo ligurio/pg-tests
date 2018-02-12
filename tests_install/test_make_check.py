@@ -23,6 +23,8 @@ PRELOAD_LIBRARIES = {
     'ee':
         ['auth_delay', 'auto_explain', 'in_memory', 'pg_pathman',
          'pgpro_scheduler', 'plantuner', 'shared_ispell'],
+    '1c':
+        ['auth_delay', 'auto_explain', 'plantuner'],
 }
 
 
@@ -125,14 +127,16 @@ tar fax postgrespro*.tar*
 cd postgres*/
 
 # vvv test5 Fails
-rm src/interfaces/ecpg/test/connect/test5*
-sed -e 's/\(\s*test5\s\+test5\)/#\1/' \
- -i src/interfaces/ecpg/test/connect/Makefile
-[ -f src/interfaces/ecpg/test/ecpg_schedule_tcp ] && \
-sed -e 's/test:\s\+connect\/test5//' \
- -i src/interfaces/ecpg/test/ecpg_schedule_tcp
-sed -e 's/test:\s\+connect\/test5//' \
- -i src/interfaces/ecpg/test/ecpg_schedule
+if [ -d src/interfaces/ecpg/test/connect ]; then
+    rm src/interfaces/ecpg/test/connect/test5*
+    sed -e 's/\(\s*test5\s\+test5\)/#\1/' \
+     -i src/interfaces/ecpg/test/connect/Makefile
+    [ -f src/interfaces/ecpg/test/ecpg_schedule_tcp ] && \
+    sed -e 's/test:\s\+connect\/test5//' \
+     -i src/interfaces/ecpg/test/ecpg_schedule_tcp
+    sed -e 's/test:\s\+connect\/test5//' \
+     -i src/interfaces/ecpg/test/ecpg_schedule
+fi
 # ^^^ test5 Fails
 
 # horology test fails on sles
