@@ -85,7 +85,7 @@ class TestFullInstall():
         name = request.config.getoption('--product_name')
         edition = request.config.getoption('--product_edition')
 
-        iprops = get_initdb_props()
+        iprops = get_initdb_props(name=name, version=version, edition=edition)
         exec_psql("ALTER SYSTEM SET shared_preload_libraries = %s" %
                   ','.join(PRELOAD_LIBRARIES[edition]))
         restart_service(name=name, version=version, edition=edition)
