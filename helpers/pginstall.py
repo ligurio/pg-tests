@@ -87,6 +87,8 @@ def get_product_dir(**kwargs):
             product_dir = "pgpro-standard-9.6.3.1-cert/repo"
         elif kwargs['edition'] == "cert-enterprise":
             product_dir = "pgpro-enterprise-9.6.5.1-cert/repo"
+        elif kwargs['edition'] == "1c":
+            product_dir = "1c-%s" % kwargs['version']
         if kwargs['milestone']:
             product_dir += "-" + kwargs['milestone']
     return product_dir
@@ -165,7 +167,10 @@ def generate_repo_info(distro, osversion, action="install", **kwargs):
         return baseurl, gpg_key_url
     elif kwargs['name'] == "postgrespro":
         product_dir = get_product_dir(**kwargs)
-        gpg_key_dir = "pgpro-" + kwargs['version']
+        if kwargs['edition'] == "1c":
+            gpg_key_dir = "1c-" + kwargs['version']
+        else:
+            gpg_key_dir = "pgpro-" + kwargs['version']
         if kwargs['milestone']:
             gpg_key_dir += "-" + kwargs['milestone']
         gpg_key_url = "https://repo.postgrespro.ru/%s/" \
