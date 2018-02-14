@@ -847,18 +847,22 @@ def get_default_service_name(**kwargs):
             raise Exception('Product %s is not supported.' % kwargs['name'])
 
 
-def get_default_bin_path(**kwargs):
+def get_default_pg_prefix(**kwargs):
     dist_info = get_distro()
     if dist_info[0] not in WIN_BASED:
         if kwargs['name'] == 'postgrespro':
             if kwargs['version'] == '9.5' or kwargs['version'] == '9.6':
                 if dist_info[0] in DEBIAN_BASED:
-                    return '/usr/lib/postgresql/%s/bin' % (kwargs['version'])
-                return '/usr/pgpro-%s/bin' % (kwargs['version'])
-            return '/opt/pgpro/%s-%s/bin' % (alt_edtn(kwargs['edition']),
-                                             kwargs['version'])
+                    return '/usr/lib/postgresql/%s' % (kwargs['version'])
+                return '/usr/pgpro-%s' % (kwargs['version'])
+            return '/opt/pgpro/%s-%s' % (alt_edtn(kwargs['edition']),
+                                         kwargs['version'])
     else:
         raise Exception('OS %s is not supported.' % dist_info[0])
+
+
+def get_default_bin_path(**kwargs):
+    return os.path.join(get_default_pg_prefix(**kwargs), 'bin')
 
 
 def get_default_datadir(**kwargs):
