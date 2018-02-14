@@ -8,6 +8,7 @@ import pytest
 from allure_commons.types import LabelType
 from helpers.pginstall import (setup_repo,
                                get_all_packages_name,
+                               get_default_pg_prefix,
                                initdb_start,
                                install_package,
                                install_postgres_win,
@@ -78,6 +79,8 @@ class TestMakeCheck(object):
             restart_service(name=name, version=version, edition=edition)
             download_source(name=name, version=version, edition=edition,
                             milestone=milestone, branch=branch)
+            pg_prefix = get_default_pg_prefix(name=name, version=version,
+                                              edition=edition)
 # TODO: Enable test5 (PGPRO-1289)
 # TODO: Don't update tzdata on mssphere (PGPRO-1293)
 # TODO: Enable horology test on SLES (PGPRO-1294)
@@ -150,13 +153,12 @@ if grep 'SUSE Linux Enterprise Server 11' /etc/SuSE-release; then
   sed 's/log10(2)/0.3010/' -i src/interfaces/ecpg/compatlib/informix.c
 fi
 
-PREFIX=$(readlink -f `pg_config --bindir`/..)
 sudo chown -R postgres:postgres .
 sudo -u postgres ./configure --enable-tap-tests --without-readline \
- --prefix=$PREFIX
+ --prefix=%s
 sudo -u postgres make -C src/interfaces/ecpg # TODO: remove?
 sudo -u postgres make installcheck-world
-"""
+""" % (pg_prefix)
             subprocess.check_call(test_script, shell=True)
         else:
             install_postgres_win()
