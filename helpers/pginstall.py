@@ -888,7 +888,7 @@ def initdb_start_9_6(**kwargs):
         service_name = get_default_service_name(**kwargs)
         if subprocess.call("which systemctl", shell=True) == 0:
             binpath = get_default_bin_path(**kwargs)
-            cmd = '%spg-setup initdb' % binpath
+            cmd = '%s/pg-setup initdb' % binpath
         else:
             cmd = 'service "%s" initdb' % service_name
         subprocess.check_call(cmd, shell=True)
