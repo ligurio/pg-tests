@@ -139,7 +139,7 @@
     become_method: su
     become: true
 
-  - name: Fix repositories and prepare local repository (МСВСфера)
+  - name: Fix repositories and prepare local repository; update tzdata (МСВСфера)
     shell: if [ -d /mnt/dvd/repodata ]; then
              ln -s /mnt/dvd /media/MSVSphere_6.3_Server &&
              sed s/enabled=0/enabled=1/ -i /etc/yum.repos.d/install.repo;
@@ -152,7 +152,9 @@
            createrepo . && cd ~ && \
            rpm --import http://vault.centos.org/6.8/os/x86_64/RPM-GPG-KEY-CentOS-6 && \
            printf "[localrepo]\nbaseurl=file:///opt/localrepo\nenabled=1\n" > /etc/yum.repos.d/local.repo; \
-           yum update
+           yum update; \
+           curl -O http://mirror.centos.org/centos/6/os/x86_64/Packages/tzdata-2016j-1.el6.noarch.rpm && \
+           yum install -y tzdata-*.rpm
     when: ansible_distribution == "МСВСфера"
     become_method: su
     become: true
