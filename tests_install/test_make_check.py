@@ -22,9 +22,9 @@ PRELOAD_LIBRARIES = {
         ['auth_delay', 'auto_explain', 'pg_pathman', 'plantuner',
          'shared_ispell'],
     'ee':
-        ['auth_delay', 'auto_explain', 'in_memory', 'pg_pathman',
+        ['auth_delay', 'auto_explain', 'in_memory',
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
-         'shared_ispell'],
+         'shared_ispell', 'pg_pathman'],
     '1c':
         ['auth_delay', 'auto_explain', 'plantuner'],
 }
