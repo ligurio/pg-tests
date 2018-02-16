@@ -23,7 +23,8 @@ PRELOAD_LIBRARIES = {
          'shared_ispell'],
     'ee':
         ['auth_delay', 'auto_explain', 'in_memory', 'pg_pathman',
-         'pgpro_scheduler', 'plantuner', 'shared_ispell'],
+         'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
+         'shared_ispell'],
     '1c':
         ['auth_delay', 'auto_explain', 'plantuner'],
 }
@@ -82,8 +83,6 @@ class TestMakeCheck(object):
             pg_prefix = get_default_pg_prefix(name=name, version=version,
                                               edition=edition)
 # TODO: Enable test5 (PGPRO-1289)
-# TODO: Don't update tzdata on mssphere (PGPRO-1293)
-# TODO: Enable horology test on SLES (PGPRO-1294)
             test_script = r"""
 if which apt-get; then
     apt-get install -y gcc || true
@@ -116,13 +115,6 @@ if grep 'SUSE Linux Enterprise Server 11' /etc/SuSE-release; then
     (cd test-more* && perl Makefile.PL && make && make install)
 fi
 
-# timestamptz fails on msvsphere due to old tzdata
-if [ "`cat /etc/msvsphere-release`" = "МСВСфера Сервер release 6.3" ]; then
-    curl -O http://mirror.centos.org/centos/6/os/x86_64/Packages/\
-tzdata-2016j-1.el6.noarch.rpm
-    yum install -y tzdata-*.rpm
-fi
-
 chmod 777 ~test
 cd ~test/pg-tests
 tar fax postgrespro*.tar*
@@ -141,12 +133,6 @@ if [ -d src/interfaces/ecpg/test/connect ]; then
      -i src/interfaces/ecpg/test/ecpg_schedule
 fi
 # ^^^ test5 Fails
-
-# horology test fails on sles
-if grep 'SUSE Linux Enterprise Server' /etc/SuSE-release; then
-    sed 's/test:\s\+horology//' -i src/test/regress/serial_schedule
-    sed 's/test:\s\+horology//' -i src/test/regress/parallel_schedule
-fi
 
 if grep 'SUSE Linux Enterprise Server 11' /etc/SuSE-release; then
   # To workaround an "internal compiler error"
