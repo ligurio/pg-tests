@@ -24,7 +24,8 @@ PRELOAD_LIBRARIES = {
     'ee':
         ['auth_delay', 'auto_explain', 'in_memory',
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
-         'shared_ispell', 'pg_pathman'],
+         'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
+         'pg_pathman'],
     '1c':
         ['auth_delay', 'auto_explain', 'plantuner'],
 }
