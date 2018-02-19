@@ -6,16 +6,7 @@ import subprocess
 import pytest
 
 from allure_commons.types import LabelType
-from helpers.pginstall import (setup_repo,
-                               get_all_packages_name,
-                               get_default_pg_prefix,
-                               initdb_start,
-                               install_package,
-                               install_postgres_win,
-                               install_perl_win,
-                               download_source,
-                               exec_psql,
-                               restart_service)
+from helpers.pginstall import PgInstall
 
 PRELOAD_LIBRARIES = {
     'standard':
@@ -54,7 +45,6 @@ class TestMakeCheck(object):
             dist = " ".join(platform.linux_distribution()[0:2])
         elif self.system == 'Windows':
             dist = 'Windows'
-            install_perl_win()
         else:
             raise Exception("OS %s is not supported." % self.system)
         version = request.config.getoption('--product_version')
@@ -69,20 +59,19 @@ class TestMakeCheck(object):
         branch = request.config.getoption('--branch')
 
         # Step 1
-        setup_repo(name=name, version=version, edition=edition,
-                   milestone=milestone, branch=branch)
+        pginst = PgInstall(product=name, edition=edition,
+                           version=version, milestone=milestone,
+                           branch=branch, windows=(self.system == 'Windows'))
+        pginst.setup_repo()
         print("Running on %s." % target)
         if self.system != 'Windows':
-            package_name = get_all_packages_name(name, edition, version)
-            install_package(package_name)
-            initdb_start(name=name, version=version, edition=edition)
-            exec_psql("ALTER SYSTEM SET shared_preload_libraries = %s" %
-                      ','.join(PRELOAD_LIBRARIES[edition]))
-            restart_service(name=name, version=version, edition=edition)
-            download_source(name=name, version=version, edition=edition,
-                            milestone=milestone, branch=branch)
-            pg_prefix = get_default_pg_prefix(name=name, version=version,
-                                              edition=edition)
+            pginst.install_full()
+            pginst.initdb_start()
+            pginst.exec_psql("ALTER SYSTEM SET shared_preload_libraries = %s" %
+                             ','.join(PRELOAD_LIBRARIES[edition]))
+            pginst.restart_service()
+            pginst.download_source()
+            pg_prefix = pginst.get_default_pg_prefix()
 # TODO: Enable test5 (PGPRO-1289)
             test_script = r"""
 if which apt-get; then
@@ -148,5 +137,6 @@ sudo -u postgres make installcheck-world
 """ % (pg_prefix)
             subprocess.check_call(test_script, shell=True)
         else:
-            install_postgres_win()
+            pginst.install_perl_win()
+            pginst.install_postgres_win()
         print("OK")

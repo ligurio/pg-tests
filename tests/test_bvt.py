@@ -7,7 +7,6 @@ import settings
 
 from helpers.os_helpers import get_directory_size
 from helpers.os_helpers import get_postgres_process_pids
-from helpers.pginstall import delete_packages
 from helpers.sql_helpers import get_pgpro_info
 
 
@@ -299,6 +298,7 @@ def test_delete_packages(request, install_postgres):
     3. Check that test data is not deleted
 
     """
+
     print(request.node.name)
     version = request.config.getoption('--product_version')
     name = request.config.getoption('--product_name')
@@ -307,8 +307,9 @@ def test_delete_packages(request, install_postgres):
     data_dir_size_before_delete_packages = get_directory_size(data_directory)
     pids = get_postgres_process_pids()
     # Step 1
-    delete_packages(remote=False, host=None, name=name,
-                    version=version, edition=edition)
+    raise Exception("Not implemented.")
+#    delete_packages(remote=False, host=None, name=name,
+#                    version=version, edition=edition)
     data_dir_size_after_delete_packages = get_directory_size(data_directory)
     # Step 2
     # assert data_dir_size_before_delete_packages ==

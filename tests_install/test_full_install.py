@@ -1,24 +1,11 @@
 import os
 import platform
-import subprocess
 import glob
 
 import pytest
-import settings
 
 from allure_commons.types import LabelType
-from helpers.pginstall import (setup_repo,
-                               get_all_packages_name,
-                               install_package,
-                               initdb_start,
-                               install_postgres_win,
-                               remove_package,
-                               install_perl_win,
-                               exec_psql,
-                               get_server_version,
-                               get_psql_version,
-                               get_initdb_props,
-                               restart_service)
+from helpers.pginstall import PgInstall
 
 PRELOAD_LIBRARIES = {
     'standard':
@@ -35,7 +22,7 @@ PRELOAD_LIBRARIES = {
 @pytest.mark.full_install
 class TestFullInstall():
 
-    os = platform.system()
+    system = platform.system()
 
     @pytest.mark.test_full_install
     def test_full_install(self, request):
@@ -47,17 +34,17 @@ class TestFullInstall():
         :return:
         """
         dist = ""
-        if self.os == 'Linux':
+        if self.system == 'Linux':
             dist = " ".join(platform.linux_distribution()[0:2])
-        elif self.os == 'Windows':
+        elif self.system == 'Windows':
             dist = 'Windows'
-            install_perl_win()
         else:
-            raise Exception("OS %s is not supported." % self.os)
+            raise Exception("OS %s is not supported." % self.system)
         version = request.config.getoption('--product_version')
         name = request.config.getoption('--product_name')
         edition = request.config.getoption('--product_edition')
         milestone = request.config.getoption('--product_milestone')
+        request.cls.pgid = '%s' % edition
         target = request.config.getoption('--target')
         product_info = " ".join([dist, name, edition, version])
         # pylint: disable=no-member
@@ -66,31 +53,33 @@ class TestFullInstall():
         branch = request.config.getoption('--branch')
 
         # Step 1
-        setup_repo(name=name, version=version, edition=edition,
-                   milestone=milestone, branch=branch)
+        pginst = PgInstall(product=name, edition=edition,
+                           version=version, milestone=milestone,
+                           branch=branch, windows=(self.system == 'Windows'))
+        request.cls.pginst = pginst
+        pginst.setup_repo()
         print("Running on %s." % target)
-        if self.os != 'Windows':
-            package_name = get_all_packages_name(name, edition, version)
-            install_package(package_name)
-            initdb_start(name=name, version=version, edition=edition)
+        if self.system != 'Windows':
+            pginst.install_full()
+            pginst.initdb_start()
         else:
-            install_postgres_win()
-        server_version = get_server_version()
-        client_version = get_psql_version()
+            pginst.install_perl_win()
+            pginst.install_postgres_win()
+        server_version = pginst.get_server_version()
+        client_version = pginst.get_psql_version()
         print("Server version:\n%s\nClient version:\n%s" %
               (server_version, client_version))
         print("OK")
 
+    # pylint: disable=unused-argument
     @pytest.mark.test_all_extensions
     def test_all_extensions(self, request):
-        version = request.config.getoption('--product_version')
-        name = request.config.getoption('--product_name')
-        edition = request.config.getoption('--product_edition')
-
-        iprops = get_initdb_props(name=name, version=version, edition=edition)
-        exec_psql("ALTER SYSTEM SET shared_preload_libraries = %s" %
-                  ','.join(PRELOAD_LIBRARIES[edition]))
-        restart_service(name=name, version=version, edition=edition)
+        pginst = request.cls.pginst
+        iprops = pginst.get_initdb_props()
+        pginst.exec_psql(
+            "ALTER SYSTEM SET shared_preload_libraries = %s" %
+            ','.join(PRELOAD_LIBRARIES[request.cls.pgid]))
+        pginst.restart_service()
         share_path = iprops['share_path'].replace('/', os.sep)
         controls = glob.glob(os.path.join(share_path,
                                           'extension', '*.control'))
@@ -100,13 +89,12 @@ class TestFullInstall():
             if extension == 'multimaster':
                 continue
             print("CREATE EXTENSION %s" % extension)
-            exec_psql("CREATE EXTENSION IF NOT EXISTS \\\"%s\\\" CASCADE" %
-                      extension)
+            pginst.exec_psql(
+                "CREATE EXTENSION IF NOT EXISTS \\\"%s\\\" CASCADE" %
+                extension)
 
+    # pylint: disable=unused-argument
     @pytest.mark.test_full_remove
     def test_full_remove(self, request):
-        name = request.config.getoption('--product_name')
-        edition = request.config.getoption('--product_edition')
-        version = request.config.getoption('--product_version')
-        package_name = get_all_packages_name(name, edition, version)
-        remove_package(package_name)
+        pginst = request.cls.pginst
+        pginst.remove_full()
