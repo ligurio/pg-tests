@@ -96,6 +96,31 @@ class TestFullInstall():
                 "CREATE EXTENSION IF NOT EXISTS \\\"%s\\\" CASCADE" %
                 extension)
 
+    @pytest.mark.test_plpython
+    def test_plpython(self, request):
+        """Test for plpython language
+        Scenario:
+        1. Create function
+        2. Execute function
+        3. Check function result
+        4. Drop function
+        """
+        pginst = request.cls.pginst
+        # Step 1
+        func = """CREATE FUNCTION py_test_function()
+RETURNS text
+AS $$
+return "python test function"
+$$ LANGUAGE plpython2u;"""
+        pginst.exec_psql_script(func)
+        # Step 2
+        result = pginst.exec_psql("SELECT py_test_function()",
+                                  "-t -P format=unaligned")
+        # Step 3
+        assert result == "python test function"
+        # Step 4
+        pginst.exec_psql("DROP FUNCTION py_test_function()")
+
     # pylint: disable=unused-argument
     @pytest.mark.test_full_remove
     def test_full_remove(self, request):

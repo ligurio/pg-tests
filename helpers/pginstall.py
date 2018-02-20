@@ -815,6 +815,22 @@ baseurl=%s
             )
         return subprocess.check_output(cmd, shell=True, cwd="/").strip()
 
+    def exec_psql_script(self, script, options=''):
+        handle, script_path = tempfile.mkstemp(suffix='.sql')
+        with os.fdopen(handle, 'w') as script_file:
+            script_file.write(script)
+        os.chmod(script_path, 0644)
+
+        cmd = '%s%spsql %s -f %s' % \
+            (
+                ('' if self.os_name in WIN_BASED else 'sudo -u postgres '),
+                self.get_client_bin_path(),
+                options, script_path
+            )
+        result = subprocess.check_output(cmd, shell=True, cwd="/").strip()
+        os.unlink(script_path)
+        return result
+
     def get_server_version(self):
         return self.exec_psql("SELECT version()", '-t -P format=unaligned')
 
