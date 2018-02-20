@@ -105,7 +105,7 @@ class PgInstall:
     def get_base_package_name(self):
         if self.product == 'postgrespro':
             if self.version == '9.5' or self.version == '9.6':
-                if self.__is_os_altlinux():
+                if self.__is_os_altlinux() or self.__is_os_suse():
                     if self.edition == 'ee':
                         return '%s-%s%s' % (self.product, 'enterprise',
                                             self.version)
@@ -162,6 +162,9 @@ class PgInstall:
 
     def __is_os_altlinux(self):
         return self.os_name in ALT_BASED
+
+    def __is_os_suse(self):
+        return self.os_name in ZYPPER_BASED
 
     def __generate_repo_info(self, action="install"):
         """Generate information about repository: url to packages
