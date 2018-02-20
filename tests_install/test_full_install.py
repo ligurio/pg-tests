@@ -8,13 +8,16 @@ from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall
 
 PRELOAD_LIBRARIES = {
-    'standard':
+    'standard-10':
         ['auth_delay', 'auto_explain', 'pg_pathman', 'plantuner',
          'shared_ispell'],
-    'ee':
+    'ee-10':
         ['auth_delay', 'auto_explain', 'in_memory', 'pg_pathman',
          'pg_shardman', 'pgpro_scheduler', 'plantuner', 'shared_ispell'],
-    '1c':
+    'ee-9.6':
+        ['auth_delay', 'auto_explain', 'pg_pathman',
+         'pgpro_scheduler', 'plantuner', 'shared_ispell'],
+    '1c-10':
         ['auth_delay', 'auto_explain', 'plantuner'],
 }
 
@@ -44,7 +47,7 @@ class TestFullInstall():
         name = request.config.getoption('--product_name')
         edition = request.config.getoption('--product_edition')
         milestone = request.config.getoption('--product_milestone')
-        request.cls.pgid = '%s' % edition
+        request.cls.pgid = '%s-%s' % (edition, version)
         target = request.config.getoption('--target')
         product_info = " ".join([dist, name, edition, version])
         # pylint: disable=no-member

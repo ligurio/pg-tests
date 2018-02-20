@@ -9,15 +9,19 @@ from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall
 
 PRELOAD_LIBRARIES = {
-    'standard':
+    'standard-10':
         ['auth_delay', 'auto_explain', 'pg_pathman', 'plantuner',
          'shared_ispell'],
-    'ee':
+    'ee-10':
         ['auth_delay', 'auto_explain', 'in_memory',
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
          'pg_pathman'],
-    '1c':
+    'ee-9.6':
+        ['auth_delay', 'auto_explain',
+         'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
+         'shared_ispell', 'pg_wait_sampling', 'pg_pathman'],
+    '1c-10':
         ['auth_delay', 'auto_explain', 'plantuner'],
 }
 
@@ -53,6 +57,7 @@ class TestMakeCheck(object):
         milestone = request.config.getoption('--product_milestone')
         target = request.config.getoption('--target')
         product_info = " ".join([dist, name, edition, version])
+        pgid = '%s-%s' % (edition, version)
         # pylint: disable=no-member
         tag_mark = pytest.allure.label(LabelType.TAG, product_info)
         request.node.add_marker(tag_mark)
@@ -68,7 +73,7 @@ class TestMakeCheck(object):
             pginst.install_full()
             pginst.initdb_start()
             pginst.exec_psql("ALTER SYSTEM SET shared_preload_libraries = %s" %
-                             ','.join(PRELOAD_LIBRARIES[edition]))
+                             ','.join(PRELOAD_LIBRARIES[pgid]))
             pginst.restart_service()
             pginst.download_source()
             pg_prefix = pginst.get_default_pg_prefix()
