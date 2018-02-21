@@ -30,7 +30,8 @@ RPM_BASED = ['CentOS Linux', 'RHEL', 'CentOS',
              'ROSA Enterprise Linux Server', 'ROSA SX \"COBALT\" ',
              'ROSA Enterprise Linux Cobalt', 'GosLinux',
              '\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1'
-             '\xd1\x84\xd0\xb5\xd1\x80\xd0\xb0 ']
+             '\xd1\x84\xd0\xb5\xd1\x80\xd0\xb0 ',
+             'RED OS release MUROM (']
 DEBIAN_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux', 'AstraLinuxSE',
                 'Astra Linux SE', "\"Astra Linux SE\"", "\"AstraLinuxSE\""]
 DEB_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux', 'AstraLinuxSE',
@@ -54,7 +55,8 @@ dist = {"Oracle Linux Server": 'oraclelinux',
         "ROSA SX \"COBALT\" ": 'rosa-sx',
         "SLES": 'sles',
         "ALT ": 'altlinux',
-        "GosLinux": 'goslinux'}
+        "GosLinux": 'goslinux',
+        "RED OS release MUROM (": 'redos'}
 
 
 class PgInstall:
