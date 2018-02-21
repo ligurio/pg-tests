@@ -533,13 +533,19 @@ baseurl=%s
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         elif self.os_name in WIN_BASED:
-            # TODO: Implement uninstall in windows
-            pass
+            raise Exception("Not implemented on Windows.")
         else:
             raise Exception("Unsupported system: %s." % self.os_name)
 
     def remove_full(self):
-        self.remove_package(self.get_all_packages_name())
+        if self.os_name in WIN_BASED:
+            # TODO: Don't stop the service manually
+            self.stop_service()
+            subprocess.check_call([
+                os.path.join(self.get_default_pg_prefix(), 'Uninstall.exe'),
+                '/S'])
+        else:
+            self.remove_package(self.get_all_packages_name())
         self.client_installed = False
         self.server_installed = False
 
@@ -902,7 +908,13 @@ baseurl=%s
                 return '/opt/pgpro/%s-%s' % (self.alter_edtn,
                                              self.version)
         else:
-            raise Exception('OS %s is not supported.' % self.os_name)
+            if self.product == 'postgrespro':
+                return 'C:\\Program Files\\PostgresPro%s\\%s' % \
+                    ('Enterprise'
+                     if self.edition in ["ee", "cert-enterprise"] else
+                     '',
+                     self.version)
+            raise Exception('Product %s is not supported.' % self.product)
 
     def get_default_bin_path(self):
         return os.path.join(self.get_default_pg_prefix(), 'bin')
@@ -926,11 +938,13 @@ baseurl=%s
                     if self.os_name in DEBIAN_BASED:
                         return '/var/lib/postgresql/%s/main' % (self.version)
                     return '/var/lib/pgpro/%s/data' % (self.version)
-                return ' /var/lib/pgpro/%s-%s/data' % (self.alter_edtn,
-                                                       self.version)
+                return '/var/lib/pgpro/%s-%s/data' % (self.alter_edtn,
+                                                      self.version)
             raise Exception('Product %s is not supported.' % self.product)
         else:
-            raise Exception('OS %s is not supported.' % self.os_name)
+            if self.product == 'postgrespro':
+                return os.path.join(self.get_default_pg_prefix(), 'data')
+            raise Exception('Product %s is not supported.' % self.product)
 
     def initdb_start(self):
         if self.product == 'postgrespro' and self.version == '9.6':
@@ -955,23 +969,26 @@ baseurl=%s
             else:
                 raise Exception('OS %s is not supported.' % self.os_name)
 
-    def start_service(self, service_name=None):
+    def service_action(self, action='start', service_name=None):
         if not service_name:
             service_name = self.get_default_service_name()
         if self.os_name in WIN_BASED:
-            cmd = 'net start "{0}"'.format(service_name)
+            if action == 'restart':
+                cmd = 'net stop "{0}" & net start "{0}"'.format(service_name)
+            else:
+                cmd = 'net %s "%s"' % (action, service_name)
         else:
-            cmd = 'service "%s" start' % service_name
+            cmd = 'service "%s" %s' % (service_name, action)
         subprocess.check_call(cmd, shell=True)
 
+    def start_service(self, service_name=None):
+        return self.service_action('start', service_name)
+
     def restart_service(self, service_name=None):
-        if not service_name:
-            service_name = self.get_default_service_name()
-        if self.os_name in WIN_BASED:
-            cmd = 'net stop "{0}" & net start "{0}"'.format(service_name)
-        else:
-            cmd = 'service "%s" restart' % service_name
-        subprocess.check_call(cmd, shell=True)
+        return self.service_action('restart', service_name)
+
+    def stop_service(self, service_name=None):
+        return self.service_action('stop', service_name)
 
     def pg_isready(self):
         cmd = '%s%spg_isready' % \
