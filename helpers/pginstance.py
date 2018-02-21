@@ -7,8 +7,6 @@ import urllib
 
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
-from helpers.pginstall import package_mgmt
-from helpers.pginstall import setup_repo
 from helpers.sql_helpers import pg_get_option
 from helpers.sql_helpers import pg_set_option
 from helpers.sql_helpers import pg_check_option
@@ -72,26 +70,27 @@ class PgInstance:
         Parameter: Product editions (postgrespro only): standard, ee
         Parameter: Product milestone (postgrespro only): beta
         """
-        if windows:
-            setup_repo(name=name, version=version, edition=edition,
-                       milestone=milestone, branch=branch)
-        else:
-            if skip_install_psql:
-                setup_repo(name=name, version=version, edition=edition,
-                           milestone=milestone, branch=branch)
-                package_mgmt(name=name, version=version, edition=edition,
-                             milestone=milestone, branch=branch)
-            else:
-                setup_repo(name=name, version=version, edition=edition,
-                           milestone=milestone, branch=branch)
-                package_mgmt(name=name, version=version, edition=edition,
-                             milestone=milestone, branch=branch)
-                self.setup_psql(version)
-
-        return {'name': name,
-                'version': version,
-                'edition': edition,
-                'milestone': milestone}
+        raise Exception("Not implemented.")
+#        if windows:
+#            setup_repo(name=name, version=version, edition=edition,
+#                       milestone=milestone, branch=branch)
+#        else:
+#            if skip_install_psql:
+#                setup_repo(name=name, version=version, edition=edition,
+#                           milestone=milestone, branch=branch)
+#                package_mgmt(name=name, version=version, edition=edition,
+#                             milestone=milestone, branch=branch)
+#            else:
+#                setup_repo(name=name, version=version, edition=edition,
+#                           milestone=milestone, branch=branch)
+#                package_mgmt(name=name, version=version, edition=edition,
+#                             milestone=milestone, branch=branch)
+#                self.setup_psql(version)
+#
+#        return {'name': name,
+#                'version': version,
+#                'edition': edition,
+#                'milestone': milestone}
 
     def install_product_cluster(self, node_ip, name, version, edition,
                                 milestone, branch, skip_install_psql=False):
@@ -106,25 +105,26 @@ class PgInstance:
         :param skip_install_psql:
         :return:
         """
-        if skip_install_psql:
-            setup_repo(remote=True, host=node_ip, version=version,
-                       milestone=milestone, name=name,
-                       edition=edition, branch=branch)
-            package_mgmt(remote=True, host=node_ip, version=version,
-                         milestone=milestone, name=name,
-                         edition=edition, branch=branch)
-        else:
-            setup_repo(remote=True, host=node_ip, version=version,
-                       milestone=milestone, name=name,
-                       edition=edition, branch=branch)
-            package_mgmt(remote=True, host=node_ip, version=version,
-                         milestone=milestone, name=name,
-                         edition=edition, branch=branch)
-            self.setup_psql(remote=True, host=node_ip, version=version)
-        return {'name': name,
-                'version': version,
-                'edition': edition,
-                'milestone': milestone}
+        raise Exception("Not implemented.")
+#        if skip_install_psql:
+#            setup_repo(remote=True, host=node_ip, version=version,
+#                       milestone=milestone, name=name,
+#                       edition=edition, branch=branch)
+#            package_mgmt(remote=True, host=node_ip, version=version,
+#                         milestone=milestone, name=name,
+#                         edition=edition, branch=branch)
+#        else:
+#            setup_repo(remote=True, host=node_ip, version=version,
+#                       milestone=milestone, name=name,
+#                       edition=edition, branch=branch)
+#            package_mgmt(remote=True, host=node_ip, version=version,
+#                         milestone=milestone, name=name,
+#                         edition=edition, branch=branch)
+#            self.setup_psql(remote=True, host=node_ip, version=version)
+#        return {'name': name,
+#                'version': version,
+#                'edition': edition,
+#                'milestone': milestone}
 
     def start_script_name(self, remote=False, host=None):
 

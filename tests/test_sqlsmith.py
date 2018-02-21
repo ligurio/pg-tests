@@ -2,13 +2,11 @@ import platform
 import pytest
 import subprocess
 
-from helpers.pginstall import setup_repo
-
 
 @pytest.fixture(scope="session")
 def install_sqlsmith(request):
-
-    setup_repo("postgresql", "9.6")
+    raise Exception("Not implemented.")
+#    setup_repo("postgresql", "9.6")
     subprocess.call(["apt-get", "install", "-y", "sqlsmith"])
     return subprocess.call("type sqlsmith", shell=True,
                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)

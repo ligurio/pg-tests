@@ -6,11 +6,6 @@ import shutil
 import subprocess
 
 
-from helpers.os_helpers import delete_data_directory
-from helpers.pginstall import delete_packages
-from helpers.pginstall import delete_repo
-from helpers.os_helpers import download_file
-
 if platform.system() == 'Linux':
     dist = platform.linux_distribution()
 elif platform.system() == 'Windows':

@@ -7,8 +7,6 @@ import subprocess
 
 
 from helpers.os_helpers import delete_data_directory
-from helpers.pginstall import delete_packages
-from helpers.pginstall import delete_repo
 from helpers.os_helpers import download_file
 from tests.settings import TMP_DIR
 
