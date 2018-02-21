@@ -121,6 +121,86 @@ $$ LANGUAGE plpython2u;"""
         # Step 4
         pginst.exec_psql("DROP FUNCTION py_test_function()")
 
+    @pytest.mark.test_pltcl
+    def test_pltcl(self, request):
+        """Test for pltcl language
+        Scenario:
+        1. Create function
+        2. Execute function
+        3. Check function result
+        4. Drop function
+        """
+        pginst = request.cls.pginst
+        # Step 1
+        func = """CREATE FUNCTION pltcl_test_function()
+RETURNS text
+AS $$
+return "pltcl test function"
+$$ LANGUAGE pltcl;"""
+        pginst.exec_psql_script(func)
+        # Step 2
+        result = pginst.exec_psql("SELECT pltcl_test_function()",
+                                  "-t -P format=unaligned")
+        # Step 3
+        assert result == "pltcl test function"
+        # Step 4
+        pginst.exec_psql("DROP FUNCTION pltcl_test_function()")
+
+    @pytest.mark.test_plperl
+    def test_plperl(self, request):
+        """Test for plperl language
+        Scenario:
+        1. Create function
+        2. Execute function
+        3. Check function result
+        4. Drop function
+        """
+        pginst = request.cls.pginst
+        # Step 1
+        func = """CREATE FUNCTION plperl_test_function()
+RETURNS text
+AS $$
+return "plperl test function"
+$$ LANGUAGE plperl;"""
+        pginst.exec_psql_script(func)
+        # Step 2
+        result = pginst.exec_psql("SELECT plperl_test_function()",
+                                  "-t -P format=unaligned")
+        # Step 3
+        assert result == "plperl test function"
+        # Step 4
+        pginst.exec_psql("DROP FUNCTION plperl_test_function()")
+
+    @pytest.mark.test_plpgsql
+    def test_plpgsql(self, request):
+        """Test for plpgsql language
+        Scenario:
+        1. Create function
+        2. Execute function
+        3. Check function result
+        4. Drop function
+        """
+        pginst = request.cls.pginst
+        # Step 1
+        func = """CREATE FUNCTION plpgsql_test_function()
+RETURNS text
+AS $$
+DECLARE
+    result text;
+BEGIN
+    result = 'plpgsql test function';
+    RETURN result;
+END;
+$$ LANGUAGE plpgsql;"""
+        pginst.exec_psql_script(func)
+        # Step 2
+        result = pginst.exec_psql("SELECT plpgsql_test_function()",
+                                  "-t -P format=unaligned")
+        # Step 3
+        assert result == "plpgsql test function"
+        # Step 4
+        pginst.exec_psql("DROP FUNCTION plpgsql_test_function()")
+
     # pylint: disable=unused-argument
     @pytest.mark.test_full_remove
     def test_full_remove(self, request):
