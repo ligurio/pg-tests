@@ -126,6 +126,7 @@ $$ LANGUAGE plpython2u;"""
         # Step 4
         pginst.exec_psql("DROP FUNCTION py_test_function()")
 
+    @pytest.mark.skipif('platform.system() == "Windows"')
     @pytest.mark.test_pltcl
     def test_pltcl(self, request):
         """Test for pltcl language
@@ -135,9 +136,6 @@ $$ LANGUAGE plpython2u;"""
         3. Check function result
         4. Drop function
         """
-        if self.system == 'Windows':
-            pytest.skip("This test is not for Windows.")
-
         pginst = request.cls.pginst
         # Step 1
         func = """CREATE FUNCTION pltcl_test_function()
