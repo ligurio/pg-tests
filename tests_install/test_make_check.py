@@ -21,6 +21,10 @@ PRELOAD_LIBRARIES = {
         ['auth_delay', 'auto_explain',
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling', 'pg_pathman'],
+    'cert-enterprise-9.6':
+        ['auth_delay', 'auto_explain',
+         'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
+         'shared_ispell', 'pg_wait_sampling', 'pg_pathman'],
     '1c-10':
         ['auth_delay', 'auto_explain', 'plantuner'],
 }

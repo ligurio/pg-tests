@@ -6,6 +6,8 @@ import pytest
 
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall
+from helpers.os_helpers import get_directory_size
+from helpers.os_helpers import get_postgres_process_pids
 
 PRELOAD_LIBRARIES = {
     'standard-10':
@@ -16,6 +18,9 @@ PRELOAD_LIBRARIES = {
          'pg_shardman', 'pgpro_scheduler', 'plantuner', 'shared_ispell'],
     'ee-9.6':
         ['auth_delay', 'auto_explain', 'pg_pathman',
+         'pgpro_scheduler', 'plantuner', 'shared_ispell'],
+    'cert-enterprise-9.6':
+        ['auth_delay', 'auto_explain', 'pg_pathman', 'pgaudit',
          'pgpro_scheduler', 'plantuner', 'shared_ispell'],
     '1c-10':
         ['auth_delay', 'auto_explain', 'plantuner'],
@@ -130,6 +135,9 @@ $$ LANGUAGE plpython2u;"""
         3. Check function result
         4. Drop function
         """
+        if self.system == 'Windows':
+            pytest.skip("This test is not for Windows.")
+
         pginst = request.cls.pginst
         # Step 1
         func = """CREATE FUNCTION pltcl_test_function()
@@ -201,8 +209,29 @@ $$ LANGUAGE plpgsql;"""
         # Step 4
         pginst.exec_psql("DROP FUNCTION plpgsql_test_function()")
 
-    # pylint: disable=unused-argument
     @pytest.mark.test_full_remove
     def test_full_remove(self, request):
+        """Try to delete all installed packages for version under test
+        Scenario:
+        1. Delete packages
+        2. Check that postgres instance was stopped
+        3. Check that test data is not deleted
+
+        """
+
         pginst = request.cls.pginst
+        dirsize0 = get_directory_size(pginst.get_default_datadir())
+        assert dirsize0 > 0
+        pids0 = get_postgres_process_pids('postgres.exe'
+                                          if (self.system == 'Windows') else
+                                          'postgres')
+        assert len(pids0) > 0
         pginst.remove_full()
+        dirsize1 = get_directory_size(pginst.get_default_datadir())
+        assert abs(dirsize0 - dirsize1) < (1024 * 1024)
+        pids1 = get_postgres_process_pids('postgres.exe'
+                                          if (self.system == 'Windows') else
+                                          'postgres')
+        assert len(pids1) == 0
+        # TODO: Add the assertion:
+        # assert not(os.path.exists(pginst.get_default_bin_path()))

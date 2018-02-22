@@ -16,9 +16,10 @@ from helpers.utils import refresh_env_win
 
 PGPRO_ARCHIVE_STANDARD = "http://repo.postgrespro.ru/pgpro-archive/"
 PGPRO_ARCHIVE_ENTERPRISE = "http://repoee.l.postgrespro.ru/archive/"
-PGPRO_BRANCH_HOST = "http://localrepo.l.postgrespro.ru/branches/"
-PGPRO_HOST = "http://repo.postgrespro.ru/"
-PSQL_HOST = "https://download.postgresql.org/pub"
+PGPRO_BRANCH_BASE = "http://localrepo.l.postgrespro.ru/branches/"
+PGPRO_BASE = "http://repo.postgrespro.ru/"
+PGPROCERT_BASE = "http://localrepo.l.postgrespro.ru/cert/"
+PSQL_BASE = "https://download.postgresql.org/pub"
 WIN_INST_DIR = "C:\\Users\\test\\pg-tests\\pg_installer"
 PACKAGES = ['server', 'contrib', 'libs', 'docs', 'docs-ru',
             'plperl', 'plpython', 'pltcl']
@@ -82,7 +83,7 @@ class PgInstall:
 
         if edition == 'standard':
             self.alter_edtn = 'std'
-        elif edition == 'ee':
+        elif edition in ['ee', 'cert-standard']:
             self.alter_edtn = 'ent'
         else:
             self.alter_edtn = edition
@@ -97,7 +98,7 @@ class PgInstall:
             elif self.edition == "cert-standard":
                 product_dir = "pgpro-standard-9.6.3.1-cert/repo"
             elif self.edition == "cert-enterprise":
-                product_dir = "pgpro-enterprise-9.6.5.1-cert/repo"
+                product_dir = "pgpro-ent-9.6.7.1/repo"
             elif self.edition == "1c":
                 product_dir = "1c-%s" % self.version
             if self.milestone:
@@ -108,11 +109,14 @@ class PgInstall:
         if self.product == 'postgrespro':
             if self.version == '9.5' or self.version == '9.6':
                 if self.__is_os_altlinux() or self.__is_os_suse():
-                    if self.edition == 'ee':
+                    if self.edition in ['ee', 'cert-enterprise']:
                         return '%s-%s%s' % (self.product, 'enterprise',
                                             self.version)
                     return '%s%s' % (self.product, self.version)
                 if self.__is_os_redhat_based():
+                    if self.edition in ['ee', 'cert-enterprise']:
+                        return '%s-%s%s' % (self.product, 'enterprise',
+                                            self.version.replace('.', ''))
                     return '%s%s' % (self.product,
                                      self.version.replace('.', ''))
                 return '%s-%s' % (self.product, self.version)
@@ -153,7 +157,9 @@ class PgInstall:
         if self.product == 'postgrespro':
             if self.version == '9.5' or self.version == '9.6':
                 if self.__is_os_debian_based():
-                    return self.get_base_package_name() + '*' + ' libecpg*'
+                    return self.get_base_package_name() + '*' + \
+                        ' %s-*-%s' % (self.product, self.version) + \
+                        ' libecpg*'
         return self.get_base_package_name() + '*'
 
     def __is_os_redhat_based(self):
@@ -189,7 +195,7 @@ class PgInstall:
                     "media/keys/ACCC4CF8.asc"
             product_dir = "/repos/yum/%s/redhat/rhel-$releasever-$basearch" % \
                 self.version
-            baseurl = PSQL_HOST + product_dir
+            baseurl = PSQL_BASE + product_dir
             return baseurl, gpg_key_url
         elif self.product == "postgrespro":
             product_dir = self.__get_product_dir()
@@ -229,24 +235,25 @@ class PgInstall:
             else:
                 distname = dist[self.os_name].lower()
             if self.edition in ['cert-standard', 'cert-enterprise']:
-                baseurl = os.path.join("http://localrepo.l.postgrespro.ru",
-                                       product_dir, distname)
+                baseurl = "/".join([
+                    PGPROCERT_BASE,
+                    product_dir, distname])
             else:
                 if action == "install":
                     if self.os_name in WIN_BASED:
-                        baseurl = "{}{}/win/".format(PGPRO_HOST, product_dir)
+                        baseurl = "{}{}/win/".format(PGPRO_BASE, product_dir)
                     elif self.branch is not None:
-                        baseurl = os.path.join(PGPRO_BRANCH_HOST,
+                        baseurl = os.path.join(PGPRO_BRANCH_BASE,
                                                self.branch,
                                                product_dir,
                                                distname)
                     else:
-                        baseurl = os.path.join(PGPRO_HOST,
+                        baseurl = os.path.join(PGPRO_BASE,
                                                product_dir,
                                                distname)
                 elif action == "upgrade":
                     if self.os_name in WIN_BASED:
-                        baseurl = "{}{}/win/".format(PGPRO_HOST, product_dir)
+                        baseurl = "{}{}/win/".format(PGPRO_BASE, product_dir)
                     elif self.edition == "ee":
                         baseurl = os.path.join(
                             PGPRO_ARCHIVE_ENTERPRISE, self.version, distname)
@@ -286,6 +293,14 @@ class PgInstall:
                                      "\xd1\x84\xd0\xb5\xd1\x80\xd0\xb0 ":
                     baseurl = os.path.join(baseurl,
                                            "6.3Server/os/$basearch/rpms")
+                elif self.os_name == "GosLinux" and \
+                        self.os_version == "7.08":
+                    baseurl = os.path.join(baseurl,
+                                           "7/os/$basearch/rpms")
+                elif self.os_name == "RED OS release MUROM (" and \
+                        self.os_version == "7.1":
+                    baseurl = os.path.join(baseurl,
+                                           "7/os/$basearch/rpms")
                 else:
                     baseurl = os.path.join(baseurl,
                                            "$releasever/os/$basearch/rpms")
@@ -398,7 +413,11 @@ baseurl=%s
             pass
         elif self.product == "postgrespro":
             product_dir = self.__get_product_dir()
-            baseurl = os.path.join(PGPRO_HOST, product_dir, 'src')
+            if self.edition == 'cert-enterprise' and self.version == '9.6':
+                baseurl = PGPROCERT_BASE + \
+                    product_dir.replace('/repo', '/sources')
+            else:
+                baseurl = "/".join([PGPRO_BASE, product_dir, 'src'])
         soup = BeautifulSoup(urllib.urlopen(baseurl))
         tar_href = None
         # TODO: Download exactly installed version
@@ -440,7 +459,7 @@ baseurl=%s
         self.install_package(self.get_base_package_name())
         if self.product == "postgrespro":
             if self.version == '9.5' or self.version == '9.6':
-                if self.__is_os_altlinux():
+                if self.__is_os_altlinux() or self.__is_os_redhat_based():
                     self.install_package(self.get_server_package_name())
         self.client_installed = True
         self.server_installed = True
@@ -448,7 +467,7 @@ baseurl=%s
         self.server_path_needed = False
         if self.product == "postgrespro":
             if self.version == '9.5' or self.version == '9.6':
-                if self.os_name in ASTRA_BASED:
+                if self.os_name in ASTRA_BASED or self.os_name in RPM_BASED:
                     self.server_path_needed = True
 
     def install_full(self):
@@ -459,7 +478,7 @@ baseurl=%s
         self.server_path_needed = False
         if self.product == "postgrespro":
             if self.version == '9.5' or self.version == '9.6':
-                if self.os_name in ASTRA_BASED:
+                if self.os_name in ASTRA_BASED or self.os_name in RPM_BASED:
                     self.server_path_needed = True
 
     def install_server_dev(self):
@@ -533,13 +552,19 @@ baseurl=%s
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         elif self.os_name in WIN_BASED:
-            # TODO: Implement uninstall in windows
-            pass
+            raise Exception("Not implemented on Windows.")
         else:
             raise Exception("Unsupported system: %s." % self.os_name)
 
     def remove_full(self):
-        self.remove_package(self.get_all_packages_name())
+        if self.os_name in WIN_BASED:
+            # TODO: Don't stop the service manually
+            self.stop_service()
+            subprocess.check_call([
+                os.path.join(self.get_default_pg_prefix(), 'Uninstall.exe'),
+                '/S'])
+        else:
+            self.remove_package(self.get_all_packages_name())
         self.client_installed = False
         self.server_installed = False
 
@@ -884,8 +909,12 @@ baseurl=%s
                         return 'postgresql@%s-main' % self.version
                     elif self.os_name in ALT_BASED:
                         return 'postgresql-%s' % self.version
-                    return '%s-%s' % (self.product,
-                                      self.version)
+                    return '%s-%s%s' % (self.product,
+                                        'enterprise-'
+                                        if self.edition in
+                                        ["ee", "cert-enterprise"] else
+                                        '',
+                                        self.version)
                 return '%s-%s-%s' % (self.product,
                                      self.alter_edtn,
                                      self.version)
@@ -898,11 +927,21 @@ baseurl=%s
                 if self.version == '9.5' or self.version == '9.6':
                     if self.os_name in DEBIAN_BASED:
                         return '/usr/lib/postgresql/%s' % (self.version)
-                    return '/usr/pgpro-%s' % (self.version)
+                    return '/usr/pgpro%s-%s' % (
+                        'ee'
+                        if self.edition in ["ee", "cert-enterprise"] else
+                        '',
+                        self.version)
                 return '/opt/pgpro/%s-%s' % (self.alter_edtn,
                                              self.version)
         else:
-            raise Exception('OS %s is not supported.' % self.os_name)
+            if self.product == 'postgrespro':
+                return 'C:\\Program Files\\PostgresPro%s\\%s' % \
+                    ('Enterprise'
+                     if self.edition in ["ee", "cert-enterprise"] else
+                     '',
+                     self.version)
+            raise Exception('Product %s is not supported.' % self.product)
 
     def get_default_bin_path(self):
         return os.path.join(self.get_default_pg_prefix(), 'bin')
@@ -926,11 +965,13 @@ baseurl=%s
                     if self.os_name in DEBIAN_BASED:
                         return '/var/lib/postgresql/%s/main' % (self.version)
                     return '/var/lib/pgpro/%s/data' % (self.version)
-                return ' /var/lib/pgpro/%s-%s/data' % (self.alter_edtn,
-                                                       self.version)
+                return '/var/lib/pgpro/%s-%s/data' % (self.alter_edtn,
+                                                      self.version)
             raise Exception('Product %s is not supported.' % self.product)
         else:
-            raise Exception('OS %s is not supported.' % self.os_name)
+            if self.product == 'postgrespro':
+                return os.path.join(self.get_default_pg_prefix(), 'data')
+            raise Exception('Product %s is not supported.' % self.product)
 
     def initdb_start(self):
         if self.product == 'postgrespro' and self.version == '9.6':
@@ -955,23 +996,26 @@ baseurl=%s
             else:
                 raise Exception('OS %s is not supported.' % self.os_name)
 
-    def start_service(self, service_name=None):
+    def service_action(self, action='start', service_name=None):
         if not service_name:
             service_name = self.get_default_service_name()
         if self.os_name in WIN_BASED:
-            cmd = 'net start "{0}"'.format(service_name)
+            if action == 'restart':
+                cmd = 'net stop "{0}" & net start "{0}"'.format(service_name)
+            else:
+                cmd = 'net %s "%s"' % (action, service_name)
         else:
-            cmd = 'service "%s" start' % service_name
+            cmd = 'service "%s" %s' % (service_name, action)
         subprocess.check_call(cmd, shell=True)
 
+    def start_service(self, service_name=None):
+        return self.service_action('start', service_name)
+
     def restart_service(self, service_name=None):
-        if not service_name:
-            service_name = self.get_default_service_name()
-        if self.os_name in WIN_BASED:
-            cmd = 'net stop "{0}" & net start "{0}"'.format(service_name)
-        else:
-            cmd = 'service "%s" restart' % service_name
-        subprocess.check_call(cmd, shell=True)
+        return self.service_action('restart', service_name)
+
+    def stop_service(self, service_name=None):
+        return self.service_action('stop', service_name)
 
     def pg_isready(self):
         cmd = '%s%spg_isready' % \
