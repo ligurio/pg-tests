@@ -969,9 +969,15 @@ baseurl=%s
                 if self.version == '9.5' or self.version == '9.6':
                     if self.os_name in DEBIAN_BASED:
                         return '/var/lib/postgresql/%s/main' % (self.version)
-                    return '/var/lib/pgpro/%s/data' % (self.version)
-                return '/var/lib/pgpro/%s-%s/data' % (self.alter_edtn,
-                                                      self.version)
+                    return '/var/lib/pgpro%s/%s/data' % (
+                        'ee'
+                        if self.edition in ['ee', 'cert-enterprise'] else
+                        '',
+                        self.version
+                        )
+                return '/var/lib/pgpro/%s-%s/data' % (
+                    self.alter_edtn,
+                    self.version)
             raise Exception('Product %s is not supported.' % self.product)
         else:
             if self.product == 'postgrespro':
