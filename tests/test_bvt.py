@@ -6,7 +6,7 @@ import settings
 
 
 from helpers.os_helpers import get_directory_size
-from helpers.os_helpers import get_postgres_process_pids
+# from helpers.os_helpers import get_postgres_process_pids
 from helpers.sql_helpers import get_pgpro_info
 
 
@@ -305,7 +305,7 @@ def test_delete_packages(request, install_postgres):
     edition = request.config.getoption('--product_edition')
     data_directory = install_postgres.get_option('data_directory')
     data_dir_size_before_delete_packages = get_directory_size(data_directory)
-    pids = get_postgres_process_pids()
+#    pids = get_postgres_process_pids()
     # Step 1
     raise Exception("Not implemented.")
 #    delete_packages(remote=False, host=None, name=name,
@@ -315,6 +315,6 @@ def test_delete_packages(request, install_postgres):
     # assert data_dir_size_before_delete_packages ==
     #  data_dir_size_after_delete_packages
     # Step 3
-    print(pids)
+    # print(pids)
     # for pid in pids:
     #     assert os.path.exists("/proc/%s") % str(pid) is False
