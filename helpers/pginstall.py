@@ -84,7 +84,7 @@ class PgInstall:
 
         if edition == 'standard':
             self.alter_edtn = 'std'
-        elif edition in ['ee', 'cert-standard']:
+        elif edition in ['ee', 'cert-enterprise']:
             self.alter_edtn = 'ent'
         else:
             self.alter_edtn = edition
