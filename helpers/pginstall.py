@@ -4,6 +4,7 @@ import subprocess
 import tempfile
 import urllib
 import re
+import time
 
 from BeautifulSoup import BeautifulSoup
 
@@ -83,7 +84,7 @@ class PgInstall:
 
         if edition == 'standard':
             self.alter_edtn = 'std'
-        elif edition in ['ee', 'cert-standard']:
+        elif edition in ['ee', 'cert-enterprise']:
             self.alter_edtn = 'ent'
         else:
             self.alter_edtn = edition
@@ -560,9 +561,11 @@ baseurl=%s
         if self.os_name in WIN_BASED:
             # TODO: Don't stop the service manually
             self.stop_service()
+            # TODO: Wait for completion without sleep
             subprocess.check_call([
                 os.path.join(self.get_default_pg_prefix(), 'Uninstall.exe'),
                 '/S'])
+            time.sleep(10)
         else:
             self.remove_package(self.get_all_packages_name())
         self.client_installed = False
@@ -842,6 +845,9 @@ baseurl=%s
             )
         return subprocess.check_output(cmd, shell=True, cwd="/").strip()
 
+    def exec_psql_select(self, query):
+        return self.exec_psql(query, '-t -P format=unaligned')
+
     def exec_psql_script(self, script, options=''):
         handle, script_path = tempfile.mkstemp(suffix='.sql')
         with os.fdopen(handle, 'w') as script_file:
@@ -859,7 +865,7 @@ baseurl=%s
         return result
 
     def get_server_version(self):
-        return self.exec_psql("SELECT version()", '-t -P format=unaligned')
+        return self.exec_psql_select("SELECT version()")
 
     def get_psql_version(self):
         """ Get client version
@@ -885,9 +891,8 @@ baseurl=%s
         return props
 
     def get_pg_setting(self, setting):
-        return self.exec_psql("SELECT setting FROM pg_settings"
-                              " WHERE name='%s'" % setting,
-                              '-t -P format=unaligned')
+        return self.exec_psql_select(
+            "SELECT setting FROM pg_settings WHERE name='%s'" % setting)
 
     def get_default_service_name(self):
         if self.os_name in WIN_BASED:
@@ -964,9 +969,15 @@ baseurl=%s
                 if self.version == '9.5' or self.version == '9.6':
                     if self.os_name in DEBIAN_BASED:
                         return '/var/lib/postgresql/%s/main' % (self.version)
-                    return '/var/lib/pgpro/%s/data' % (self.version)
-                return '/var/lib/pgpro/%s-%s/data' % (self.alter_edtn,
-                                                      self.version)
+                    return '/var/lib/pgpro%s/%s/data' % (
+                        'ee'
+                        if self.edition in ['ee', 'cert-enterprise'] else
+                        '',
+                        self.version
+                        )
+                return '/var/lib/pgpro/%s-%s/data' % (
+                    self.alter_edtn,
+                    self.version)
             raise Exception('Product %s is not supported.' % self.product)
         else:
             if self.product == 'postgrespro':

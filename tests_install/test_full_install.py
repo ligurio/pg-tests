@@ -7,7 +7,7 @@ import pytest
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall
 from helpers.os_helpers import get_directory_size
-from helpers.os_helpers import get_postgres_process_pids
+from helpers.os_helpers import get_process_pids
 
 PRELOAD_LIBRARIES = {
     'standard-10':
@@ -20,8 +20,9 @@ PRELOAD_LIBRARIES = {
         ['auth_delay', 'auto_explain', 'pg_pathman',
          'pgpro_scheduler', 'plantuner', 'shared_ispell'],
     'cert-enterprise-9.6':
-        ['auth_delay', 'auto_explain', 'pg_pathman', 'pgaudit',
-         'pgpro_scheduler', 'plantuner', 'shared_ispell'],
+        ['auth_delay', 'auto_explain', 'passwordcheck', 'pg_pathman',
+         'pgaudit', 'pgpro_scheduler', 'plantuner',
+         'shared_ispell'],
     '1c-10':
         ['auth_delay', 'auto_explain', 'plantuner'],
 }
@@ -77,9 +78,18 @@ class TestFullInstall():
         client_version = pginst.get_psql_version()
         print("Server version:\n%s\nClient version:\n%s" %
               (server_version, client_version))
+        if name == 'postgrespro' and edition != '1c':
+            ppversion = pginst.exec_psql_select("SELECT pgpro_version()")
+            assert ppversion.startswith('PostgresPro ' + version)
+            ppedition = pginst.exec_psql_select("SELECT pgpro_edition()")
+            if edition == 'ee':
+                assert ppedition == 'enterprise'
+            elif edition == 'cert-enterprise':
+                assert ppedition == 'enterprise-certified'
+            else:
+                assert ppedition == 'standard'
         print("OK")
 
-    # pylint: disable=unused-argument
     @pytest.mark.test_all_extensions
     def test_all_extensions(self, request):
         pginst = request.cls.pginst
@@ -119,13 +129,13 @@ return "python test function"
 $$ LANGUAGE plpython2u;"""
         pginst.exec_psql_script(func)
         # Step 2
-        result = pginst.exec_psql("SELECT py_test_function()",
-                                  "-t -P format=unaligned")
+        result = pginst.exec_psql_select("SELECT py_test_function()")
         # Step 3
         assert result == "python test function"
         # Step 4
         pginst.exec_psql("DROP FUNCTION py_test_function()")
 
+    @pytest.mark.skipif('platform.system() == "Windows"')
     @pytest.mark.test_pltcl
     def test_pltcl(self, request):
         """Test for pltcl language
@@ -135,9 +145,6 @@ $$ LANGUAGE plpython2u;"""
         3. Check function result
         4. Drop function
         """
-        if self.system == 'Windows':
-            pytest.skip("This test is not for Windows.")
-
         pginst = request.cls.pginst
         # Step 1
         func = """CREATE FUNCTION pltcl_test_function()
@@ -147,8 +154,7 @@ return "pltcl test function"
 $$ LANGUAGE pltcl;"""
         pginst.exec_psql_script(func)
         # Step 2
-        result = pginst.exec_psql("SELECT pltcl_test_function()",
-                                  "-t -P format=unaligned")
+        result = pginst.exec_psql_select("SELECT pltcl_test_function()")
         # Step 3
         assert result == "pltcl test function"
         # Step 4
@@ -172,8 +178,7 @@ return "plperl test function"
 $$ LANGUAGE plperl;"""
         pginst.exec_psql_script(func)
         # Step 2
-        result = pginst.exec_psql("SELECT plperl_test_function()",
-                                  "-t -P format=unaligned")
+        result = pginst.exec_psql_select("SELECT plperl_test_function()")
         # Step 3
         assert result == "plperl test function"
         # Step 4
@@ -202,12 +207,36 @@ END;
 $$ LANGUAGE plpgsql;"""
         pginst.exec_psql_script(func)
         # Step 2
-        result = pginst.exec_psql("SELECT plpgsql_test_function()",
-                                  "-t -P format=unaligned")
+        result = pginst.exec_psql_select("SELECT plpgsql_test_function()")
         # Step 3
         assert result == "plpgsql test function"
         # Step 4
         pginst.exec_psql("DROP FUNCTION plpgsql_test_function()")
+
+    @pytest.mark.test_passwordcheck
+    def test_passwordcheck(self, request):
+        """Test for passwordcheck feature for certified enterprise version
+        Scenario:
+        1. Check default value for password_min_unique_chars variable
+        2. Check default value for password_min_pass_len
+        3. Check default value for password_with_nonletters
+        :param install_postgres:
+        :param request:
+        :return:
+        """
+
+        pginst = request.cls.pginst
+        if request.config.getoption('--product_edition') != "cert-enterprise":
+            pytest.skip("This test only for certified enterprise version.")
+
+        result = pginst.exec_psql_select("SHOW password_min_unique_chars")
+        assert result == "8"
+
+        result = pginst.exec_psql_select("SHOW password_min_pass_len")
+        assert result == "8"
+
+        result = pginst.exec_psql_select("SHOW password_with_nonletters")
+        assert result == "on"
 
     @pytest.mark.test_full_remove
     def test_full_remove(self, request):
@@ -222,16 +251,13 @@ $$ LANGUAGE plpgsql;"""
         pginst = request.cls.pginst
         dirsize0 = get_directory_size(pginst.get_default_datadir())
         assert dirsize0 > 0
-        pids0 = get_postgres_process_pids('postgres.exe'
-                                          if (self.system == 'Windows') else
-                                          'postgres')
+        pids0 = get_process_pids(
+            ['postgres', 'postgres.exe', 'postmaster'])
         assert len(pids0) > 0
         pginst.remove_full()
         dirsize1 = get_directory_size(pginst.get_default_datadir())
         assert abs(dirsize0 - dirsize1) < (1024 * 1024)
-        pids1 = get_postgres_process_pids('postgres.exe'
-                                          if (self.system == 'Windows') else
-                                          'postgres')
+        pids1 = get_process_pids(
+            ['postgres', 'postgres.exe', 'postmaster'])
         assert len(pids1) == 0
-        # TODO: Add the assertion:
-        # assert not(os.path.exists(pginst.get_default_bin_path()))
+        assert not(os.path.exists(pginst.get_default_bin_path()))
