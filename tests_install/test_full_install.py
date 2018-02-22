@@ -78,6 +78,16 @@ class TestFullInstall():
         client_version = pginst.get_psql_version()
         print("Server version:\n%s\nClient version:\n%s" %
               (server_version, client_version))
+        if name == 'postgrespro' and edition != '1c':
+            ppversion = pginst.exec_psql_select("SELECT pgpro_version()")
+            assert ppversion.startswith('PostgresPro ' + version)
+            ppedition = pginst.exec_psql_select("SELECT pgpro_edition()")
+            if edition == 'ee':
+                assert ppedition == 'enterprise'
+            elif edition == 'cert-enterprise':
+                assert ppedition == 'enterprise-certified'
+            else:
+                assert ppedition == 'standard'
         print("OK")
 
     @pytest.mark.test_all_extensions
