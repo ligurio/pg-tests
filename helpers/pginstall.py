@@ -845,6 +845,9 @@ baseurl=%s
             )
         return subprocess.check_output(cmd, shell=True, cwd="/").strip()
 
+    def exec_psql_select(self, query):
+        return self.exec_psql(query, '-t -P format=unaligned')
+
     def exec_psql_script(self, script, options=''):
         handle, script_path = tempfile.mkstemp(suffix='.sql')
         with os.fdopen(handle, 'w') as script_file:
@@ -862,7 +865,7 @@ baseurl=%s
         return result
 
     def get_server_version(self):
-        return self.exec_psql("SELECT version()", '-t -P format=unaligned')
+        return self.exec_psql_select("SELECT version()")
 
     def get_psql_version(self):
         """ Get client version
@@ -888,9 +891,8 @@ baseurl=%s
         return props
 
     def get_pg_setting(self, setting):
-        return self.exec_psql("SELECT setting FROM pg_settings"
-                              " WHERE name='%s'" % setting,
-                              '-t -P format=unaligned')
+        return self.exec_psql_select(
+            "SELECT setting FROM pg_settings WHERE name='%s'" % setting)
 
     def get_default_service_name(self):
         if self.os_name in WIN_BASED:
