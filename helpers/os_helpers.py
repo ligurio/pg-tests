@@ -186,16 +186,15 @@ def get_directory_size(start_path):
     return total_size
 
 
-def get_postgres_process_pids(process_name="postgres"):
-    """Get postgres process ids
-    :process_name: string: process_name, default "postgres"
-    :return: list of postgress pids
+def get_process_pids(process_names):
+    """Get process ids
+    :process_name: string: array of possible process names
+    :return: list of process pids
     """
     pids = []
     for p in psutil.process_iter():
-        if p.name() == process_name:
+        if p.name() in process_names:
             pids.append(p.pid)
-    print(pids)
     return pids
 
 

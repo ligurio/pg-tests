@@ -7,7 +7,7 @@ import pytest
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall
 from helpers.os_helpers import get_directory_size
-from helpers.os_helpers import get_postgres_process_pids
+from helpers.os_helpers import get_process_pids
 
 PRELOAD_LIBRARIES = {
     'standard-10':
@@ -244,15 +244,13 @@ $$ LANGUAGE plpgsql;"""
         pginst = request.cls.pginst
         dirsize0 = get_directory_size(pginst.get_default_datadir())
         assert dirsize0 > 0
-        pids0 = get_postgres_process_pids('postgres.exe'
-                                          if (self.system == 'Windows') else
-                                          'postgres')
+        pids0 = get_process_pids(
+            ['postgres', 'postgres.exe', 'postmaster'])
         assert len(pids0) > 0
         pginst.remove_full()
         dirsize1 = get_directory_size(pginst.get_default_datadir())
         assert abs(dirsize0 - dirsize1) < (1024 * 1024)
-        pids1 = get_postgres_process_pids('postgres.exe'
-                                          if (self.system == 'Windows') else
-                                          'postgres')
+        pids1 = get_process_pids(
+            ['postgres', 'postgres.exe', 'postmaster'])
         assert len(pids1) == 0
         assert not(os.path.exists(pginst.get_default_bin_path()))
