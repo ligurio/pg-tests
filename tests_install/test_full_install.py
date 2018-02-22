@@ -80,7 +80,6 @@ class TestFullInstall():
               (server_version, client_version))
         print("OK")
 
-    # pylint: disable=unused-argument
     @pytest.mark.test_all_extensions
     def test_all_extensions(self, request):
         pginst = request.cls.pginst
