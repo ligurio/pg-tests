@@ -19,6 +19,9 @@ PRELOAD_LIBRARIES = {
     'ee-9.6':
         ['auth_delay', 'auto_explain', 'pg_pathman',
          'pgpro_scheduler', 'plantuner', 'shared_ispell'],
+    'cert-enterprise-9.6':
+        ['auth_delay', 'auto_explain', 'pg_pathman', 'pgaudit',
+         'pgpro_scheduler', 'plantuner', 'shared_ispell'],
     '1c-10':
         ['auth_delay', 'auto_explain', 'plantuner'],
 }
