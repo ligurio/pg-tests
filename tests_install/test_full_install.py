@@ -233,5 +233,4 @@ $$ LANGUAGE plpgsql;"""
                                           if (self.system == 'Windows') else
                                           'postgres')
         assert len(pids1) == 0
-        # TODO: Add the assertion:
-        # assert not(os.path.exists(pginst.get_default_bin_path()))
+        assert not(os.path.exists(pginst.get_default_bin_path()))

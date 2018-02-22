@@ -4,6 +4,7 @@ import subprocess
 import tempfile
 import urllib
 import re
+import time
 
 from BeautifulSoup import BeautifulSoup
 
@@ -560,9 +561,11 @@ baseurl=%s
         if self.os_name in WIN_BASED:
             # TODO: Don't stop the service manually
             self.stop_service()
+            # TODO: Wait for completion without sleep
             subprocess.check_call([
                 os.path.join(self.get_default_pg_prefix(), 'Uninstall.exe'),
                 '/S'])
+            time.sleep(10)
         else:
             self.remove_package(self.get_all_packages_name())
         self.client_installed = False
