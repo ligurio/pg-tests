@@ -159,7 +159,8 @@ class PgInstall:
             if self.version == '9.5' or self.version == '9.6':
                 if self.__is_os_debian_based():
                     return self.get_base_package_name() + '*' + \
-                        ' %s-*-%s' % (self.product, self.version) + \
+                        ' %s-.*-%s' % (self.product,
+                                       self.version.replace('.', '\\.')) + \
                         ' libecpg*'
         return self.get_base_package_name() + '*'
 
@@ -468,7 +469,9 @@ baseurl=%s
         self.server_path_needed = False
         if self.product == "postgrespro":
             if self.version == '9.5' or self.version == '9.6':
-                if self.os_name in ASTRA_BASED or self.os_name in RPM_BASED:
+                if self.os_name in ASTRA_BASED or \
+                   self.os_name in RPM_BASED or \
+                   self.os_name in DEBIAN_BASED:
                     self.server_path_needed = True
 
     def install_full(self):
@@ -479,7 +482,9 @@ baseurl=%s
         self.server_path_needed = False
         if self.product == "postgrespro":
             if self.version == '9.5' or self.version == '9.6':
-                if self.os_name in ASTRA_BASED or self.os_name in RPM_BASED:
+                if self.os_name in ASTRA_BASED or \
+                   self.os_name in RPM_BASED or \
+                   self.os_name in DEBIAN_BASED:
                     self.server_path_needed = True
 
     def install_server_dev(self):
