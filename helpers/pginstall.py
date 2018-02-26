@@ -159,7 +159,8 @@ class PgInstall:
             if self.version == '9.5' or self.version == '9.6':
                 if self.__is_os_debian_based():
                     return self.get_base_package_name() + '*' + \
-                        ' %s-*-%s' % (self.product, self.version) + \
+                        ' %s-.*-%s' % (self.product,
+                                       self.version.replace('.', '\\.')) + \
                         ' libecpg*'
         return self.get_base_package_name() + '*'
 
