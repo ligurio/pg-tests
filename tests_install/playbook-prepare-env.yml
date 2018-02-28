@@ -190,6 +190,16 @@
     become_method: su
     become: true
 
+  - name: install required packages (ALT 8)
+    shell: apt-get install -y gcc5
+    args:
+      warn: no
+    when: ansible_distribution == "ALT" and ansible_distribution_major_version == "8"
+    become_method: su
+    become: true
+    tags:
+    - skip_ansible_lint
+
   - name: install required packages (urpmi)
     urpmi: name={{ item }} state=present update_cache=yes
     with_items:
