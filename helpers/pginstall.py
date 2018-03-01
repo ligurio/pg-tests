@@ -214,6 +214,8 @@ class PgInstall:
                 distname = "altlinux-spt"
             elif self.os_name == "ALT Linux " and self.os_version == "7.0.5":
                 distname = "altlinux"
+            elif self.os_name == "ALT " and self.os_version == "8":
+                distname = "alt-sp"
             elif self.os_name == "ROSA Enterprise Linux Server":
                 if self.os_version == "6.8":
                     distname = "rosa-chrome"
