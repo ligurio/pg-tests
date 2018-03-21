@@ -731,7 +731,7 @@ baseurl=%s
         setup_files = []
         for link in soup.findAll('a'):
             href = link.get('href')
-            if "Postgres" in href and exe_arch in href:
+            if "Postgre" in href and exe_arch in href:
                 setup_files.append(href)
         if not setup_files:
             raise Exception("No Postgres (%s) setup files found in %s." %

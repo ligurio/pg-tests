@@ -44,3 +44,33 @@ def pytest_addoption(parser):
         "--branch", action="store",
         help="Specify branch")
     parser.addoption("--skip_install", action="store_true")
+
+
+@pytest.fixture(scope="session", autouse=True)
+def setup(request):
+    def finalize():
+        if dist != 'Windows':
+            test_script = r"""
+if [ ! -z "`ls /var/coredumps`" ]; then
+    echo "The /var/coredumps directory is not empty."
+    exit 1
+fi
+if [ ! -z "`ls /var/crash`" ]; then
+    echo "The /var/crash directory is not empty."
+    exit 1
+fi
+if [ ! -z "`which coredumpct`" ]; then
+    if coredumpctl; then
+        echo "Coredump found. Check coredumpctl."
+        exit 1
+    fi
+fi
+if dmesg | grep ' segfault at '; then
+    echo "A segfault recorded in dmesg."
+    exit 1
+fi
+"""
+            subprocess.check_call(test_script, shell=True)
+        else:
+            pass
+    request.addfinalizer(finalize)
