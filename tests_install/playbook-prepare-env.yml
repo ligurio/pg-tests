@@ -353,12 +353,15 @@
     with_items:
       - test
       - postgres
+      - root
     become_method: su
     become: true
     when: ansible_os_family != "Windows"
 
   - name: make a directory for coredumps
-    file: path="/home/test/coredumps" state=directory
+    file: path="/var/coredumps" state=directory mode=0777
+    become_method: su
+    become: true
     when: ansible_os_family != "Windows"
 
   - name: remove unknown keys from sysctl.conf
@@ -372,7 +375,7 @@
     when: ansible_os_family == "GosLinux" or ansible_os_family == "ROSA"
 
   - name: change coredump filename pattern
-    sysctl: name="kernel.core_pattern" value="/home/test/coredumps/core-%e-%p-%t" sysctl_set=yes state=present
+    sysctl: name="kernel.core_pattern" value="/var/coredumps/core-%e-%p-%t" sysctl_set=yes state=present
     become_method: su
     become: true
     when:
