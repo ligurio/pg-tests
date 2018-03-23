@@ -96,10 +96,12 @@ class PgInstall:
                 product_dir = "pgproee-%s" % self.version
             elif self.edition == "standard":
                 product_dir = "pgpro-%s" % self.version
-            elif self.edition == "cert-standard":
-                product_dir = "pgpro-standard-9.6.3.1-cert/repo"
-            elif self.edition == "cert-enterprise":
-                product_dir = "pgpro-ent-9.6.8.1/repo"
+            elif self.edition == "cert-standard" and self.version == "9.6":
+                product_dir = "pgpro-std-9.6.3.1/repo"
+            elif self.edition == "cert-enterprise" and self.version == "9.6":
+                product_dir = "pgpro-ent-9.6.8.2/repo"
+            elif self.edition == "cert-enterprise" and self.version == "10":
+                product_dir = "pgpro-ent-10.3.2/repo"
             elif self.edition == "1c":
                 product_dir = "1c-%s" % self.version
             if self.milestone:
@@ -417,7 +419,7 @@ baseurl=%s
             pass
         elif self.product == "postgrespro":
             product_dir = self.__get_product_dir()
-            if self.edition == 'cert-enterprise' and self.version == '9.6':
+            if self.edition == 'cert-enterprise':
                 baseurl = PGPROCERT_BASE + \
                     product_dir.replace('/repo', '/sources')
             else:
