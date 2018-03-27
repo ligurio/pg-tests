@@ -88,6 +88,7 @@ class TestMakeCheck(object):
             pginst.download_source()
             pg_prefix = pginst.get_default_pg_prefix()
 # TODO: Enable test5 (PGPRO-1289)
+# TODO: Enable  (PGPRO-1396)
             test_script = r"""
 if which apt-get; then
     apt-get install -y gcc || true
@@ -138,6 +139,10 @@ if [ -d src/interfaces/ecpg/test/connect ]; then
      -i src/interfaces/ecpg/test/ecpg_schedule
 fi
 # ^^^ test5 Fails
+
+if [ -f contrib/pg_hint_plan/Makefile ]; then
+    sed -e 's/REGRESS = /# REGRESS = /' -i contrib/pg_hint_plan/Makefile
+fi
 
 if grep 'SUSE Linux Enterprise Server 11' /etc/SuSE-release; then
   # To workaround an "internal compiler error"
