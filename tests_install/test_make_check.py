@@ -28,7 +28,8 @@ PRELOAD_LIBRARIES = {
     'cert-enterprise-10':
         ['auth_delay', 'auto_explain',
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
-         'shared_ispell', 'pg_wait_sampling', 'pg_pathman'],
+         'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
+         'pg_pathman'],
     '1c-10':
         ['auth_delay', 'auto_explain', 'plantuner'],
 }
@@ -87,6 +88,7 @@ class TestMakeCheck(object):
             pginst.download_source()
             pg_prefix = pginst.get_default_pg_prefix()
 # TODO: Enable test5 (PGPRO-1289)
+# TODO: Enable  (PGPRO-1396)
             test_script = r"""
 if which apt-get; then
     apt-get install -y gcc || true
@@ -138,6 +140,10 @@ if [ -d src/interfaces/ecpg/test/connect ]; then
 fi
 # ^^^ test5 Fails
 
+if [ -f contrib/pg_hint_plan/Makefile ]; then
+    sed -e 's/REGRESS = /# REGRESS = /' -i contrib/pg_hint_plan/Makefile
+fi
+
 if grep 'SUSE Linux Enterprise Server 11' /etc/SuSE-release; then
   # To workaround an "internal compiler error"
   sed 's/log10(2)/0.3010/' -i src/interfaces/ecpg/compatlib/informix.c
@@ -175,10 +181,15 @@ then
     exit 0
 fi
 if which apt-get; then
-    apt-get install -y build-essential autoconf autoconf-archive pkg-config
+    apt-get install -y build-essential pkg-config autoconf
+    apt-get install -y autoconf-archive
     apt-get install -y libboost-regex-dev
     if grep 'PRETTY_NAME="Ubuntu 14\.04' /etc/os-release; then
          CONF_OPTIONS="--with-boost-libdir=/usr/lib/x86_64-linux-gnu"
+    fi
+    if grep 'PRETTY_NAME="ALT 8' /etc/os-release; then
+        apt-get install -y gcc5-c++ autoconf_2.60 automake_1.14 \
+        boost-regex-devel
     fi
 elif which zypper; then
     zypper install -y gcc-c++
