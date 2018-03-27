@@ -163,10 +163,10 @@ sudo -u postgres make installcheck-world
     @pytest.mark.test_sqlsmith
     def test_sqlsmith(self, request):
         pginst = request.cls.pginst
-        pginst.exec_psql("CREATE ROLE tester LOGIN PASSWORD 'test'")
-        pginst.exec_psql("GRANT ALL ON DATABASE regression TO tester")
-        pg_prefix = pginst.get_default_pg_prefix()
         if self.system != 'Windows':
+            pginst.exec_psql("CREATE ROLE tester LOGIN PASSWORD 'test'")
+            pginst.exec_psql("GRANT ALL ON DATABASE regression TO tester")
+            pg_prefix = pginst.get_default_pg_prefix()
             test_script = r"""
 set -x
 if grep 'ALT Linux 6\.' /etc/altlinux-release || \
