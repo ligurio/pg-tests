@@ -906,6 +906,10 @@ baseurl=%s
     def get_default_service_name(self):
         if self.os_name in WIN_BASED:
             if self.product == "postgrespro":
+                if self.edition == "1c":
+                    return 'postgresql-1c-' + \
+                        self.version + \
+                        ('' if self.os_arch == 'AMD64' else '-32bit')
                 return 'postgrespro' + '-' + \
                     ('enterprise-' if self.edition == 'ee' else '') + \
                     ('X64' if self.os_arch == 'AMD64' else 'X86') + '-' + \
