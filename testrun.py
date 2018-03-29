@@ -238,10 +238,10 @@ def create_env(name, domname, domimage=None):
         qemu_path = "/usr/libexec/qemu-kvm"
     if name[0:3] == 'win':
         network_driver = "e1000"
-        ram_size = 2
+        ram_size = 2048
     else:
         network_driver = "virtio"
-        ram_size = 1
+        ram_size = 1536
     domisos = glob.glob(TEMPLATE_DIR + name + '*.iso')
     cdroms = ""
     cdromletter = "c"
@@ -257,7 +257,7 @@ def create_env(name, domname, domimage=None):
 
     xmldesc = """<domain type='kvm'>
                   <name>%s</name>
-                  <memory unit='GB'>%d</memory>
+                  <memory unit='MB'>%d</memory>
                   <vcpu>1</vcpu>
                   <os>
                     <type>hvm</type>
