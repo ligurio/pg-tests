@@ -127,6 +127,10 @@ tar fax postgrespro*.tar*
 
 cd postgres*/
 
+if grep 'SUSE Linux Enterprise Server' /etc/SuSE-release; then #PGPRO-1294
+    patch -p0 -i ../patches/SUSE-postgresql-regress.patch
+fi
+
 # vvv test5 Fails
 if [ -d src/interfaces/ecpg/test/connect ]; then
     rm src/interfaces/ecpg/test/connect/test5*
@@ -151,10 +155,10 @@ fi
 
 sudo chown -R postgres:postgres .
 sudo -u postgres ./configure --enable-tap-tests --without-readline \
- --prefix=%s
+ --prefix={0}
 sudo -u postgres make -C src/interfaces/ecpg # TODO: remove?
 sudo -u postgres make installcheck-world
-""" % (pg_prefix)
+""".format(pg_prefix)
             subprocess.check_call(test_script, shell=True)
         else:
             pginst.install_perl_win()
