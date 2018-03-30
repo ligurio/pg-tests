@@ -101,7 +101,7 @@ class PgInstall:
             elif self.edition == "cert-enterprise" and self.version == "9.6":
                 product_dir = "pgpro-ent-9.6.8.2/repo"
             elif self.edition == "cert-enterprise" and self.version == "10":
-                product_dir = "pgpro-ent-10.3.2/repo"
+                product_dir = "pgpro-ent-10.3.3/repo"
             elif self.edition == "1c":
                 product_dir = "1c-%s" % self.version
             if self.milestone:
