@@ -87,6 +87,7 @@ class TestMakeCheck(object):
             pginst.install_postgres_win()
         pginst.exec_psql("ALTER SYSTEM SET shared_preload_libraries = %s" %
                          ','.join(PRELOAD_LIBRARIES[pgid]))
+        pginst.exec_psql("ALTER SYSTEM SET max_worker_processes = 16")
         pginst.restart_service()
         pginst.download_source()
         pg_prefix = pginst.get_default_pg_prefix()
