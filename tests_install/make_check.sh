@@ -66,5 +66,9 @@ fi
 sudo chown -R postgres:postgres .
 sudo -u postgres ./configure --enable-tap-tests --without-readline \
  --prefix=$1
-sudo -u postgres make -C src/interfaces/ecpg # TODO: remove?
+echo "Fixing ECPG test for installcheck..."
+sed -e "s@^ECPG = ../../preproc/ecpg@ECPG = ecpg@" \
+    -e "s@^ECPG_TEST_DEPENDENCIES = ../../preproc/ecpg\$(X)@ECPG_TEST_DEPENDENCIES = @" \
+    -e "s@^override LDFLAGS := -L../../ecpglib -L../../pgtypeslib @override LDFLAGS := -L'\$(DESTDIR)\$(libdir)/' @" \
+    -i src/interfaces/ecpg/test/Makefile.regress
 sudo -u postgres make installcheck-world
