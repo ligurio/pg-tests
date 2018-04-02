@@ -55,7 +55,7 @@ if [ ! -z "`ls /var/coredumps`" ]; then
     echo "The /var/coredumps directory is not empty."
     exit 1
 fi
-if [ ! -z "`ls /var/crash`" ]; then
+if [ -d /var/crash ] && [ ! -z "`ls /var/crash`" ]; then
     echo "The /var/crash directory is not empty."
     exit 1
 fi

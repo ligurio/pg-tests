@@ -203,6 +203,8 @@ def exec_command_win(cmd, hostname,
             p = winrm.Protocol(
                 endpoint='http://' + hostname + ':5985/wsman',
                 transport='plaintext',
+                read_timeout_sec=360,
+                operation_timeout_sec=300,
                 username=user,
                 password=password)
             shell_id = p.open_shell()
