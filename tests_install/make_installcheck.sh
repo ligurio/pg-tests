@@ -31,8 +31,10 @@ if grep 'SUSE Linux Enterprise Server 11' /etc/SuSE-release; then
     (cd test-more* && perl Makefile.PL && make && make install)
 fi
 
-chmod 777 ~test
-cd ~test/pg-tests
+if [ -d ~test/pg-tests ]; then
+    chmod 777 ~test
+    cd ~test/pg-tests
+fi
 tar fax postgrespro*.tar*
 
 cd postgres*/
@@ -71,4 +73,4 @@ sed -e "s@^ECPG = ../../preproc/ecpg@ECPG = ecpg@" \
     -e "s@^ECPG_TEST_DEPENDENCIES = ../../preproc/ecpg\$(X)@ECPG_TEST_DEPENDENCIES = @" \
     -e "s@^override LDFLAGS := -L../../ecpglib -L../../pgtypeslib @override LDFLAGS := -L'\$(DESTDIR)\$(libdir)/' @" \
     -i src/interfaces/ecpg/test/Makefile.regress
-sudo -u postgres make installcheck-world
+sudo -u postgres sh -c "PATH=$1/bin:$PATH make installcheck-world"

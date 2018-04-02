@@ -95,13 +95,13 @@ class TestMakeCheck(object):
         curpath = os.path.dirname(os.path.abspath(__file__))
         if self.system != 'Windows':
             subprocess.check_call(
-                '"%s" "%s"' % (os.path.join(curpath, 'make_check.sh'),
+                '"%s" "%s"' % (os.path.join(curpath, 'make_installcheck.sh'),
                                pg_prefix),
                 shell=True)
             pginst.make_check_passed = True
         else:
             subprocess.check_call(
-                '"%s" "%s"' % (os.path.join(curpath, 'make_check.cmd'),
+                '"%s" "%s"' % (os.path.join(curpath, 'make_installcheck.cmd'),
                                pg_prefix),
                 shell=True)
             pginst.make_check_passed = True
