@@ -24,10 +24,11 @@ PRELOAD_LIBRARIES = {
          'pgaudit', 'pgpro_scheduler', 'plantuner',
          'shared_ispell'],
     'cert-enterprise-10':
-        ['auth_delay', 'auto_explain', 'in_memory',
-         'passwordcheck', 'pg_pathman',
-         'pgaudit', 'pgpro_scheduler', 'plantuner',
-         'shared_ispell'],
+        ['auth_delay', 'auto_explain', 'in_memory', 'pgaudit',
+         'passwordcheck',
+         'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
+         'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
+         'pg_pathman'],
     '1c-10':
         ['auth_delay', 'auto_explain', 'plantuner'],
 }
