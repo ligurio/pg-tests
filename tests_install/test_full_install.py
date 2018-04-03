@@ -235,13 +235,13 @@ $$ LANGUAGE plpgsql;"""
         if request.config.getoption('--product_edition') != "cert-enterprise":
             pytest.skip("This test only for certified enterprise version.")
 
-        result = pginst.exec_psql_select("SHOW password_min_unique_chars")
+        result = pginst.exec_psql_select("SHOW passwordcheck.min_unique_chars")
         assert result == "8"
 
-        result = pginst.exec_psql_select("SHOW password_min_pass_len")
+        result = pginst.exec_psql_select("SHOW passwordcheck.min_len")
         assert result == "8"
 
-        result = pginst.exec_psql_select("SHOW password_with_nonletters")
+        result = pginst.exec_psql_select("SHOW passwordcheck.with_nonletters")
         assert result == "on"
 
     @pytest.mark.test_full_remove
