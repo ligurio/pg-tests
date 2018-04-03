@@ -89,7 +89,7 @@ class TestFullInstall():
             if edition == 'ee':
                 assert ppedition == 'enterprise'
             elif edition == 'cert-enterprise':
-                assert ppedition == 'enterprise-certified'
+                assert ppedition == 'enterprise'
             else:
                 assert ppedition == 'standard'
         print("OK")
