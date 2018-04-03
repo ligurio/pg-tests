@@ -858,7 +858,9 @@ baseurl=%s
         return self.exec_psql(query, '-t -P format=unaligned')
 
     def exec_psql_script(self, script, options=''):
-        handle, script_path = tempfile.mkstemp(suffix='.sql')
+        handle, script_path = \
+            tempfile.mkstemp(suffix='.sql',
+                             dir=('/tmp' if os.path.exists('/tmp') else None))
         with os.fdopen(handle, 'w') as script_file:
             script_file.write(script)
         os.chmod(script_path, 0644)

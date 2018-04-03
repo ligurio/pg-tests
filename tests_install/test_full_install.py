@@ -24,9 +24,11 @@ PRELOAD_LIBRARIES = {
          'pgaudit', 'pgpro_scheduler', 'plantuner',
          'shared_ispell'],
     'cert-enterprise-10':
-        ['auth_delay', 'auto_explain', 'passwordcheck', 'pg_pathman',
-         'pgaudit', 'pgpro_scheduler', 'plantuner',
-         'shared_ispell'],
+        ['auth_delay', 'auto_explain', 'in_memory', 'pgaudit',
+         'passwordcheck',
+         'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
+         'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
+         'pg_pathman'],
     '1c-10':
         ['auth_delay', 'auto_explain', 'plantuner'],
 }
@@ -89,7 +91,7 @@ class TestFullInstall():
             if edition == 'ee':
                 assert ppedition == 'enterprise'
             elif edition == 'cert-enterprise':
-                assert ppedition == 'enterprise-certified'
+                assert ppedition == 'enterprise'
             else:
                 assert ppedition == 'standard'
         print("OK")
@@ -233,13 +235,13 @@ $$ LANGUAGE plpgsql;"""
         if request.config.getoption('--product_edition') != "cert-enterprise":
             pytest.skip("This test only for certified enterprise version.")
 
-        result = pginst.exec_psql_select("SHOW password_min_unique_chars")
+        result = pginst.exec_psql_select("SHOW passwordcheck.min_unique_chars")
         assert result == "8"
 
-        result = pginst.exec_psql_select("SHOW password_min_pass_len")
+        result = pginst.exec_psql_select("SHOW passwordcheck.min_len")
         assert result == "8"
 
-        result = pginst.exec_psql_select("SHOW password_with_nonletters")
+        result = pginst.exec_psql_select("SHOW passwordcheck.with_nonletters")
         assert result == "on"
 
     @pytest.mark.test_full_remove
