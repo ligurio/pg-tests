@@ -59,7 +59,7 @@ if [ -d /var/crash ] && [ ! -z "`ls /var/crash`" ]; then
     echo "The /var/crash directory is not empty."
     exit 1
 fi
-if [ ! -z "`which coredumpct`" ]; then
+if [ ! -z "`which coredumpctl`" ]; then
     if coredumpctl; then
         echo "Coredump found. Check coredumpctl."
         exit 1
