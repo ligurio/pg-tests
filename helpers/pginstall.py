@@ -434,12 +434,12 @@ baseurl=%s
                re.search(r'\.tar\b', href, re.I):
                 if re.search(r'-common-', href):  # 9.5, 9.6 (Debian)
                     continue
-                print("source:", os.path.join(baseurl, href), "target:", href)
+                print("source:", baseurl + '/' + href, "target:", href)
                 tar_href = href
         if not tar_href:
             raise Exception("Source tarball is not found at %s." % baseurl)
         sourcetar = urllib.URLopener()
-        sourcetar.retrieve(os.path.join(baseurl, tar_href), tar_href)
+        sourcetar.retrieve(baseurl + '/' + tar_href, tar_href)
 
     def install_package(self, pkg_name):
         """
