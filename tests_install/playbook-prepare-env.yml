@@ -278,7 +278,8 @@
     tags:
     - skip_ansible_lint
     when: ansible_os_family != "Windows" and
-          not (ansible_distribution == "ALT" and ansible_distribution_major_version == "6")
+          not (ansible_distribution == "ALT" and ansible_distribution_major_version == "6") and
+          not (ansible_distribution == "GosLinux" and ansible_distribution_major_version == "6")
 
 # To workaround an internal compiler error on
 # 'gcc psutil/_psutil_linux.c -O2 -I/usr/include/python2.7 -DPSUTIL_POSIX=1 -DPSUTIL_VERSION=501 -DPSUTIL_LINUX=1'
