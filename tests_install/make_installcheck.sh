@@ -1,17 +1,18 @@
 # TODO: Enable test5 (PGPRO-1289)
-# TODO: Enable  (PGPRO-1396)
+# TODO: Enable pg_hint_plan (PGPRO-1396)
 if which apt-get; then
     apt-get install -y gcc || true
     apt-get install -y make flex bison perl
     apt-get install -y zlib1g-dev || apt-get install -y zlib-devel
     apt-get install -y libipc-run-perl || apt-get install -y perl-IPC-Run
+    apt-get install -y patch || true
     apt-get install -y perl-devel || true
 elif which zypper; then
     zypper install -y gcc make flex bison perl
     zypper install -y --force --force-resolution zlib-devel
     zypper install -y libipc-run-perl
 elif which yum; then
-    yum install -y gcc make flex bison perl bzip2 zlib-devel
+    yum install -y gcc make flex bison perl bzip2 zlib-devel patch
     yum install -y perl-devel || true
     yum install -y perl-IPC-Run perl-Test-Simple perl-Time-HiRes
     # perl-IPC-Run is not present in some distributions (rhel-7, rosa-sx-7...)
@@ -66,11 +67,33 @@ if grep 'SUSE Linux Enterprise Server 11' /etc/SuSE-release; then
 fi
 
 sudo chown -R postgres:postgres .
+echo "Fixing Makefiles for installcheck-world..."
+patch -p1 --dry-run -i ../patches/make-checkinstall-10.patch && \
+patch -p1 -i ../patches/make-checkinstall-10.patch
+if ./configure --help | grep '  --enable-svt5'; then
+    extraoption="--enable-svt5"
+    if which apt-get; then
+        apt-get install -y pkg-config
+        apt-get install -y fuse
+        apt-get install -y fuse-devel || apt-get install -y libfuse-dev || apt-get install -y libfuse-devel
+    elif which yum; then
+        yum install -y fuse fuse-devel
+    fi
+    getent group fuse && usermod -a -G fuse postgres
+
+    if ! perl -e "use Fuse"; then
+        (
+        cd ..
+        if which wget; then
+        wget http://www.cpan.org/authors/id/D/DP/DPATES/Fuse-0.16.tar.gz
+        else
+        curl -O http://www.cpan.org/authors/id/D/DP/DPATES/Fuse-0.16.tar.gz
+        fi
+        tar fax Fuse* && \
+        cd Fuse* && perl Makefile.PL && make && make install
+        )
+    fi
+fi
 sudo -u postgres ./configure --enable-tap-tests --without-readline \
- --prefix=$1
-echo "Fixing ECPG test for installcheck..."
-sed -e "s@^ECPG = ../../preproc/ecpg@ECPG = ecpg@" \
-    -e "s@^ECPG_TEST_DEPENDENCIES = ../../preproc/ecpg\$(X)@ECPG_TEST_DEPENDENCIES = @" \
-    -e "s@^override LDFLAGS := -L../../ecpglib -L../../pgtypeslib @override LDFLAGS := -L'\$(DESTDIR)\$(libdir)/' @" \
-    -i src/interfaces/ecpg/test/Makefile.regress
+ --prefix=$1 $extraoption
 sudo -u postgres sh -c "PATH=$1/bin:$PATH make installcheck-world"
