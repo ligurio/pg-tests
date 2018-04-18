@@ -421,10 +421,6 @@
       creates: C:\Users\test\pg_tests
     when: ansible_os_family == "Windows"
 
-  - name: windows - install pip
-    when: ansible_os_family == "Windows"
-    win_shell: 'C:\Python27\python.exe C:\Users\test\pg-tests\get-pip.py'
-
   - name: windows - install python requirements
     when: ansible_os_family == "Windows"
     win_shell: 'C:\Python27\Scripts\pip.exe install -r C:\Users\test\pg-tests\tests_install\requirements.txt'
