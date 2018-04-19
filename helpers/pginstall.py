@@ -723,7 +723,7 @@ baseurl=%s
                                      REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
     def __get_last_winstaller_file(self, url, arch):
-        """Get last uploaded postgrespro installation file from postgrespro repo
+        """Get last uploaded postgrespro installation file from our repo
 
         :param url: str:
         :return: str: last postgrespro exe file
