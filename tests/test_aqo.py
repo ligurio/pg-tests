@@ -120,8 +120,8 @@ def parse_explain_analyze_stat(explain_output):
     # Like 'Seq Scan on pg_class  (cost=0.00..14.56 rows=356 width=228)
     #       (actual time=0.013..0.077 rows=356 loops=1)'
     REGEX_CARDINALITY = r'.*\(cost.*rows=([0-9]*).*\)\s{1}' \
-        '\(actual\s{1}time.*rows=([0-9]*).*\)'
-    REGEX_TIME = '\w+\s{1}time:\s{1}([0-9]+\.[0-9]+)\s{1}ms'
+        r'\(actual\s{1}time.*rows=([0-9]*).*\)'
+    REGEX_TIME = r'\w+\s{1}time:\s{1}([0-9]+\.[0-9]+)\s{1}ms'
 
     try:
         dict['execution_time'] = re.search(

@@ -14,7 +14,7 @@ EXTENSIONS_OS = ["pg_pathman", "pg_trgm", "pg_variables", "sr_plan",
                  "mchar", "fasttrun", "fulleq", "shared_ispell",
                  "jsquery", "pg_variables", "hunspell_ru_ru"]
 
-MIXED_SCHEMA = """
+MIXED_SCHEMA = r"""
 -- df: size=2000 null=0.0
 -- df name: chars='a-z' length=6 lenvar=2
 -- df dot: word=':.'
@@ -180,7 +180,7 @@ CREATE TABLE mixed ( -- df: mult=1.0
 );
 """
 
-PGBENCH_SCHEMA = """
+PGBENCH_SCHEMA = r"""
 -- TPC-B example adapted from pgbench
 -- df regress: int sub=power alpha=1.5
 -- df: size=1

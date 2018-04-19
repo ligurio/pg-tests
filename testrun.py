@@ -58,7 +58,7 @@ def list_images():
             if fp[1] == '.qcow2':
                 names.append(fp[0])
         return sorted(names)
-    images = re.findall('href=[\'"]?([^\'" >]+)\.qcow2', page)
+    images = re.findall(r'''href=['"]?([^'" >]+)\.qcow2''', page)
     for i in images:
         names.append(i)
     return sorted(names)
@@ -113,7 +113,7 @@ def create_image(domname, name):
     except IOError:
         print("%s is not available, no *.iso will be downloaded." %
               IMAGE_BASE_URL)
-    isos = re.findall('href=[\'"]?([^\'" >]+)\.iso', page)
+    isos = re.findall(r'''href=['"]?([^'" >]+)\.iso''', page)
     for isoname in isos:
         if isoname.startswith(name):
             iso_url = IMAGE_BASE_URL + isoname + '.iso'
@@ -614,7 +614,7 @@ def main():
             if not linux_os:
                 s = winrm.Session(domipaddress,
                                   auth=(REMOTE_LOGIN, REMOTE_PASSWORD))
-                ps_script = """
+                ps_script = r"""
                     Set-ExecutionPolicy Unrestricted
                     [Environment]::SetEnvironmentVariable("Path", $env:Path +
                     ";C:\Python27;C:\Python27\Scripts",
