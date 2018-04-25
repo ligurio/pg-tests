@@ -24,9 +24,9 @@ if which apt-get; then
 elif which zypper; then
     zypper install -y gcc-c++
     zypper install -y boost-devel
-    wget https://download.opensuse.org/repositories/devel:/tools:/building/\
-SLE_12_SP1/noarch/autoconf-archive-2017.09.28-44.1.noarch.rpm
-    rpm -i autoconf-archive-2017.09.28-44.1.noarch.rpm
+    wget http://download.opensuse.org/distribution/\
+openSUSE-stable/repo/oss/suse/noarch/autoconf-archive-2016.03.20-3.3.noarch.rpm
+    rpm -i autoconf-archive-2016.03.20-3.3.noarch.rpm
 elif which yum; then
     yum install -y autoconf autoconf-archive automake
     yum install -y gcc-c++
