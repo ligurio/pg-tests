@@ -267,4 +267,4 @@ $$ LANGUAGE plpgsql;"""
             ['postgres', 'postgres.exe', 'postmaster'])
         assert len(pids1) == 0
         # TODO: Uncomment (PGPRO-1534)
-        #assert not(os.path.exists(pginst.get_default_bin_path()))
+        # assert not(os.path.exists(pginst.get_default_bin_path()))
