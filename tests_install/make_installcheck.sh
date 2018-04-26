@@ -25,8 +25,8 @@ IPC-Run-0.96.tar.gz && \
 fi
 
 if grep 'SUSE Linux Enterprise Server 11' /etc/SuSE-release; then
-    # Update Test::More to minimum required version (0.82)
-    curl https://codeload.github.com/Test-More/test-more/tar.gz/v0.82 \
+    # Update Test::More to minimum required version (0.87)
+    curl https://codeload.github.com/Test-More/test-more/tar.gz/v0.90 \
      -o test-more.tar.gz && \
     tar fax test-more* && \
     (cd test-more* && perl Makefile.PL && make && make install)
