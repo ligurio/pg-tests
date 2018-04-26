@@ -3,8 +3,10 @@ if grep 'ALT Linux 6\.' /etc/altlinux-release || \
    grep 'PRETTY_NAME="ALT Linux 7' /etc/os-release || \
    grep 'PRETTY_NAME="Astra Linux (Smolensk 1.5)"' /etc/os-release || \
    grep 'PRETTY_NAME="Debian GNU/Linux 7' /etc/os-release || \
-   grep 'GosLinux release 6' /etc/goslinux-release || \
    grep 'PRETTY_NAME="SUSE Linux Enterprise Server 11' /etc/os-release || \
+   grep 'GosLinux release 6' /etc/goslinux-release || \
+   grep 'ROSA Enterprise Linux Server release 6.6' /etc/system-release || \
+   grep 'CentOS release 6.7' /etc/system-release || \
    grep 'cpe:/o:msvsphere:msvsphere:6server' /etc/system-release-cpe; \
 then
     echo 'C++11 is not present on this platform. Test skipped.'
@@ -28,9 +30,9 @@ elif which zypper; then
 openSUSE-stable/repo/oss/suse/noarch/autoconf-archive-2016.03.20-3.3.noarch.rpm
     rpm -i autoconf-archive-2016.03.20-3.3.noarch.rpm
 elif which yum; then
-    yum install -y autoconf autoconf-archive automake
-    yum install -y gcc-c++
-    yum install -y boost-devel
+    yum install -y autoconf autoconf-archive automake >/dev/null
+    yum install -y gcc-c++ >/dev/null
+    yum install -y boost-devel >/dev/null
 
     if grep '\(Red Hat\|ROSA\) Enterprise Linux Server release 6' \
         /etc/redhat-release; then
@@ -72,23 +74,26 @@ devtoolset-3-binutils-2.24-18.el6.x86_64.rpm
 6/x86_64/autoconf-archive-2012.09.08-1.el6.noarch.rpm
     fi
 fi
+export PATH=$1/bin:$PATH
 cd ~test/pg-tests
 curl --tlsv1.2 -sS -L https://github.com/jtv/libpqxx/archive/6.1.0.tar.gz \
     -o libpqxx.tar.gz || \
 wget https://github.com/jtv/libpqxx/archive/6.1.0.tar.gz -O libpqxx.tar.gz
 tar fax libpqxx.tar.gz
 cd libpqxx*
-PATH=$1/bin:$PATH ./configure --disable-documentation && make && make install
+./configure --disable-documentation && make && make install
 
 cd ~test/pg-tests
-curl --tlsv1.2 -sS -L https://github.com/anse1/sqlsmith/archive/v1.0.tar.gz \
-    -o sqlsmith.tar.gz || \
-wget https://github.com/anse1/sqlsmith/archive/v1.0.tar.gz -O sqlsmith.tar.gz
-tar fax sqlsmith.tar.gz
+curl --tlsv1.2 -sS -L https://github.com/anse1/sqlsmith/archive/master.tar.gz \
+    -o ss.tar.gz || \
+wget https://github.com/anse1/sqlsmith/archive/master.tar.gz -O ss.tar.gz
+tar fax ss.tar.gz
 cd sqlsmith*
+sed -i -e 's/\$(PQXX_CFLAGS)/\$(LIBPQXX_CFLAGS)/' Makefile.am # https://github.com/anse1/sqlsmith/issues/19
 autoreconf -i
+sed -i -e 's|/\* re-throw to outer loop to recover session. \*/|return 1;|' sqlsmith.cc
 PKG_CONFIG_PATH=/usr/local/lib/pkgconfig/:$1/lib/pkgconfig/ \
 LIBPQXX_LIBS="-L$1/lib -lpqxx -lpq" ./configure $CONF_OPTIONS && make
 LD_LIBRARY_PATH=$1/lib \
-./sqlsmith --max-queries=10000 --verbose \
---target="host=localhost dbname=regression user=tester password=test"
+./sqlsmith --max-queries=10000 --dump-all-queries --verbose \
+--target="host=localhost dbname=regression user=tester password=test" >../sqlsmith.log 2>&1
