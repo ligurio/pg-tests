@@ -89,7 +89,6 @@ curl --tlsv1.2 -sS -L https://github.com/anse1/sqlsmith/archive/master.tar.gz \
 wget https://github.com/anse1/sqlsmith/archive/master.tar.gz -O ss.tar.gz
 tar fax ss.tar.gz
 cd sqlsmith*
-sed -i -e 's/\$(PQXX_CFLAGS)/\$(LIBPQXX_CFLAGS)/' Makefile.am # https://github.com/anse1/sqlsmith/issues/19
 autoreconf -i
 sed -i -e 's|/\* re-throw to outer loop to recover session. \*/|return 1;|' sqlsmith.cc
 PKG_CONFIG_PATH=/usr/local/lib/pkgconfig/:$1/lib/pkgconfig/ \
