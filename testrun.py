@@ -651,10 +651,8 @@ def main():
                 print retcode, stdout, stderr
                 return 1
 
-        if not args.keep:
+        if not args.keep or len(tests) > 1:
             close_env(domname, saveimg=False, destroys0=True)
-        else:
-            close_env(domname, saveimg=True, destroys0=False)
 
         print("Target %s done in %s." %
               (target, time.strftime(
