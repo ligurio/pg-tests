@@ -3,6 +3,7 @@
 import platform
 import subprocess
 import os
+import re
 
 import pytest
 
@@ -91,7 +92,10 @@ class TestMakeCheck(object):
         pginst.exec_psql("ALTER SYSTEM SET max_worker_processes = 16")
         pginst.restart_service()
         pginst.download_source()
-        pg_prefix = pginst.get_default_pg_prefix()
+        cmd = os.path.join(pginst.get_default_bin_path(),
+                           'pg_config') + ' --bindir'
+        binpath = subprocess.check_output(cmd, shell=True).strip()
+        pg_prefix = re.sub('bin$', '', binpath)
         curpath = os.path.dirname(os.path.abspath(__file__))
         if self.system != 'Windows':
             subprocess.check_call(
