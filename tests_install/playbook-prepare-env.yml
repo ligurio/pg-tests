@@ -71,6 +71,7 @@
              echo "deb file:///mnt/dvd2 smolensk contrib main non-free" >> /etc/apt/sources.list.d/repo-dvd.list;
            fi;
            apt-get update;
+           apt-get remove -y bind9*;
            sed -e 's|^#\s*\(/sbin/shutdown\)|\1|' -i /etc/acpi/powerbtn-acpi-support.sh
     when: ansible_distribution == 'Astra Linux (Smolensk)'
     become_method: su
@@ -278,17 +279,24 @@
     tags:
     - skip_ansible_lint
     when: ansible_os_family != "Windows" and
-          not (ansible_distribution == "ALT" and ansible_distribution_major_version == "6") and
-          not (ansible_distribution == "GosLinux" and ansible_distribution_major_version == "6")
+          not ((ansible_distribution == "ALT" or ansible_distribution == "GosLinux" or
+                ansible_distribution == "ROSA" or ansible_distribution == "CentOS") and
+                ansible_distribution_major_version == "6") and
+          not (ansible_distribution == "SLES" and ansible_distribution_major_version == "11")
 
 # To workaround an internal compiler error on
 # 'gcc psutil/_psutil_linux.c -O2 -I/usr/include/python2.7 -DPSUTIL_POSIX=1 -DPSUTIL_VERSION=501 -DPSUTIL_LINUX=1'
 # and to allow for new libicu installation
 # and to workaround PGPRO-1223
-  - name: disable all cc1 optimizations on Suse 11
+# and to do without get-pip.py
+  - name: Customizations for Suse 11
     shell:  gcc -dumpspecs | sed 's/%{O\*}//' > /usr/lib64/gcc/x86_64-suse-linux/4.5/defaults.spec &&
             zypper remove -y libboost_regex1_36_0 &&
-            zypper install -y --force --force-resolution perl=5.10.0
+            zypper install -y --force --force-resolution perl=5.10.0 &&
+            wget https://download.opensuse.org/repositories/openSUSE:/infrastructure/SLE_12_SP3/noarch/python-setuptools-28.3.0-3.1.noarch.rpm &&
+            wget https://download.opensuse.org/repositories/openSUSE:/infrastructure/SLE_12_SP3/noarch/python-pip-9.0.1-3.1.noarch.rpm &&
+            wget https://download.opensuse.org/repositories/openSUSE:/infrastructure/SLE_12_SP3/noarch/python-six-1.10.0-5.1.noarch.rpm &&
+            zypper install -y --force python*.rpm
     become_method: su
     become: true
     when: ansible_os_family == "Suse" and ansible_distribution_major_version == "11"
@@ -420,10 +428,6 @@
       dest: C:\Users\test
       creates: C:\Users\test\pg_tests
     when: ansible_os_family == "Windows"
-
-  - name: windows - install pip
-    when: ansible_os_family == "Windows"
-    win_shell: 'C:\Python27\python.exe C:\Users\test\pg-tests\get-pip.py'
 
   - name: windows - install python requirements
     when: ansible_os_family == "Windows"

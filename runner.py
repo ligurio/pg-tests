@@ -429,7 +429,7 @@ def main():
             if domname[0:3] == 'win':
                 s = winrm.Session(domipaddress,
                                   auth=(REMOTE_LOGIN, REMOTE_PASSWORD))
-                ps_script = """
+                ps_script = r"""
                         Set-ExecutionPolicy Unrestricted
                         [Environment]::SetEnvironmentVariable(
                         "Path", $env:Path + ";C:\Python27",

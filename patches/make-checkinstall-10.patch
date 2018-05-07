@@ -1,8 +1,22 @@
 diff --git a/src/Makefile.global.in b/src/Makefile.global.in
-index e8b3a51..fce0122 100644
+index e8b3a51..17f7015 100644
 --- a/src/Makefile.global.in
 +++ b/src/Makefile.global.in
-@@ -278,7 +278,13 @@ with_gnu_ld = @with_gnu_ld@
+@@ -234,7 +234,13 @@ CPPFLAGS = @CPPFLAGS@
+ 
+ override CPPFLAGS := $(ICU_CFLAGS) $(CPPFLAGS)
+ 
++ifdef USE_INSTALLED_ASSETS
++USE_INCLUDEDIR = 1
++endif
+ ifdef PGXS
++USE_INCLUDEDIR = 1
++endif
++ifdef USE_INCLUDEDIR
+ override CPPFLAGS := -I$(includedir_server) -I$(includedir_internal) $(CPPFLAGS)
+ else # not PGXS
+ override CPPFLAGS := -I$(top_srcdir)/src/include $(CPPFLAGS)
+@@ -278,7 +284,13 @@ with_gnu_ld = @with_gnu_ld@
  # to rpathdir don't work right.  So we must NOT do LDFLAGS := something,
  # meaning this has to be done first and elsewhere we must only do LDFLAGS +=
  # something.
@@ -31,7 +45,7 @@ index 41460a1..d235059 100644
 +installcheck:
 +	USE_INSTALLED_ASSETS=1 $(MAKE) -C test $@
 diff --git a/src/interfaces/ecpg/test/Makefile.regress b/src/interfaces/ecpg/test/Makefile.regress
-index b3d7c1e..64062a9 100644
+index b3d7c1e..dbac870 100644
 --- a/src/interfaces/ecpg/test/Makefile.regress
 +++ b/src/interfaces/ecpg/test/Makefile.regress
 @@ -1,18 +1,25 @@
@@ -65,6 +79,18 @@ index b3d7c1e..64062a9 100644
  	$(srcdir)/../regression.h \
  	$(srcdir)/../../include/sqlca.h \
  	$(srcdir)/../../include/sqlda.h \
+diff --git a/src/makefiles/pgxs.mk b/src/makefiles/pgxs.mk
+index c27004e..982e2b2 100644
+--- a/src/makefiles/pgxs.mk
++++ b/src/makefiles/pgxs.mk
+@@ -271,6 +271,7 @@ endif
+ 
+ # against installed postmaster
+ ifndef NO_INSTALLCHECK
++installcheck: export USE_INSTALLED_ASSETS=1
+ installcheck: submake $(REGRESS_PREP)
+ 	$(pg_regress_installcheck) $(REGRESS_OPTS) $(REGRESS)
+ endif
 diff --git a/src/test/isolation/Makefile b/src/test/isolation/Makefile
 index c3c8280..ef90762 100644
 --- a/src/test/isolation/Makefile

@@ -508,7 +508,7 @@ baseurl=%s
         self.client_installed = True
         self.client_path_needed = True
 
-    def install_postgres_win(self):
+    def install_postgres_win(self, port=None):
         exename = None
         for filename in os.listdir(WIN_INST_DIR):
             if os.path.splitext(filename)[1] == '.exe' and \
@@ -521,7 +521,8 @@ baseurl=%s
                 WIN_INST_DIR)
         ininame = os.path.join(WIN_INST_DIR, "pgpro.ini")
         with open(ininame, "w") as ini:
-            ini.write("[options]\nenvvar=1\n")
+            ini.write("[options]\nenvvar=1\n" +
+                      (("port=%s\n" % port) if port else ""))
         cmd = "%s /S /init=%s" % (os.path.join(WIN_INST_DIR, exename),
                                   ininame)
         command_executor(cmd, windows=True)
@@ -723,7 +724,7 @@ baseurl=%s
                                      REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
     def __get_last_winstaller_file(self, url, arch):
-        """Get last uploaded postgrespro installation file from postgrespro repo
+        """Get last uploaded postgrespro installation file from our repo
 
         :param url: str:
         :return: str: last postgrespro exe file

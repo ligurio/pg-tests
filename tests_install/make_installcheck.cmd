@@ -22,7 +22,7 @@ REM Grant access to Users (including postgres user) to src/test/regress/testtabl
 icacls %MD%\var\src /grant *S-1-5-32-545:(OI)(CI)F /T
 @echo off
 echo ^
-PGPATH=$(echo %PGPATH% ^| sed -e "s@c:\\\\@/c/@i" -e "s@\\\\@/@g"); ^
+PGPATH=$(echo %PGPATH% ^| sed -e "s@c:[/\\\\]@/c/@i" -e "s@\\\\@/@g"); ^
 if file "$PGPATH/bin/postgres.exe" ^| grep '80386. for MS Windows$'; then ^
 bitness=32; gcc=mingw-w64-i686-gcc; host=i686-w64-mingw32; ^
 else ^
@@ -30,11 +30,16 @@ bitness=64; gcc=mingw-w64-x86_64-gcc; host=x86_64-w64-mingw32; ^
 fi ^&^& ^
 pacman --noconfirm -S tar make diffutils perl $gcc ^&^& ^
 export PATH="/mingw$bitness/bin:/usr/bin/core_perl:$PGPATH/bin:$PATH" ^&^& ^
-echo $PATH ^&^& ^
+echo PATH=$PATH ^&^& ^
+echo PGPORT=$PGPORT ^&^& ^
+unset PGDATA PGLOCALEDIR ^&^& ^
+export PGUSER=postgres ^&^& ^
 cd /var/src ^&^& ^
 curl -O http://cpan.metacpan.org/authors/id/T/TO/TODDR/IPC-Run-0.96.tar.gz ^&^& ^
 tar fax IPC-Run* ^&^& ^
 (cd IPC-Run* ^&^& perl Makefile.PL ^&^& make ^&^& make install) ^&^& ^
+echo "Switching log messages language to English (for src/bin/scripts/ tests)" ^&^& ^
+printf "\nlc_messages = 'English_United States.1252'" >> $PGPATH/share/postgresql.conf.sample ^&^& ^
 tar fax postgres*.tar.bz2 ^&^& ^
 cd postgres* ^&^& ^
 ./configure --enable-tap-tests --host=$host --without-zlib --prefix="$PGPATH" >configure.log ^&^& ^
@@ -45,16 +50,10 @@ sed -e "s@^ECPG = ../../preproc/ecpg@ECPG = ecpg@" ^
     -i src/interfaces/ecpg/test/Makefile.regress ^&^& ^
 echo "Disabling ECPG test to avoid exception 0xC0000005..." ^&^& ^
 sed -e "s@^\t\./pg_regress@\techo skipped ./pg_regress@" -i src/interfaces/ecpg/test/Makefile ^&^& ^
-echo "Disabling dblink test..." ^&^& ^
+echo "Disabling dblink test (msys doesn't see Windows processes)..." ^&^& ^
 sed -e "s@^REGRESS = paths dblink@REGRESS = paths@" -i contrib/dblink/Makefile ^&^& ^
 echo "Disabling pg_basebackup/030_pg_recvlogical test (PGPRO-1527)" ^&^& ^
 rm src/bin/pg_basebackup/t/030_pg_recvlogical.pl ^&^& ^
-echo "Disabling pg_ctl/001_start_stop test (port conflict)" ^&^& ^
-rm src/bin/pg_ctl/t/001_start_stop.pl ^&^& ^
-echo "Disabling pg_dump/002_pg_dump test" ^&^& ^
-rm src/bin/pg_dump/t/002_pg_dump.pl ^&^& ^
-echo "Disabling scripts tests" ^&^& ^
-rm src/bin/scripts/t/0*.pl src/bin/scripts/t/1*.pl ^&^& ^
 echo "Disabling isolation/timeouts test (Fails in pg-tests only with a message: step locktbl timed out after 75 seconds)" ^&^& ^
 sed -e "s@test: timeouts@#test: timeouts@" -i src/test/isolation/isolation_schedule ^&^& ^
 (cd src/common ^&^& make -j4 libpgcommon_srv.a ^> /tmp/make_libpgcommon_srv.log) ^&^& ^
