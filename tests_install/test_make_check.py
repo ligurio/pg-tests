@@ -82,18 +82,18 @@ class TestMakeCheck(object):
         pginst.make_check_passed = False
         pginst.setup_repo()
         print("Running on %s." % target)
+        pginst.download_source()
         if self.system != 'Windows':
             pginst.install_full()
             pginst.initdb_start()
         else:
-            pginst.install_postgres_win()
+            pginst.install_postgres_win(port=55432)
         pginst.exec_psql("ALTER SYSTEM SET shared_preload_libraries = %s" %
                          ','.join(PRELOAD_LIBRARIES[pgid]))
         pginst.exec_psql("ALTER SYSTEM SET max_worker_processes = 16")
         pginst.restart_service()
-        pginst.download_source()
-        cmd = os.path.join(pginst.get_default_bin_path(),
-                           'pg_config') + ' --bindir'
+        cmd = '"%s" --bindir' % os.path.join(pginst.get_default_bin_path(),
+                                             'pg_config')
         binpath = subprocess.check_output(cmd, shell=True).strip()
         pg_prefix = re.sub('bin$', '', binpath)
         curpath = os.path.dirname(os.path.abspath(__file__))
