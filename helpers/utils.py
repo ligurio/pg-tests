@@ -358,7 +358,9 @@ def refresh_env_win():
         except WindowsError as e:
             break
         i += 1
-        if envvar.upper() == 'PATH' or envvar.upper().startswith('PG'):
+        if envvar.upper() == 'PATH':
+            os.environ[envvar] = os.path.expandvars(envval)
+        elif envvar.upper().startswith('PG'):
             os.environ[envvar] = envval
 
 
