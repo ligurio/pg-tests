@@ -612,16 +612,6 @@ def main():
             if DEBUG:
                 print("Test command:\n%s" % cmd)
             if not linux_os:
-                s = winrm.Session(domipaddress,
-                                  auth=(REMOTE_LOGIN, REMOTE_PASSWORD))
-                ps_script = r"""
-                    Set-ExecutionPolicy Unrestricted
-                    [Environment]::SetEnvironmentVariable("Path", $env:Path +
-                    ";C:\Python27;C:\Python27\Scripts",
-                    [EnvironmentVariableTarget]::Machine)
-                    """
-                s.run_ps(ps_script)
-                print "Added path for python and python scripts.\n"
                 retcode, stdout, stderr = exec_command_win(
                     cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD,
                     skip_ret_code_check=True)

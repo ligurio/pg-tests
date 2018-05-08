@@ -416,6 +416,13 @@
       product_id: '{4A656C6C-D24A-473F-9747-3A8D00907A04}'
       state: present
 
+  - name: windows - setup Python PATH
+    win_path:
+        elements:
+        - 'C:\Python27'
+        - 'C:\Python27\Scripts'
+    when: ansible_os_family == "Windows"
+
   - name: windows - copy tests payload
     win_copy:
       src:  "{{ payload_win }}"
@@ -431,5 +438,5 @@
 
   - name: windows - install python requirements
     when: ansible_os_family == "Windows"
-    win_shell: 'C:\Python27\Scripts\pip.exe install -r C:\Users\test\pg-tests\tests_install\requirements.txt'
+    win_shell: 'pip install -r C:\Users\test\pg-tests\tests_install\requirements.txt'
 
