@@ -39,7 +39,7 @@ curl -O http://cpan.metacpan.org/authors/id/T/TO/TODDR/IPC-Run-0.96.tar.gz ^&^& 
 tar fax IPC-Run* ^&^& ^
 (cd IPC-Run* ^&^& perl Makefile.PL ^&^& make ^&^& make install) ^&^& ^
 echo "Switching log messages language to English (for src/bin/scripts/ tests)" ^&^& ^
-printf "\nlc_messages = 'English_United States.1252'" ^>^> "$PGPATH/share/postgresql.conf.sample" ^&^& ^
+printf "\nlc_messages = 'English_United States.1252'\n" ^>^> "$PGPATH/share/postgresql.conf.sample" ^&^& ^
 tar fax postgres*.tar.bz2 ^&^& ^
 cd postgres* ^&^& ^
 ./configure --enable-tap-tests --host=$host --without-zlib --prefix="$PGPATH" ^>configure.log ^&^& ^
