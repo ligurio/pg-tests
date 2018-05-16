@@ -521,7 +521,7 @@ baseurl=%s
                 WIN_INST_DIR)
         ininame = os.path.join(WIN_INST_DIR, "pgpro.ini")
         with open(ininame, "w") as ini:
-            ini.write("[options]\nenvvar=1\n" +
+            ini.write("[options]\nenvvar=1\nneedoptimization=0\n" +
                       (("port=%s\n" % port) if port else ""))
         cmd = "%s /S /init=%s" % (os.path.join(WIN_INST_DIR, exename),
                                   ininame)
