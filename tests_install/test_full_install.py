@@ -11,11 +11,12 @@ from helpers.os_helpers import get_process_pids
 
 PRELOAD_LIBRARIES = {
     'standard-10':
-        ['auth_delay', 'auto_explain', 'pg_pathman', 'plantuner',
-         'shared_ispell'],
+        ['auth_delay', 'auto_explain', 'pg_pathman', 'pg_pageprep',
+         'plantuner', 'shared_ispell'],
     'ee-10':
         ['auth_delay', 'auto_explain', 'in_memory', 'pg_pathman',
-         'pg_shardman', 'pgpro_scheduler', 'plantuner', 'shared_ispell'],
+         'pg_shardman', 'pgpro_scheduler', 'pg_pageprep'
+         'plantuner', 'shared_ispell'],
     'ee-9.6':
         ['auth_delay', 'auto_explain', 'pg_pathman',
          'pgpro_scheduler', 'plantuner', 'shared_ispell'],

@@ -12,10 +12,10 @@ from helpers.pginstall import PgInstall
 
 PRELOAD_LIBRARIES = {
     'standard-10':
-        ['auth_delay', 'auto_explain', 'pg_pathman', 'plantuner',
-         'shared_ispell'],
+        ['auth_delay', 'auto_explain', 'pg_pathman', 'pg_pageprep',
+         'plantuner', 'shared_ispell'],
     'ee-10':
-        ['auth_delay', 'auto_explain', 'in_memory',
+        ['auth_delay', 'auto_explain', 'in_memory', 'pg_pageprep',
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
          'pg_pathman'],
