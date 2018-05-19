@@ -1,6 +1,7 @@
 import os
 import platform
 import glob
+import time
 
 import pytest
 
@@ -108,6 +109,7 @@ class TestFullInstall():
             "ALTER SYSTEM SET shared_preload_libraries = %s" %
             ','.join(PRELOAD_LIBRARIES[request.cls.pgid]))
         pginst.restart_service()
+        time.sleep(5)
         share_path = iprops['share_path'].replace('/', os.sep)
         controls = glob.glob(os.path.join(share_path,
                                           'extension', '*.control'))
