@@ -5,7 +5,6 @@ import os
 import shutil
 import subprocess
 
-
 if platform.system() == 'Linux':
     dist = platform.linux_distribution()
 elif platform.system() == 'Windows':
@@ -51,6 +50,10 @@ def setup(request):
     def finalize():
         if dist != 'Windows':
             test_script = r"""
+if ps -o comm= -C systemd-coredump; then
+    echo "The systemd-coredump process is running."
+    exit 1
+fi
 if [ ! -z "`ls /var/coredumps`" ]; then
     echo "The /var/coredumps directory is not empty."
     exit 1
@@ -59,7 +62,7 @@ if [ -d /var/crash ] && [ ! -z "`ls /var/crash`" ]; then
     echo "The /var/crash directory is not empty."
     exit 1
 fi
-if [ ! -z "`which coredumpctl`" ]; then
+if [ ! -z "`which coredumpctl 2>/dev/null`" ]; then
     if coredumpctl; then
         echo "Coredump found. Check coredumpctl."
         exit 1
