@@ -296,7 +296,7 @@
     - skip_ansible_lint
     when: ansible_os_family != "Windows" and
           not ((ansible_distribution == "ALT" or ansible_distribution == "GosLinux" or
-                ansible_distribution == "ROSA" or ansible_distribution == "CentOS") and
+                ansible_distribution == "ROSA" or ansible_os_family == "RedHat") and
                 ansible_distribution_major_version == "6") and
           not (ansible_distribution == "SLES" and ansible_distribution_major_version == "11")
 
