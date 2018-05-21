@@ -408,7 +408,14 @@
     when:
       - ansible_os_family != "Windows"
       - ansible_os_family != "МСВСфера"
-      - not (ansible_distribution == 'Debian' and ansible_distribution_major_version == '9')
+      - not (ansible_distribution == 'Debian' and ansible_distribution_major_version|int > 8)
+      - not (ansible_os_family == 'RedHat' and ansible_distribution_major_version|int > 6)
+
+  - name: change coredump filename pattern (RedHat 7)
+    sysctl: name="kernel.core_pattern" value="| /usr/lib/systemd/systemd-coredump %p %u %g %s %t %c %e" sysctl_set=yes state=present
+    become_method: su
+    become: true
+    when: (ansible_os_family == 'RedHat' and ansible_distribution_major_version == '7')
 
   - name: windows - install Visual C++ Compiler for Python
     when: ansible_os_family == "Windows"
