@@ -4,7 +4,7 @@ mkdir %MD%\var\src
 copy postgres*.tar.bz2 %MD%\var\src\
 cd /D c:\
 SET PGPATH=%1
-powershell -Command "((new-object net.webclient).DownloadFile('https://www.7-zip.org/a/7za920.zip', '%TEMP%\7z.zip'))"
+powershell -Command "((new-object net.webclient).DownloadFile('https://netcologne.dl.sourceforge.net/project/sevenzip/7-Zip/9.20/7za920.zip', '%TEMP%\7z.zip'))"
 powershell -Command "$shell = New-Object -ComObject Shell.Application; $zip_src = $shell.NameSpace('%TEMP%\7z.zip'); $zip_dest = $shell.NameSpace('%TEMP%'); $zip_dest.CopyHere($zip_src.Items(), 1044)"
 
 REM %TEMP%\7z.exe /S /D="C:\7z\"
