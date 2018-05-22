@@ -12,22 +12,22 @@ from helpers.os_helpers import get_process_pids
 
 PRELOAD_LIBRARIES = {
     'standard-10':
-        ['auth_delay', 'auto_explain', 'pg_pathman', 'pg_pageprep',
-         'plantuner', 'shared_ispell'],
+        ['auth_delay', 'auto_explain', 'pg_pageprep',
+         'plantuner', 'shared_ispell', 'pg_pathman'],
     'ee-10':
-        ['auth_delay', 'auto_explain', 'in_memory', 'pg_pathman',
+        ['auth_delay', 'auto_explain', 'in_memory',
          'pg_shardman', 'pgpro_scheduler', 'pg_pageprep',
-         'plantuner', 'shared_ispell'],
+         'plantuner', 'shared_ispell', 'pg_pathman'],
     'standard-9.6':
-        ['auth_delay', 'auto_explain', 'pg_pathman', 'pg_pageprep',
-         'plantuner', 'shared_ispell'],
+        ['auth_delay', 'auto_explain', 'pg_pageprep',
+         'plantuner', 'shared_ispell', 'pg_pathman'],
     'ee-9.6':
-        ['auth_delay', 'auto_explain', 'pg_pathman',
-         'pgpro_scheduler', 'plantuner', 'shared_ispell'],
+        ['auth_delay', 'auto_explain', 'pgpro_scheduler',
+         'plantuner', 'shared_ispell', 'pg_pathman'],
     'cert-enterprise-9.6':
-        ['auth_delay', 'auto_explain', 'passwordcheck', 'pg_pathman',
+        ['auth_delay', 'auto_explain', 'passwordcheck',
          'pgaudit', 'pgpro_scheduler', 'plantuner',
-         'shared_ispell'],
+         'shared_ispell', 'pg_pathman'],
     'cert-enterprise-10':
         ['auth_delay', 'auto_explain', 'in_memory', 'pgaudit',
          'passwordcheck',
