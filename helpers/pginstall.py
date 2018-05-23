@@ -927,7 +927,9 @@ baseurl=%s
                     elif self.os_name in ASTRA_BASED:
                         return 'postgresql'
                     elif self.os_name in DEBIAN_BASED:
-                        return 'postgresql@%s-main' % self.version
+                        if os.path.isdir('/run/systemd/system'):
+                            return 'postgresql@%s-main' % self.version
+                        return 'postgresql'
                     elif self.os_name in ALT_BASED:
                         return 'postgresql-%s' % self.version
                     return '%s-%s%s' % (self.product,
