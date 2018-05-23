@@ -111,12 +111,12 @@ class PgInstall:
     def get_base_package_name(self):
         if self.product == 'postgrespro':
             if self.version == '9.5' or self.version == '9.6':
-                if self.__is_os_altlinux() or self.__is_os_suse():
+                if self.__is_os_altlinux():
                     if self.edition in ['ee', 'cert-enterprise']:
                         return '%s-%s%s' % (self.product, 'enterprise',
                                             self.version)
                     return '%s%s' % (self.product, self.version)
-                if self.__is_os_redhat_based():
+                if self.__is_os_redhat_based() or self.__is_os_suse():
                     if self.edition in ['ee', 'cert-enterprise']:
                         return '%s-%s%s' % (self.product, 'enterprise',
                                             self.version.replace('.', ''))
