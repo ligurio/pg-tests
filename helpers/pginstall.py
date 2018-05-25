@@ -465,7 +465,9 @@ baseurl=%s
         self.install_package(self.get_base_package_name())
         if self.product == "postgrespro":
             if self.version == '9.5' or self.version == '9.6':
-                if self.__is_os_altlinux() or self.__is_os_redhat_based():
+                if self.__is_os_altlinux() or \
+                   self.__is_os_redhat_based() or \
+                   self.__is_os_suse():
                     self.install_package(self.get_server_package_name())
         self.client_installed = True
         self.server_installed = True
