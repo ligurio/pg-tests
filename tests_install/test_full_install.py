@@ -99,6 +99,8 @@ class TestFullInstall():
                 assert ppedition == 'enterprise'
             else:
                 assert ppedition == 'standard'
+            print('pgpro_source_id:',
+                  pginst.exec_psql_select("SELECT pgpro_build()"))
         print("OK")
 
     @pytest.mark.test_all_extensions
