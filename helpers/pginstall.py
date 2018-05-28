@@ -989,6 +989,8 @@ baseurl=%s
                 if self.version == '9.5' or self.version == '9.6':
                     if self.os_name in DEBIAN_BASED:
                         return '/var/lib/postgresql/%s/main' % (self.version)
+                    if self.__is_os_suse():
+                        return '/var/lib/pgsql/data'
                     return '/var/lib/pgpro%s/%s/data' % (
                         'ee'
                         if self.edition in ['ee', 'cert-enterprise'] else
