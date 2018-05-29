@@ -97,6 +97,8 @@ if ./configure --help | grep '  --enable-svt5'; then
         )
     fi
 fi
+# PGPRO-1678
+sed -s 's|logging_collector = on|# logging_collector = off|' -i `$1/bin/pg_config --sharedir`/postgresql.conf.sample
 sudo -u postgres ./configure --enable-tap-tests --without-readline --with-icu \
  --prefix=$1 $extraoption && \
 sudo -u postgres sh -c "PATH=$1/bin:$PATH make installcheck-world"
