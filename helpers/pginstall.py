@@ -952,6 +952,13 @@ baseurl=%s
                 if self.version == '9.5' or self.version == '9.6':
                     if self.os_name in DEBIAN_BASED:
                         return '/usr/lib/postgresql/%s' % (self.version)
+                    if self.__is_os_suse():
+                        return '/usr/lib/postgrespro%s%s' % (
+                            '-enterprise'
+                            if self.edition in ["ee", "cert-enterprise"] else
+                            '',
+                            self.version.replace('.', '')
+                        )
                     return '/usr/pgpro%s-%s' % (
                         'ee'
                         if self.edition in ["ee", "cert-enterprise"] else
