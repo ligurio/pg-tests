@@ -15,7 +15,7 @@ PRELOAD_LIBRARIES = {
         ['auth_delay', 'auto_explain',
          'plantuner', 'shared_ispell', 'pg_pathman'],
     'ee-10':
-        ['auth_delay', 'auto_explain', 'in_memory', 'pg_pageprep',
+        ['auth_delay', 'auto_explain', 'in_memory',
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
          'pg_pathman'],

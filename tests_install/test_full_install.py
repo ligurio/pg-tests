@@ -16,7 +16,7 @@ PRELOAD_LIBRARIES = {
          'plantuner', 'shared_ispell', 'pg_pathman'],
     'ee-10':
         ['auth_delay', 'auto_explain', 'in_memory',
-         'pg_shardman', 'pgpro_scheduler', 'pg_pageprep',
+         'pg_shardman', 'pgpro_scheduler',
          'plantuner', 'shared_ispell', 'pg_pathman'],
     'standard-9.6':
         ['auth_delay', 'auto_explain',
