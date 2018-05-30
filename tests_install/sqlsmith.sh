@@ -39,6 +39,7 @@ elif which yum; then
         wget -qO- http://people.redhat.com/bkabrda/scl_python27.repo >> \
             /etc/yum.repos.d/scl.repo
         yum install -y python27
+        yum remove -y sqlite-devel
 
         yum install -y \
             http://mirror.centos.org/centos/6/sclo/x86_64/rh/devtoolset-3/\
@@ -56,6 +57,8 @@ devtoolset-3-binutils-2.24-18.el6.x86_64.rpm
         source /opt/rh/python27/enable
         yum install -y http://mirrors.isu.net.sa/pub/fedora/fedora-epel/\
 6/x86_64/autoconf-archive-2012.09.08-1.el6.noarch.rpm
+        yum install -y https://dl.fedoraproject.org/pub/archive/fedora/\
+linux/releases/14/Fedora/x86_64/os/Packages/pkgconfig-0.25-2.fc14.x86_64.rpm
     fi
 
     if grep '\(Red Hat\|ROSA\) Enterprise Linux \(Server\|Cobalt\) release 7'\
@@ -89,7 +92,9 @@ curl --tlsv1.2 -sS -L https://github.com/anse1/sqlsmith/archive/master.tar.gz \
 wget https://github.com/anse1/sqlsmith/archive/master.tar.gz -O ss.tar.gz
 tar fax ss.tar.gz
 cd sqlsmith*
+sed -e 's|\[m4_esyscmd_s(\[git describe --dirty --tags --always\])\]|1|' -i configure.ac # To do with old autoconf and without git
 autoreconf -i
+sed -e 's|char conninfo="dbname = postgres";|char conninfo[]="dbname = postgres";|' -i configure # https://github.com/autoconf-archive/autoconf-archive/pull/158
 PKG_CONFIG_PATH=/usr/local/lib/pkgconfig/:$1/lib/pkgconfig/ \
 LIBPQXX_LIBS="-L$1/lib -lpqxx -lpq" ./configure $CONF_OPTIONS || exit 1
 [ -f gitrev.h ] || echo "#define GITREV \"1\"" >gitrev.h # To do without git
