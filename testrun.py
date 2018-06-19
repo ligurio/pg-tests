@@ -241,9 +241,11 @@ def create_env(name, domname, domimage=None):
     if name[0:3] == 'win':
         network_driver = "e1000"
         ram_size = 2048
+        cpus = 4
     else:
         network_driver = "virtio"
         ram_size = 1536
+        cpus = 1
     domisos = glob.glob(TEMPLATE_DIR + name + '*.iso')
     cdroms = ""
     cdromletter = "c"
@@ -260,7 +262,7 @@ def create_env(name, domname, domimage=None):
     xmldesc = """<domain type='kvm'>
                   <name>%s</name>
                   <memory unit='MB'>%d</memory>
-                  <vcpu>1</vcpu>
+                  <vcpu>%d</vcpu>
                   <os>
                     <type>hvm</type>
                     <boot dev='hd'/>
@@ -290,7 +292,7 @@ def create_env(name, domname, domimage=None):
                     <graphics type='vnc' port='-1' listen='0.0.0.0'/>
                   </devices>
                 </domain>
-                """ % (domname, ram_size, qemu_path, domimage,
+                """ % (domname, ram_size, cpus, qemu_path, domimage,
                        cdroms, dommac, network_driver)
 
     dom = conn.createLinux(xmldesc, 0)

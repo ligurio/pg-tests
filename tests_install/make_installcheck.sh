@@ -71,9 +71,6 @@ if grep 'SUSE Linux Enterprise Server 11' /etc/SuSE-release; then
 fi
 
 sudo chown -R postgres:postgres .
-echo "Fixing Makefiles for installcheck-world..."
-patch -p1 --dry-run -i ../patches/make-checkinstall-10.patch && \
-patch -p1 -i ../patches/make-checkinstall-10.patch
 if ./configure --help | grep '  --enable-svt5'; then
     extraoption="--enable-svt5"
     if which apt-get; then
@@ -99,6 +96,15 @@ if ./configure --help | grep '  --enable-svt5'; then
 fi
 # PGPRO-1678
 sed -s 's|logging_collector = on|# logging_collector = off|' -i `$1/bin/pg_config --sharedir`/postgresql.conf.sample
+
+if patch -p1 --dry-run -i ../patches/make-instalcheck-10.patch; then
+    echo "Fixing Makefiles for installcheck-world..."
+    patch -p1 -i ../patches/make-installcheck-10.patch
+else
+    makeecpg=true
+fi
+
 sudo -u postgres ./configure --enable-tap-tests --without-readline --with-icu \
- --prefix=$1 $extraoption && \
+ --prefix=$1 $extraoption || exit $?
+[ "$makeecpg" = true ] && sudo -u postgres sh -c "make -C src/interfaces/ecpg"
 sudo -u postgres sh -c "PATH=$1/bin:$PATH make installcheck-world"

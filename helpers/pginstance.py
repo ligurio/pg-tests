@@ -67,7 +67,7 @@ class PgInstance:
         """ Install product
         Parameter: Product name: postgrespro, postgresql
         Parameter: Product version: 9.5, 9.6 etc
-        Parameter: Product editions (postgrespro only): standard, ee
+        Parameter: Product editions (postgrespro only): standard, ent
         Parameter: Product milestone (postgrespro only): beta
         """
         raise Exception("Not implemented.")
@@ -451,7 +451,7 @@ class PgInstance:
                     " /var/lib/pgpro/%s.%s/data" % (major, minor)
                 return command_executor(cmd, remote, host,
                                         REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-            elif edition == "ee":
+            elif edition == "ent":
                 cmd = "cp -r /var/lib/pgsql/%s.%s/data/" \
                     " /var/lib/pgproee/%s.%s/" % (major, minor, major, minor)
                 command_executor(cmd)
@@ -484,7 +484,7 @@ class PgInstance:
         minor_versions = []
         if edition == 'standard':
             page = urllib.urlopen(PGPRO_ARCHIVE_STANDARD).read()
-        elif edition == 'ee':
+        elif edition == 'ent':
             page = urllib.urlopen(PGPRO_ARCHIVE_ENTERPRISE).read()
         versions = re.findall('href=[\'"]?([^\'" >]+)/', page)
         for version in versions:

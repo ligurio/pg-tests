@@ -31,7 +31,7 @@
 
 --product_name – имя продукта, доступные значения: postgresql, postgrespro
 
---product_edition – тип продукта, доступные значения: standard, ee, cert, certified-enterprise
+--product_edition – тип продукта, доступные значения: standard, ent, cert, certified-enterprise
 
 --product_version – версия продукта
 
@@ -65,7 +65,7 @@
 
 --product_name – имя продукта, доступные значения: postgresql, postgrespro
 
---product_edition – тип продукта, доступные значения: standard, ee, cert, certified-enterprise
+--product_edition – тип продукта, доступные значения: standard, ent, cert, certified-enterprise
 
 --product_version – версия продукта
 
@@ -96,7 +96,7 @@
 
 --product_name – имя продукта, доступные значения: postgresql, postgrespro
 
---product_edition – тип продукта, доступные значения: standard, ee, cert, certified-enterprise
+--product_edition – тип продукта, доступные значения: standard, ent, cert, certified-enterprise
 
 --product_version – версия продукта
 

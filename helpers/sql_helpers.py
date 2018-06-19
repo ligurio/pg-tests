@@ -248,7 +248,7 @@ def pg_start_script_name(name, edition, version, distro):
     if distro in RPM_BASED:
         if name == 'postgresql':
             service_name = "postgresql-%s.%s" % (major, minor)
-        elif name == 'postgrespro' and edition in ['ee', 'cert-enterprise']:
+        elif name == 'postgrespro' and edition in ['ent', 'cert-enterprise']:
             service_name = "postgrespro-enterprise-%s.%s" % (major, minor)
         elif name == 'postgrespro' and edition == 'standard':
             service_name = "postgrespro-%s.%s" % (major, minor)

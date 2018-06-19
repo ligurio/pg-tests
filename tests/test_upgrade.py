@@ -54,7 +54,7 @@ class TestMinorUpdates():
         minor_versions = []
         if edition == 'standard':
             page = urllib.urlopen(self.PGPRO_ARCHIVE_STANDARD).read()
-        elif edition == 'ee':
+        elif edition == 'ent':
             page = urllib.urlopen(self.PGPRO_ARCHIVE_ENTERPRISE).read()
         versions = re.findall('href=[\'"]?([^\'" >]+)/', page)
         for version in versions:
@@ -101,7 +101,7 @@ class TestMinorUpdates():
         else:
             distname = dist[distro].lower()
 
-        if edition == "ee":
+        if edition == "ent":
             baseurl = os.path.join(self.PGPRO_ARCHIVE_ENTERPRISE,
                                    version, distname)
             gpg_key_url = self.PGPRO_ARCHIVE_ENTERPRISE + version
@@ -191,7 +191,7 @@ enabled=1
         minor = version.split(".")[1]
         pkg_name = ""
         if dist_info[0] in RPM_BASED:
-            if edition == "ee":
+            if edition == "ent":
                 pkg_name = "postgrespro-enterprise%s%s" % (major, minor)
             elif edition == "standard":
                 pkg_name = "postgrespro%s%s" % (major, minor)
@@ -220,7 +220,7 @@ enabled=1
         elif "ALT" in dist_info[0]:
             if edition == "standard":
                 pkg_name = "postgrespro%s.%s" % (major, minor)
-            elif edition == "ee":
+            elif edition == "ent":
                 pkg_name = "postgrespro-enterprise%s.%s" % (major, minor)
             for p in ALT_PACKAGES:
                 cmd = "apt-get install -y %s-%s" % (pkg_name, p)
@@ -301,7 +301,7 @@ host    all             all             ::0/0                   trust"""
         print(version)
         if edition == "standard":
             version = version.strip("pgpro-")
-        elif edition == "ee":
+        elif edition == "ent":
             version = version.strip("pgproee-")
         major = "9"
         minor = version.split(".")[1]
@@ -313,7 +313,7 @@ host    all             all             ::0/0                   trust"""
             else:
                 if edition == "standard":
                     service_name = "postgrespro-%s.%s" % (major, minor)
-                elif edition == "ee":
+                elif edition == "ent":
                     service_name = "postgrespro-enterprise-%s.%s" % (
                         major, minor)
                 assert service_name is not None
@@ -401,7 +401,7 @@ host    all             all             ::0/0                   trust"""
                 cmd = "chown -R postgres:postgres" \
                     " /var/lib/pgpro/%s.%s/data" % (major, minor)
                 return command_executor(cmd)
-            elif edition == "ee":
+            elif edition == "ent":
                 cmd = "cp -r /var/lib/pgsql/%s.%s/data/" \
                     " /var/lib/pgproee/%s.%s/" % (major, minor, major, minor)
                 command_executor(cmd)
@@ -511,7 +511,7 @@ host    all             all             ::0/0                   trust"""
                 continue
             self.setup_repo(version, edition)
             self.package_mgmt(version, edition)
-            if version_for_check == "9.6.2.1" or edition == "ee" \
+            if version_for_check == "9.6.2.1" or edition == "ent" \
                and version_for_check == "9.6.3.1":
                 self.move_data_direcory(version_for_check, edition)
             self.manage_psql("restart", version=version, edition=edition)

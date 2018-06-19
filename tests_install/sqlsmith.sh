@@ -99,7 +99,13 @@ PKG_CONFIG_PATH=/usr/local/lib/pkgconfig/:$1/lib/pkgconfig/ \
 LIBPQXX_LIBS="-L$1/lib -lpqxx -lpq" ./configure $CONF_OPTIONS || exit 1
 [ -f gitrev.h ] || echo "#define GITREV \"1\"" >gitrev.h # To do without git
 sed -i -e 's|/\* re-throw to outer loop to recover session. \*/|return 1;|' sqlsmith.cc
-make || exit 1
+make || exit $?
 LD_LIBRARY_PATH=$1/lib \
 ./sqlsmith --max-queries=10000 --dump-all-queries --verbose \
 --target="host=localhost dbname=regression user=tester password=test" >../sqlsmith.log 2>&1
+result=$?
+if [ $result -ne 0 ]; then
+  echo "sqlsmith failed (see sqlsmith.log):"
+  tail ../sqlsmith.log
+  exit $result
+fi
