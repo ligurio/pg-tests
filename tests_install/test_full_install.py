@@ -1,6 +1,7 @@
 import os
 import platform
 import glob
+import time
 
 import pytest
 
@@ -11,18 +12,25 @@ from helpers.os_helpers import get_process_pids
 
 PRELOAD_LIBRARIES = {
     'standard-10':
-        ['auth_delay', 'auto_explain', 'pg_pathman', 'plantuner',
-         'shared_ispell'],
+        ['auth_delay', 'auto_explain',
+         'plantuner', 'shared_ispell', 'pg_pathman'],
     'ee-10':
-        ['auth_delay', 'auto_explain', 'in_memory', 'pg_pathman',
-         'pg_shardman', 'pgpro_scheduler', 'plantuner', 'shared_ispell'],
+        ['auth_delay', 'auto_explain', 'in_memory',
+         'pg_shardman', 'pgpro_scheduler',
+         'plantuner', 'shared_ispell', 'pg_pathman'],
+    'cert-standard-10':
+        ['auth_delay', 'auto_explain', 'pgaudit',
+         'plantuner', 'shared_ispell', 'pg_pathman'],
+    'standard-9.6':
+        ['auth_delay', 'auto_explain',
+         'plantuner', 'shared_ispell', 'pg_pathman'],
     'ee-9.6':
-        ['auth_delay', 'auto_explain', 'pg_pathman',
-         'pgpro_scheduler', 'plantuner', 'shared_ispell'],
+        ['auth_delay', 'auto_explain', 'pgpro_scheduler',
+         'plantuner', 'shared_ispell', 'pg_pathman'],
     'cert-enterprise-9.6':
-        ['auth_delay', 'auto_explain', 'passwordcheck', 'pg_pathman',
+        ['auth_delay', 'auto_explain', 'passwordcheck',
          'pgaudit', 'pgpro_scheduler', 'plantuner',
-         'shared_ispell'],
+         'shared_ispell', 'pg_pathman'],
     'cert-enterprise-10':
         ['auth_delay', 'auto_explain', 'in_memory', 'pgaudit',
          'passwordcheck',
@@ -94,6 +102,8 @@ class TestFullInstall():
                 assert ppedition == 'enterprise'
             else:
                 assert ppedition == 'standard'
+            print('pgpro_source_id:',
+                  pginst.exec_psql_select("SELECT pgpro_build()"))
         print("OK")
 
     @pytest.mark.test_all_extensions
@@ -104,6 +114,7 @@ class TestFullInstall():
             "ALTER SYSTEM SET shared_preload_libraries = %s" %
             ','.join(PRELOAD_LIBRARIES[request.cls.pgid]))
         pginst.restart_service()
+        time.sleep(5)
         share_path = iprops['share_path'].replace('/', os.sep)
         controls = glob.glob(os.path.join(share_path,
                                           'extension', '*.control'))

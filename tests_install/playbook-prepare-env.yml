@@ -71,7 +71,6 @@
              echo "deb file:///mnt/dvd2 smolensk contrib main non-free" >> /etc/apt/sources.list.d/repo-dvd.list;
            fi;
            apt-get update;
-           apt-get remove -y bind9*;
            sed -e 's|^#\s*\(/sbin/shutdown\)|\1|' -i /etc/acpi/powerbtn-acpi-support.sh
     when: ansible_distribution == 'Astra Linux (Smolensk)'
     become_method: su
@@ -192,6 +191,14 @@
     become_method: su
     become: true
 
+  - name: install coredump (APT)
+    apt: name={{ item }} state=present update_cache=yes
+    with_items:
+        - systemd-coredump
+    when: ansible_distribution == 'Debian' and ansible_distribution_major_version == '9'
+    become_method: su
+    become: true
+
   - name: install required packages (ALT 8)
     shell: apt-get install -y gcc5
     args:
@@ -272,6 +279,15 @@
       remote_src: yes
     when: ansible_os_family != "Windows"
 
+  - name: update python-six on Ubuntu 14.04
+    shell: wget http://archive.ubuntu.com/ubuntu/pool/main/s/six/python-six_1.10.0-3_all.deb &&
+        dpkg -i python-six_1.10.0-3_all.deb
+    args:
+      warn: no
+    when: ansible_distribution == 'Ubuntu' and ansible_distribution_major_version == "14"
+    become_method: su
+    become: true
+
   - name: install pip
     command: "python /home/test/pg-tests/get-pip.py"
     become_method: su
@@ -280,7 +296,7 @@
     - skip_ansible_lint
     when: ansible_os_family != "Windows" and
           not ((ansible_distribution == "ALT" or ansible_distribution == "GosLinux" or
-                ansible_distribution == "ROSA" or ansible_distribution == "CentOS") and
+                ansible_distribution == "ROSA" or ansible_os_family == "RedHat") and
                 ansible_distribution_major_version == "6") and
           not (ansible_distribution == "SLES" and ansible_distribution_major_version == "11")
 
@@ -392,6 +408,14 @@
     when:
       - ansible_os_family != "Windows"
       - ansible_os_family != "МСВСфера"
+      - not (ansible_distribution == 'Debian' and ansible_distribution_major_version|int > 8)
+      - not (ansible_os_family == 'RedHat' and ansible_distribution_major_version|int > 6)
+
+  - name: change coredump filename pattern (RedHat 7)
+    sysctl: name="kernel.core_pattern" value="| /usr/lib/systemd/systemd-coredump %p %u %g %s %t %c %e" sysctl_set=yes state=present
+    become_method: su
+    become: true
+    when: (ansible_os_family == 'RedHat' and ansible_distribution_major_version == '7')
 
   - name: windows - install Visual C++ Compiler for Python
     when: ansible_os_family == "Windows"
@@ -416,6 +440,13 @@
       product_id: '{4A656C6C-D24A-473F-9747-3A8D00907A04}'
       state: present
 
+  - name: windows - setup Python PATH
+    win_path:
+        elements:
+        - 'C:\Python27'
+        - 'C:\Python27\Scripts'
+    when: ansible_os_family == "Windows"
+
   - name: windows - copy tests payload
     win_copy:
       src:  "{{ payload_win }}"
@@ -431,5 +462,5 @@
 
   - name: windows - install python requirements
     when: ansible_os_family == "Windows"
-    win_shell: 'C:\Python27\Scripts\pip.exe install -r C:\Users\test\pg-tests\tests_install\requirements.txt'
+    win_shell: 'pip install -r C:\Users\test\pg-tests\tests_install\requirements.txt'
 

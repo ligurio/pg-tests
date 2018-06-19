@@ -82,7 +82,7 @@ class PgInstall:
         self.client_path_needed = False
         self.server_path_needed = False
 
-        if edition == 'standard':
+        if edition in ['standard', 'cert-standard']:
             self.alter_edtn = 'std'
         elif edition in ['ee', 'cert-enterprise']:
             self.alter_edtn = 'ent'
@@ -102,6 +102,8 @@ class PgInstall:
                 product_dir = "pgpro-ent-9.6.8.2/repo"
             elif self.edition == "cert-enterprise" and self.version == "10":
                 product_dir = "pgpro-ent-10.3.3/repo"
+            elif self.edition == "cert-standard" and self.version == "10":
+                product_dir = "pgpro-std-10.4.1/repo"
             elif self.edition == "1c":
                 product_dir = "1c-%s" % self.version
             if self.milestone:
@@ -111,12 +113,12 @@ class PgInstall:
     def get_base_package_name(self):
         if self.product == 'postgrespro':
             if self.version == '9.5' or self.version == '9.6':
-                if self.__is_os_altlinux() or self.__is_os_suse():
+                if self.__is_os_altlinux():
                     if self.edition in ['ee', 'cert-enterprise']:
                         return '%s-%s%s' % (self.product, 'enterprise',
                                             self.version)
                     return '%s%s' % (self.product, self.version)
-                if self.__is_os_redhat_based():
+                if self.__is_os_redhat_based() or self.__is_os_suse():
                     if self.edition in ['ee', 'cert-enterprise']:
                         return '%s-%s%s' % (self.product, 'enterprise',
                                             self.version.replace('.', ''))
@@ -419,7 +421,7 @@ baseurl=%s
             pass
         elif self.product == "postgrespro":
             product_dir = self.__get_product_dir()
-            if self.edition == 'cert-enterprise':
+            if self.edition in ['cert-enterprise', 'cert-standard']:
                 baseurl = PGPROCERT_BASE + \
                     product_dir.replace('/repo', '/sources')
             else:
@@ -465,7 +467,9 @@ baseurl=%s
         self.install_package(self.get_base_package_name())
         if self.product == "postgrespro":
             if self.version == '9.5' or self.version == '9.6':
-                if self.__is_os_altlinux() or self.__is_os_redhat_based():
+                if self.__is_os_altlinux() or \
+                   self.__is_os_redhat_based() or \
+                   self.__is_os_suse():
                     self.install_package(self.get_server_package_name())
         self.client_installed = True
         self.server_installed = True
@@ -521,7 +525,7 @@ baseurl=%s
                 WIN_INST_DIR)
         ininame = os.path.join(WIN_INST_DIR, "pgpro.ini")
         with open(ininame, "w") as ini:
-            ini.write("[options]\nenvvar=1\n" +
+            ini.write("[options]\nenvvar=1\nneedoptimization=0\n" +
                       (("port=%s\n" % port) if port else ""))
         cmd = "%s /S /init=%s" % (os.path.join(WIN_INST_DIR, exename),
                                   ininame)
@@ -927,7 +931,9 @@ baseurl=%s
                     elif self.os_name in ASTRA_BASED:
                         return 'postgresql'
                     elif self.os_name in DEBIAN_BASED:
-                        return 'postgresql@%s-main' % self.version
+                        if os.path.isdir('/run/systemd/system'):
+                            return 'postgresql@%s-main' % self.version
+                        return 'postgresql'
                     elif self.os_name in ALT_BASED:
                         return 'postgresql-%s' % self.version
                     return '%s-%s%s' % (self.product,
@@ -948,6 +954,13 @@ baseurl=%s
                 if self.version == '9.5' or self.version == '9.6':
                     if self.os_name in DEBIAN_BASED:
                         return '/usr/lib/postgresql/%s' % (self.version)
+                    if self.__is_os_suse():
+                        return '/usr/lib/postgrespro%s%s' % (
+                            '-enterprise'
+                            if self.edition in ["ee", "cert-enterprise"] else
+                            '',
+                            self.version.replace('.', '')
+                        )
                     return '/usr/pgpro%s-%s' % (
                         'ee'
                         if self.edition in ["ee", "cert-enterprise"] else
@@ -985,6 +998,8 @@ baseurl=%s
                 if self.version == '9.5' or self.version == '9.6':
                     if self.os_name in DEBIAN_BASED:
                         return '/var/lib/postgresql/%s/main' % (self.version)
+                    if self.__is_os_suse():
+                        return '/var/lib/pgsql/data'
                     return '/var/lib/pgpro%s/%s/data' % (
                         'ee'
                         if self.edition in ['ee', 'cert-enterprise'] else
