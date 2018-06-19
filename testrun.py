@@ -134,10 +134,12 @@ def create_image(domname, name):
     return domimage
 
 
-def prepare_payload(tests_dir):
+def prepare_payload(tests_dir, clean):
     rsrcdir = os.path.join(tests_dir, TESTS_PAYLOAD_DIR)
     tar_path = os.path.join(rsrcdir, TESTS_PAYLOAD_TAR)
     zip_path = os.path.join(rsrcdir, TESTS_PAYLOAD_ZIP)
+    if clean:
+        shutil.rmtree(rsrcdir)
     while True:
         if os.path.isdir(rsrcdir):
             timeout = 0
@@ -550,6 +552,8 @@ def main():
                         help='what to do with env after testing')
     parser.add_argument('--export', dest="export",
                         help='export results', action='store_true')
+    parser.add_argument('--clean', dest="clean",
+                        help='clean resources before run', action='store_true')
 
     args = parser.parse_args()
 
@@ -578,7 +582,7 @@ def main():
 
     tests_dir = args.run_tests if os.path.isdir(args.run_tests) else \
         os.path.dirname(args.run_tests)
-    prepare_payload(tests_dir)
+    prepare_payload(tests_dir, args.clean)
 
     targets = args.target.split(',')
     for target in targets:
