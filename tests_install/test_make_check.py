@@ -14,7 +14,7 @@ PRELOAD_LIBRARIES = {
     'standard-10':
         ['auth_delay', 'auto_explain',
          'plantuner', 'shared_ispell', 'pg_pathman'],
-    'ee-10':
+    'ent-10':
         ['auth_delay', 'auto_explain', 'in_memory',
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
@@ -25,7 +25,7 @@ PRELOAD_LIBRARIES = {
     'standard-9.6':
         ['auth_delay', 'auto_explain',
          'plantuner', 'shared_ispell', 'pg_pathman'],
-    'ee-9.6':
+    'ent-9.6':
         ['auth_delay', 'auto_explain',
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling', 'pg_pathman'],

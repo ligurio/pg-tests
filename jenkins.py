@@ -103,9 +103,9 @@ def check_commits(last_commit):
 
 product_info = branch.split('-')
 if product_info[0] == "pgproee":
-    product_edition = "ee"
+    product_edition = "ent"
 elif product_info[0] == "pgpro":
-    product_edition = "standard"
+    product_edition = "std"
 product_version = product_info[1]
 
 print "Product version %s and edition %s" % (product_version, product_edition)

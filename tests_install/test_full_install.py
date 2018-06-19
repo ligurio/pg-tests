@@ -14,7 +14,7 @@ PRELOAD_LIBRARIES = {
     'standard-10':
         ['auth_delay', 'auto_explain',
          'plantuner', 'shared_ispell', 'pg_pathman'],
-    'ee-10':
+    'ent-10':
         ['auth_delay', 'auto_explain', 'in_memory',
          'pg_shardman', 'pgpro_scheduler',
          'plantuner', 'shared_ispell', 'pg_pathman'],
@@ -24,7 +24,7 @@ PRELOAD_LIBRARIES = {
     'standard-9.6':
         ['auth_delay', 'auto_explain',
          'plantuner', 'shared_ispell', 'pg_pathman'],
-    'ee-9.6':
+    'ent-9.6':
         ['auth_delay', 'auto_explain', 'pgpro_scheduler',
          'plantuner', 'shared_ispell', 'pg_pathman'],
     'cert-enterprise-9.6':
@@ -96,7 +96,7 @@ class TestFullInstall():
             ppversion = pginst.exec_psql_select("SELECT pgpro_version()")
             assert ppversion.startswith('PostgresPro ' + version)
             ppedition = pginst.exec_psql_select("SELECT pgpro_edition()")
-            if edition == 'ee':
+            if edition == 'ent':
                 assert ppedition == 'enterprise'
             elif edition == 'cert-enterprise':
                 assert ppedition == 'enterprise'

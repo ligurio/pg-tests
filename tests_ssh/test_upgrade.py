@@ -27,7 +27,7 @@ class TestMajorUpdates():
     #
     # @pytest.mark.usefixture("create_environment")
     # @pytest.mark.parametrize("from_update, to_update",
-    #                          [(["9.5", "ee"]), (["9.6", "standard"]),
+    #                          [(["9.5", "ent"]), (["9.6", "standard"]),
     #                           ("9.6", "10")],
     #                          indirect=True)
     # def test_major_migration(self, from_update, to_update):
