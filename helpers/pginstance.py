@@ -403,8 +403,7 @@ class PgInstance:
     @property
     def get_edition(self):
         """Get postgrespro edition.
-        It can be std, ent, standard-certified and
-         enterprise-certified
+        It can be standard, enterprise
 
         :return: string
         """
