@@ -464,3 +464,6 @@
     when: ansible_os_family == "Windows"
     win_shell: 'pip install -r C:\Users\test\pg-tests\tests_install\requirements.txt'
 
+  - name: windows - disable time synchronization
+    when: ansible_os_family == "Windows"
+    win_shell: 'w32tm /unregister'

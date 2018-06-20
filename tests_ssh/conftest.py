@@ -31,7 +31,7 @@ def pytest_addoption(parser):
         help="Specify product name. Available values: postgrespro, postresql")
     parser.addoption(
         "--product_edition", action="store", default='ent',
-        help="Specify product edition. Available values: ent, standard")
+        help="Specify product edition. Available values: ent, std")
     parser.addoption(
         "--product_milestone", action="store", default='beta',
         help="Specify product milestone. Available values: beta")

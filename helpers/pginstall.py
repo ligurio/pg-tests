@@ -82,7 +82,7 @@ class PgInstall:
         self.client_path_needed = False
         self.server_path_needed = False
 
-        if edition in ['standard', 'cert-standard']:
+        if edition in ['std', 'cert-standard']:
             self.alter_edtn = 'std'
         elif edition in ['ent', 'cert-enterprise']:
             self.alter_edtn = 'ent'
@@ -94,7 +94,7 @@ class PgInstall:
         if self.product == "postgrespro":
             if self.edition == "ent":
                 product_dir = "pgproee-%s" % self.version
-            elif self.edition == "standard":
+            elif self.edition == "std":
                 product_dir = "pgpro-%s" % self.version
             elif self.edition == "cert-standard" and self.version == "9.6":
                 product_dir = "pgpro-std-9.6.3.1/repo"
@@ -266,7 +266,7 @@ class PgInstall:
                         baseurl = os.path.join(
                             PGPRO_ARCHIVE_ENTERPRISE, self.version, distname)
                         gpg_key_url = PGPRO_ARCHIVE_ENTERPRISE + self.version
-                    elif self.edition == "standard":
+                    elif self.edition == "std":
                         baseurl = os.path.join(
                             PGPRO_ARCHIVE_STANDARD, self.version, distname)
                         gpg_key_url = PGPRO_ARCHIVE_STANDARD + self.version
@@ -688,7 +688,7 @@ baseurl=%s
                 elif self.edition == "cert-standard":
                     pkg_name = "postgrespro%s.%s" % (
                         major, minor)
-                elif self.edition == "standard":
+                elif self.edition == "std":
                     pkg_name = "postgrespro%s.%s" % (
                         major, minor)
                 else:
@@ -716,7 +716,7 @@ baseurl=%s
                 if self.edition in ["ent", "cert-enterprise"]:
                     pkg_name = "%s-enterprise%s.%s" % (
                         self.product, major, minor)
-                elif self.edition == "standard":
+                elif self.edition == "std":
                     pkg_name = "postgrespro%s.%s" % (
                         major, minor)
                 else:
@@ -832,7 +832,7 @@ baseurl=%s
                 pkg_name = "%s-enterprise%s.%s" % (self.product, major, minor)
             elif self.edition == 'cert-standard':
                 pkg_name = "postgrespro%s.%s" % (major, minor)
-            elif self.edition == "standard":
+            elif self.edition == "std":
                 pkg_name = "postgrespro%s.%s" % (major, minor)
             else:
                 pkg_name = self.product + major + minor
