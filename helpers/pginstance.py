@@ -67,7 +67,7 @@ class PgInstance:
         """ Install product
         Parameter: Product name: postgrespro, postgresql
         Parameter: Product version: 9.5, 9.6 etc
-        Parameter: Product editions (postgrespro only): standard, ent
+        Parameter: Product editions (postgrespro only): std, ent
         Parameter: Product milestone (postgrespro only): beta
         """
         raise Exception("Not implemented.")
@@ -403,7 +403,7 @@ class PgInstance:
     @property
     def get_edition(self):
         """Get postgrespro edition.
-        It can be standard, enterprise, standard-certified and
+        It can be std, ent, standard-certified and
          enterprise-certified
 
         :return: string
@@ -432,7 +432,7 @@ class PgInstance:
                 position = minor_versions.index(version)
         return minor_versions[position + 1:]
 
-    def move_data_direcory(self, version, edition="standard",
+    def move_data_direcory(self, version, edition="std",
                            remote=False, host=None):
         """Move data directory from one folder to another
 
@@ -443,7 +443,7 @@ class PgInstance:
         distro = get_distro()[0]
         self.kill_postgres_instance()
         if distro in RPM_BASED:
-            if edition == "standard":
+            if edition == "std":
                 cmd = "cp -r /var/lib/pgsql/%s.%s/data/" \
                     " /var/lib/pgpro/%s.%s/" % (major, minor, major, minor)
                 command_executor(cmd)
@@ -474,7 +474,7 @@ class PgInstance:
         return command_executor(cmd)
 
     def get_pgpro_minor_versions(self, major_version='9.6',
-                                 edition='standard'):
+                                 edition='std'):
         """ Get all minor versions of pgpro
 
         :return: list with minor version
@@ -482,7 +482,7 @@ class PgInstance:
         # TODO add dependencie from distribution because
         #  not for all dists we have all updates
         minor_versions = []
-        if edition == 'standard':
+        if edition == 'std':
             page = urllib.urlopen(PGPRO_ARCHIVE_STANDARD).read()
         elif edition == 'ent':
             page = urllib.urlopen(PGPRO_ARCHIVE_ENTERPRISE).read()
@@ -494,7 +494,7 @@ class PgInstance:
 
     def get_pgpro_earliest_minor_version(self,
                                          major_version='9.6',
-                                         edition="standard"):
+                                         edition="std"):
         """ Get earliest minor version
         :return string with earliest minor version
         """

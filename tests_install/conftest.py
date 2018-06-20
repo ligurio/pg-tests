@@ -15,7 +15,7 @@ else:
 
 def pytest_addoption(parser):
     """This method needed for running pytest test with options
-    Example: command "pytest --product_edition=standard" will install
+    Example: command "pytest --product_edition=std" will install
     postgrespro with standard edition
 
     :param parser pytest default param for command line args:
@@ -32,7 +32,7 @@ def pytest_addoption(parser):
         help="Specify product name. Available values: postgrespro, postresql")
     parser.addoption(
         "--product_edition", action="store", default='ent',
-        help="Specify product edition. Available values: ent, standard")
+        help="Specify product edition. Available values: ent, std")
     parser.addoption(
         "--product_milestone", action="store",
         help="Specify product milestone. Available values: beta")

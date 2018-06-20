@@ -46,13 +46,13 @@ class TestMinorUpdates():
     connstring = "host=localhost user=postgres"
 
     def get_pgpro_minor_versions(self, major_version='9.6',
-                                 edition='standard'):
+                                 edition='std'):
         """ Get all minor versions of pgpro
 
         :return: list with minor version
         """
         minor_versions = []
-        if edition == 'standard':
+        if edition == 'std':
             page = urllib.urlopen(self.PGPRO_ARCHIVE_STANDARD).read()
         elif edition == 'ent':
             page = urllib.urlopen(self.PGPRO_ARCHIVE_ENTERPRISE).read()
@@ -63,7 +63,7 @@ class TestMinorUpdates():
         return minor_versions
 
     def get_pgpro_earliest_minor_version(self, major_version='9.6',
-                                         edition="standard"):
+                                         edition="std"):
         """ Get earlies minor version
         :return string with earliest minor version
         """
@@ -72,7 +72,7 @@ class TestMinorUpdates():
         return versions[0]
 
     def generate_repo_info(self, distro, osversion, version,
-                           edition="standard"):
+                           edition="std"):
         """
 
         :return:
@@ -105,7 +105,7 @@ class TestMinorUpdates():
             baseurl = os.path.join(self.PGPRO_ARCHIVE_ENTERPRISE,
                                    version, distname)
             gpg_key_url = self.PGPRO_ARCHIVE_ENTERPRISE + version
-        elif edition == "standard":
+        elif edition == "std":
             baseurl = os.path.join(self.PGPRO_ARCHIVE_STANDARD,
                                    version, distname)
             gpg_key_url = self.PGPRO_ARCHIVE_STANDARD + version
@@ -114,7 +114,7 @@ class TestMinorUpdates():
         logging.debug("GPG key url for installation: %s" % gpg_key_url)
         return baseurl, gpg_key_url
 
-    def setup_repo(self, version, edition="standard"):
+    def setup_repo(self, version, edition="std"):
         """
         Check that we already has repo file
         Delete old repo file if needed
@@ -185,7 +185,7 @@ enabled=1
             print "Unsupported distro %s" % dist_info[0]
             sys.exit(1)
 
-    def package_mgmt(self, version, edition="standard"):
+    def package_mgmt(self, version, edition="std"):
         dist_info = get_distro()
         major = "9"
         minor = version.split(".")[1]
@@ -193,7 +193,7 @@ enabled=1
         if dist_info[0] in RPM_BASED:
             if edition == "ent":
                 pkg_name = "postgrespro-enterprise%s%s" % (major, minor)
-            elif edition == "standard":
+            elif edition == "std":
                 pkg_name = "postgrespro%s%s" % (major, minor)
 
             for p in PACKAGES:
@@ -218,7 +218,7 @@ enabled=1
                 command_executor(cmd)
 
         elif "ALT" in dist_info[0]:
-            if edition == "standard":
+            if edition == "std":
                 pkg_name = "postgrespro%s.%s" % (major, minor)
             elif edition == "ent":
                 pkg_name = "postgrespro-enterprise%s.%s" % (major, minor)
@@ -230,7 +230,7 @@ enabled=1
             #         pkg_name, "pg_probackup")
             #     command_executor(cmd)
 
-    def delete_repo(self, version, edition="standard"):
+    def delete_repo(self, version, edition="std"):
         """ Delete repo file
         """
         dist_info = get_distro()
@@ -252,7 +252,7 @@ enabled=1
             print "Unsupported distro %s" % dist_info[0]
             sys.exit(1)
 
-    def setup_psql(self, version, edition="standard"):
+    def setup_psql(self, version, edition="std"):
         """
 
         :return: None
@@ -291,7 +291,7 @@ host    all             all             ::0/0                   trust"""
         cmd = "chown postgres:postgres %s" % hba_file
         return command_executor(cmd)
 
-    def pg_start_script_name(self, version, distro, edition="standard"):
+    def pg_start_script_name(self, version, distro, edition="std"):
         """
 
         :param version:
@@ -299,7 +299,7 @@ host    all             all             ::0/0                   trust"""
         :return:
         """
         print(version)
-        if edition == "standard":
+        if edition == "std":
             version = version.strip("pgpro-")
         elif edition == "ent":
             version = version.strip("pgproee-")
@@ -311,7 +311,7 @@ host    all             all             ::0/0                   trust"""
                 assert service_name is not None
                 return service_name
             else:
-                if edition == "standard":
+                if edition == "std":
                     service_name = "postgrespro-%s.%s" % (major, minor)
                 elif edition == "ent":
                     service_name = "postgrespro-enterprise-%s.%s" % (
@@ -327,13 +327,13 @@ host    all             all             ::0/0                   trust"""
             assert service_name is not None
             return service_name
 
-    def start_script_name(self, version, edition="standard"):
+    def start_script_name(self, version, edition="std"):
 
         return self.pg_start_script_name(version, distro=get_distro()[0],
                                          edition=edition)
 
     def manage_psql(self, action, data_dir=None, version="9.6",
-                    edition="standard"):
+                    edition="std"):
         """ Manage Postgres instance
         :param action: start, restart, stop etc
         :param init: Initialization before a first start
@@ -384,7 +384,7 @@ host    all             all             ::0/0                   trust"""
         cmd = "kill -9 %s" % ppid
         return command_executor(cmd)
 
-    def move_data_direcory(self, version, edition="standard"):
+    def move_data_direcory(self, version, edition="std"):
         """Move data directory from one folder to another
 
         :return:
@@ -394,7 +394,7 @@ host    all             all             ::0/0                   trust"""
         distro = get_distro()[0]
         self.kill_postgres_instance()
         if distro in RPM_BASED:
-            if edition == "standard":
+            if edition == "std":
                 cmd = "cp -r /var/lib/pgsql/%s.%s/data/" \
                     " /var/lib/pgpro/%s.%s/" % (major, minor, major, minor)
                 command_executor(cmd)
@@ -503,7 +503,7 @@ host    all             all             ::0/0                   trust"""
         # Steps 4-6
         for version in minor_versions:
             print("Trying to update to version: %s" % version)
-            if edition == "standard":
+            if edition == "std":
                 version_for_check = version.strip("pgpro-")
             else:
                 version_for_check = version.strip("pgproee-")
