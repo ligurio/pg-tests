@@ -82,9 +82,9 @@ class PgInstall:
         self.client_path_needed = False
         self.server_path_needed = False
 
-        if edition in ['std', 'cert-standard']:
+        if edition in ['std', 'std-cert']:
             self.alter_edtn = 'std'
-        elif edition in ['ent', 'cert-enterprise']:
+        elif edition in ['ent', 'ent-cert']:
             self.alter_edtn = 'ent'
         else:
             self.alter_edtn = edition
@@ -96,13 +96,13 @@ class PgInstall:
                 product_dir = "pgproee-%s" % self.version
             elif self.edition == "std":
                 product_dir = "pgpro-%s" % self.version
-            elif self.edition == "cert-standard" and self.version == "9.6":
+            elif self.edition == "std-cert" and self.version == "9.6":
                 product_dir = "pgpro-std-9.6.3.1/repo"
-            elif self.edition == "cert-enterprise" and self.version == "9.6":
+            elif self.edition == "ent-cert" and self.version == "9.6":
                 product_dir = "pgpro-ent-9.6.8.2/repo"
-            elif self.edition == "cert-enterprise" and self.version == "10":
+            elif self.edition == "ent-cert" and self.version == "10":
                 product_dir = "pgpro-ent-10.3.3/repo"
-            elif self.edition == "cert-standard" and self.version == "10":
+            elif self.edition == "std-cert" and self.version == "10":
                 product_dir = "pgpro-std-10.4.1/repo"
             elif self.edition == "1c":
                 product_dir = "1c-%s" % self.version
@@ -114,12 +114,12 @@ class PgInstall:
         if self.product == 'postgrespro':
             if self.version == '9.5' or self.version == '9.6':
                 if self.__is_os_altlinux():
-                    if self.edition in ['ent', 'cert-enterprise']:
+                    if self.edition in ['ent', 'ent-cert']:
                         return '%s-%s%s' % (self.product, 'enterprise',
                                             self.version)
                     return '%s%s' % (self.product, self.version)
                 if self.__is_os_redhat_based() or self.__is_os_suse():
-                    if self.edition in ['ent', 'cert-enterprise']:
+                    if self.edition in ['ent', 'ent-cert']:
                         return '%s-%s%s' % (self.product, 'enterprise',
                                             self.version.replace('.', ''))
                     return '%s%s' % (self.product,
@@ -242,7 +242,7 @@ class PgInstall:
                 distname = "Windows"
             else:
                 distname = dist[self.os_name].lower()
-            if self.edition in ['cert-standard', 'cert-enterprise']:
+            if self.edition in ['std-cert', 'ent-cert']:
                 baseurl = "/".join([
                     PGPROCERT_BASE,
                     product_dir, distname])
@@ -421,7 +421,7 @@ baseurl=%s
             pass
         elif self.product == "postgrespro":
             product_dir = self.__get_product_dir()
-            if self.edition in ['cert-enterprise', 'cert-standard']:
+            if self.edition in ['ent-cert', 'std-cert']:
                 baseurl = PGPROCERT_BASE + \
                     product_dir.replace('/repo', '/sources')
             else:
@@ -595,7 +595,7 @@ baseurl=%s
         pkg_name = ""
         if self.os_name in RPM_BASED:
             if action == "install":
-                if self.edition in ["ent", "cert-enterprise"]:
+                if self.edition in ["ent", "ent-cert"]:
                     pkg_name = "%s-enterprise%s%s" % (
                         self.product, major, minor)
                 else:
@@ -608,7 +608,7 @@ baseurl=%s
                     cmd = "yum install -y %s-%s" % (pkg_name, "pg_probackup")
                     command_executor(cmd, self.remote, self.host,
                                      REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-                if self.edition in ['cert-standard', 'cert-enterprise']:
+                if self.edition in ['std-cert', 'ent-cert']:
                     cmd = "yum install -y pgbouncer"
                     command_executor(cmd, self.remote, self.host,
                                      REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
@@ -618,7 +618,7 @@ baseurl=%s
                                      REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
             elif action == "upgrade":
-                if self.edition in ["ent", "cert-enterprise"]:
+                if self.edition in ["ent", "ent-cert"]:
                     pkg_name = "%s-enterprise%s%s" % (
                         self.product, major, minor)
                 else:
@@ -651,7 +651,7 @@ baseurl=%s
                         self.product, self.version)
                     command_executor(cmd, self.remote, self.host,
                                      REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-                if self.edition in ['cert-standard', 'cert-enterprise']:
+                if self.edition in ['std-cert', 'ent-cert']:
                     cmd = "apt-get install -y pgbouncer"
                     command_executor(cmd, self.remote, self.host,
                                      REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
@@ -682,10 +682,10 @@ baseurl=%s
 
         elif "ALT" in self.os_name:
             if action == "install":
-                if self.edition in ["ent", "cert-enterprise"]:
+                if self.edition in ["ent", "ent-cert"]:
                     pkg_name = "%s-enterprise%s.%s" % (
                         self.product, major, minor)
-                elif self.edition == "cert-standard":
+                elif self.edition == "std-cert":
                     pkg_name = "postgrespro%s.%s" % (
                         major, minor)
                 elif self.edition == "std":
@@ -703,7 +703,7 @@ baseurl=%s
                                                         "pg_probackup")
                     command_executor(cmd, self.remote, self.host,
                                      REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-                if self.edition in ['cert-standard', 'cert-enterprise']:
+                if self.edition in ['std-cert', 'ent-cert']:
                     cmd = "apt-get install -y pgbouncer"
                     command_executor(cmd, self.remote, self.host,
                                      REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
@@ -713,7 +713,7 @@ baseurl=%s
                                      REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
             elif action == "upgrade":
-                if self.edition in ["ent", "cert-enterprise"]:
+                if self.edition in ["ent", "ent-cert"]:
                     pkg_name = "%s-enterprise%s.%s" % (
                         self.product, major, minor)
                 elif self.edition == "std":
@@ -791,7 +791,7 @@ baseurl=%s
                 cmd = "yum remove -y %s-%s" % (pkg_name, "pg_probackup")
                 command_executor(cmd, self.remote, self.host,
                                  REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-            if self.edition in ['cert-standard', 'cert-enterprise']:
+            if self.edition in ['std-cert', 'ent-cert']:
                 cmd = "yum remove -y pgbouncer"
                 command_executor(cmd, self.remote, self.host,
                                  REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
@@ -817,7 +817,7 @@ baseurl=%s
                     self.product, self.version)
                 command_executor(cmd, self.remote, self.host,
                                  REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-            if self.edition in ['cert-standard', 'cert-enterprise']:
+            if self.edition in ['std-cert', 'ent-cert']:
                 cmd = "apt-get remove -y pgbouncer"
                 command_executor(cmd, self.remote, self.host,
                                  REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
@@ -828,9 +828,9 @@ baseurl=%s
                                  REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
         elif "ALT" in self.os_name:
-            if self.edition in ["ent", "cert-enterprise"]:
+            if self.edition in ["ent", "ent-cert"]:
                 pkg_name = "%s-enterprise%s.%s" % (self.product, major, minor)
-            elif self.edition == 'cert-standard':
+            elif self.edition == 'std-cert':
                 pkg_name = "postgrespro%s.%s" % (major, minor)
             elif self.edition == "std":
                 pkg_name = "postgrespro%s.%s" % (major, minor)
@@ -845,7 +845,7 @@ baseurl=%s
                 cmd = "apt-get remove -y %s-%s" % (pkg_name, "pg_probackup")
                 command_executor(cmd, self.remote, self.host,
                                  REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-            if self.edition in ['cert-standard', 'cert-enterprise']:
+            if self.edition in ['std-cert', 'ent-cert']:
                 cmd = "apt-get remove -y pgbouncer"
                 command_executor(cmd, self.remote, self.host,
                                  REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
@@ -939,7 +939,7 @@ baseurl=%s
                     return '%s-%s%s' % (self.product,
                                         'enterprise-'
                                         if self.edition in
-                                        ["ent", "cert-enterprise"] else
+                                        ["ent", "ent-cert"] else
                                         '',
                                         self.version)
                 return '%s-%s-%s' % (self.product,
@@ -957,13 +957,13 @@ baseurl=%s
                     if self.__is_os_suse():
                         return '/usr/lib/postgrespro%s%s' % (
                             '-enterprise'
-                            if self.edition in ["ent", "cert-enterprise"] else
+                            if self.edition in ["ent", "ent-cert"] else
                             '',
                             self.version.replace('.', '')
                         )
                     return '/usr/pgpro%s-%s' % (
                         'ee'
-                        if self.edition in ["ent", "cert-enterprise"] else
+                        if self.edition in ["ent", "ent-cert"] else
                         '',
                         self.version)
                 return '/opt/pgpro/%s-%s' % (self.alter_edtn,
@@ -972,7 +972,7 @@ baseurl=%s
             if self.product == 'postgrespro':
                 return 'C:\\Program Files\\PostgresPro%s\\%s' % \
                     ('Enterprise'
-                     if self.edition in ["ent", "cert-enterprise"] else
+                     if self.edition in ["ent", "ent-cert"] else
                      '',
                      self.version)
             raise Exception('Product %s is not supported.' % self.product)
@@ -1002,7 +1002,7 @@ baseurl=%s
                         return '/var/lib/pgsql/data'
                     return '/var/lib/pgpro%s/%s/data' % (
                         'ee'
-                        if self.edition in ['ent', 'cert-enterprise'] else
+                        if self.edition in ['ent', 'ent-cert'] else
                         '',
                         self.version
                         )

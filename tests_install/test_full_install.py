@@ -18,7 +18,7 @@ PRELOAD_LIBRARIES = {
         ['auth_delay', 'auto_explain', 'in_memory',
          'pg_shardman', 'pgpro_scheduler',
          'plantuner', 'shared_ispell', 'pg_pathman'],
-    'cert-standard-10':
+    'std-cert-10':
         ['auth_delay', 'auto_explain', 'pgaudit',
          'plantuner', 'shared_ispell', 'pg_pathman'],
     'std-9.6':
@@ -27,11 +27,11 @@ PRELOAD_LIBRARIES = {
     'ent-9.6':
         ['auth_delay', 'auto_explain', 'pgpro_scheduler',
          'plantuner', 'shared_ispell', 'pg_pathman'],
-    'cert-enterprise-9.6':
+    'ent-cert-9.6':
         ['auth_delay', 'auto_explain', 'passwordcheck',
          'pgaudit', 'pgpro_scheduler', 'plantuner',
          'shared_ispell', 'pg_pathman'],
-    'cert-enterprise-10':
+    'ent-cert-10':
         ['auth_delay', 'auto_explain', 'in_memory', 'pgaudit',
          'passwordcheck',
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
@@ -98,7 +98,7 @@ class TestFullInstall():
             ppedition = pginst.exec_psql_select("SELECT pgpro_edition()")
             if edition == 'ent':
                 assert ppedition == 'enterprise'
-            elif edition == 'cert-enterprise':
+            elif edition == 'ent-cert':
                 assert ppedition == 'enterprise'
             else:
                 assert ppedition == 'standard'
@@ -243,7 +243,7 @@ $$ LANGUAGE plpgsql;"""
         """
 
         pginst = request.cls.pginst
-        if request.config.getoption('--product_edition') != "cert-enterprise":
+        if request.config.getoption('--product_edition') != "ent-cert":
             pytest.skip("This test only for certified enterprise version.")
 
         result = pginst.exec_psql_select("SHOW passwordcheck.min_unique_chars")

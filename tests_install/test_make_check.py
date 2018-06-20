@@ -19,7 +19,7 @@ PRELOAD_LIBRARIES = {
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
          'pg_pathman'],
-    'cert-standard-10':
+    'std-cert-10':
         ['auth_delay', 'auto_explain', 'pgaudit',
          'plantuner', 'shared_ispell', 'pg_pathman'],
     'std-9.6':
@@ -29,11 +29,11 @@ PRELOAD_LIBRARIES = {
         ['auth_delay', 'auto_explain',
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling', 'pg_pathman'],
-    'cert-enterprise-9.6':
+    'ent-cert-9.6':
         ['auth_delay', 'auto_explain',
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling', 'pg_pathman'],
-    'cert-enterprise-10':
+    'ent-cert-10':
         ['auth_delay', 'auto_explain', 'in_memory', 'pgaudit',
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling', 'pg_shardman',

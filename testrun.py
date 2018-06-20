@@ -139,7 +139,8 @@ def prepare_payload(tests_dir, clean):
     tar_path = os.path.join(rsrcdir, TESTS_PAYLOAD_TAR)
     zip_path = os.path.join(rsrcdir, TESTS_PAYLOAD_ZIP)
     if clean:
-        shutil.rmtree(rsrcdir)
+        if os.path.isdir(rsrcdir):
+            shutil.rmtree(rsrcdir)
     while True:
         if os.path.isdir(rsrcdir):
             timeout = 0
