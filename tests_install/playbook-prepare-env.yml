@@ -447,6 +447,14 @@
         - 'C:\Python27\Scripts'
     when: ansible_os_family == "Windows"
 
+  - name: windows - setup Python home
+    win_environment:
+        state: present
+        name: PYTHONHOME
+        value: C:\Python27
+        level: machine
+    when: ansible_os_family == "Windows"
+
   - name: windows - copy tests payload
     win_copy:
       src:  "{{ payload_win }}"
