@@ -7,7 +7,7 @@ tparts=(${job//-/ })
 codename=${tparts[0]}
 version=${tparts[1]}
 
-substr1=${1#*-}
+substr1=${job#*-}
 os=${substr1#*-}
 ext=${os##*-}
 case "$ext" in
@@ -40,5 +40,5 @@ pgproee)
     ;;
 esac
 
-sudo chmod -R 777 .
-sudo -u tester -i sh -c "cd '$PWD'; ./testrun.py --product_name $product --product_edition $edition --product_version $version --target $target $extraopt --test tests_install/ --clean --export"
+echo sudo chmod -R 777 .
+echo sudo -u tester -i sh -c "cd '$PWD'; ./testrun.py --product_name $product --product_edition $edition --product_version $version --target $target $extraopt --test tests_install/ --clean --export"
