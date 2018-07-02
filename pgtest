@@ -1,0 +1,43 @@
+#!/bin/bash
+
+set -e
+
+tparts=(${1//-/ })
+codename=${tparts[0]}
+version=${tparts[1]}
+
+substr1=${1#*-}
+os=${substr1#*-}
+ext=${os##*-}
+case "$ext" in
+amd64)
+    target=${os%-amd64}
+    ;;
+multimaster)
+    echo "Invalid project extension ($ext) in $1"
+    exit 1
+    ;;
+*)
+    target=$os
+    ;;
+esac
+
+case "$codename" in
+pgpro)
+    product="postgrespro"
+    edition="std"
+    extraopt="--product_milestone beta"
+    ;;
+pgproee)
+    product="postgrespro"
+    edition="ent"
+    extraopt="--product_milestone beta"
+    ;;
+*)
+    echo "Invalid codename: $codename"
+    exit 1
+    ;;
+esac
+
+sudo chmod -R 777 .
+sudo -u tester -i sh -c "cd '$PWD'; ./testrun.py --product_name $product --product_edition $edition --product_version $version --target $target $extraopt --test tests_install/ --clean --export"
