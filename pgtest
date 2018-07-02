@@ -2,7 +2,8 @@
 
 set -e
 
-tparts=(${1//-/ })
+job=${1##*/}
+tparts=(${job//-/ })
 codename=${tparts[0]}
 version=${tparts[1]}
 
