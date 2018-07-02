@@ -11,6 +11,15 @@ substr1=${job#*-}
 os=${substr1#*-}
 ext=${os##*-}
 case "$ext" in
+test)
+    os=${os%-test}
+    ;;
+*)
+    ;;
+esac
+
+ext=${os##*-}
+case "$ext" in
 amd64)
     target=${os%-amd64}
     ;;
