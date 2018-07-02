@@ -9,6 +9,15 @@ version=${tparts[1]}
 
 substr1=${job#*-}
 os=${substr1#*-}
+edn=""
+case "$os" in
+cert-*)
+    os=${os#cert-}
+    edn="-cert"
+    ;;
+*)
+    ;;
+esac
 ext=${os##*-}
 case "$ext" in
 test)
@@ -35,12 +44,12 @@ esac
 case "$codename" in
 pgpro)
     product="postgrespro"
-    edition="std"
+    edition="std$edn"
     extraopt="--product_milestone beta"
     ;;
 pgproee)
     product="postgrespro"
-    edition="ent"
+    edition="ent$edn"
     extraopt="--product_milestone beta"
     ;;
 *)
