@@ -45,12 +45,12 @@ case "$codename" in
 pgpro)
     product="postgrespro"
     edition="std$edn"
-    extraopt="--product_milestone beta"
+    [ X"$edn" == X"-cert" ] || extraopt="--product_milestone beta"
     ;;
 pgproee)
     product="postgrespro"
     edition="ent$edn"
-    extraopt="--product_milestone beta"
+    [ X"$edn" == X"-cert" ] || extraopt="--product_milestone beta"
     ;;
 *)
     echo "Invalid codename: $codename"
