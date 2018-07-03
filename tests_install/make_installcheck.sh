@@ -90,7 +90,7 @@ if ./configure --help | grep '  --enable-svt5'; then
         curl -O http://www.cpan.org/authors/id/D/DP/DPATES/Fuse-0.16.tar.gz
         fi
         tar fax Fuse* && \
-        cd Fuse* && perl Makefile.PL && make && make install
+        cd Fuse*/ && perl Makefile.PL && make && make install
         )
     fi
 fi
