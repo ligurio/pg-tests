@@ -60,7 +60,8 @@ set -e
 if which apt-get; then
     apt-get install -y gcc || true
     apt-get install -y make
-    grep -E '(Debian GNU/Linux 9|"Ubuntu 17.10")' /etc/os-release && \
+    grep -E '(Debian GNU/Linux 9|"Ubuntu 17.10"|'\
+'"Astra Linux \(Smolensk 1.5.28\)")' /etc/os-release && \
         apt install -y libdpkg-perl
 elif which zypper; then
     zypper install -y gcc make
@@ -73,7 +74,7 @@ tar.gz/master -O pg_wait_sampling.tar.gz ||
 curl https://codeload.github.com/postgrespro/pg_wait_sampling/\
 tar.gz/master -o pg_wait_sampling.tar.gz
 tar fax pg_wait_sampling* && \
-cd pg_wait_sampling*
+cd pg_wait_sampling*/
 export PATH=%s:$PATH
 make USE_PGXS=1
 make USE_PGXS=1 install
@@ -87,7 +88,7 @@ chmod 777 .
                 'pg_wait_sampling')
             pginst.restart_service()
             test_script = r"""
-cd /tmp/pg_wait_sampling*
+cd /tmp/pg_wait_sampling*/
 sudo -u postgres sh -c "export PATH=%s:$PATH; make USE_PGXS=1 installcheck"
 """ % (pg_bin_path)
             subprocess.check_call(test_script, shell=True)

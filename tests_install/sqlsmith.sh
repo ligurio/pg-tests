@@ -83,7 +83,7 @@ curl --tlsv1.2 -sS -L https://github.com/jtv/libpqxx/archive/6.1.0.tar.gz \
     -o libpqxx.tar.gz || \
 wget https://github.com/jtv/libpqxx/archive/6.1.0.tar.gz -O libpqxx.tar.gz
 tar fax libpqxx.tar.gz
-cd libpqxx*
+cd libpqxx*/
 ./configure --disable-documentation && make && make install
 
 cd ~test/pg-tests
@@ -91,7 +91,7 @@ curl --tlsv1.2 -sS -L https://github.com/anse1/sqlsmith/archive/master.tar.gz \
     -o ss.tar.gz || \
 wget https://github.com/anse1/sqlsmith/archive/master.tar.gz -O ss.tar.gz
 tar fax ss.tar.gz
-cd sqlsmith*
+cd sqlsmith*/
 sed -e 's|\[m4_esyscmd_s(\[git describe --dirty --tags --always\])\]|1|' -i configure.ac # To do with old autoconf and without git
 autoreconf -i
 sed -e 's|char conninfo="dbname = postgres";|char conninfo[]="dbname = postgres";|' -i configure # https://github.com/autoconf-archive/autoconf-archive/pull/158

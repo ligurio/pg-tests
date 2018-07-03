@@ -90,14 +90,14 @@ if ./configure --help | grep '  --enable-svt5'; then
         curl -O http://www.cpan.org/authors/id/D/DP/DPATES/Fuse-0.16.tar.gz
         fi
         tar fax Fuse* && \
-        cd Fuse* && perl Makefile.PL && make && make install
+        cd Fuse*/ && perl Makefile.PL && make && make install
         )
     fi
 fi
 # PGPRO-1678
 sed -s 's|logging_collector = on|# logging_collector = off|' -i `$1/bin/pg_config --sharedir`/postgresql.conf.sample
 
-if patch -p1 --dry-run -i ../patches/make-instalcheck-10.patch; then
+if patch -p1 --dry-run -i ../patches/make-installcheck-10.patch; then
     echo "Fixing Makefiles for installcheck-world..."
     patch -p1 -i ../patches/make-installcheck-10.patch
 else

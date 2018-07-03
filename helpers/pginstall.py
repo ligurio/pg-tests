@@ -235,6 +235,8 @@ class PgInstall:
                     distname = "astra-smolensk/1.4"
                 elif self.os_version == "1.5":
                     distname = "astra-smolensk/1.5"
+                elif self.os_version == "1.5.28":
+                    distname = "astra-smolensk/1.6"
             elif self.os_name == "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1" \
                     "\xd1\x84\xd0\xb5\xd1\x80\xd0\xb0 ":
                 distname = "msvsphere"
