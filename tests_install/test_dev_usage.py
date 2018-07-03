@@ -60,7 +60,8 @@ set -e
 if which apt-get; then
     apt-get install -y gcc || true
     apt-get install -y make
-    grep -E '(Debian GNU/Linux 9|"Ubuntu 17.10")' /etc/os-release && \
+    grep -E '(Debian GNU/Linux 9|"Ubuntu 17.10"|'\
+'"Astra Linux \(Smolensk 1.5.28\)")' /etc/os-release && \
         apt install -y libdpkg-perl
 elif which zypper; then
     zypper install -y gcc make
