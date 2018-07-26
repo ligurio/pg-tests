@@ -19,6 +19,7 @@ PGPRO_ARCHIVE_STANDARD = "http://repo.postgrespro.ru/pgpro-archive/"
 PGPRO_ARCHIVE_ENTERPRISE = "http://repoee.l.postgrespro.ru/archive/"
 PGPRO_BRANCH_BASE = "http://localrepo.l.postgrespro.ru/branches/"
 PGPRO_BASE = "http://repo.postgrespro.ru/"
+PGPROALPHA_BASE = "http://localrepo.l.postgrespro.ru/dev/"
 PGPROCERT_BASE = "http://localrepo.l.postgrespro.ru/cert/"
 PSQL_BASE = "https://download.postgresql.org/pub"
 WIN_INST_DIR = "C:\\Users\\test\\pg-tests\\pg_installer"
@@ -89,6 +90,11 @@ class PgInstall:
         else:
             self.alter_edtn = edition
 
+    def get_repo_base(self):
+        if self.milestone == "alpha":
+            return PGPROALPHA_BASE
+        return PGPRO_BASE
+
     def __get_product_dir(self):
         product_dir = ""
         if self.product == "postgrespro":
@@ -106,7 +112,7 @@ class PgInstall:
                 product_dir = "pgpro-std-10.4.1/repo"
             elif self.edition == "1c":
                 product_dir = "1c-%s" % self.version
-            if self.milestone:
+            if self.milestone == "beta":
                 product_dir += "-" + self.milestone
         return product_dir
 
@@ -209,7 +215,7 @@ class PgInstall:
                 gpg_key_dir = "1c-" + self.version
             else:
                 gpg_key_dir = "pgpro-" + self.version
-            if self.milestone:
+            if self.milestone == "beta":
                 gpg_key_dir += "-" + self.milestone
             gpg_key_url = "https://repo.postgrespro.ru/%s/" \
                 "keys/GPG-KEY-POSTGRESPRO" % gpg_key_dir
@@ -251,19 +257,21 @@ class PgInstall:
             else:
                 if action == "install":
                     if self.os_name in WIN_BASED:
-                        baseurl = "{}{}/win/".format(PGPRO_BASE, product_dir)
+                        baseurl = "{}{}/win/".format(self.get_repo_base(),
+                                                     product_dir)
                     elif self.branch is not None:
                         baseurl = os.path.join(PGPRO_BRANCH_BASE,
                                                self.branch,
                                                product_dir,
                                                distname)
                     else:
-                        baseurl = os.path.join(PGPRO_BASE,
+                        baseurl = os.path.join(self.get_repo_base(),
                                                product_dir,
                                                distname)
                 elif action == "upgrade":
                     if self.os_name in WIN_BASED:
-                        baseurl = "{}{}/win/".format(PGPRO_BASE, product_dir)
+                        baseurl = "{}{}/win/".format(self.get_repo_base(),
+                                                     product_dir)
                     elif self.edition == "ent":
                         baseurl = os.path.join(
                             PGPRO_ARCHIVE_ENTERPRISE, self.version, distname)
@@ -427,7 +435,7 @@ baseurl=%s
                 baseurl = PGPROCERT_BASE + \
                     product_dir.replace('/repo', '/sources')
             else:
-                baseurl = "/".join([PGPRO_BASE, product_dir, 'src'])
+                baseurl = "/".join([self.get_repo_base(), product_dir, 'src'])
         soup = BeautifulSoup(urllib.urlopen(baseurl))
         tar_href = None
         # TODO: Download exactly installed version

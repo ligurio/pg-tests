@@ -2,11 +2,13 @@
 
 set -e
 
+branch=${1%%/*}
 job=${1##*/}
 tparts=(${job//-/ })
 codename=${tparts[0]}
 version=${tparts[1]}
 
+echo $branch
 substr1=${job#*-}
 os=${substr1#*-}
 edn=""
@@ -45,16 +47,26 @@ case "$codename" in
 pgpro)
     product="postgrespro"
     edition="std$edn"
-    [ X"$edn" == X"-cert" ] || extraopt="--product_milestone beta"
     ;;
 pgproee)
     product="postgrespro"
     edition="ent$edn"
-    [ X"$edn" == X"-cert" ] || extraopt="--product_milestone beta"
     ;;
 *)
     echo "Invalid codename: $codename"
     exit 1
+    ;;
+esac
+
+case "$codename" in
+pgpro | pgproee)
+    if [ X"$edn" != X"-cert" ]; then
+        if [ X"$branch" == X"DEV" ]; then
+            extraopt="--product_milestone alpha"
+        else
+            extraopt="--product_milestone beta"
+        fi
+    fi
     ;;
 esac
 
