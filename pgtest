@@ -44,6 +44,10 @@ multimaster)
 esac
 
 case "$codename" in
+pg1c)
+    product="postgrespro"
+    edition="1c"
+    ;;
 pgpro)
     product="postgrespro"
     edition="std$edn"
@@ -59,7 +63,7 @@ pgproee)
 esac
 
 case "$codename" in
-pgpro | pgproee)
+pgpro | pgproee | pg1c )
     if [ X"$edn" != X"-cert" ]; then
         if [ X"$branch" == X"DEV" ]; then
             extraopt="--product_milestone alpha"
