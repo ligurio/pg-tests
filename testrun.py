@@ -314,7 +314,9 @@ def create_env(name, domname, domimage=None):
         print "Waiting for IP address...%d" % timeout
         time.sleep(timeout)
 
-    print "Domain name: %s\nIP address: %s" % (dom.name(), domipaddress)
+    print "Domain name: %s\nIP address: %s, MAC address: %s" % (dom.name(),
+                                                                domipaddress,
+                                                                dommac)
     conn.close()
 
     retcode = call("ssh-keygen -R " + domname,
