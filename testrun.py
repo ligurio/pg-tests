@@ -291,6 +291,10 @@ def create_env(name, domname, domimage=None):
                     <input type='tablet' bus='usb'/>
                     <input type='mouse' bus='ps2'/>
                     <graphics type='vnc' port='-1' listen='0.0.0.0'/>
+                    <channel type='unix'>
+                      <source mode="bind"/>
+                      <target type='virtio' name='org.qemu.guest_agent.0'/>
+                    </channel>
                   </devices>
                 </domain>
                 """ % (domname, ram_size, cpus, qemu_path, domimage,
