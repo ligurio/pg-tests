@@ -458,8 +458,14 @@ def save_env(domname):
     conn = libvirt.open(None)
     dom = conn.lookupByName(domname)
     print('Shutting target down...')
-    if dom.shutdown() < 0:
-        raise Exception('Unable to shutdown %s.' % domname)
+    sdFlags = 2  # Preferred mode -- VIR_DOMAIN_SHUTDOWN_GUEST_AGENT
+    try:
+        if dom.shutdownFlags(sdFlags) < 0:
+            raise Exception('Unable to shutdown %s.' % domname)
+    except libvirt.libvirtError:
+        sdFlags = 1  # Fallback mode -- VIR_DOMAIN_SHUTDOWN_ACPI_POWER_BTN
+        if dom.shutdownFlags(sdFlags) < 0:
+            raise Exception('Unable to shutdown %s.' % domname)
     timeout = 0
     while True:
         timeout += 5
@@ -468,7 +474,7 @@ def save_env(domname):
             time.sleep(timeout)
             if not dom.isActive():
                 break
-            dom.shutdown()
+            dom.shutdownFlags(sdFlags)
         except libvirt.libvirtError, e:
             break
         if timeout == 60:
