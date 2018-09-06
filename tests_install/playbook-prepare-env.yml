@@ -183,12 +183,19 @@
     apt: name={{ item }} state=present update_cache=yes
     with_items:
         - acpid
-        - qemu-guest-agent
         - gcc
         - python-dev
         - sudo
     when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu' or
           ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux')
+    become_method: su
+    become: true
+
+  - name: install required packages (APT)
+    apt: name={{ item }} state=present update_cache=yes
+    with_items:
+        - qemu-guest-agent
+    when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
     become_method: su
     become: true
 
