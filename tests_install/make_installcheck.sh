@@ -92,11 +92,16 @@ fi
 # PGPRO-1678
 sed -s 's|logging_collector = on|# logging_collector = off|' -i `$1/bin/pg_config --sharedir`/postgresql.conf.sample
 
+makeecpg=true
+if patch -p1 --dry-run -i ../patches/make-installcheck-11.patch; then
+    echo "Fixing Makefiles for installcheck-world..."
+    patch -p1 -i ../patches/make-installcheck-11.patch
+    makeecpg=false
+fi
 if patch -p1 --dry-run -i ../patches/make-installcheck-10.patch; then
     echo "Fixing Makefiles for installcheck-world..."
     patch -p1 -i ../patches/make-installcheck-10.patch
-else
-    makeecpg=true
+    makeecpg=false
 fi
 
 sudo -u postgres ./configure --enable-tap-tests --without-readline --with-icu \
