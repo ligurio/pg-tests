@@ -10,9 +10,9 @@ powershell -Command "$shell = New-Object -ComObject Shell.Application; $zip_src 
 REM %TEMP%\7z.exe /S /D="C:\7z\"
 REM https://downloads.sourceforge.net/project/mingw/Installer/mingw-get/mingw-get-0.6.2-beta-20131004-1/mingw-get-0.6.2-mingw32-beta-20131004-1-bin.zip
 REM Alternative way (without 7z, but starts the shell)
-REM powershell -Command "((new-object net.webclient).DownloadFile('http://repo.msys2.org/distrib/x86_64/msys2-x86_64-20161025.exe', 'msys2.exe'))"
+REM powershell -Command "((new-object net.webclient).DownloadFile('http://repo.msys2.org/distrib/x86_64/msys2-x86_64-20180531.exe', 'msys2.exe'))"
 REM msys2.exe --script install.qs
-powershell -Command "((new-object net.webclient).DownloadFile('http://repo.msys2.org/distrib/i686/msys2-base-i686-20161025.tar.xz', '%TEMP%\msys.tar.xz'))"
+powershell -Command "((new-object net.webclient).DownloadFile('http://repo.msys2.org/distrib/i686/msys2-base-i686-20180531.tar.xz', '%TEMP%\msys.tar.xz'))"
 %TEMP%\7za.exe x %TEMP%\msys.tar.xz -so | %TEMP%\7za.exe  x -aoa -si -ttar >%TEMP%/7z-msys.log
 
 REM First run is performed to setup the environment
@@ -37,11 +37,11 @@ export PGUSER=postgres ^&^& ^
 cd /var/src ^&^& ^
 curl -O http://cpan.metacpan.org/authors/id/T/TO/TODDR/IPC-Run-0.96.tar.gz ^&^& ^
 tar fax IPC-Run* ^&^& ^
-(cd IPC-Run* ^&^& perl Makefile.PL ^&^& make ^&^& make install) ^&^& ^
+(cd IPC-Run*/ ^&^& perl Makefile.PL ^&^& make ^&^& make install) ^&^& ^
 echo "Switching log messages language to English (for src/bin/scripts/ tests)" ^&^& ^
 printf "\nlc_messages = 'English_United States.1252'\n" ^>^> "$PGPATH/share/postgresql.conf.sample" ^&^& ^
 tar fax postgres*.tar.bz2 ^&^& ^
-cd postgres* ^&^& ^
+cd postgres*/ ^&^& ^
 ./configure --enable-tap-tests --host=$host --without-zlib --prefix="$PGPATH" ^>configure.log ^&^& ^
 echo "Fixing ECPG test for installcheck..." ^&^& ^
 sed -e "s@^ECPG = ../../preproc/ecpg@ECPG = ecpg@" ^
