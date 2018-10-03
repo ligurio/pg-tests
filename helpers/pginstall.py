@@ -543,15 +543,20 @@ baseurl=%s
         refresh_env_win()
 
     def install_perl_win(self):
+        # Workaround for PGPRO-2021
+        import ssl
+        context = ssl._create_unverified_context()
         if self.os_arch == 'AMD64':
             exename = 'ActivePerl-5.22.4.2205-MSWin32-x64-403863.exe'
+            url = 'https://oc.postgrespro.ru/index.php/s/pL5BjUDCNgRlJGR/' \
+                'download'
         else:
             exename = 'ActivePerl-5.22.4.2205-MSWin32-x86-64int-403863.exe'
-        url = 'http://downloads.activestate.com/ActivePerl/' \
-            'releases/5.22.4.2205/' + exename
+            url = 'https://oc.postgrespro.ru/index.php/s/5rvuVx9NHibDtwS/' \
+                'download'
         if not os.path.exists(WIN_INST_DIR):
             os.mkdir(WIN_INST_DIR)
-        perl_installer = urllib.URLopener()
+        perl_installer = urllib.URLopener(context=context)
         target_path = os.path.join(WIN_INST_DIR, exename)
         perl_installer.retrieve(url, target_path)
 
