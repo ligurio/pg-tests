@@ -437,7 +437,7 @@
     when: ansible_os_family == "Windows" and
           (ansible_architecture == "32-bit" or ansible_architecture == "32-разрядная")
     win_package:
-      path: https://www.python.org/ftp/python/2.7.13/python-2.7.13.msi
+      path: http://webdav.l.postgrespro.ru/DIST/windows/resources/python-2.7.13.msi
       product_id: '{4A656C6C-D24A-473F-9747-3A8D00907A03}'
       state: present
 
@@ -445,7 +445,7 @@
     when: ansible_os_family == "Windows" and
           (ansible_architecture == "64-bit" or ansible_architecture == "64-разрядная")
     win_package:
-      path: https://www.python.org/ftp/python/2.7.13/python-2.7.13.amd64.msi
+      path: http://webdav.l.postgrespro.ru/DIST/windows/resources/python-2.7.13.amd64.msi
       product_id: '{4A656C6C-D24A-473F-9747-3A8D00907A04}'
       state: present
 
