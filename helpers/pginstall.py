@@ -972,6 +972,8 @@ baseurl=%s
                             '',
                             self.version.replace('.', '')
                         )
+                    if self.__is_os_altlinux():
+                        return '/usr'
                     return '/usr/pgpro%s-%s' % (
                         'ee'
                         if self.edition in ["ent", "ent-cert"] else
@@ -1011,6 +1013,8 @@ baseurl=%s
                         return '/var/lib/postgresql/%s/main' % (self.version)
                     if self.__is_os_suse():
                         return '/var/lib/pgsql/data'
+                    if self.__is_os_altlinux():
+                        return '/var/lib/pgsql/%s/data' % (self.version)
                     return '/var/lib/pgpro%s/%s/data' % (
                         'ee'
                         if self.edition in ['ent', 'ent-cert'] else
