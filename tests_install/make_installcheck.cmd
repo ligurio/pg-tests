@@ -2,6 +2,7 @@ SET MD=c:\msys32\
 rmdir /S /Q %MD%
 mkdir %MD%\var\src
 copy postgres*.tar.bz2 %MD%\var\src\
+xcopy patches %MD%\var\src\patches\ /E
 cd /D c:\
 SET PGPATH=%1
 powershell -Command "((new-object net.webclient).DownloadFile('https://netcologne.dl.sourceforge.net/project/sevenzip/7-Zip/9.20/7za920.zip', '%TEMP%\7z.zip'))"
@@ -28,7 +29,7 @@ bitness=32; gcc=mingw-w64-i686-gcc; host=i686-w64-mingw32; ^
 else ^
 bitness=64; gcc=mingw-w64-x86_64-gcc; host=x86_64-w64-mingw32; ^
 fi ^&^& ^
-pacman --noconfirm -S tar make diffutils perl $gcc ^&^& ^
+pacman --noconfirm -S tar make diffutils patch perl $gcc ^&^& ^
 export PATH="/mingw$bitness/bin:/usr/bin/core_perl:$PGPATH/bin:$PATH" ^&^& ^
 echo PATH=$PATH ^&^& ^
 echo PGPORT=$PGPORT ^&^& ^
@@ -56,9 +57,15 @@ echo "Disabling pg_basebackup/030_pg_recvlogical test (PGPRO-1527)" ^&^& ^
 rm src/bin/pg_basebackup/t/030_pg_recvlogical.pl ^&^& ^
 echo "Disabling isolation/timeouts test (Fails in pg-tests only with a message: step locktbl timed out after 75 seconds)" ^&^& ^
 sed -e "s@test: timeouts@#test: timeouts@" -i src/test/isolation/isolation_schedule ^&^& ^
+echo "Making native MinGW libs" ^&^& ^
 (cd src/common ^&^& make -j4 libpgcommon_srv.a ^> /tmp/make_libpgcommon_srv.log) ^&^& ^
 (cd src/backend ^&^& make -j4 libpostgres.a ^> /tmp/make_libpostgres.log) ^&^& ^
-make installcheck-world ^
+echo "Making ecpg" ^&^& ^
+make -C src/interfaces/ecpg ^&^& ^
+echo "Workaround for inability to merge PGPRO-626-ICU" ^&^& ^
+if [ -f src/test/default_collation/icu/t/001_default_collation.pl ]; then patch -p1 -i /var/src/patches/win-icu-test.patch; fi ^&^& ^
+echo "Running installcheck-world" ^&^& ^
+with_icu=yes make -e installcheck-world ^
 
 > %MD%\var\src\make_check.sh
 %MD%\usr\bin\bash --login -i /var/src/make_check.sh
