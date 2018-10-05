@@ -543,12 +543,13 @@ baseurl=%s
         refresh_env_win()
 
     def install_perl_win(self):
+        # Workaround for PGPRO-2021
         if self.os_arch == 'AMD64':
             exename = 'ActivePerl-5.22.4.2205-MSWin32-x64-403863.exe'
         else:
             exename = 'ActivePerl-5.22.4.2205-MSWin32-x86-64int-403863.exe'
-        url = 'http://downloads.activestate.com/ActivePerl/' \
-            'releases/5.22.4.2205/' + exename
+        url = 'http://webdav.l.postgrespro.ru/DIST/windows/resources/' + \
+            exename
         if not os.path.exists(WIN_INST_DIR):
             os.mkdir(WIN_INST_DIR)
         perl_installer = urllib.URLopener()
@@ -971,6 +972,8 @@ baseurl=%s
                             '',
                             self.version.replace('.', '')
                         )
+                    if self.__is_os_altlinux():
+                        return '/usr'
                     return '/usr/pgpro%s-%s' % (
                         'ee'
                         if self.edition in ["ent", "ent-cert"] else
@@ -1010,6 +1013,8 @@ baseurl=%s
                         return '/var/lib/postgresql/%s/main' % (self.version)
                     if self.__is_os_suse():
                         return '/var/lib/pgsql/data'
+                    if self.__is_os_altlinux():
+                        return '/var/lib/pgsql/%s/data' % (self.version)
                     return '/var/lib/pgpro%s/%s/data' % (
                         'ee'
                         if self.edition in ['ent', 'ent-cert'] else

@@ -1,0 +1,59 @@
+diff --git a/src/test/default_collation/icu/t/001_default_collation.pl b/src/test/default_collation/icu/t/001_default_collation.pl
+index 5f5753d400..f1b39a4935 100644
+--- a/src/test/default_collation/icu/t/001_default_collation.pl
++++ b/src/test/default_collation/icu/t/001_default_collation.pl
+@@ -13,7 +13,7 @@ my $datadir = "$tempdir/data";
+ # cannot use it as the default collation of the cluster/database because the
+ # system does not know it and the function setlocale() fails.
+ 
+-my $has_posix_locale = $Config{osname} ne "MSWin32";
++my $has_posix_locale = not $windows_os;
+ 
+ # check whether ICU can convert C locale to a language tag
+ 
+@@ -269,7 +269,10 @@ test_initdb(
+ # test createdb and CREATE DATABASE
+ 
+ my $node = get_new_node('main');
+-$node->init;
++
++# Set to untranslated messages, to be able to compare program output with
++# expected strings.
++$node->init(extra => [ '--locale', 'C' ]);
+ 
+ # prep pg_hba.conf and pg_ident.conf
+ $node->run_log([
+@@ -313,14 +316,14 @@ sub test_createdb
+ 		{
+ 			$node->command_like(
+ 				@command,
+-				qr{\@$expected_collprovider\n},
++				qr{\@$expected_collprovider\s},
+ 				"createdb: $test_name: check pg_database.datcollate");
+ 		}
+ 		elsif ($expected_collprovider eq "icu")
+ 		{
+ 			$node->command_like(
+ 				@command,
+-				qr{\@$expected_collprovider([\.\d]+)?\n},
++				qr{\@$expected_collprovider([\.\d]+)?\s},
+ 				"createdb: $test_name: check pg_database.datcollate");
+ 		}
+ 
+@@ -368,14 +371,14 @@ sub test_create_database
+ 		{
+ 			$node->command_like(
+ 				@command,
+-				qr{\@$expected_collprovider\n},
++				qr{\@$expected_collprovider\s},
+ 				"CREATE DATABASE: $test_name: check pg_database.datcollate");
+ 		}
+ 		elsif ($expected_collprovider eq "icu")
+ 		{
+ 			$node->command_like(
+ 				@command,
+-				qr{\@$expected_collprovider([\.\d]+)?\n},
++				qr{\@$expected_collprovider([\.\d]+)?\s},
+ 				"CREATE DATABASE: $test_name: check pg_database.datcollate");
+ 		}
+ 

@@ -2,6 +2,7 @@ SET MD=c:\msys32\
 rmdir /S /Q %MD%
 mkdir %MD%\var\src
 copy postgres*.tar.bz2 %MD%\var\src\
+xcopy patches %MD%\var\src\patches\ /E
 cd /D c:\
 SET PGPATH=%1
 powershell -Command "((new-object net.webclient).DownloadFile('https://netcologne.dl.sourceforge.net/project/sevenzip/7-Zip/9.20/7za920.zip', '%TEMP%\7z.zip'))"
@@ -10,9 +11,9 @@ powershell -Command "$shell = New-Object -ComObject Shell.Application; $zip_src 
 REM %TEMP%\7z.exe /S /D="C:\7z\"
 REM https://downloads.sourceforge.net/project/mingw/Installer/mingw-get/mingw-get-0.6.2-beta-20131004-1/mingw-get-0.6.2-mingw32-beta-20131004-1-bin.zip
 REM Alternative way (without 7z, but starts the shell)
-REM powershell -Command "((new-object net.webclient).DownloadFile('http://repo.msys2.org/distrib/x86_64/msys2-x86_64-20161025.exe', 'msys2.exe'))"
+REM powershell -Command "((new-object net.webclient).DownloadFile('http://repo.msys2.org/distrib/x86_64/msys2-x86_64-20180531.exe', 'msys2.exe'))"
 REM msys2.exe --script install.qs
-powershell -Command "((new-object net.webclient).DownloadFile('http://repo.msys2.org/distrib/i686/msys2-base-i686-20161025.tar.xz', '%TEMP%\msys.tar.xz'))"
+powershell -Command "((new-object net.webclient).DownloadFile('http://repo.msys2.org/distrib/i686/msys2-base-i686-20180531.tar.xz', '%TEMP%\msys.tar.xz'))"
 %TEMP%\7za.exe x %TEMP%\msys.tar.xz -so | %TEMP%\7za.exe  x -aoa -si -ttar >%TEMP%/7z-msys.log
 
 REM First run is performed to setup the environment
@@ -28,7 +29,7 @@ bitness=32; gcc=mingw-w64-i686-gcc; host=i686-w64-mingw32; ^
 else ^
 bitness=64; gcc=mingw-w64-x86_64-gcc; host=x86_64-w64-mingw32; ^
 fi ^&^& ^
-pacman --noconfirm -S tar make diffutils perl $gcc ^&^& ^
+pacman --noconfirm -S tar make diffutils patch perl $gcc ^&^& ^
 export PATH="/mingw$bitness/bin:/usr/bin/core_perl:$PGPATH/bin:$PATH" ^&^& ^
 echo PATH=$PATH ^&^& ^
 echo PGPORT=$PGPORT ^&^& ^
@@ -37,11 +38,11 @@ export PGUSER=postgres ^&^& ^
 cd /var/src ^&^& ^
 curl -O http://cpan.metacpan.org/authors/id/T/TO/TODDR/IPC-Run-0.96.tar.gz ^&^& ^
 tar fax IPC-Run* ^&^& ^
-(cd IPC-Run* ^&^& perl Makefile.PL ^&^& make ^&^& make install) ^&^& ^
+(cd IPC-Run*/ ^&^& perl Makefile.PL ^&^& make ^&^& make install) ^&^& ^
 echo "Switching log messages language to English (for src/bin/scripts/ tests)" ^&^& ^
 printf "\nlc_messages = 'English_United States.1252'\n" ^>^> "$PGPATH/share/postgresql.conf.sample" ^&^& ^
 tar fax postgres*.tar.bz2 ^&^& ^
-cd postgres* ^&^& ^
+cd postgres*/ ^&^& ^
 ./configure --enable-tap-tests --host=$host --without-zlib --prefix="$PGPATH" ^>configure.log ^&^& ^
 echo "Fixing ECPG test for installcheck..." ^&^& ^
 sed -e "s@^ECPG = ../../preproc/ecpg@ECPG = ecpg@" ^
@@ -56,9 +57,15 @@ echo "Disabling pg_basebackup/030_pg_recvlogical test (PGPRO-1527)" ^&^& ^
 rm src/bin/pg_basebackup/t/030_pg_recvlogical.pl ^&^& ^
 echo "Disabling isolation/timeouts test (Fails in pg-tests only with a message: step locktbl timed out after 75 seconds)" ^&^& ^
 sed -e "s@test: timeouts@#test: timeouts@" -i src/test/isolation/isolation_schedule ^&^& ^
+echo "Making native MinGW libs" ^&^& ^
 (cd src/common ^&^& make -j4 libpgcommon_srv.a ^> /tmp/make_libpgcommon_srv.log) ^&^& ^
 (cd src/backend ^&^& make -j4 libpostgres.a ^> /tmp/make_libpostgres.log) ^&^& ^
-make installcheck-world ^
+echo "Making ecpg" ^&^& ^
+make -C src/interfaces/ecpg ^&^& ^
+echo "Workaround for inability to merge PGPRO-626-ICU" ^&^& ^
+if [ -f src/test/default_collation/icu/t/001_default_collation.pl ]; then patch -p1 -i /var/src/patches/win-icu-test.patch; fi ^&^& ^
+echo "Running installcheck-world" ^&^& ^
+with_icu=yes make -e installcheck-world ^
 
 > %MD%\var\src\make_check.sh
 %MD%\usr\bin\bash --login -i /var/src/make_check.sh
