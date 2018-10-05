@@ -34,6 +34,9 @@ case "$ext" in
 amd64)
     target=${os%-amd64}
     ;;
+x86)
+    target=${os%-x86}
+    ;;
 multimaster)
     echo "Invalid project extension ($ext) in $1"
     exit 1
