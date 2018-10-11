@@ -2,6 +2,7 @@
 
 import platform
 import subprocess
+import time
 
 import pytest
 
@@ -87,6 +88,7 @@ chmod 777 .
                 'ALTER SYSTEM SET shared_preload_libraries = '
                 'pg_wait_sampling')
             pginst.restart_service()
+            time.sleep(10)
             test_script = r"""
 cd /tmp/pg_wait_sampling*/
 sudo -u postgres sh -c "export PATH=%s:$PATH; make USE_PGXS=1 installcheck"
