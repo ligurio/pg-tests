@@ -55,7 +55,7 @@ devtoolset-3-binutils-2.24-18.el6.x86_64.rpm
 
         source /opt/rh/devtoolset-3/enable
         source /opt/rh/python27/enable
-        yum install -y http://mirrors.isu.net.sa/pub/fedora/fedora-epel/\
+        yum install -y http://math.sgu.ru/soft/Linux/distributions/epel-bk/\
 6/x86_64/autoconf-archive-2012.09.08-1.el6.noarch.rpm
         yum install -y https://dl.fedoraproject.org/pub/archive/fedora/\
 linux/releases/14/Fedora/x86_64/os/Packages/pkgconfig-0.25-2.fc14.x86_64.rpm
@@ -73,7 +73,7 @@ linux/releases/14/Fedora/x86_64/os/Packages/pkgconfig-0.25-2.fc14.x86_64.rpm
         source /opt/rh/devtoolset-3/enable
         ln -s /usr/local/bin/python2.7 /usr/local/bin/python
         export PATH=/usr/local/bin:$PATH
-        yum install -y http://mirrors.isu.net.sa/pub/fedora/fedora-epel/\
+        yum install -y http://math.sgu.ru/soft/Linux/distributions/epel-bk/\
 6/x86_64/autoconf-archive-2012.09.08-1.el6.noarch.rpm
     fi
 fi
