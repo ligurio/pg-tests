@@ -172,6 +172,16 @@ def prepare_payload(tests_dir, clean):
     if retcode != 0:
         raise Exception("Downloading get-pip failed.")
 
+    subprocess.check_call(
+        "wget -q https://codeload.github.com/postgrespro/"
+        "pg_wait_sampling/tar.gz/master -O extras/pg_wait_sampling.tar.gz",
+        cwd=pgtd, shell=True)
+
+    subprocess.check_call(
+        "wget -q https://codeload.github.com/Test-More/"
+        "test-more/tar.gz/v0.90 -O extras/test-more.tar.gz",
+        cwd=pgtd, shell=True)
+
     retcode = call("zip -q -r _%s pg-tests" % TESTS_PAYLOAD_ZIP,
                    cwd=tempdir, shell=True)
     if retcode != 0:

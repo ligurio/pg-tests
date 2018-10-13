@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import os
 import platform
 import subprocess
 import time
@@ -56,6 +57,7 @@ class TestDevUsage(object):
         if self.system != 'Windows':
             pginst.install_server_dev()
             pg_bin_path = pginst.get_default_bin_path()
+            curpath = os.path.dirname(os.path.abspath(__file__))
             test_script = r"""
 set -e
 if which apt-get; then
@@ -69,19 +71,14 @@ elif which zypper; then
 elif which yum; then
     yum install -y gcc make
 fi
-cd /tmp/
-wget https://codeload.github.com/postgrespro/pg_wait_sampling/\
-tar.gz/master -O pg_wait_sampling.tar.gz ||
-curl https://codeload.github.com/postgrespro/pg_wait_sampling/\
-tar.gz/master -o pg_wait_sampling.tar.gz
-tar fax pg_wait_sampling* && \
-cd pg_wait_sampling*/
+tar fax ../extras/pg_wait_sampling.tar.gz -C /tmp && \
+cd /tmp/pg_wait_sampling*/
 export PATH=%s:$PATH
 make USE_PGXS=1
 make USE_PGXS=1 install
 chmod 777 .
 """ % (pg_bin_path)
-            subprocess.check_call(test_script, shell=True)
+            subprocess.check_call(test_script, cwd=curpath, shell=True)
             pginst.install_full()
             pginst.initdb_start()
             pginst.exec_psql(
