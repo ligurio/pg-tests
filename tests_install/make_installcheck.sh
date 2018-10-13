@@ -27,18 +27,17 @@ IPC-Run-0.96.tar.gz && \
     (cd IPC-Run* && perl Makefile.PL && make && make install)
 fi
 
-if grep 'SUSE Linux Enterprise Server 11' /etc/SuSE-release; then
-    # Update Test::More to minimum required version (0.87)
-    curl https://codeload.github.com/Test-More/test-more/tar.gz/v0.90 \
-     -o test-more.tar.gz && \
-    tar fax test-more* && \
-    (cd test-more* && perl Makefile.PL && make && make install)
-fi
-
 if [ -d ~test/pg-tests ]; then
     chmod 777 ~test
     cd ~test/pg-tests
 fi
+
+if grep 'SUSE Linux Enterprise Server 11' /etc/SuSE-release; then
+    # Update Test::More to minimum required version (0.87)
+    tar fax extras/test-more* && \
+    (cd test-more* && perl Makefile.PL && make && make install)
+fi
+
 tar fax postgrespro*.tar*
 
 cd postgres*/
