@@ -59,10 +59,16 @@ class TestExtensions():
         pginst = request.cls.pginst
         pginst.exec_psql("ALTER SYSTEM SET log_min_duration_statement = 0")
         pginst.exec_psql("ALTER SYSTEM SET lc_messages = 'C'")
-        logdir = pginst.exec_psql_select('SHOW log_directory')
-        if not os.path.isabs(logdir):
-            datadir = pginst.exec_psql_select('SHOW data_directory')
-            logdir = os.path.join(datadir, logdir)
+        logcol = pginst.exec_psql_select('SHOW logging_collector')
+        if logcol == 'on':
+            logdir = pginst.exec_psql_select('SHOW log_directory')
+            if not os.path.isabs(logdir):
+                datadir = pginst.exec_psql_select('SHOW data_directory')
+                logdir = os.path.join(datadir, logdir)
+        else:
+            request.cls.logdir = None  # PGPRO-2048
+            print("Test skipped because logging_collector is disabled.")
+            return
         request.cls.logdir = logdir
         pginst.stop_service()
         time.sleep(5)
@@ -73,6 +79,9 @@ class TestExtensions():
 
     @pytest.mark.test_pgbadger
     def test_pgbadger(self, request):
+        logdir = request.cls.logdir
+        if logdir is None:
+            return
         pginst = request.cls.pginst
         if pginst.edition != 'ent':
             print("pg_badger test is only performed with enterprise edition")
@@ -88,7 +97,6 @@ class TestExtensions():
             "CREATE TABLE test (data text)")
         pginst.exec_psql(
             "INSERT INTO test SELECT 'data' FROM generate_series(1, 100);")
-        logdir = request.cls.logdir
         pginst.exec_psql("SELECT * FROM test")
         for lf in os.listdir(logdir):
             pgbres = subprocess.check_output(
