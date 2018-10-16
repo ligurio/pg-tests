@@ -516,9 +516,10 @@ baseurl=%s
         self.install_package(self.get_server_package_name())
         self.server_installed = True
         self.server_path_needed = True
+        self.client_path_needed = True
 
     def install_client_only(self):
-        self.install_package(self.get_server_package_name())
+        self.install_package(self.get_client_package_name())
         self.client_installed = True
         self.client_path_needed = True
 
