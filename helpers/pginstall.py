@@ -68,7 +68,11 @@ class PgInstall:
                  windows=False, remote=False, host=None):
         self.product = product
         self.edition = edition
-        self.version = version
+        self.fullversion = version
+        if version.startswith('9.'):
+            self.version = '9.' + version.split('.')[1]
+        else:
+            self.version = version.split('.')[0]
         self.milestone = milestone
         self.branch = branch
         self.windows = windows
@@ -93,15 +97,26 @@ class PgInstall:
     def get_repo_base(self):
         if self.milestone == "alpha":
             return PGPROALPHA_BASE
+        if self.milestone == "archive":
+            if self.product == "postgrespro":
+                if self.edition == "ent":
+                    return PGPRO_ARCHIVE_ENTERPRISE
+                else:
+                    return PGPRO_ARCHIVE_STANDARD
+            else:
+                raise Exception("Archived versions are not supported for %s." %
+                                self.product)
         return PGPRO_BASE
 
     def __get_product_dir(self):
         product_dir = ""
         if self.product == "postgrespro":
+            product_version = self.fullversion if self.milestone == 'archive' \
+                else self.version
             if self.edition == "ent":
-                product_dir = "pgproee-%s" % self.version
+                product_dir = "pgproee-%s" % product_version
             elif self.edition == "std":
-                product_dir = "pgpro-%s" % self.version
+                product_dir = "pgpro-%s" % product_version
             elif self.edition == "std-cert" and self.version == "9.6":
                 product_dir = "pgpro-std-9.6.3.1/repo"
             elif self.edition == "ent-cert" and self.version == "9.6":
@@ -111,7 +126,7 @@ class PgInstall:
             elif self.edition == "std-cert" and self.version == "10":
                 product_dir = "pgpro-std-10.4.1/repo"
             elif self.edition == "1c":
-                product_dir = "1c-%s" % self.version
+                product_dir = "1c-%s" % product_version
             if self.milestone == "beta":
                 product_dir += "-" + self.milestone
         return product_dir
@@ -211,14 +226,8 @@ class PgInstall:
             return baseurl, gpg_key_url
         elif self.product == "postgrespro":
             product_dir = self.__get_product_dir()
-            if self.edition == "1c":
-                gpg_key_dir = "1c-" + self.version
-            else:
-                gpg_key_dir = "pgpro-" + self.version
-            if self.milestone == "beta":
-                gpg_key_dir += "-" + self.milestone
-            gpg_key_url = "https://repo.postgrespro.ru/%s/" \
-                "keys/GPG-KEY-POSTGRESPRO" % gpg_key_dir
+            gpg_key_url = "%s/%s/keys/GPG-KEY-POSTGRESPRO" % \
+                          (self.get_repo_base(), product_dir)
             if self.os_name == "ALT Linux " and \
                self.os_version in ["7.0.4", "6.0.1"]:
                 distname = "altlinux-spt"
