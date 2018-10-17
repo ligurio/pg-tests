@@ -1128,15 +1128,16 @@ baseurl=%s
             )
         return subprocess.call(cmd) == 0
 
-    def pg_control(self, action, data_dir):
+    def pg_control(self, action, data_dir, preaction=''):
         """ Manage Postgres instance
         :param action: start, restart, stop etc
         :param data_dir: data directory of the Postgres instance
         :return:
         """
-        cmd = '%s%spg_ctl -w -D "%s" %s >pg_ctl.out 2>&1' % \
+        cmd = '%s%s"%spg_ctl" -w -D "%s" %s >pg_ctl.out 2>&1' % \
             (
                 ('' if self.os_name in WIN_BASED else 'sudo -u postgres '),
+                preaction,
                 self.get_server_bin_path(), data_dir, action
             )
         # sys.stdout.encoding = 'cp866'?
