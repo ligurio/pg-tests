@@ -5,6 +5,7 @@ import tempfile
 import urllib
 import re
 import time
+import shutil
 
 from BeautifulSoup import BeautifulSoup
 
@@ -86,6 +87,11 @@ class PgInstall:
         self.server_installed = False
         self.client_path_needed = False
         self.server_path_needed = False
+
+        self.pg_prefix = self.get_default_pg_prefix()
+        self.bin_path = self.get_default_bin_path()
+        self.datadir = self.get_default_datadir()
+        self.configdir = self.get_default_configdir()
 
         if edition in ['std', 'std-cert']:
             self.alter_edtn = 'std'
@@ -592,17 +598,21 @@ baseurl=%s
         else:
             raise Exception("Unsupported system: %s." % self.os_name)
 
-    def remove_full(self):
+    def remove_full(self, remove_data=False):
         if self.os_name in WIN_BASED:
             # TODO: Don't stop the service manually
             self.stop_service()
             # TODO: Wait for completion without sleep
             subprocess.check_call([
-                os.path.join(self.get_default_pg_prefix(), 'Uninstall.exe'),
+                os.path.join(self.get_pg_prefix(), 'Uninstall.exe'),
                 '/S'])
             time.sleep(10)
         else:
             self.remove_package(self.get_all_packages_name())
+        if remove_data:
+            shutil.rmtree(self.get_datadir())
+            if self.get_configdir() != self.get_datadir():
+                shutil.rmtree(self.get_configdir())
         self.client_installed = False
         self.server_installed = False
 
@@ -1000,19 +1010,25 @@ baseurl=%s
                      self.version)
             raise Exception('Product %s is not supported.' % self.product)
 
+    def get_pg_prefix(self):
+        return self.pg_prefix
+
     def get_default_bin_path(self):
-        return os.path.join(self.get_default_pg_prefix(), 'bin')
+        return os.path.join(self.get_pg_prefix(), 'bin')
+
+    def get_bin_path(self):
+        return self.bin_path
 
     def get_server_bin_path(self):
         path = ''
         if self.server_path_needed:
-            path = self.get_default_bin_path() + os.sep
+            path = self.get_bin_path() + os.sep
         return path
 
     def get_client_bin_path(self):
         path = ''
         if self.client_path_needed:
-            path = self.get_default_bin_path() + os.sep
+            path = self.get_bin_path() + os.sep
         return path
 
     def get_default_datadir(self):
@@ -1037,8 +1053,11 @@ baseurl=%s
             raise Exception('Product %s is not supported.' % self.product)
         else:
             if self.product == 'postgrespro':
-                return os.path.join(self.get_default_pg_prefix(), 'data')
+                return os.path.join(self.get_pg_prefix(), 'data')
             raise Exception('Product %s is not supported.' % self.product)
+
+    def get_datadir(self):
+        return self.datadir
 
     def get_default_configdir(self):
         if self.os_name in DEBIAN_BASED:
@@ -1046,6 +1065,9 @@ baseurl=%s
                self.product == 'postgresql':
                 return '/etc/postgresql/%s/main' % (self.version)
         return self.get_default_datadir()
+
+    def get_configdir(self):
+        return self.configdir
 
     def initdb_start(self):
         if self.product == 'postgrespro' and self.version == '9.6':
