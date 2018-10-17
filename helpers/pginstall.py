@@ -89,7 +89,6 @@ class PgInstall:
         self.server_path_needed = False
 
         self.pg_prefix = self.get_default_pg_prefix()
-        self.bin_path = self.get_default_bin_path()
         self.datadir = self.get_default_datadir()
         self.configdir = self.get_default_configdir()
 
@@ -1020,7 +1019,7 @@ baseurl=%s
         return os.path.join(self.get_pg_prefix(), 'bin')
 
     def get_bin_path(self):
-        return self.bin_path
+        return os.path.join(self.get_pg_prefix(), 'bin')
 
     def get_server_bin_path(self):
         path = ''
