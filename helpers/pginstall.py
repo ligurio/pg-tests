@@ -965,7 +965,8 @@ baseurl=%s
                         if os.path.isdir('/run/systemd/system'):
                             return 'postgresql@%s-main' % self.version
                         return 'postgresql'
-                    elif self.os_name in ALT_BASED:
+                    elif (self.os_name in ALT_BASED or
+                          self.fullversion[:6] in ['9.6.0.', '9.6.1.']):
                         return 'postgresql-%s' % self.version
                     return '%s-%s%s' % (self.product,
                                         'enterprise-'
@@ -994,6 +995,8 @@ baseurl=%s
                         )
                     if self.__is_os_altlinux():
                         return '/usr'
+                    if self.fullversion[:6] in ['9.6.0.', '9.6.1.']:
+                        return '/usr/pgsql-%s' % (self.version)
                     return '/usr/pgpro%s-%s' % (
                         'ee'
                         if self.edition in ["ent", "ent-cert"] else
@@ -1039,7 +1042,8 @@ baseurl=%s
                         return '/var/lib/postgresql/%s/main' % (self.version)
                     if self.__is_os_suse():
                         return '/var/lib/pgsql/data'
-                    if self.__is_os_altlinux():
+                    if (self.__is_os_altlinux() or
+                       self.fullversion[:6] in ['9.6.0.', '9.6.1.']):
                         return '/var/lib/pgsql/%s/data' % (self.version)
                     return '/var/lib/pgpro%s/%s/data' % (
                         'ee'
@@ -1076,8 +1080,11 @@ baseurl=%s
             if self.os_name in RPM_BASED:
                 service_name = self.get_default_service_name()
                 if subprocess.call("which systemctl", shell=True) == 0:
-                    binpath = self.get_default_bin_path()
-                    cmd = '%s/pg-setup initdb' % binpath
+                    binpath = self.get_bin_path()
+                    if self.fullversion[:6] in ['9.6.0.', '9.6.1.']:
+                        cmd = '%s/postgresql96-setup initdb' % binpath
+                    else:
+                        cmd = '%s/pg-setup initdb' % binpath
                 else:
                     cmd = 'service "%s" initdb' % service_name
                 subprocess.check_call(cmd, shell=True)
