@@ -351,6 +351,10 @@ baseurl=%s
             cmd = "rpm --import %s" % gpg_key_url
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            cmd = "yum --enablerepo=%s-%s clean metadata" % \
+                (self.product, self.version)
+            command_executor(cmd, self.remote, self.host,
+                             REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             return repofile
         elif self.os_name in DEB_BASED:
             cmd = "apt-get install -y lsb-release"
