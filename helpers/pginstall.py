@@ -84,6 +84,7 @@ class PgInstall:
         self.os_version = self.dist_info[1]
         self.os_arch = self.dist_info[2]
         self.port = None
+        self.env = None
         self.client_installed = False
         self.server_installed = False
         self.client_path_needed = True
@@ -894,7 +895,8 @@ baseurl=%s
                 '' if not(self.port) else '-p ' + str(self.port),
                 options, query
             )
-        return subprocess.check_output(cmd, shell=True, cwd="/").strip()
+        return subprocess.check_output(cmd, shell=True,
+                                       cwd="/", env=self.env).strip()
 
     def exec_psql_select(self, query):
         return self.exec_psql(query, '-t -P format=unaligned')
@@ -914,7 +916,8 @@ baseurl=%s
                 '' if not(self.port) else '-p ' + str(self.port),
                 options, script_path
             )
-        result = subprocess.check_output(cmd, shell=True, cwd="/").strip()
+        result = subprocess.check_output(cmd, shell=True,
+                                         cwd="/", env=self.env).strip()
         os.unlink(script_path)
         return result
 
@@ -925,7 +928,7 @@ baseurl=%s
         """ Get client version
         """
         cmd = '%spsql --version' % self.get_client_bin_path()
-        return subprocess.check_output(cmd, shell=True).strip()
+        return subprocess.check_output(cmd, shell=True, env=self.env).strip()
 
     def get_initdb_props(self):
         """ Get properties returned by initdb
@@ -938,7 +941,7 @@ baseurl=%s
         props = {}
         for line in subprocess.check_output(cmd, shell=True,
                                             stderr=subprocess.STDOUT,
-                                            cwd="/").split('\n'):
+                                            cwd="/", env=self.env).split('\n'):
             if '=' in line:
                 (name, val) = line.split('=', 1)
                 props[name] = val.strip()
@@ -1133,7 +1136,7 @@ baseurl=%s
                 ('' if self.os_name in WIN_BASED else 'sudo -u postgres '),
                 self.get_server_bin_path()
             )
-        return subprocess.call(cmd) == 0
+        return subprocess.call(cmd, env=self.env) == 0
 
     def pg_control(self, action, data_dir, preaction=''):
         """ Manage Postgres instance
@@ -1148,4 +1151,5 @@ baseurl=%s
                 self.get_server_bin_path(), data_dir, action
             )
         # sys.stdout.encoding = 'cp866'?
-        subprocess.check_call(cmd, shell=True, cwd=tempfile.gettempdir())
+        subprocess.check_call(cmd, shell=True, cwd=tempfile.gettempdir(),
+                              env=self.env)
