@@ -83,6 +83,7 @@ class PgInstall:
         self.os_name = self.dist_info[0]
         self.os_version = self.dist_info[1]
         self.os_arch = self.dist_info[2]
+        self.port = None
         self.client_installed = False
         self.server_installed = False
         self.client_path_needed = True
@@ -540,6 +541,7 @@ baseurl=%s
         self.client_path_needed = True
 
     def install_postgres_win(self, port=None):
+        self.port = port
         exename = None
         for filename in os.listdir(WIN_INST_DIR):
             if os.path.splitext(filename)[1] == '.exe' and \
@@ -885,10 +887,11 @@ baseurl=%s
                                  REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
     def exec_psql(self, query, options=''):
-        cmd = '%s%spsql %s -c "%s"' % \
+        cmd = '%s%spsql %s %s -c "%s"' % \
             (
                 ('' if self.os_name in WIN_BASED else 'sudo -u postgres '),
                 self.get_client_bin_path(),
+                '' if not(self.port) else '-p ' + str(self.port),
                 options, query
             )
         return subprocess.check_output(cmd, shell=True, cwd="/").strip()
@@ -904,10 +907,11 @@ baseurl=%s
             script_file.write(script)
         os.chmod(script_path, 0644)
 
-        cmd = '%s%spsql %s -f %s' % \
+        cmd = '%s%spsql %s %s -f %s' % \
             (
                 ('' if self.os_name in WIN_BASED else 'sudo -u postgres '),
                 self.get_client_bin_path(),
+                '' if not(self.port) else '-p ' + str(self.port),
                 options, script_path
             )
         result = subprocess.check_output(cmd, shell=True, cwd="/").strip()
