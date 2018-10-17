@@ -87,17 +87,15 @@ class PgInstall:
         self.server_installed = False
         self.client_path_needed = False
         self.server_path_needed = False
-
-        self.pg_prefix = self.get_default_pg_prefix()
-        self.datadir = self.get_default_datadir()
-        self.configdir = self.get_default_configdir()
-
         if edition in ['std', 'std-cert']:
             self.alter_edtn = 'std'
         elif edition in ['ent', 'ent-cert']:
             self.alter_edtn = 'ent'
         else:
             self.alter_edtn = edition
+        self.pg_prefix = self.get_default_pg_prefix()
+        self.datadir = self.get_default_datadir()
+        self.configdir = self.get_default_configdir()
 
     def get_repo_base(self):
         if self.milestone == "alpha":
