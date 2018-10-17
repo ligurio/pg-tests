@@ -1040,6 +1040,13 @@ baseurl=%s
                 return os.path.join(self.get_default_pg_prefix(), 'data')
             raise Exception('Product %s is not supported.' % self.product)
 
+    def get_default_configdir(self):
+        if self.os_name in DEBIAN_BASED:
+            if self.version in ['9.5', '9.6'] or \
+               self.product == 'postgresql':
+                return '/etc/postgresql/%s/main' % (self.version)
+        return self.get_default_datadir()
+
     def initdb_start(self):
         if self.product == 'postgrespro' and self.version == '9.6':
             if self.os_name in DEBIAN_BASED:
