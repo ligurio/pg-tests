@@ -85,8 +85,8 @@ class PgInstall:
         self.os_arch = self.dist_info[2]
         self.client_installed = False
         self.server_installed = False
-        self.client_path_needed = False
-        self.server_path_needed = False
+        self.client_path_needed = True
+        self.server_path_needed = True
         if edition in ['std', 'std-cert']:
             self.alter_edtn = 'std'
         elif edition in ['ent', 'ent-cert']:
@@ -616,6 +616,8 @@ baseurl=%s
                 shutil.rmtree(self.get_configdir())
         self.client_installed = False
         self.server_installed = False
+        self.client_path_needed = True
+        self.server_path_needed = True
 
     def package_mgmt(self, action="install"):
         """
