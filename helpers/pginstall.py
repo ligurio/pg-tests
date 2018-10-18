@@ -416,13 +416,20 @@ baseurl=%s
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             cmd = "rpm --import ./gpg.key"
-            command_executor(cmd, self.remote, self.host,
-                             REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            try:
+                # SLES 11 fails when the key is already imported
+                command_executor(cmd, self.remote, self.host,
+                                 REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            except Exception:
+                pass
             if self.os_name == 'SUSE Linux Enterprise Server ' and \
                self.os_version == "12":
                 baseurl = os.path.join(baseurl, "12.1")
             else:
                 baseurl = os.path.join(baseurl, self.os_version)
+            cmd = "zypper removerepo %s" % (reponame)
+            command_executor(cmd, self.remote, self.host,
+                             REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             cmd = "zypper addrepo %s %s" % (baseurl, reponame)
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
