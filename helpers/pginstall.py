@@ -5,6 +5,7 @@ import tempfile
 import urllib
 import re
 import time
+import shutil
 
 from BeautifulSoup import BeautifulSoup
 
@@ -82,17 +83,21 @@ class PgInstall:
         self.os_name = self.dist_info[0]
         self.os_version = self.dist_info[1]
         self.os_arch = self.dist_info[2]
+        self.port = None
+        self.env = None
         self.client_installed = False
         self.server_installed = False
-        self.client_path_needed = False
-        self.server_path_needed = False
-
+        self.client_path_needed = True
+        self.server_path_needed = True
         if edition in ['std', 'std-cert']:
             self.alter_edtn = 'std'
         elif edition in ['ent', 'ent-cert']:
             self.alter_edtn = 'ent'
         else:
             self.alter_edtn = edition
+        self.pg_prefix = self.get_default_pg_prefix()
+        self.datadir = self.get_default_datadir()
+        self.configdir = self.get_default_configdir()
 
     def get_repo_base(self):
         if self.milestone == "alpha":
@@ -186,7 +191,7 @@ class PgInstall:
                     return self.get_base_package_name() + '*' + \
                         ' %s-.*-%s' % (self.product,
                                        self.version.replace('.', '\\.')) + \
-                        ' postgrespro-libecpg*'
+                        ' libecpg.*'
         return self.get_base_package_name() + '*'
 
     def __is_os_redhat_based(self):
@@ -344,6 +349,10 @@ baseurl=%s
                 self.product, self.version)
             write_file(repofile, repo, self.remote, self.host)
             cmd = "rpm --import %s" % gpg_key_url
+            command_executor(cmd, self.remote, self.host,
+                             REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            cmd = "yum --enablerepo=%s-%s clean metadata" % \
+                (self.product, self.version)
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             return repofile
@@ -533,6 +542,7 @@ baseurl=%s
         self.client_path_needed = True
 
     def install_postgres_win(self, port=None):
+        self.port = port
         exename = None
         for filename in os.listdir(WIN_INST_DIR):
             if os.path.splitext(filename)[1] == '.exe' and \
@@ -592,19 +602,25 @@ baseurl=%s
         else:
             raise Exception("Unsupported system: %s." % self.os_name)
 
-    def remove_full(self):
+    def remove_full(self, remove_data=False):
         if self.os_name in WIN_BASED:
             # TODO: Don't stop the service manually
             self.stop_service()
             # TODO: Wait for completion without sleep
             subprocess.check_call([
-                os.path.join(self.get_default_pg_prefix(), 'Uninstall.exe'),
+                os.path.join(self.get_pg_prefix(), 'Uninstall.exe'),
                 '/S'])
             time.sleep(10)
         else:
             self.remove_package(self.get_all_packages_name())
+        if remove_data:
+            shutil.rmtree(self.get_datadir())
+            if self.get_configdir() != self.get_datadir():
+                shutil.rmtree(self.get_configdir())
         self.client_installed = False
         self.server_installed = False
+        self.client_path_needed = True
+        self.server_path_needed = True
 
     def package_mgmt(self, action="install"):
         """
@@ -872,13 +888,15 @@ baseurl=%s
                                  REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
     def exec_psql(self, query, options=''):
-        cmd = '%s%spsql %s -c "%s"' % \
+        cmd = '%s%spsql %s %s -c "%s"' % \
             (
                 ('' if self.os_name in WIN_BASED else 'sudo -u postgres '),
                 self.get_client_bin_path(),
+                '' if not(self.port) else '-p ' + str(self.port),
                 options, query
             )
-        return subprocess.check_output(cmd, shell=True, cwd="/").strip()
+        return subprocess.check_output(cmd, shell=True,
+                                       cwd="/", env=self.env).strip()
 
     def exec_psql_select(self, query):
         return self.exec_psql(query, '-t -P format=unaligned')
@@ -891,13 +909,15 @@ baseurl=%s
             script_file.write(script)
         os.chmod(script_path, 0644)
 
-        cmd = '%s%spsql %s -f %s' % \
+        cmd = '%s%spsql %s %s -f %s' % \
             (
                 ('' if self.os_name in WIN_BASED else 'sudo -u postgres '),
                 self.get_client_bin_path(),
+                '' if not(self.port) else '-p ' + str(self.port),
                 options, script_path
             )
-        result = subprocess.check_output(cmd, shell=True, cwd="/").strip()
+        result = subprocess.check_output(cmd, shell=True,
+                                         cwd="/", env=self.env).strip()
         os.unlink(script_path)
         return result
 
@@ -908,7 +928,7 @@ baseurl=%s
         """ Get client version
         """
         cmd = '%spsql --version' % self.get_client_bin_path()
-        return subprocess.check_output(cmd, shell=True).strip()
+        return subprocess.check_output(cmd, shell=True, env=self.env).strip()
 
     def get_initdb_props(self):
         """ Get properties returned by initdb
@@ -921,7 +941,7 @@ baseurl=%s
         props = {}
         for line in subprocess.check_output(cmd, shell=True,
                                             stderr=subprocess.STDOUT,
-                                            cwd="/").split('\n'):
+                                            cwd="/", env=self.env).split('\n'):
             if '=' in line:
                 (name, val) = line.split('=', 1)
                 props[name] = val.strip()
@@ -955,7 +975,8 @@ baseurl=%s
                         if os.path.isdir('/run/systemd/system'):
                             return 'postgresql@%s-main' % self.version
                         return 'postgresql'
-                    elif self.os_name in ALT_BASED:
+                    elif (self.os_name in ALT_BASED or
+                          self.fullversion[:6] in ['9.6.0.', '9.6.1.']):
                         return 'postgresql-%s' % self.version
                     return '%s-%s%s' % (self.product,
                                         'enterprise-'
@@ -984,6 +1005,8 @@ baseurl=%s
                         )
                     if self.__is_os_altlinux():
                         return '/usr'
+                    if self.fullversion[:6] in ['9.6.0.', '9.6.1.']:
+                        return '/usr/pgsql-%s' % (self.version)
                     return '/usr/pgpro%s-%s' % (
                         'ee'
                         if self.edition in ["ent", "ent-cert"] else
@@ -1000,19 +1023,25 @@ baseurl=%s
                      self.version)
             raise Exception('Product %s is not supported.' % self.product)
 
+    def get_pg_prefix(self):
+        return self.pg_prefix
+
     def get_default_bin_path(self):
-        return os.path.join(self.get_default_pg_prefix(), 'bin')
+        return os.path.join(self.get_pg_prefix(), 'bin')
+
+    def get_bin_path(self):
+        return os.path.join(self.get_pg_prefix(), 'bin')
 
     def get_server_bin_path(self):
         path = ''
         if self.server_path_needed:
-            path = self.get_default_bin_path() + os.sep
+            path = self.get_bin_path() + os.sep
         return path
 
     def get_client_bin_path(self):
         path = ''
         if self.client_path_needed:
-            path = self.get_default_bin_path() + os.sep
+            path = self.get_bin_path() + os.sep
         return path
 
     def get_default_datadir(self):
@@ -1023,7 +1052,8 @@ baseurl=%s
                         return '/var/lib/postgresql/%s/main' % (self.version)
                     if self.__is_os_suse():
                         return '/var/lib/pgsql/data'
-                    if self.__is_os_altlinux():
+                    if (self.__is_os_altlinux() or
+                       self.fullversion[:6] in ['9.6.0.', '9.6.1.']):
                         return '/var/lib/pgsql/%s/data' % (self.version)
                     return '/var/lib/pgpro%s/%s/data' % (
                         'ee'
@@ -1037,8 +1067,11 @@ baseurl=%s
             raise Exception('Product %s is not supported.' % self.product)
         else:
             if self.product == 'postgrespro':
-                return os.path.join(self.get_default_pg_prefix(), 'data')
+                return os.path.join(self.get_pg_prefix(), 'data')
             raise Exception('Product %s is not supported.' % self.product)
+
+    def get_datadir(self):
+        return self.datadir
 
     def get_default_configdir(self):
         if self.os_name in DEBIAN_BASED:
@@ -1047,6 +1080,9 @@ baseurl=%s
                 return '/etc/postgresql/%s/main' % (self.version)
         return self.get_default_datadir()
 
+    def get_configdir(self):
+        return self.configdir
+
     def initdb_start(self):
         if self.product == 'postgrespro' and self.version == '9.6':
             if self.os_name in DEBIAN_BASED:
@@ -1054,8 +1090,11 @@ baseurl=%s
             if self.os_name in RPM_BASED:
                 service_name = self.get_default_service_name()
                 if subprocess.call("which systemctl", shell=True) == 0:
-                    binpath = self.get_default_bin_path()
-                    cmd = '%s/pg-setup initdb' % binpath
+                    binpath = self.get_bin_path()
+                    if self.fullversion[:6] in ['9.6.0.', '9.6.1.']:
+                        cmd = '%s/postgresql96-setup initdb' % binpath
+                    else:
+                        cmd = '%s/pg-setup initdb' % binpath
                 else:
                     cmd = 'service "%s" initdb' % service_name
                 subprocess.check_call(cmd, shell=True)
@@ -1097,18 +1136,20 @@ baseurl=%s
                 ('' if self.os_name in WIN_BASED else 'sudo -u postgres '),
                 self.get_server_bin_path()
             )
-        return subprocess.call(cmd) == 0
+        return subprocess.call(cmd, env=self.env) == 0
 
-    def pg_control(self, action, data_dir):
+    def pg_control(self, action, data_dir, preaction=''):
         """ Manage Postgres instance
         :param action: start, restart, stop etc
         :param data_dir: data directory of the Postgres instance
         :return:
         """
-        cmd = '%s%spg_ctl -w -D "%s" %s >pg_ctl.out 2>&1' % \
+        cmd = '%s%s"%spg_ctl" -w -D "%s" %s >pg_ctl.out 2>&1' % \
             (
                 ('' if self.os_name in WIN_BASED else 'sudo -u postgres '),
+                preaction,
                 self.get_server_bin_path(), data_dir, action
             )
         # sys.stdout.encoding = 'cp866'?
-        subprocess.check_call(cmd, shell=True, cwd=tempfile.gettempdir())
+        subprocess.check_call(cmd, shell=True, cwd=tempfile.gettempdir(),
+                              env=self.env)
