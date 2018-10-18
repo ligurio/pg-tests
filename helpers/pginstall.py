@@ -85,6 +85,9 @@ class PgInstall:
         self.os_arch = self.dist_info[2]
         self.port = None
         self.env = None
+        self.pg_preexec = ('' if windows else
+                           'sudo -u postgres '
+                           'LD_LIBRARY_PATH=${LD_LIBRARY_PATH} ')
         self.client_installed = False
         self.server_installed = False
         self.client_path_needed = True
@@ -900,7 +903,7 @@ baseurl=%s
     def exec_psql(self, query, options=''):
         cmd = '%s%spsql %s %s -c "%s"' % \
             (
-                ('' if self.os_name in WIN_BASED else 'sudo -u postgres '),
+                self.pg_preexec,
                 self.get_client_bin_path(),
                 '' if not(self.port) else '-p ' + str(self.port),
                 options, query
@@ -921,7 +924,7 @@ baseurl=%s
 
         cmd = '%s%spsql %s %s -f %s' % \
             (
-                ('' if self.os_name in WIN_BASED else 'sudo -u postgres '),
+                self.pg_preexec,
                 self.get_client_bin_path(),
                 '' if not(self.port) else '-p ' + str(self.port),
                 options, script_path
@@ -945,7 +948,7 @@ baseurl=%s
         """
         cmd = '%s%sinitdb -s -D .' % \
             (
-                ('' if self.os_name in WIN_BASED else 'sudo -u postgres '),
+                self.pg_preexec,
                 self.get_server_bin_path()
             )
         props = {}
@@ -1130,7 +1133,7 @@ baseurl=%s
 
         cmd = "%s%sinitdb -D %s" % \
               (
-                  ('' if self.os_name in WIN_BASED else 'sudo -u postgres '),
+                  self.pg_preexec,
                   self.get_server_bin_path(),
                   self.get_datadir()
               )
@@ -1160,10 +1163,10 @@ baseurl=%s
     def pg_isready(self):
         cmd = '%s%spg_isready' % \
             (
-                ('' if self.os_name in WIN_BASED else 'sudo -u postgres '),
+                self.pg_preexec,
                 self.get_server_bin_path()
             )
-        return subprocess.call(cmd, env=self.env) == 0
+        return subprocess.call(cmd, shell=True, env=self.env) == 0
 
     def pg_control(self, action, data_dir, preaction=''):
         """ Manage Postgres instance
@@ -1173,7 +1176,7 @@ baseurl=%s
         """
         cmd = '%s%s"%spg_ctl" -w -D "%s" %s >pg_ctl.out 2>&1' % \
             (
-                ('' if self.os_name in WIN_BASED else 'sudo -u postgres '),
+                self.pg_preexec,
                 preaction,
                 self.get_server_bin_path(), data_dir, action
             )
