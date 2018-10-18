@@ -1112,6 +1112,23 @@ baseurl=%s
             else:
                 raise Exception('OS %s is not supported.' % self.os_name)
 
+    def init_cluster(self, force_remove):
+        if (os.path.exists(self.get_datadir())):
+            if force_remove:
+                self.remove_data()
+        os.makedirs(self.get_datadir())
+        if self.os_name not in WIN_BASED:
+            subprocess.check_call('chown -R postgres:postgres %s' %
+                                  self.get_datadir(), shell=True)
+
+        cmd = "%s%sinitdb -D %s" % \
+              (
+                  ('' if self.os_name in WIN_BASED else 'sudo -u postgres '),
+                  self.get_server_bin_path(),
+                  self.get_datadir()
+              )
+        subprocess.check_call(cmd, shell=True, cwd="/")
+
     def service_action(self, action='start', service_name=None):
         if not service_name:
             service_name = self.get_default_service_name()
