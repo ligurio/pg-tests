@@ -1160,6 +1160,17 @@ baseurl=%s
     def stop_service(self, service_name=None):
         return self.service_action('stop', service_name)
 
+    def exec_client_bin(self, bin, options=''):
+        cmd = '%s"%s%s" %s' % \
+            (
+                self.pg_preexec,
+                self.get_client_bin_path(),
+                bin,
+                options
+            )
+        return subprocess.check_output(cmd, shell=True,
+                                       cwd="/", env=self.env)
+
     def pg_isready(self):
         cmd = '%s%spg_isready' % \
             (
