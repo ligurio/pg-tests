@@ -614,13 +614,16 @@ baseurl=%s
         else:
             self.remove_package(self.get_all_packages_name())
         if remove_data:
-            shutil.rmtree(self.get_datadir())
-            if self.get_configdir() != self.get_datadir():
-                shutil.rmtree(self.get_configdir())
+            self.remove_data()
         self.client_installed = False
         self.server_installed = False
         self.client_path_needed = True
         self.server_path_needed = True
+
+    def remove_data(self):
+        shutil.rmtree(self.get_datadir())
+        if self.get_configdir() != self.get_datadir():
+            shutil.rmtree(self.get_configdir())
 
     def package_mgmt(self, action="install"):
         """
