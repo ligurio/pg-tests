@@ -1138,6 +1138,7 @@ baseurl=%s
                   self.get_datadir()
               )
         subprocess.check_call(cmd, shell=True, cwd="/")
+        self.configdir = self.get_datadir()
 
     def service_action(self, action='start', service_name=None):
         if not service_name:
