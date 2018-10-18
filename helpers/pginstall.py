@@ -517,6 +517,7 @@ baseurl=%s
                 if self.os_name in ASTRA_BASED or \
                    self.os_name in RPM_BASED or \
                    self.os_name in DEBIAN_BASED:
+                    self.client_path_needed = True
                     self.server_path_needed = True
 
     def install_full(self):
@@ -530,6 +531,7 @@ baseurl=%s
                 if self.os_name in ASTRA_BASED or \
                    self.os_name in RPM_BASED or \
                    self.os_name in DEBIAN_BASED:
+                    self.client_path_needed = True
                     self.server_path_needed = True
 
     def install_server_dev(self):
