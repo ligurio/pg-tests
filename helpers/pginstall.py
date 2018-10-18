@@ -85,6 +85,8 @@ class PgInstall:
         self.os_arch = self.dist_info[2]
         self.port = None
         self.env = None
+        self.pg_preexec = ('' if windows else
+                           'sudo -u postgres ')
         self.client_installed = False
         self.server_installed = False
         self.client_path_needed = True
@@ -416,13 +418,20 @@ baseurl=%s
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             cmd = "rpm --import ./gpg.key"
-            command_executor(cmd, self.remote, self.host,
-                             REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            try:
+                # SLES 11 fails when the key is already imported
+                command_executor(cmd, self.remote, self.host,
+                                 REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            except Exception:
+                pass
             if self.os_name == 'SUSE Linux Enterprise Server ' and \
                self.os_version == "12":
                 baseurl = os.path.join(baseurl, "12.1")
             else:
                 baseurl = os.path.join(baseurl, self.os_version)
+            cmd = "zypper removerepo %s" % (reponame)
+            command_executor(cmd, self.remote, self.host,
+                             REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             cmd = "zypper addrepo %s %s" % (baseurl, reponame)
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
@@ -614,13 +623,16 @@ baseurl=%s
         else:
             self.remove_package(self.get_all_packages_name())
         if remove_data:
-            shutil.rmtree(self.get_datadir())
-            if self.get_configdir() != self.get_datadir():
-                shutil.rmtree(self.get_configdir())
+            self.remove_data()
         self.client_installed = False
         self.server_installed = False
         self.client_path_needed = True
         self.server_path_needed = True
+
+    def remove_data(self):
+        shutil.rmtree(self.get_datadir())
+        if self.get_configdir() != self.get_datadir():
+            shutil.rmtree(self.get_configdir())
 
     def package_mgmt(self, action="install"):
         """
@@ -890,7 +902,7 @@ baseurl=%s
     def exec_psql(self, query, options=''):
         cmd = '%s%spsql %s %s -c "%s"' % \
             (
-                ('' if self.os_name in WIN_BASED else 'sudo -u postgres '),
+                self.pg_preexec,
                 self.get_client_bin_path(),
                 '' if not(self.port) else '-p ' + str(self.port),
                 options, query
@@ -911,7 +923,7 @@ baseurl=%s
 
         cmd = '%s%spsql %s %s -f %s' % \
             (
-                ('' if self.os_name in WIN_BASED else 'sudo -u postgres '),
+                self.pg_preexec,
                 self.get_client_bin_path(),
                 '' if not(self.port) else '-p ' + str(self.port),
                 options, script_path
@@ -935,7 +947,7 @@ baseurl=%s
         """
         cmd = '%s%sinitdb -s -D .' % \
             (
-                ('' if self.os_name in WIN_BASED else 'sudo -u postgres '),
+                self.pg_preexec,
                 self.get_server_bin_path()
             )
         props = {}
@@ -1109,6 +1121,24 @@ baseurl=%s
             else:
                 raise Exception('OS %s is not supported.' % self.os_name)
 
+    def init_cluster(self, force_remove):
+        if (os.path.exists(self.get_datadir())):
+            if force_remove:
+                self.remove_data()
+        os.makedirs(self.get_datadir())
+        if self.os_name not in WIN_BASED:
+            subprocess.check_call('chown -R postgres:postgres %s' %
+                                  self.get_datadir(), shell=True)
+
+        cmd = "%s%sinitdb -D %s" % \
+              (
+                  self.pg_preexec,
+                  self.get_server_bin_path(),
+                  self.get_datadir()
+              )
+        subprocess.check_call(cmd, shell=True, cwd="/")
+        self.configdir = self.get_datadir()
+
     def service_action(self, action='start', service_name=None):
         if not service_name:
             service_name = self.get_default_service_name()
@@ -1130,13 +1160,24 @@ baseurl=%s
     def stop_service(self, service_name=None):
         return self.service_action('stop', service_name)
 
+    def exec_client_bin(self, bin, options=''):
+        cmd = '%s"%s%s" %s' % \
+            (
+                self.pg_preexec,
+                self.get_client_bin_path(),
+                bin,
+                options
+            )
+        return subprocess.check_output(cmd, shell=True,
+                                       cwd="/", env=self.env)
+
     def pg_isready(self):
         cmd = '%s%spg_isready' % \
             (
-                ('' if self.os_name in WIN_BASED else 'sudo -u postgres '),
+                self.pg_preexec,
                 self.get_server_bin_path()
             )
-        return subprocess.call(cmd, env=self.env) == 0
+        return subprocess.call(cmd, shell=True, env=self.env) == 0
 
     def pg_control(self, action, data_dir, preaction=''):
         """ Manage Postgres instance
@@ -1146,7 +1187,7 @@ baseurl=%s
         """
         cmd = '%s%s"%spg_ctl" -w -D "%s" %s >pg_ctl.out 2>&1' % \
             (
-                ('' if self.os_name in WIN_BASED else 'sudo -u postgres '),
+                self.pg_preexec,
                 preaction,
                 self.get_server_bin_path(), data_dir, action
             )
