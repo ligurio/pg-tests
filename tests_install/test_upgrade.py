@@ -217,7 +217,7 @@ class TestUpgrade():
         if (dist in upgrade_route['unsupported_platforms']):
             print "Upgrade on %s not supported" % (dist)
             return
-
+        # pylint: disable=no-member
         tag_mark = pytest.allure.label(LabelType.TAG, product_info)
         request.node.add_marker(tag_mark)
         # Install the tested version
@@ -277,6 +277,7 @@ class TestUpgrade():
             raise Exception("OS %s is not supported." % self.system)
 
         product_info = request.cls.product_info
+        # pylint: disable=no-member
         tag_mark = pytest.allure.label(LabelType.TAG, product_info)
         request.node.add_marker(tag_mark)
 
