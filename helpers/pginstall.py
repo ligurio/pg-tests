@@ -572,6 +572,8 @@ baseurl=%s
                                   ininame)
         command_executor(cmd, windows=True)
         refresh_env_win()
+        self.client_path_needed = False
+        self.server_path_needed = False
 
     def install_perl_win(self):
         # Workaround for PGPRO-2021
