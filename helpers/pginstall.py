@@ -902,7 +902,7 @@ baseurl=%s
                                  REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
     def exec_psql(self, query, options=''):
-        cmd = '%s%spsql %s %s -c "%s"' % \
+        cmd = '%s"%spsql" %s %s -c "%s"' % \
             (
                 self.pg_preexec,
                 self.get_client_bin_path(),
@@ -923,7 +923,7 @@ baseurl=%s
             script_file.write(script)
         os.chmod(script_path, 0644)
 
-        cmd = '%s%spsql %s %s -f %s' % \
+        cmd = '%s"%spsql" %s %s -f "%s"' % \
             (
                 self.pg_preexec,
                 self.get_client_bin_path(),
@@ -941,13 +941,13 @@ baseurl=%s
     def get_psql_version(self):
         """ Get client version
         """
-        cmd = '%spsql --version' % self.get_client_bin_path()
+        cmd = '"%spsql" --version' % self.get_client_bin_path()
         return subprocess.check_output(cmd, shell=True, env=self.env).strip()
 
     def get_initdb_props(self):
         """ Get properties returned by initdb
         """
-        cmd = '%s%sinitdb -s -D .' % \
+        cmd = '%s"%sinitdb" -s -D .' % \
             (
                 self.pg_preexec,
                 self.get_server_bin_path()
@@ -1132,7 +1132,7 @@ baseurl=%s
             subprocess.check_call('chown -R postgres:postgres %s' %
                                   self.get_datadir(), shell=True)
 
-        cmd = "%s%sinitdb -D %s" % \
+        cmd = '%s"%sinitdb" -D "%s"' % \
               (
                   self.pg_preexec,
                   self.get_server_bin_path(),
@@ -1174,7 +1174,7 @@ baseurl=%s
                                        cwd="/", env=self.env)
 
     def pg_isready(self):
-        cmd = '%s%spg_isready' % \
+        cmd = '%s"%spg_isready"' % \
             (
                 self.pg_preexec,
                 self.get_server_bin_path()
