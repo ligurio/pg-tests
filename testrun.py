@@ -321,7 +321,7 @@ def create_env(name, domname, domimage=None):
         if domipaddress:
             break
         timeout += 5
-        if timeout > 60:
+        if timeout > 80:
             raise Exception(
                 "Failed to obtain IP address (for MAC %s) in domain %s." %
                 (dommac, domname))
