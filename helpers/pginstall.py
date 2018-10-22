@@ -134,6 +134,8 @@ class PgInstall:
                 product_dir = "pgpro-std-10.4.1/repo"
             elif self.edition == "1c":
                 product_dir = "1c-%s" % product_version
+            elif self.edition == "sql":
+                product_dir = "pgsql-%s" % product_version
             if self.milestone == "beta":
                 product_dir += "-" + self.milestone
         return product_dir
@@ -224,11 +226,11 @@ class PgInstall:
                 gpg_key_url = "https://download.postgresql.org/" \
                     "pub/repos/yum/RPM-GPG-KEY-PGDG-%s" % \
                     self.version.replace('.', '')
+                product_dir = "/repos/yum/%s/redhat/" \
+                    "rhel-$releasever-$basearch" % self.version
             elif self.os_name in DEB_BASED:
                 gpg_key_url = "https://www.postgresql.org/"\
                     "media/keys/ACCC4CF8.asc"
-            product_dir = "/repos/yum/%s/redhat/rhel-$releasever-$basearch" % \
-                self.version
             baseurl = PSQL_BASE + product_dir
             return baseurl, gpg_key_url
         elif self.product == "postgrespro":
@@ -974,6 +976,10 @@ baseurl=%s
                     return 'postgresql-1c-' + \
                         self.version + \
                         ('' if self.os_arch == 'AMD64' else '-32bit')
+                if self.edition == "sql":
+                    return 'postgresql-' + \
+                        self.version + \
+                        ('' if self.os_arch == 'AMD64' else '-32bit')
                 return 'postgrespro' + '-' + \
                     ('enterprise-' if self.edition == 'ent' else '') + \
                     ('X64' if self.os_arch == 'AMD64' else 'X86') + '-' + \
@@ -1032,8 +1038,9 @@ baseurl=%s
                                              self.version)
         else:
             if self.product == 'postgrespro':
-                return 'C:\\Program Files\\PostgresPro%s\\%s' % \
-                    ('Enterprise'
+                return 'C:\\Program Files\\%s%s\\%s' % \
+                    ('PostgreSQL' if self.edition == 'sql' else 'PostgresPro',
+                     'Enterprise'
                      if self.edition in ["ent", "ent-cert"] else
                      '',
                      self.version)
