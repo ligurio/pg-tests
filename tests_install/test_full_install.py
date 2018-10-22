@@ -92,7 +92,7 @@ class TestFullInstall():
         client_version = pginst.get_psql_version()
         print("Server version:\n%s\nClient version:\n%s" %
               (server_version, client_version))
-        if name == 'postgrespro' and edition != '1c':
+        if name == 'postgrespro' and not (edition in ['1c', 'sql']):
             ppversion = pginst.exec_psql_select("SELECT pgpro_version()")
             assert ppversion.startswith('PostgresPro ' + version)
             ppedition = pginst.exec_psql_select("SELECT pgpro_edition()")
@@ -110,11 +110,12 @@ class TestFullInstall():
     def test_all_extensions(self, request):
         pginst = request.cls.pginst
         iprops = pginst.get_initdb_props()
-        pginst.exec_psql(
-            "ALTER SYSTEM SET shared_preload_libraries = %s" %
-            ','.join(PRELOAD_LIBRARIES[request.cls.pgid]))
-        pginst.restart_service()
-        time.sleep(10)
+        if request.cls.pgid in PRELOAD_LIBRARIES:
+            pginst.exec_psql(
+                "ALTER SYSTEM SET shared_preload_libraries = %s" %
+                ','.join(PRELOAD_LIBRARIES[request.cls.pgid]))
+            pginst.restart_service()
+            time.sleep(10)
         share_path = iprops['share_path'].replace('/', os.sep)
         controls = glob.glob(os.path.join(share_path,
                                           'extension', '*.control'))
