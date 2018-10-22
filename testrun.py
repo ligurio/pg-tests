@@ -321,7 +321,7 @@ def create_env(name, domname, domimage=None):
         if domipaddress:
             break
         timeout += 5
-        if timeout > 60:
+        if timeout > 80:
             raise Exception(
                 "Failed to obtain IP address (for MAC %s) in domain %s." %
                 (dommac, domname))
@@ -523,6 +523,7 @@ def close_env(domname, saveimg=False, destroys0=False):
             print('Domain %s state saved to %s.' % (domname, imgfile))
     else:
         timeout = 0
+        print('Destroying domain...')
         while True:
             # To workaround: libvirt.libvirtError: Failed to terminate \
             #   process PID with SIGKILL: Device or resource busy
@@ -615,8 +616,13 @@ def main():
         linux_os = target[0:3] != 'win'
         target_start = time.time()
         domname = gen_name(target)
-        domipaddress = create_env(target, domname)[0]
-        setup_env(domipaddress, domname, linux_os, tests_dir)
+        try:
+            domipaddress = create_env(target, domname)[0]
+            setup_env(domipaddress, domname, linux_os, tests_dir)
+        except Exception as e:
+            # Don't leave a domain that is failed to setup running
+            close_env(domname, saveimg=False, destroys0=True)
+            raise e
         print("Environment deployed without errors. Ready to run tests")
         if len(tests) > 1:
             save_env(domname)
@@ -626,9 +632,14 @@ def main():
             testname = test.split('/')[1].split('.')[0]
             if len(tests) > 1:
                 restore_env(domname)
-                domipaddress = create_env(
-                    target, domname, get_dom_disk(domname))[0]
-                wait_for_boot(domipaddress, linux=linux_os)
+                try:
+                    domipaddress = create_env(
+                        target, domname, get_dom_disk(domname))[0]
+                    wait_for_boot(domipaddress, linux=linux_os)
+                except Exception as e:
+                    # Don't leave a domain that is failed to boot running
+                    close_env(domname, saveimg=False, destroys0=True)
+                    raise e
             reportname = "report-%s_%s_%s" % (
                 time.strftime('%Y-%m-%d-%H-%M-%S'), testname, target)
             cmd = make_test_cmd(
