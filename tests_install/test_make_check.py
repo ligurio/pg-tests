@@ -94,8 +94,9 @@ class TestMakeCheck(object):
             pginst.initdb_start()
         else:
             pginst.install_postgres_win(port=55432)
-        pginst.exec_psql("ALTER SYSTEM SET shared_preload_libraries = %s" %
-                         ','.join(PRELOAD_LIBRARIES[pgid]))
+        if pgid in PRELOAD_LIBRARIES:
+            pginst.exec_psql("ALTER SYSTEM SET shared_preload_libraries = %s" %
+                             ','.join(PRELOAD_LIBRARIES[pgid]))
         pginst.exec_psql("ALTER SYSTEM SET max_worker_processes = 16")
         pginst.restart_service()
         cmd = '"%s" --bindir' % os.path.join(pginst.get_default_bin_path(),
