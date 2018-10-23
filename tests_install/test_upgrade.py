@@ -232,7 +232,8 @@ class TestUpgrade():
             return
 
         upgrade_route = UPGRADE_ROUTES[key]
-        if ('unsupported_platforms' in upgrade_route and dist in upgrade_route['unsupported_platforms']):
+        if ('unsupported_platforms' in upgrade_route
+                and dist in upgrade_route['unsupported_platforms']):
             print "Upgrade on %s not supported" % (dist)
             return
         # pylint: disable=no-member
@@ -248,7 +249,8 @@ class TestUpgrade():
         stop(pg)
 
         for route in upgrade_route['from']:
-            if ('unsupported_platforms' in route and dist in route['unsupported_platforms']):
+            if ('unsupported_platforms' in route
+                    and dist in route['unsupported_platforms']):
                 continue
 
             old_name = route['name']
@@ -311,7 +313,8 @@ class TestUpgrade():
 
         dump_restore_route = UPGRADE_ROUTES[key]
 
-        if ('unsupported_platforms' in dump_restore_route and dist in dump_restore_route['unsupported_platforms']):
+        if ('unsupported_platforms' in dump_restore_route
+                and dist in dump_restore_route['unsupported_platforms']):
             print "Dump-restore scenario on %s not supported" % (dist)
             return
 
@@ -319,7 +322,8 @@ class TestUpgrade():
 
         for route in dump_restore_route['from']:
 
-            if ('unsupported_platforms' in route and dist in route['unsupported_platforms']):
+            if ('unsupported_platforms' in route
+                    and dist in route['unsupported_platforms']):
                 continue
 
             old_name = route['name']
