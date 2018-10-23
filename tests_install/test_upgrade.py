@@ -27,6 +27,15 @@ UPGRADE_ROUTES = {
         ]
     },
 
+    'postgrespro-std-11': {
+        'unsupported_platforms': ['ALT  8', 'GosLinux 7.08'],
+        'from': [
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '10'
+            }
+        ]
+    },
+
     'postgrespro-ent-10': {
         'unsupported_platforms': ['ALT  8', 'GosLinux 7.08'],
         'from': [
@@ -52,6 +61,15 @@ DUMP_RESTORE_ROUTES = {
                     "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0\xb5\xd1"
                         "\x80\xd0\xb0  6.3"
                 ]
+            }
+        ]
+    },
+
+    'postgrespro-std-11': {
+        'unsupported_platforms': ['ALT  8', 'GosLinux 7.08'],
+        'from': [
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '10'
             }
         ]
     },
@@ -214,7 +232,7 @@ class TestUpgrade():
             return
 
         upgrade_route = UPGRADE_ROUTES[key]
-        if (dist in upgrade_route['unsupported_platforms']):
+        if ('unsupported_platforms' in upgrade_route and dist in upgrade_route['unsupported_platforms']):
             print "Upgrade on %s not supported" % (dist)
             return
         # pylint: disable=no-member
@@ -230,7 +248,7 @@ class TestUpgrade():
         stop(pg)
 
         for route in upgrade_route['from']:
-            if (dist in route['unsupported_platforms']):
+            if ('unsupported_platforms' in route and dist in route['unsupported_platforms']):
                 continue
 
             old_name = route['name']
@@ -293,7 +311,7 @@ class TestUpgrade():
 
         dump_restore_route = UPGRADE_ROUTES[key]
 
-        if (dist in dump_restore_route['unsupported_platforms']):
+        if ('unsupported_platforms' in dump_restore_route and dist in dump_restore_route['unsupported_platforms']):
             print "Dump-restore scenario on %s not supported" % (dist)
             return
 
@@ -301,7 +319,7 @@ class TestUpgrade():
 
         for route in dump_restore_route['from']:
 
-            if (dist in route['unsupported_platforms']):
+            if ('unsupported_platforms' in route and dist in route['unsupported_platforms']):
                 continue
 
             old_name = route['name']
