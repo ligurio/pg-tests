@@ -11,6 +11,9 @@ from helpers.os_helpers import get_directory_size
 from helpers.os_helpers import get_process_pids
 
 PRELOAD_LIBRARIES = {
+    'std-11':
+        ['auth_delay', 'auto_explain',
+         'plantuner', 'shared_ispell', 'pg_pathman'],
     'std-10':
         ['auth_delay', 'auto_explain',
          'plantuner', 'shared_ispell', 'pg_pathman'],

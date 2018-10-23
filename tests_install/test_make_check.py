@@ -11,6 +11,9 @@ from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall
 
 PRELOAD_LIBRARIES = {
+    'std-11':
+        ['auth_delay', 'auto_explain',
+         'plantuner', 'shared_ispell', 'pg_pathman'],
     'std-10':
         ['auth_delay', 'auto_explain',
          'plantuner', 'shared_ispell', 'pg_pathman'],
