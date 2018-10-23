@@ -15,7 +15,6 @@ system = platform.system()
 UPGRADE_ROUTES = {
 
     'postgrespro-std-10': {
-        'unsupported_platforms': ['ALT  8', 'GosLinux 7.08'],
         'from': [
             {
                 'name': 'postgrespro', 'edition': 'std', 'version': '9.6',
@@ -28,7 +27,6 @@ UPGRADE_ROUTES = {
     },
 
     'postgrespro-std-11': {
-        'unsupported_platforms': ['ALT  8', 'GosLinux 7.08'],
         'from': [
             {
                 'name': 'postgrespro', 'edition': 'std', 'version': '10'
@@ -37,7 +35,6 @@ UPGRADE_ROUTES = {
     },
 
     'postgrespro-ent-10': {
-        'unsupported_platforms': ['ALT  8', 'GosLinux 7.08'],
         'from': [
             {
                 'name': 'postgrespro', 'edition': 'ent', 'version': '9.6',
@@ -53,7 +50,6 @@ UPGRADE_ROUTES = {
 DUMP_RESTORE_ROUTES = {
 
     'postgrespro-std-10': {
-        'unsupported_platforms': ['ALT  8', 'GosLinux 7.08'],
         'from': [
             {
                 'name': 'postgrespro', 'edition': 'std', 'version': '9.6',
@@ -66,7 +62,6 @@ DUMP_RESTORE_ROUTES = {
     },
 
     'postgrespro-std-11': {
-        'unsupported_platforms': ['ALT  8', 'GosLinux 7.08'],
         'from': [
             {
                 'name': 'postgrespro', 'edition': 'std', 'version': '10'
@@ -75,7 +70,6 @@ DUMP_RESTORE_ROUTES = {
     },
 
     'postgrespro-ent-10': {
-        'unsupported_platforms': ['ALT  8', 'GosLinux 7.08'],
         'from': [
             {
                 'name': 'postgrespro', 'edition': 'ent', 'version': '9.6',
@@ -232,10 +226,7 @@ class TestUpgrade():
             return
 
         upgrade_route = UPGRADE_ROUTES[key]
-        if ('unsupported_platforms' in upgrade_route
-                and dist in upgrade_route['unsupported_platforms']):
-            print "Upgrade on %s not supported" % (dist)
-            return
+
         # pylint: disable=no-member
         tag_mark = pytest.allure.label(LabelType.TAG, product_info)
         request.node.add_marker(tag_mark)
@@ -312,11 +303,6 @@ class TestUpgrade():
             return
 
         dump_restore_route = UPGRADE_ROUTES[key]
-
-        if ('unsupported_platforms' in dump_restore_route
-                and dist in dump_restore_route['unsupported_platforms']):
-            print "Dump-restore scenario on %s not supported" % (dist)
-            return
 
         pg = request.cls.pg
 
