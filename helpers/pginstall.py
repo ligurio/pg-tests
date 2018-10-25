@@ -455,6 +455,14 @@ baseurl=%s
         else:
             raise Exception("Unsupported distro %s" % self.os_name)
 
+    def setup_extra_repos(self):
+        if self.product == 'postgrespro' and self.version == '11':
+            if (self.os_name == 'CentOS Linux' and
+               self.os_version.startswith('7.')):
+                cmd = "yum install -y epel-release"
+                command_executor(cmd, self.remote, self.host,
+                                 REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+
     def download_source(self):
         if self.product == "postgresql":
             pass
@@ -523,6 +531,7 @@ baseurl=%s
                     self.server_path_needed = True
 
     def install_full(self):
+        self.setup_extra_repos()
         self.install_package(self.get_all_packages_name())
         self.client_installed = True
         self.server_installed = True
