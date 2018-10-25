@@ -1106,6 +1106,11 @@ baseurl=%s
     def get_configdir(self):
         return self.configdir
 
+    def get_port(self):
+        if self.port:
+            return self.port
+        return 5432
+
     def initdb_start(self):
         if self.product == 'postgrespro' and self.version == '9.6':
             if self.os_name in DEBIAN_BASED:
@@ -1196,11 +1201,11 @@ baseurl=%s
         :param data_dir: data directory of the Postgres instance
         :return:
         """
-        cmd = '%s%s"%spg_ctl" -w -D "%s" %s >pg_ctl.out 2>&1' % \
+        cmd = '%s%s"%spg_ctl" -w -D "%s" %s >pg_ctl-%s.log 2>&1' % \
             (
                 self.pg_preexec,
                 preaction,
-                self.get_server_bin_path(), data_dir, action
+                self.get_server_bin_path(), data_dir, action, self.get_port()
             )
         # sys.stdout.encoding = 'cp866'?
         subprocess.check_call(cmd, shell=True, cwd=tempfile.gettempdir(),
