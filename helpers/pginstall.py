@@ -455,6 +455,14 @@ baseurl=%s
         else:
             raise Exception("Unsupported distro %s" % self.os_name)
 
+    def setup_extra_repos(self):
+        if self.product == 'postgrespro' and self.version == '11':
+            if (self.os_name == 'CentOS Linux' and
+               self.os_version.startswith('7.')):
+                cmd = "yum install -y epel-release"
+                command_executor(cmd, self.remote, self.host,
+                                 REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+
     def download_source(self):
         if self.product == "postgresql":
             pass
@@ -523,6 +531,7 @@ baseurl=%s
                     self.server_path_needed = True
 
     def install_full(self):
+        self.setup_extra_repos()
         self.install_package(self.get_all_packages_name())
         self.client_installed = True
         self.server_installed = True
@@ -1106,6 +1115,11 @@ baseurl=%s
     def get_configdir(self):
         return self.configdir
 
+    def get_port(self):
+        if self.port:
+            return self.port
+        return 5432
+
     def initdb_start(self):
         if self.product == 'postgrespro' and self.version == '9.6':
             if self.os_name in DEBIAN_BASED:
@@ -1196,11 +1210,11 @@ baseurl=%s
         :param data_dir: data directory of the Postgres instance
         :return:
         """
-        cmd = '%s%s"%spg_ctl" -w -D "%s" %s >pg_ctl.out 2>&1' % \
+        cmd = '%s%s"%spg_ctl" -w -D "%s" %s >pg_ctl-%s.log 2>&1' % \
             (
                 self.pg_preexec,
                 preaction,
-                self.get_server_bin_path(), data_dir, action
+                self.get_server_bin_path(), data_dir, action, self.get_port()
             )
         # sys.stdout.encoding = 'cp866'?
         subprocess.check_call(cmd, shell=True, cwd=tempfile.gettempdir(),
