@@ -193,10 +193,10 @@ class PgInstall:
             if self.version == '9.5' or self.version == '9.6':
                 if self.__is_os_debian_based():
                     return self.get_base_package_name() + '*' + \
-                        ' %s-.*-%s' % (self.product,
-                                       self.version.replace('.', '\\.')) + \
-                        ' libecpg.*'
-        return self.get_base_package_name() + '.*'
+                        ' %s-*-%s' % (self.product,
+                                      self.version.replace('.', '\\.')) + \
+                        ' libecpg*'
+        return self.get_base_package_name() + '*'
 
     def __is_os_redhat_based(self):
         return self.os_name in RPM_BASED
@@ -500,7 +500,7 @@ baseurl=%s
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         elif self.os_name in DEB_BASED:
-            cmd = "apt-get install -y %s" % pkg_name
+            cmd = "apt-get install -y %s" % pkg_name.replace('*', '.*')
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         elif self.os_name in ZYPPER_BASED:
@@ -614,7 +614,7 @@ baseurl=%s
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         elif self.os_name in DEB_BASED:
-            cmd = "apt-get remove -y %s" % pkg_name
+            cmd = "apt-get remove -y %s" % pkg_name.replace('*', '.*')
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         elif self.os_name in ZYPPER_BASED:
