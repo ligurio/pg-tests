@@ -457,9 +457,19 @@ baseurl=%s
 
     def setup_extra_repos(self):
         if self.product == 'postgrespro' and self.version == '11':
+            cmd = None
             if (self.os_name == 'CentOS Linux' and
                self.os_version.startswith('7.')):
                 cmd = "yum install -y epel-release"
+            elif (self.os_name == 'Oracle Linux Server' and
+                  self.os_version.startswith('6.')):
+                cmd = "yum install -y https://dl.fedoraproject.org/pub/" \
+                    "epel/epel-release-latest-6.noarch.rpm"
+            elif (self.os_name == 'Oracle Linux Server' and
+                  self.os_version.startswith('7.')):
+                cmd = "yum install -y https://dl.fedoraproject.org/pub/" \
+                    "epel/epel-release-latest-7.noarch.rpm"
+            if cmd:
                 command_executor(cmd, self.remote, self.host,
                                  REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
