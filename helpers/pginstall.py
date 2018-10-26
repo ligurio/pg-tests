@@ -457,9 +457,19 @@ baseurl=%s
 
     def setup_extra_repos(self):
         if self.product == 'postgrespro' and self.version == '11':
+            cmd = None
             if (self.os_name == 'CentOS Linux' and
                self.os_version.startswith('7.')):
                 cmd = "yum install -y epel-release"
+            elif (self.os_name == 'Oracle Linux Server' and
+                  self.os_version.startswith('6.')):
+                cmd = "yum install -y https://dl.fedoraproject.org/pub/" \
+                    "epel/epel-release-latest-6.noarch.rpm"
+            elif (self.os_name == 'Oracle Linux Server' and
+                  self.os_version.startswith('7.')):
+                cmd = "yum install -y https://dl.fedoraproject.org/pub/" \
+                    "epel/epel-release-latest-7.noarch.rpm"
+            if cmd:
                 command_executor(cmd, self.remote, self.host,
                                  REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
@@ -589,11 +599,13 @@ baseurl=%s
     def install_perl_win(self):
         # Workaround for PGPRO-2021
         if self.os_arch == 'AMD64':
-            exename = 'ActivePerl-5.22.4.2205-MSWin32-x64-403863.exe'
+            exename = 'ActivePerl-5.26.1.2601-MSWin32-x64-404865.exe'
+            url = 'http://downloads.activestate.com/ActivePerl/' \
+                'releases/5.26.1.2601/' + exename
         else:
             exename = 'ActivePerl-5.22.4.2205-MSWin32-x86-64int-403863.exe'
-        url = 'http://webdav.l.postgrespro.ru/DIST/windows/resources/' + \
-            exename
+            url = 'http://webdav.l.postgrespro.ru/DIST/windows/resources/' + \
+                exename
         if not os.path.exists(WIN_INST_DIR):
             os.mkdir(WIN_INST_DIR)
         perl_installer = urllib.URLopener()
