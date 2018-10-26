@@ -196,7 +196,7 @@ class PgInstall:
                         ' %s-.*-%s' % (self.product,
                                        self.version.replace('.', '\\.')) + \
                         ' libecpg.*'
-        return self.get_base_package_name() + '*'
+        return self.get_base_package_name() + '.*'
 
     def __is_os_redhat_based(self):
         return self.os_name in RPM_BASED
