@@ -176,7 +176,7 @@ def after_upgrade():
     if not system == "Windows":
         subprocess.check_output('sudo -u postgres ./analyze_new_cluster.sh',
                                 shell=True, cwd=tempfile.gettempdir())
-        subprocess.check_output('sudo -u postgres ./delete_old_cluster.sh',
+        subprocess.check_output('./delete_old_cluster.sh',
                                 shell=True, cwd=tempfile.gettempdir())
 
 
