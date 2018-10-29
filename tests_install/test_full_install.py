@@ -146,13 +146,44 @@ class TestFullInstall():
         func = """CREATE FUNCTION py_test_function()
 RETURNS text
 AS $$
-return "python test function"
+return "python2u test function"
 $$ LANGUAGE plpython2u;"""
         pginst.exec_psql_script(func)
         # Step 2
         result = pginst.exec_psql_select("SELECT py_test_function()")
+        print(result)
         # Step 3
-        assert result == "python test function"
+        assert result == "python2u test function"
+        # Step 4
+        pginst.exec_psql("DROP FUNCTION py_test_function()")
+
+    @pytest.mark.test_plpython
+    def test_plpython3(self, request):
+        """Test for plpython language
+        Scenario:
+        1. Create function
+        2. Execute function
+        3. Check function result
+        4. Drop function
+        """
+        pginst = request.cls.pginst
+        py3ext = pginst.exec_psql_select("SELECT extname FROM pg_extension "
+                                         "WHERE extname='plpython3u'")
+        if py3ext != "plpython3u":
+            print("No plpython3u extension found. Test skipped.")
+            return
+        # Step 1
+        func = """CREATE FUNCTION py_test_function()
+RETURNS text
+AS $$
+return "python3u test function"
+$$ LANGUAGE plpython3u;"""
+        pginst.exec_psql_script(func)
+        # Step 2
+        result = pginst.exec_psql_select("SELECT py_test_function()")
+        print(result)
+        # Step 3
+        assert result == "python3u test function"
         # Step 4
         pginst.exec_psql("DROP FUNCTION py_test_function()")
 
@@ -176,6 +207,7 @@ $$ LANGUAGE pltcl;"""
         pginst.exec_psql_script(func)
         # Step 2
         result = pginst.exec_psql_select("SELECT pltcl_test_function()")
+        print(result)
         # Step 3
         assert result == "pltcl test function"
         # Step 4
@@ -200,6 +232,7 @@ $$ LANGUAGE plperl;"""
         pginst.exec_psql_script(func)
         # Step 2
         result = pginst.exec_psql_select("SELECT plperl_test_function()")
+        print(result)
         # Step 3
         assert result == "plperl test function"
         # Step 4
@@ -229,6 +262,7 @@ $$ LANGUAGE plpgsql;"""
         pginst.exec_psql_script(func)
         # Step 2
         result = pginst.exec_psql_select("SELECT plpgsql_test_function()")
+        print result
         # Step 3
         assert result == "plpgsql test function"
         # Step 4
