@@ -461,7 +461,7 @@ baseurl=%s
             if (self.os_name == 'CentOS Linux' and
                self.os_version.startswith('7.')):
                 cmd = "yum install -y epel-release"
-            elif (self.os_name == 'Oracle Linux Server' and
+            elif (self.os_name in ['Oracle Linux Server', 'CentOS'] and
                   self.os_version.startswith('6.')):
                 cmd = "yum install -y https://dl.fedoraproject.org/pub/" \
                     "epel/epel-release-latest-6.noarch.rpm"
