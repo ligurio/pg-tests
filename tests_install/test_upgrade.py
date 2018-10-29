@@ -87,13 +87,19 @@ DUMP_RESTORE_ROUTES = {
 def start(pg):
     if not pg.pg_isready():
         pg.pg_control("start", pg.get_datadir())
-        time.sleep(10)
+        for i in range(1, 100):
+            if pg.pg_isready():
+                break
+            time.sleep(1)
 
 
 def stop(pg):
     if pg.pg_isready():
         pg.pg_control("stop", pg.get_datadir())
-        time.sleep(10)
+        for i in range(1, 100):
+            if not pg.pg_isready():
+                break
+            time.sleep(1)
 
 
 def install_server(product, edition, version, milestone, branch, windows):
