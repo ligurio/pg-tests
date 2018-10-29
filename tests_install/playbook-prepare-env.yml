@@ -487,3 +487,10 @@
       name: w32time
       start_mode: disabled
       state: stopped
+
+  - name: windows - stop Windows Update service
+    when: ansible_os_family == "Windows"
+    win_service:
+      name: wuauserv
+      start_mode: disabled
+      state: stopped
