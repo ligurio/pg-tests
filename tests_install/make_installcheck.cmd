@@ -1,5 +1,5 @@
 SET MD=c:\msys32\
-rmdir /S /Q %MD%
+rmdir /S /Q %MD% 2>NUL
 mkdir %MD%\var\src
 copy postgres*.tar.bz2 %MD%\var\src\
 xcopy patches %MD%\var\src\patches\ /E
@@ -14,10 +14,10 @@ REM Alternative way (without 7z, but starts the shell)
 REM powershell -Command "((new-object net.webclient).DownloadFile('http://repo.msys2.org/distrib/x86_64/msys2-x86_64-20180531.exe', 'msys2.exe'))"
 REM msys2.exe --script install.qs
 powershell -Command "((new-object net.webclient).DownloadFile('http://repo.msys2.org/distrib/i686/msys2-base-i686-20180531.tar.xz', '%TEMP%\msys.tar.xz'))"
-%TEMP%\7za.exe x %TEMP%\msys.tar.xz -so | %TEMP%\7za.exe  x -aoa -si -ttar >%TEMP%/7z-msys.log
+%TEMP%\7za.exe x %TEMP%\msys.tar.xz -so 2>%TEMP%/7z-msys0.log | %TEMP%\7za.exe  x -aoa -si -ttar >%TEMP%/7z-msys1.log 2>&1
 
 REM First run is performed to setup the environment
-%MD%\usr\bin\bash --login -i -c exit >%TEMP%\msys-setup.log
+%MD%\usr\bin\bash --login -i -c exit >%TEMP%\msys-setup.log 2>&1
 
 REM Grant access to Users (including postgres user) to src/test/regress/testtablespace/
 icacls %MD%\var\src /grant *S-1-5-32-545:(OI)(CI)F /T
@@ -36,14 +36,15 @@ echo PGPORT=$PGPORT ^&^& ^
 unset PGDATA PGLOCALEDIR ^&^& ^
 export PGUSER=postgres ^&^& ^
 cd /var/src ^&^& ^
-curl -O http://cpan.metacpan.org/authors/id/T/TO/TODDR/IPC-Run-0.96.tar.gz ^&^& ^
+curl -s -O http://cpan.metacpan.org/authors/id/T/TO/TODDR/IPC-Run-0.96.tar.gz ^&^& ^
 tar fax IPC-Run* ^&^& ^
 (cd IPC-Run*/ ^&^& perl Makefile.PL ^&^& make ^&^& make install) ^&^& ^
 echo "Switching log messages language to English (for src/bin/scripts/ tests)" ^&^& ^
 printf "\nlc_messages = 'English_United States.1252'\n" ^>^> "$PGPATH/share/postgresql.conf.sample" ^&^& ^
 tar fax postgres*.tar.bz2 ^&^& ^
 cd postgres*/ ^&^& ^
-./configure --enable-tap-tests --host=$host --without-zlib --prefix="$PGPATH" ^>configure.log ^&^& ^
+set -o pipefail ^&^& ^
+./configure --enable-tap-tests --host=$host --without-zlib --prefix="$PGPATH" 2^>^&1 ^| tee configure.log ^&^& ^
 echo "Fixing ECPG test for installcheck..." ^&^& ^
 sed -e "s@^ECPG = ../../preproc/ecpg@ECPG = ecpg@" ^
     -e "s@^ECPG_TEST_DEPENDENCIES = ../../preproc/ecpg\$(X)@ECPG_TEST_DEPENDENCIES = @" ^
@@ -59,7 +60,6 @@ echo "Disabling recovery/*logical_decoding test (PGPRO-1527)" ^&^& ^
 rm src/test/recovery/t/*logical_decoding*.pl ^&^& ^
 echo "Disabling isolation/timeouts test (Fails in pg-tests only with a message: step locktbl timed out after 75 seconds)" ^&^& ^
 sed -e "s@test: timeouts@#test: timeouts@" -i src/test/isolation/isolation_schedule ^&^& ^
-set -o pipefail ^&^& ^
 echo "Making native MinGW libs" ^&^& ^
 (cd src/common ^&^& make 2^>^&1 ^| tee /tmp/make_common.log) ^&^& ^
 (cd src/backend ^&^& make libpostgres.a 2^>^&1 ^| tee /tmp/make_libpostgres.log) ^&^& ^
