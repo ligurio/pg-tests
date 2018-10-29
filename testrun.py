@@ -253,10 +253,12 @@ def create_env(name, domname, domimage=None):
         network_driver = "e1000"
         ram_size = 2048
         cpus = 4
+        clock = "localtime"
     else:
         network_driver = "virtio"
         ram_size = 1536
         cpus = 1
+        clock = "utc"
     domisos = glob.glob(TEMPLATE_DIR + name + '*.iso')
     cdroms = ""
     cdromletter = "c"
@@ -281,7 +283,7 @@ def create_env(name, domname, domimage=None):
                   <features>
                     <acpi/>
                   </features>
-                  <clock offset='utc'/>
+                  <clock offset='%s'/>
                   <on_poweroff>destroy</on_poweroff>
                   <on_reboot>restart</on_reboot>
                   <on_crash>destroy</on_crash>
@@ -307,7 +309,7 @@ def create_env(name, domname, domimage=None):
                     </channel>
                   </devices>
                 </domain>
-                """ % (domname, ram_size, cpus, qemu_path, domimage,
+                """ % (domname, ram_size, cpus, clock, qemu_path, domimage,
                        cdroms, dommac, network_driver)
 
     dom = conn.createLinux(xmldesc, 0)
