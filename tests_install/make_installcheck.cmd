@@ -55,17 +55,20 @@ echo "Disabling dblink test (msys doesn't see Windows processes)..." ^&^& ^
 sed -e "s@^REGRESS = paths dblink@REGRESS = paths@" -i contrib/dblink/Makefile ^&^& ^
 echo "Disabling pg_basebackup/030_pg_recvlogical test (PGPRO-1527)" ^&^& ^
 rm src/bin/pg_basebackup/t/030_pg_recvlogical.pl ^&^& ^
+echo "Disabling recovery/*logical_decoding test (PGPRO-1527)" ^&^& ^
+rm src/test/recovery/t/*logical_decoding*.pl ^&^& ^
 echo "Disabling isolation/timeouts test (Fails in pg-tests only with a message: step locktbl timed out after 75 seconds)" ^&^& ^
 sed -e "s@test: timeouts@#test: timeouts@" -i src/test/isolation/isolation_schedule ^&^& ^
+set -o pipefail ^&^& ^
 echo "Making native MinGW libs" ^&^& ^
-(cd src/common ^&^& make -j4 libpgcommon_srv.a ^> /tmp/make_libpgcommon_srv.log) ^&^& ^
-(cd src/backend ^&^& make -j4 libpostgres.a ^> /tmp/make_libpostgres.log) ^&^& ^
+(cd src/common ^&^& make 2^>^&1 ^| tee /tmp/make_common.log) ^&^& ^
+(cd src/backend ^&^& make libpostgres.a 2^>^&1 ^| tee /tmp/make_libpostgres.log) ^&^& ^
 echo "Making ecpg" ^&^& ^
 make -C src/interfaces/ecpg ^&^& ^
 echo "Workaround for inability to merge PGPRO-626-ICU" ^&^& ^
-if [ -f src/test/default_collation/icu/t/001_default_collation.pl ]; then patch -p1 -i /var/src/patches/win-icu-test.patch; fi ^&^& ^
+if [ -f src/test/default_collation/icu/t/001_default_collation.pl ] ^&^& ! patch -N --dry-run -R /var/src/patches/win-icu-test.patch ; then patch -p1 -i /var/src/patches/win-icu-test.patch; fi ^&^& ^
 echo "Running installcheck-world" ^&^& ^
-with_icu=yes make -e installcheck-world ^
+with_icu=yes make -e installcheck-world 2^>^&1 ^| tee /tmp/installcheck.log ^
 
 > %MD%\var\src\make_check.sh
 %MD%\usr\bin\bash --login -i /var/src/make_check.sh
