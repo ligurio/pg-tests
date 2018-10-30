@@ -29,7 +29,10 @@ UPGRADE_ROUTES = {
     'postgrespro-std-11': {
         'from': [
             {
-                'name': 'postgrespro', 'edition': 'std', 'version': '10'
+                'name': 'postgrespro', 'edition': 'std', 'version': '10',
+                'unsupported_platforms': [
+                    "GosLinux 7.08", "RED OS release MUROM ( 7.1"
+                ]
             }
         ]
     },
