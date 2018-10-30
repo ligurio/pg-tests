@@ -172,6 +172,10 @@ def exec_command(cmd, hostname, login, password,
         stderr += chan.recv_stderr(buff_size)
 
     client.close()
+
+    stdout = stdout.decode('unicode-escape')
+    stderr = stderr.decode('unicode-escape')
+
     if skip_ret_code_check:
         return retcode, stdout, stderr
     else:
