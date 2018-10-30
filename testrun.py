@@ -680,7 +680,8 @@ def main():
                       " IP address: %s) is not zero - %s.\n"
                       "Please check report: %s" %
                       (target, domname, domipaddress, retcode, reporturl))
-                print retcode, stdout, stderr
+                print stdout
+                print stderr
                 return 1
 
         if not args.keep or len(tests) > 1:
