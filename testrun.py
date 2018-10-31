@@ -23,6 +23,9 @@ from helpers.utils import (copy_file, copy_reports_win,
                            REMOTE_LOGIN, REMOTE_PASSWORD,
                            REMOTE_ROOT_PASSWORD)
 
+reload(sys)
+sys.setdefaultencoding('utf8')
+
 DEBUG = False
 
 IMAGE_BASE_URL = 'http://webdav.l.postgrespro.ru/DIST/vm-images/test/'
