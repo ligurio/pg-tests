@@ -334,16 +334,19 @@ def create_env(name, domname, domimage=None):
                                                                 domipaddress,
                                                                 dommac)
     conn.close()
+    if name[0:3] != 'win':
+        # We don't use SSH on Windows
+        retcode = call("ssh-keygen -R " + domname,
+                       stderr=subprocess.STDOUT, shell=True)
+        if retcode != 0:
+            raise Exception("Could not remove old ssh key for %s." %
+                            domname)
 
-    retcode = call("ssh-keygen -R " + domname,
-                   stderr=subprocess.STDOUT, shell=True)
-    if retcode != 0:
-        raise Exception("Could not remove old ssh key for %s." % domname)
-
-    retcode = call("ssh-keygen -R " + domipaddress,
-                   stderr=subprocess.STDOUT, shell=True)
-    if retcode != 0:
-        raise Exception("Could not remove old ssh key for %s." % domipaddress)
+        retcode = call("ssh-keygen -R " + domipaddress,
+                       stderr=subprocess.STDOUT, shell=True)
+        if retcode != 0:
+            raise Exception("Could not remove old ssh key for %s." %
+                            domipaddress)
 
     return domipaddress, domimage, xmldesc
 
