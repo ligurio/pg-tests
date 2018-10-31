@@ -6,7 +6,6 @@ import shlex
 import shutil
 import socket
 import subprocess
-import requests
 import sys
 
 from enum import Enum
@@ -202,6 +201,7 @@ def exec_command_win(cmd, hostname,
     """
 
     import winrm
+    import requests
 
     for trc in range(connect_retry_count):
         try:
