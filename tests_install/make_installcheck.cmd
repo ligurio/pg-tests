@@ -1,3 +1,6 @@
+echo %time%: CMD starting
+PowerShell -Command "Set-MpPreference -DisableRealtimeMonitoring $true"
+
 SET MD=c:\msys32\
 rmdir /S /Q %MD% 2>NUL
 mkdir %MD%\var\src
@@ -23,6 +26,7 @@ REM Grant access to Users (including postgres user) to src/test/regress/testtabl
 icacls %MD%\var\src /grant *S-1-5-32-545:(OI)(CI)F /T
 @echo off
 echo ^
+echo "`date -Iseconds`: Starting shell... "; ^
 PGPATH=$(echo %PGPATH% ^| sed -e "s@c:[/\\\\]@/c/@i" -e "s@\\\\@/@g"); ^
 if file "$PGPATH/bin/postgres.exe" ^| grep '80386. for MS Windows$'; then ^
 bitness=32; gcc=mingw-w64-i686-gcc; host=i686-w64-mingw32; ^
@@ -41,9 +45,11 @@ tar fax IPC-Run* ^&^& ^
 (cd IPC-Run*/ ^&^& perl Makefile.PL ^&^& make ^&^& make install) ^&^& ^
 echo "Switching log messages language to English (for src/bin/scripts/ tests)" ^&^& ^
 printf "\nlc_messages = 'English_United States.1252'\n" ^>^> "$PGPATH/share/postgresql.conf.sample" ^&^& ^
+echo "`date -Iseconds`: Source archive extracting... " ^&^& ^
 tar fax postgres*.tar.bz2 ^&^& ^
 cd postgres*/ ^&^& ^
 set -o pipefail ^&^& ^
+echo "`date -Iseconds`: Configuring... "  ^&^& ^
 ./configure --enable-tap-tests --host=$host --without-zlib --prefix="$PGPATH" 2^>^&1 ^| tee configure.log ^&^& ^
 echo "Fixing ECPG test for installcheck..." ^&^& ^
 sed -e "s@^ECPG = ../../preproc/ecpg@ECPG = ecpg@" ^
@@ -60,16 +66,18 @@ echo "Disabling recovery/*logical_decoding test (PGPRO-1527)" ^&^& ^
 rm src/test/recovery/t/*logical_decoding*.pl ^&^& ^
 echo "Disabling isolation/timeouts test (Fails in pg-tests only with a message: step locktbl timed out after 75 seconds)" ^&^& ^
 sed -e "s@test: timeouts@#test: timeouts@" -i src/test/isolation/isolation_schedule ^&^& ^
-echo "Making native MinGW libs" ^&^& ^
+echo "`date -Iseconds`: Making native MinGW libs" ^&^& ^
 (cd src/common ^&^& make 2^>^&1 ^| tee /tmp/make_common.log) ^&^& ^
 (cd src/backend ^&^& make libpostgres.a 2^>^&1 ^| tee /tmp/make_libpostgres.log) ^&^& ^
-echo "Making ecpg" ^&^& ^
+echo "`date -Iseconds`: Making ecpg" ^&^& ^
 make -C src/interfaces/ecpg ^&^& ^
 echo "Workaround for inability to merge PGPRO-626-ICU" ^&^& ^
 if [ -f src/test/default_collation/icu/t/001_default_collation.pl ] ^&^& ! patch -N --dry-run -R /var/src/patches/win-icu-test.patch ; then patch -p1 -i /var/src/patches/win-icu-test.patch; fi ^&^& ^
-echo "Running installcheck-world" ^&^& ^
+echo "`date -Iseconds`: Running installcheck-world" ^&^& ^
 with_icu=yes make -e installcheck-world 2^>^&1 ^| tee /tmp/installcheck.log ^
 
 > %MD%\var\src\make_check.sh
 %MD%\usr\bin\bash --login -i /var/src/make_check.sh
-exit /b %errorlevel%
+SET LEVEL=%ERRORLEVEL%
+echo %time%: CMD finishing
+exit /b %LEVEL%
