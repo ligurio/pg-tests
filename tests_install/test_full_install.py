@@ -224,7 +224,7 @@ $$ LANGUAGE pltcl;"""
         """
         pginst = request.cls.pginst
         if platform.system() == "Windows" and pginst.os_arch != 'AMD64':
-            print "plperl is only supported on 32-bit Windows. Test skipped."
+            print "plperl is only supported on 64-bit Windows. Test skipped."
             return
         # Step 1
         func = """CREATE FUNCTION plperl_test_function()
