@@ -6,6 +6,7 @@ import shlex
 import shutil
 import socket
 import subprocess
+import requests
 import sys
 
 from enum import Enum
@@ -215,6 +216,7 @@ def exec_command_win(cmd, hostname,
             break
         except (winrm.exceptions.WinRMOperationTimeoutError,
                 winrm.exceptions.WinRMTransportError,
+                requests.exceptions.ConnectionError,
                 socket.error) as e:
             if trc == connect_retry_count:
                 raise e
