@@ -649,7 +649,13 @@ baseurl=%s
             subprocess.check_call([
                 os.path.join(self.get_pg_prefix(), 'Uninstall.exe'),
                 '/S'])
-            time.sleep(10)
+            for i in range(100, 0, -1):
+                if not os.path.exists(os.path.join(self.get_pg_prefix(),
+                                                   'bin')):
+                    break
+                if i == 1:
+                    raise Exception("Uninstallation failed.")
+                time.sleep(1)
         else:
             self.remove_package(self.get_all_packages_name())
         if remove_data:
