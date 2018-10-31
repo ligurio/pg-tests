@@ -100,6 +100,7 @@ class PgInstall:
         self.pg_prefix = self.get_default_pg_prefix()
         self.datadir = self.get_default_datadir()
         self.configdir = self.get_default_configdir()
+        self.service_name = self.get_default_service_name()
 
     def get_repo_base(self):
         if self.milestone == "alpha":
@@ -1146,7 +1147,6 @@ baseurl=%s
             if self.os_name in DEBIAN_BASED:
                 return
             if self.os_name in RPM_BASED:
-                service_name = self.get_default_service_name()
                 if subprocess.call("which systemctl", shell=True) == 0:
                     binpath = self.get_bin_path()
                     if self.fullversion[:6] in ['9.6.0.', '9.6.1.']:
@@ -1154,13 +1154,12 @@ baseurl=%s
                     else:
                         cmd = '%s/pg-setup initdb' % binpath
                 else:
-                    cmd = 'service "%s" initdb' % service_name
+                    cmd = 'service "%s" initdb' % self.service_name
                 subprocess.check_call(cmd, shell=True)
                 self.start_service()
             elif self.os_name in ALT_BASED:
                 subprocess.check_call('/etc/init.d/postgresql-%s initdb' %
                                       self.version, shell=True)
-                service_name = self.get_default_service_name()
                 self.start_service()
             elif self.os_name in ZYPPER_BASED:
                 self.start_service()
@@ -1185,26 +1184,25 @@ baseurl=%s
         subprocess.check_call(cmd, shell=True, cwd="/")
         self.configdir = self.get_datadir()
 
-    def service_action(self, action='start', service_name=None):
-        if not service_name:
-            service_name = self.get_default_service_name()
+    def service_action(self, action='start'):
         if self.os_name in WIN_BASED:
             if action == 'restart':
-                cmd = 'net stop "{0}" & net start "{0}"'.format(service_name)
+                cmd = 'net stop "{0}" & net start "{0}"'.format(
+                    self.service_name)
             else:
-                cmd = 'net %s "%s"' % (action, service_name)
+                cmd = 'net %s "%s"' % (action, self.service_name)
         else:
-            cmd = 'service "%s" %s' % (service_name, action)
+            cmd = 'service "%s" %s' % (self.service_name, action)
         subprocess.check_call(cmd, shell=True)
 
-    def start_service(self, service_name=None):
-        return self.service_action('start', service_name)
+    def start_service(self):
+        return self.service_action('start')
 
-    def restart_service(self, service_name=None):
-        return self.service_action('restart', service_name)
+    def restart_service(self):
+        return self.service_action('restart')
 
-    def stop_service(self, service_name=None):
-        return self.service_action('stop', service_name)
+    def stop_service(self):
+        return self.service_action('stop')
 
     def exec_client_bin(self, bin, options=''):
         cmd = '%s"%s%s" %s' % \
