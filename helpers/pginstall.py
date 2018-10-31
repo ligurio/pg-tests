@@ -643,7 +643,8 @@ baseurl=%s
     def remove_full(self, remove_data=False):
         if self.os_name in WIN_BASED:
             # TODO: Don't stop the service manually
-            self.stop_service()
+            if self.pg_isready():
+                self.stop_service()
             # TODO: Wait for completion without sleep
             subprocess.check_call([
                 os.path.join(self.get_pg_prefix(), 'Uninstall.exe'),
@@ -1211,10 +1212,11 @@ baseurl=%s
                                        cwd="/", env=self.env)
 
     def pg_isready(self):
-        cmd = '%s"%spg_isready"' % \
+        cmd = '%s"%spg_isready" %s' % \
             (
                 self.pg_preexec,
-                self.get_server_bin_path()
+                self.get_server_bin_path(),
+                '' if not(self.port) else '-p ' + str(self.port)
             )
         return subprocess.call(cmd, shell=True, env=self.env) == 0
 
