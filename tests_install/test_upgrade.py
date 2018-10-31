@@ -31,7 +31,8 @@ UPGRADE_ROUTES = {
             {
                 'name': 'postgrespro', 'edition': 'std', 'version': '10',
                 'unsupported_platforms': [
-                    "GosLinux 7.08", "RED OS release MUROM ( 7.1"
+                    "GosLinux 7.08", "RED OS release MUROM ( 7.1",
+                    "Ubuntu 18.10"
                 ]
             }
         ]
