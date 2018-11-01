@@ -1171,6 +1171,7 @@ baseurl=%s
             if force_remove:
                 self.remove_data()
         os.makedirs(self.get_datadir())
+        extraparam = ''
         if self.os_name not in WIN_BASED:
             subprocess.check_call('chown -R postgres:postgres %s' %
                                   self.get_datadir(), shell=True)
@@ -1179,11 +1180,13 @@ baseurl=%s
                 'icacls "%s" /grant *S-1-5-32-545:(OI)(CI)F /T' %
                 self.get_datadir(),
                 shell=True)
+            extraparam = ' -U postgres '
 
-        cmd = '%s"%sinitdb" -D "%s"' % \
+        cmd = '%s"%sinitdb" %s -D "%s"' % \
               (
                   self.pg_preexec,
                   self.get_server_bin_path(),
+                  extraparam,
                   self.get_datadir()
               )
         subprocess.check_call(cmd, shell=True, cwd="/")
