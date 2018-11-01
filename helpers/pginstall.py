@@ -651,8 +651,10 @@ baseurl=%s
                 os.path.join(self.get_pg_prefix(), 'Uninstall.exe'),
                 '/S'])
             for i in range(100, 0, -1):
-                if not os.path.exists(os.path.join(self.get_pg_prefix(),
-                                                   'bin')):
+                if (not os.path.exists(os.path.join(
+                        self.get_pg_prefix(), 'bin')) and
+                    not os.path.exists(os.path.join(
+                        self.get_pg_prefix(), 'share'))):
                     break
                 if i == 1:
                     raise Exception("Uninstallation failed.")
@@ -661,6 +663,10 @@ baseurl=%s
             self.remove_package(self.get_all_packages_name())
         if remove_data:
             self.remove_data()
+            if self.os_name in WIN_BASED:
+                time.sleep(1)  # Let uninstallation finish
+                if os.path.exists(self.get_pg_prefix()):
+                    shutil.rmtree(self.get_pg_prefix())
         self.client_installed = False
         self.server_installed = False
         self.client_path_needed = True
