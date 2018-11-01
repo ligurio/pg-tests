@@ -66,9 +66,10 @@ echo "Disabling recovery/*logical_decoding test (PGPRO-1527)" ^&^& ^
 rm src/test/recovery/t/*logical_decoding*.pl ^&^& ^
 echo "Disabling isolation/timeouts test (Fails in pg-tests only with a message: step locktbl timed out after 75 seconds)" ^&^& ^
 sed -e "s@test: timeouts@#test: timeouts@" -i src/test/isolation/isolation_schedule ^&^& ^
-echo "`date -Iseconds`: Making native MinGW libs" ^&^& ^
-(cd src/common ^&^& make 2^>^&1 ^| tee /tmp/make_common.log) ^&^& ^
-(cd src/backend ^&^& make libpostgres.a 2^>^&1 ^| tee /tmp/make_libpostgres.log) ^&^& ^
+echo "`date -Iseconds`: Making native MinGW libs 1" ^&^& ^
+(cd src/common ^&^& make -j4 2^>^&1 ^| tee /tmp/make_common.log) ^&^& ^
+echo "`date -Iseconds`: Making native MinGW libs 2" ^&^& ^
+(cd src/backend ^&^& make -j4 libpostgres.a 2^>^&1 ^| tee /tmp/make_libpostgres.log) ^&^& ^
 echo "`date -Iseconds`: Making ecpg" ^&^& ^
 make -C src/interfaces/ecpg ^&^& ^
 echo "Workaround for inability to merge PGPRO-626-ICU" ^&^& ^
