@@ -826,11 +826,11 @@ baseurl=%s
         :return: str: last postgrespro exe file
         """
         soup = BeautifulSoup(urllib.urlopen(url))
-        exe_arch = '_64bit_' if arch == 'AMD64' else '_32bit_'
+        exe_arch = r'_[X]?64bit_' if arch == 'AMD64' else r'_32bit_'
         setup_files = []
         for link in soup.findAll('a'):
             href = link.get('href')
-            if "Postgre" in href and exe_arch in href:
+            if "Postgre" in href and re.search(exe_arch, href):
                 setup_files.append(href)
         if not setup_files:
             raise Exception("No Postgres (%s) setup files found in %s." %
