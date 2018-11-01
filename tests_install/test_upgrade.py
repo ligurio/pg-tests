@@ -68,7 +68,11 @@ DUMP_RESTORE_ROUTES = {
     'postgrespro-std-11': {
         'from': [
             {
-                'name': 'postgrespro', 'edition': 'std', 'version': '10'
+                'name': 'postgrespro', 'edition': 'std', 'version': '10',
+                'unsupported_platforms': [
+                    "GosLinux 7.08", "RED OS release MUROM ( 7.1",
+                    "Ubuntu 18.10"
+                ]
             }
         ]
     },
@@ -304,6 +308,8 @@ class TestUpgrade():
 
         key = request.cls.key
 
+        print "DEBUG: dump-restore!!! %s" % product_info
+
         if dist in ['"AstraLinuxSE" 1.5', '"AstraLinuxSE" 1.5.28']:
             print 'AstraLinux not supported (PGPRO-2072)'
             return
@@ -312,7 +318,7 @@ class TestUpgrade():
             print 'No routes for dump-restore'
             return
 
-        dump_restore_route = UPGRADE_ROUTES[key]
+        dump_restore_route = DUMP_RESTORE_ROUTES[key]
 
         pg = request.cls.pg
 
