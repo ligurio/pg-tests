@@ -1174,6 +1174,11 @@ baseurl=%s
         if self.os_name not in WIN_BASED:
             subprocess.check_call('chown -R postgres:postgres %s' %
                                   self.get_datadir(), shell=True)
+        else:
+            subprocess.check_call(
+                'icacls "%s" /grant *S-1-5-32-545:(OI)(CI)F /T' %
+                self.get_datadir(),
+                shell=True)
 
         cmd = '%s"%sinitdb" -D "%s"' % \
               (
