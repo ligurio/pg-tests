@@ -56,10 +56,12 @@ if ps -o comm= -C systemd-coredump; then
 fi
 if [ ! -z "`ls /var/coredumps`" ]; then
     echo "The /var/coredumps directory is not empty."
+    ls -l /var/coredumps
     exit 1
 fi
 if [ -d /var/crash ] && [ ! -z "`ls /var/crash`" ]; then
     echo "The /var/crash directory is not empty."
+    ls -l /var/crash
     exit 1
 fi
 if [ ! -z "`which coredumpctl 2>/dev/null`" ]; then
