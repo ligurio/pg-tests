@@ -232,6 +232,9 @@ def exec_command_win(cmd, hostname,
     p.cleanup_command(shell_id, command_id)
     p.close_shell(shell_id)
 
+    stdout = stdout.decode('unicode-escape')
+    stderr = stderr.decode('unicode-escape')
+
     if skip_ret_code_check:
         return retcode, stdout, stderr
     else:
