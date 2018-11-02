@@ -413,9 +413,11 @@ def make_test_cmd(domname, linux_os, reportname, tests=None,
                  '--alluredir=reports {2} --target={3}'.format(
                      tests, reportname, pcmd, domname)
     if not linux_os:
-        cmd = r'cd C:\Users\test\pg-tests && ' + pytest_cmd
+        cmd = r'cd C:\Users\test\pg-tests && ' + \
+            'set PYTHONIOENCODING=UTF-8 && ' + pytest_cmd
     else:
-        cmd = 'cd /home/test/pg-tests && sudo ' + pytest_cmd
+        cmd = 'cd /home/test/pg-tests && ' + \
+            'sudo PYTHONIOENCODING=UTF-8 ' + pytest_cmd
 
     if DEBUG:
         cmd += " --verbose --tb=long --full-trace"
