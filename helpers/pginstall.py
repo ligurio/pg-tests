@@ -457,6 +457,13 @@ baseurl=%s
             raise Exception("Unsupported distro %s" % self.os_name)
 
     def setup_extra_repos(self):
+        if self.product == 'postgrespro' and self.__is_os_altlinux():
+            cmd = r"perl -i -pe 's/^\s*([^#](.*?)x86_64)(\s+classic\s*)$/"\
+                "$1$3$1 debuginfo\n/' /etc/apt/sources.list.d/alt.list"
+            command_executor(cmd, self.remote, self.host,
+                             REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            command_executor('apt-get update', self.remote, self.host,
+                             REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         if self.product == 'postgrespro' and self.version == '11':
             cmd = None
             if (self.os_name == 'CentOS Linux' and
