@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # TODO: Enable test5 (PGPRO-1289)
 if which apt-get; then
     apt-get install -y gcc || true
@@ -103,7 +105,10 @@ if patch -p1 --dry-run -i ../patches/make-installcheck-10.patch >/dev/null 2>&1;
     makeecpg=false
 fi
 
+set -o pipefail
 sudo -u postgres ./configure --enable-tap-tests --without-readline --with-icu \
  --prefix=$1 $extraoption || exit $?
 [ "$makeecpg" = true ] && sudo -u postgres sh -c "make -C src/interfaces/ecpg"
-sudo -u postgres sh -c "PATH=$1/bin:$PATH make installcheck-world"
+sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make installcheck-world 2>&1" | tee /tmp/installcheck.log; exitcode=$?
+for df in `find . -name *.diffs`; do echo;echo "    vvvv $df vvvv    "; cat $df; echo "    ^^^^^^^^"; done
+exit $exitcode
