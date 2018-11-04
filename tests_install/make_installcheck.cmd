@@ -73,7 +73,7 @@ echo "`date -Iseconds`: Making native MinGW libs 2" ^&^& ^
 echo "`date -Iseconds`: Making ecpg" ^&^& ^
 make -C src/interfaces/ecpg ^&^& ^
 echo "Workaround for inability to merge PGPRO-626-ICU" ^&^& ^
-if [ -f src/test/default_collation/icu/t/001_default_collation.pl ] ^&^& ! patch -N --dry-run -R /var/src/patches/win-icu-test.patch ; then patch -p1 -i /var/src/patches/win-icu-test.patch; fi ^&^& ^
+if [ -f src/test/default_collation/icu/t/001_default_collation.pl ] ^&^& ! patch -N --dry-run -R -p1 -i /var/src/patches/win-icu-test.patch ; then patch -p1 -i /var/src/patches/win-icu-test.patch; fi ^&^& ^
 echo "`date -Iseconds`: Running installcheck-world" ^&^& ^
 with_icu=yes make -e installcheck-world 2^>^&1 ^| tee /tmp/installcheck.log ^
 
