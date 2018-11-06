@@ -32,7 +32,7 @@ UPGRADE_ROUTES = {
                 'name': 'postgrespro', 'edition': 'std', 'version': '10',
                 'unsupported_platforms': [
                     "GosLinux 7.08", "RED OS release MUROM ( 7.1",
-                    "Ubuntu 18.10", "7 6.1.7601"
+                    "Ubuntu 18.10"
                 ]
             }
         ]
@@ -71,7 +71,7 @@ DUMP_RESTORE_ROUTES = {
                 'name': 'postgrespro', 'edition': 'std', 'version': '10',
                 'unsupported_platforms': [
                     "GosLinux 7.08", "RED OS release MUROM ( 7.1",
-                    "Ubuntu 18.10", "7 6.1.7601"
+                    "Ubuntu 18.10"
                 ]
             }
         ]
