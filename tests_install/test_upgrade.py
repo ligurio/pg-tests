@@ -32,7 +32,7 @@ UPGRADE_ROUTES = {
                 'name': 'postgrespro', 'edition': 'std', 'version': '10',
                 'unsupported_platforms': [
                     "GosLinux 7.08", "RED OS release MUROM ( 7.1",
-                    "Ubuntu 18.10"
+                    "Ubuntu 18.10", "7 6.1.7601"
                 ]
             }
         ]
@@ -71,7 +71,7 @@ DUMP_RESTORE_ROUTES = {
                 'name': 'postgrespro', 'edition': 'std', 'version': '10',
                 'unsupported_platforms': [
                     "GosLinux 7.08", "RED OS release MUROM ( 7.1",
-                    "Ubuntu 18.10"
+                    "Ubuntu 18.10", "7 6.1.7601"
                 ]
             }
         ]
@@ -94,7 +94,10 @@ DUMP_RESTORE_ROUTES = {
 
 def start(pg):
     if not pg.pg_isready():
-        pg.pg_control("start", pg.get_datadir())
+        if not system == "Windows":
+            pg.pg_control("start", pg.get_datadir())
+        else:
+            pg.start_service()
         for i in range(1, 100):
             if pg.pg_isready():
                 break
@@ -103,7 +106,10 @@ def start(pg):
 
 def stop(pg):
     if pg.pg_isready():
-        pg.pg_control("stop", pg.get_datadir())
+        if not system == "Windows":
+            pg.pg_control("stop", pg.get_datadir())
+        else:
+            pg.stop_service()
         for i in range(1, 100):
             if not pg.pg_isready():
                 break
@@ -121,6 +127,8 @@ def install_server(product, edition, version, milestone, branch, windows):
         pg.init_cluster(True)
     else:
         pg.install_postgres_win()
+        pg.client_path_needed = True
+        pg.server_path_needed = True
     start(pg)
     return pg
 
@@ -155,7 +163,7 @@ def upgrade(pg, pgOld):
 
     cmd = '%s"%s/pg_upgrade" -d "%s" -b "%s" -D "%s" -B "%s"' % \
           (
-              ('' if system == "Windows" else 'sudo -u postgres '),
+              pg.pg_preexec,
               pg.get_default_bin_path(),
               pgOld.get_datadir(),
               pgOld.get_default_bin_path(),
@@ -169,7 +177,7 @@ def upgrade(pg, pgOld):
 def dumpall(pg, file):
     cmd = '%s"%s/pg_dumpall" > "%s"' % \
           (
-              ('' if system == "Windows" else 'sudo -u postgres '),
+              pg.pg_preexec,
               pg.get_default_bin_path(),
               file
           )
@@ -179,7 +187,7 @@ def dumpall(pg, file):
 def restore(pg, file):
     cmd = '%s"%s/psql" < "%s"' % \
           (
-              ('' if system == "Windows" else 'sudo -u postgres '),
+              pg.pg_preexec,
               pg.get_default_bin_path(),
               file
           )
@@ -191,6 +199,11 @@ def after_upgrade():
         subprocess.check_output('sudo -u postgres ./analyze_new_cluster.sh',
                                 shell=True, cwd=tempfile.gettempdir())
         subprocess.check_output('./delete_old_cluster.sh',
+                                shell=True, cwd=tempfile.gettempdir())
+    else:
+        subprocess.check_output('analyze_new_cluster.bat',
+                                shell=True, cwd=tempfile.gettempdir())
+        subprocess.check_output('delete_old_cluster.bat',
                                 shell=True, cwd=tempfile.gettempdir())
 
 
@@ -214,8 +227,7 @@ class TestUpgrade():
         if self.system == 'Linux':
             dist = " ".join(platform.linux_distribution()[0:2])
         elif self.system == 'Windows':
-            print 'Windows not supported'
-            return
+            dist = " ".join(platform.win32_ver()[0:2])
         else:
             raise Exception("OS %s is not supported." % self.system)
 
@@ -279,8 +291,8 @@ class TestUpgrade():
             start(pg)
             after_upgrade()
             check_db(key, pg)
-            pgold.remove_full()
             stop(pg)
+            pgold.remove_full()
             pg.init_cluster(True)
 
         request.cls.pg = pg
@@ -296,8 +308,7 @@ class TestUpgrade():
         if self.system == 'Linux':
             dist = " ".join(platform.linux_distribution()[0:2])
         elif self.system == 'Windows':
-            print 'Windows not supported'
-            return
+            dist = "Windows"
         else:
             raise Exception("OS %s is not supported." % self.system)
 
