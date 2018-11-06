@@ -9,11 +9,11 @@ codename=${tparts[0]}
 version=${tparts[1]}
 
 echo $branch
-stest=${job#*:}
+stest=${job#*~}
 if [ X"$stest" = X"$job" ]; then
     stest=""
 else
-    job=${job%%:*}
+    job=${job%%~*}
     case "$stest" in
     *.py)
         ;;
