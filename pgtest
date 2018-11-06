@@ -9,6 +9,20 @@ codename=${tparts[0]}
 version=${tparts[1]}
 
 echo $branch
+stest=${job#*:}
+if [ X"$stest" = X"$job" ]; then
+    stest=""
+else
+    job=${job%%:*}
+    case "$stest" in
+    *.py)
+        ;;
+    *)
+        stest="$stest.py"
+        ;;
+    esac
+fi
+
 substr1=${job#*-}
 os=${substr1#*-}
 edn=""
@@ -78,4 +92,4 @@ pgpro | pgproee | pg1c )
 esac
 
 sudo chmod -R 777 .
-sudo -u tester -i sh -c "cd '$PWD'; ./testrun.py --product_name $product --product_edition $edition --product_version $version --target $target $extraopt --test tests_install/ --clean --export"
+sudo -u tester -i sh -c "cd '$PWD'; ./testrun.py --product_name $product --product_edition $edition --product_version $version --target $target $extraopt --test tests_install/$stest --clean --export"
