@@ -77,6 +77,7 @@ class PgInstall:
         self.milestone = milestone
         self.branch = branch
         self.windows = windows
+        self.installer_name = None
         self.remote = remote
         self.host = host
         self.dist_info = get_distro(remote, host)
@@ -450,9 +451,10 @@ baseurl=%s
             if not os.path.exists(WIN_INST_DIR):
                 os.mkdir(WIN_INST_DIR)
             print(baseurl + installer_name)
+            self.installer_name = os.path.join(WIN_INST_DIR,
+                                               installer_name)
             windows_installer.retrieve(windows_installer_url,
-                                       os.path.join(WIN_INST_DIR,
-                                                    installer_name))
+                                       self.installer_name)
         else:
             raise Exception("Unsupported distro %s" % self.os_name)
 
@@ -585,22 +587,17 @@ baseurl=%s
 
     def install_postgres_win(self, port=None):
         self.port = port
-        exename = None
-        for filename in os.listdir(WIN_INST_DIR):
-            if os.path.splitext(filename)[1] == '.exe' and \
-               filename.upper().startswith('POSTGRES'):
-                exename = filename
-                break
-        if not exename:
+        if not self.installer_name:
+            raise Exception("Installer name is not defined")
+        if not os.path.exists(self.installer_name):
             raise Exception(
-                "Executable installer not found in %s." %
-                WIN_INST_DIR)
+                "Executable installer %s not found." %
+                self.installer_name)
         ininame = os.path.join(WIN_INST_DIR, "pgpro.ini")
         with open(ininame, "w") as ini:
             ini.write("[options]\nenvvar=1\nneedoptimization=0\n" +
                       (("port=%s\n" % port) if port else ""))
-        cmd = "%s /S /init=%s" % (os.path.join(WIN_INST_DIR, exename),
-                                  ininame)
+        cmd = "%s /S /init=%s" % (self.installer_name, ininame)
         command_executor(cmd, windows=True)
         refresh_env_win()
         self.client_path_needed = False
