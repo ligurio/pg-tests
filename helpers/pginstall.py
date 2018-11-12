@@ -671,7 +671,7 @@ baseurl=%s
         if remove_data:
             self.remove_data()
             if self.os_name in WIN_BASED:
-                time.sleep(1)  # Let uninstallation finish
+                time.sleep(3)  # Let uninstallation finish
                 if os.path.exists(self.get_pg_prefix()):
                     shutil.rmtree(self.get_pg_prefix())
         self.client_installed = False
