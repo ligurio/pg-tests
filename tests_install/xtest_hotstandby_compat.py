@@ -149,6 +149,8 @@ def prepare_pg_regress(pginst, target_dir):
                                   pgsrc, pginst.get_pg_prefix())
     subprocess.check_call(cmd, cwd=target_dir, shell=True)
 
+    shutil.copytree(os.path.join(curpath, '..', 'patches'),
+                    os.path.join(target_dir, 'patches'))
     pgsrcdir = None
     for pgi in glob.glob(os.path.join(target_dir, "postgres*")):
         if os.path.isdir(pgi):
@@ -157,14 +159,17 @@ def prepare_pg_regress(pginst, target_dir):
     if not pgsrcdir:
         raise Exception("Prepared build tree not found.")
     if windows_os:
-        cmd = (r'c:\msys64\usr\bin\bash -c '
-               '"source setenv.sh && '
+        cmd = (r'c:\msys64\usr\bin\bash -c "'
+               'source setenv.sh && '
+               'patch -p1 -i ../patches/fix-pg_cancel_backend.patch && '
                'make -j4 -C src/common && '
                'make -j4 -C src/backend libpostgres.a && '
                'make -j4 -C src/test/regress"')
         subprocess.check_call(cmd, cwd=pgsrcdir, shell=True)
     else:
-        cmd = 'sudo -u postgres make -C src/test/regress pg_regress'
+        cmd = ('sudo -u postgres sh -c "'
+               'patch -p1 -i ../patches/fix-pg_cancel_backend.patch && '
+               'make -C src/test/regress pg_regress"')
         subprocess.check_call(cmd, cwd=pgsrcdir, shell=True)
     return pgsrcdir
 
