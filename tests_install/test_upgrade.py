@@ -171,7 +171,7 @@ def upgrade(pg, pgOld):
               pg.get_default_bin_path()
           )
 
-    subprocess.check_output(cmd, shell=True, cwd=tempfile.gettempdir())
+    subprocess.check_call(cmd, shell=True, cwd=tempfile.gettempdir())
 
 
 def dumpall(pg, file):
@@ -181,7 +181,7 @@ def dumpall(pg, file):
               pg.get_default_bin_path(),
               file
           )
-    subprocess.check_output(cmd, shell=True)
+    subprocess.check_call(cmd, shell=True, cwd=tempfile.gettempdir())
 
 
 def restore(pg, file):
@@ -191,20 +191,20 @@ def restore(pg, file):
               pg.get_default_bin_path(),
               file
           )
-    subprocess.check_output(cmd, shell=True)
+    subprocess.check_call(cmd, shell=True)
 
 
 def after_upgrade():
     if not system == "Windows":
-        subprocess.check_output('sudo -u postgres ./analyze_new_cluster.sh',
-                                shell=True, cwd=tempfile.gettempdir())
-        subprocess.check_output('./delete_old_cluster.sh',
-                                shell=True, cwd=tempfile.gettempdir())
+        subprocess.check_call('sudo -u postgres ./analyze_new_cluster.sh',
+                              shell=True, cwd=tempfile.gettempdir())
+        subprocess.check_call('./delete_old_cluster.sh',
+                              shell=True, cwd=tempfile.gettempdir())
     else:
-        subprocess.check_output('analyze_new_cluster.bat',
-                                shell=True, cwd=tempfile.gettempdir())
-        subprocess.check_output('delete_old_cluster.bat',
-                                shell=True, cwd=tempfile.gettempdir())
+        subprocess.check_call('analyze_new_cluster.bat',
+                              shell=True, cwd=tempfile.gettempdir())
+        subprocess.check_call('delete_old_cluster.bat',
+                              shell=True, cwd=tempfile.gettempdir())
 
 
 @pytest.mark.upgrade
