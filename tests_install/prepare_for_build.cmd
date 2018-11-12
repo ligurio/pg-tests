@@ -26,7 +26,7 @@ PGSRC=$(echo %PGSRC% ^| sed -e "s@c:[/\\\\]@/c/@i" -e "s@\\\\@/@g"); ^
 CWD=$(echo %CWD% ^| sed -e "s@c:[/\\\\]@/c/@i" -e "s@\\\\@/@g"); ^
 cd "$CWD" ^&^& ^
 bitness=64; gcc=mingw-w64-x86_64-gcc; host=x86_64-w64-mingw32; ^
-pacman --noconfirm -S tar make diffutils perl mingw-w64-x86_64-gcc ^&^& ^
+pacman --noconfirm -S tar make diffutils perl mingw-w64-x86_64-gcc patch ^&^& ^
 echo "`date -Iseconds`: Extracting source from $PGSRC..." ^&^& ^
 tar fax "$PGSRC" ^&^& ^
 cd postgres*/ ^&^& ^

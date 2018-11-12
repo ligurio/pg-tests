@@ -1,0 +1,27 @@
+diff --git a/src/test/regress/expected/hs_standby_functions.out b/src/test/regress/expected/hs_standby_functions.out
+index e0af677ea1..7714d7bdd6 100644
+--- a/src/test/regress/expected/hs_standby_functions.out
++++ b/src/test/regress/expected/hs_standby_functions.out
+@@ -36,5 +36,8 @@ from pg_locks where virtualxid = '1/1';
+ (1 row)
+ 
+ -- suicide is painless
+-select pg_cancel_backend(pg_backend_pid());
++select case
++	when pg_cancel_backend(pg_backend_pid())
++	then pg_sleep(60)
++end;
+ ERROR:  canceling statement due to user request
+diff --git a/src/test/regress/sql/hs_standby_functions.sql b/src/test/regress/sql/hs_standby_functions.sql
+index 251bac0a43..23795a8668 100644
+--- a/src/test/regress/sql/hs_standby_functions.sql
++++ b/src/test/regress/sql/hs_standby_functions.sql
+@@ -21,4 +21,7 @@ select locktype, virtualxid, virtualtransaction, mode, granted
+ from pg_locks where virtualxid = '1/1';
+ 
+ -- suicide is painless
+-select pg_cancel_backend(pg_backend_pid());
++select case
++	when pg_cancel_backend(pg_backend_pid())
++	then pg_sleep(60)
++end;
