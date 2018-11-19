@@ -11,6 +11,7 @@ if which apt-get; then
     apt-get install -y libipc-run-perl || apt-get install -y perl-IPC-Run
     apt-get install -y patch || true
     apt-get install -y perl-devel || true
+    apt-get install -y perl-bignum || true
 elif which zypper; then
     zypper install -y gcc make flex bison perl
     zypper install -y --force --force-resolution zlib-devel
