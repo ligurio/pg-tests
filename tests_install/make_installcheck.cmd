@@ -64,6 +64,10 @@ echo "Disabling pg_basebackup/030_pg_recvlogical test (PGPRO-1527)" ^&^& ^
 rm src/bin/pg_basebackup/t/030_pg_recvlogical.pl ^&^& ^
 echo "Disabling recovery/*logical_decoding test (PGPRO-1527)" ^&^& ^
 rm src/test/recovery/t/*logical_decoding*.pl ^&^& ^
+echo "Fixing PQselect declaration bug (PGPRO-2197)" ^&^& ^
+sed -e "s@^PQselect(pgsocket nfds, @PQselect(int nfds, @" -i src/interfaces/libpq/fe-connect.c ^&^& ^
+echo "Dirty fix for undefined random()" ^&^& ^
+sed -e "s@(long) random()@(long) rand()@" -i src/interfaces/libpq/fe-connect.c ^&^& ^
 echo "Disabling isolation/timeouts test (Fails in pg-tests only with a message: step locktbl timed out after 75 seconds)" ^&^& ^
 sed -e "s@test: timeouts@#test: timeouts@" -i src/test/isolation/isolation_schedule ^&^& ^
 echo "`date -Iseconds`: Making native MinGW libs 1" ^&^& ^
@@ -75,7 +79,9 @@ make -C src/interfaces/ecpg ^&^& ^
 echo "Workaround for inability to merge PGPRO-626-ICU" ^&^& ^
 if [ -f src/test/default_collation/icu/t/001_default_collation.pl ] ^&^& ! patch -N --dry-run -R -p1 -i /var/src/patches/win-icu-test.patch ; then patch -p1 -i /var/src/patches/win-icu-test.patch; fi ^&^& ^
 echo "`date -Iseconds`: Running installcheck-world" ^&^& ^
-with_icu=yes make -e installcheck-world 2^>^&1 ^| tee /tmp/installcheck.log ^
+with_icu=yes make -e installcheck-world 2^>^&1 ^| tee /tmp/installcheck.log; exitcode=$?; ^
+for df in `find . -name *.diffs`; do echo;echo "    vvvv $df vvvv    "; cat $df; echo "    ========"; done; ^
+exit $exitcode ^
 
 > %MD%\var\src\make_check.sh
 %MD%\usr\bin\bash --login -i /var/src/make_check.sh
