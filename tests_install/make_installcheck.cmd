@@ -79,7 +79,9 @@ make -C src/interfaces/ecpg ^&^& ^
 echo "Workaround for inability to merge PGPRO-626-ICU" ^&^& ^
 if [ -f src/test/default_collation/icu/t/001_default_collation.pl ] ^&^& ! patch -N --dry-run -R -p1 -i /var/src/patches/win-icu-test.patch ; then patch -p1 -i /var/src/patches/win-icu-test.patch; fi ^&^& ^
 echo "`date -Iseconds`: Running installcheck-world" ^&^& ^
-with_icu=yes make -e installcheck-world 2^>^&1 ^| tee /tmp/installcheck.log ^
+with_icu=yes make -e installcheck-world 2^>^&1 ^| tee /tmp/installcheck.log; exitcode=$?; ^
+for df in `find . -name *.diffs`; do echo;echo "    vvvv $df vvvv    "; cat $df; echo "    ========"; done; ^
+exit $exitcode ^
 
 > %MD%\var\src\make_check.sh
 %MD%\usr\bin\bash --login -i /var/src/make_check.sh
