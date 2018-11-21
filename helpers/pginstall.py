@@ -355,8 +355,7 @@ baseurl=%s
                 self.product, self.version)
             write_file(repofile, repo, self.remote, self.host)
             cmd = "rpm --import %s" % gpg_key_url
-            command_executor(cmd, self.remote, self.host,
-                             REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            self.exec_cmd_retry(cmd)
             cmd = "yum --enablerepo=%s-%s clean metadata" % \
                 (self.product, self.version)
             command_executor(cmd, self.remote, self.host,
@@ -364,8 +363,7 @@ baseurl=%s
             return repofile
         elif self.os_name in DEB_BASED:
             cmd = "apt-get install -y lsb-release"
-            command_executor(cmd, self.remote, self.host,
-                             REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            self.exec_cmd_retry(cmd)
             cmd = "lsb_release -cs"
             codename = ""
             if self.remote:
@@ -399,28 +397,22 @@ baseurl=%s
 
             if "ALT " in self.os_name:
                 cmd = "apt-get update -y"
-                command_executor(cmd, self.remote, self.host,
-                                 REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                self.exec_cmd_retry(cmd)
             else:
                 cmd = "apt-get install -y wget ca-certificates"
-                command_executor(cmd, self.remote, self.host,
-                                 REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                self.exec_cmd_retry(cmd)
                 cmd = "wget -nv %s -O gpg.key" % gpg_key_url
-                command_executor(cmd, self.remote, self.host,
-                                 REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                self.exec_cmd_retry(cmd)
                 cmd = "apt-key add gpg.key"
-                command_executor(cmd, self.remote, self.host,
-                                 REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                self.exec_cmd_retry(cmd)
                 cmd = "apt-get update -y"
-                command_executor(cmd, self.remote, self.host,
-                                 REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                self.exec_cmd_retry(cmd)
                 return repofile
         elif self.os_name in ZYPPER_BASED:
             reponame = "%s-%s" % (self.product, self.version)
             repofile = '/etc/zypp/repos.d/%s.repo' % reponame
             cmd = "wget -nv %s -O gpg.key" % gpg_key_url
-            command_executor(cmd, self.remote, self.host,
-                             REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            self.exec_cmd_retry(cmd)
             cmd = "rpm --import ./gpg.key"
             try:
                 # SLES 11 fails when the key is already imported
@@ -440,8 +432,7 @@ baseurl=%s
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             cmd = "zypper refresh"
-            command_executor(cmd, self.remote, self.host,
-                             REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            self.exec_cmd_retry(cmd)
             return repofile
         elif self.os_name in WIN_BASED:
             installer_name = self.__get_last_winstaller_file(
@@ -464,8 +455,7 @@ baseurl=%s
                 "$1$3$1 debuginfo\n/' /etc/apt/sources.list.d/alt.list"
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-            command_executor('apt-get update', self.remote, self.host,
-                             REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            self.exec_cmd_retry('apt-get update')
         if self.product == 'postgrespro' and self.version == '11':
             cmd = None
             if (self.os_name == 'CentOS Linux' and
@@ -482,8 +472,7 @@ baseurl=%s
                 cmd = "yum install -y https://dl.fedoraproject.org/pub/" \
                     "epel/epel-release-latest-7.noarch.rpm"
             if cmd:
-                command_executor(cmd, self.remote, self.host,
-                                 REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                self.exec_cmd_retry(cmd)
 
     def download_source(self):
         if self.product == "postgresql":
@@ -519,16 +508,13 @@ baseurl=%s
         """
         if self.os_name in RPM_BASED:
             cmd = "yum install -y %s" % pkg_name
-            command_executor(cmd, self.remote, self.host,
-                             REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            self.exec_cmd_retry(cmd)
         elif self.os_name in DEB_BASED:
             cmd = "apt-get install -y %s" % pkg_name.replace('*', '.*')
-            command_executor(cmd, self.remote, self.host,
-                             REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            self.exec_cmd_retry(cmd)
         elif self.os_name in ZYPPER_BASED:
             cmd = "zypper install -y -l --force-resolution %s" % pkg_name
-            command_executor(cmd, self.remote, self.host,
-                             REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            self.exec_cmd_retry(cmd)
         else:
             raise Exception("Unsupported system: %s" % self.os_name)
 
@@ -698,20 +684,16 @@ baseurl=%s
                     pkg_name = self.product + major + minor
                 for pkg in PACKAGES:
                     cmd = "yum install -y %s-%s" % (pkg_name, pkg)
-                    command_executor(cmd, self.remote, self.host,
-                                     REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                    self.exec_cmd_retry(cmd)
                 if self.version != '9.5':
                     cmd = "yum install -y %s-%s" % (pkg_name, "pg_probackup")
-                    command_executor(cmd, self.remote, self.host,
-                                     REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                    self.exec_cmd_retry(cmd)
                 if self.edition in ['std-cert', 'ent-cert']:
                     cmd = "yum install -y pgbouncer"
-                    command_executor(cmd, self.remote, self.host,
-                                     REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                    self.exec_cmd_retry(cmd)
                 if self.edition == 'ent':
                     cmd = "yum install -y pg_repack%s%s" % (major, minor)
-                    command_executor(cmd, self.remote, self.host,
-                                     REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                    self.exec_cmd_retry(cmd)
 
             elif action == "upgrade":
                 if self.edition in ["ent", "ent-cert"]:
@@ -722,59 +704,47 @@ baseurl=%s
 
                 for pkg in PACKAGES:
                     cmd = "yum install -y %s-%s" % (pkg_name, pkg)
-                    command_executor(cmd, self.remote, self.host,
-                                     REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                    self.exec_cmd_retry(cmd)
 
         elif self.os_name in DEB_BASED and "ALT" not in self.os_name:
             if action == "install":
                 cmd = "apt-get install -y %s-%s" % (
                     self.product, self.version)
-                command_executor(cmd, self.remote, self.host,
-                                 REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                self.exec_cmd_retry(cmd)
                 cmd = "apt-get install -y %s-doc-%s" % (
                     self.product, self.version)
-                command_executor(cmd, self.remote, self.host,
-                                 REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                self.exec_cmd_retry(cmd)
                 cmd = "apt-get install -y %s-doc-ru-%s" % (
                     self.product, self.version)
-                command_executor(cmd, self.remote, self.host,
-                                 REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                self.exec_cmd_retry(cmd)
                 cmd = "apt-get install -y libpq-dev"
-                command_executor(cmd, self.remote, self.host,
-                                 REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                self.exec_cmd_retry(cmd)
                 if self.version != '9.5':
                     cmd = "apt-get install -y %s-pg-probackup-%s" % (
                         self.product, self.version)
-                    command_executor(cmd, self.remote, self.host,
-                                     REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                    self.exec_cmd_retry(cmd)
                 if self.edition in ['std-cert', 'ent-cert']:
                     cmd = "apt-get install -y pgbouncer"
-                    command_executor(cmd, self.remote, self.host,
-                                     REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                    self.exec_cmd_retry(cmd)
                 for pkg in DEB_PACKAGES:
                     cmd = "apt-get install -y %s-%s-%s" % (
                         self.product, pkg, self.version)
-                    command_executor(cmd, self.remote, self.host,
-                                     REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                    self.exec_cmd_retry(cmd)
                 if self.edition == 'ent':
                     cmd = "apt-get install -y pg-repack-%s" % self.version
-                    command_executor(cmd, self.remote, self.host,
-                                     REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                    self.exec_cmd_retry(cmd)
 
             elif action == "upgrade":
                 cmd = "apt-get install -y %s-%s" % (
                     self.product, self.version)
-                command_executor(cmd, self.remote, self.host,
-                                 REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                self.exec_cmd_retry(cmd)
                 cmd = "apt-get install -y libpq-dev"
-                command_executor(cmd, self.remote, self.host,
-                                 REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                self.exec_cmd_retry(cmd)
 
                 for pkg in DEB_PACKAGES:
                     cmd = "apt-get install -y %s-%s-%s" % (
                         self.product, pkg, self.version)
-                    command_executor(cmd, self.remote, self.host,
-                                     REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                    self.exec_cmd_retry(cmd)
 
         elif "ALT" in self.os_name:
             if action == "install":
@@ -792,21 +762,17 @@ baseurl=%s
 
                 for pkg in ALT_PACKAGES:
                     cmd = "apt-get install -y %s-%s" % (pkg_name, pkg)
-                    command_executor(cmd, self.remote, self.host,
-                                     REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                    self.exec_cmd_retry(cmd)
                 if self.version != '9.5':
                     cmd = "apt-get install -y %s-%s" % (pkg_name,
                                                         "pg_probackup")
-                    command_executor(cmd, self.remote, self.host,
-                                     REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                    self.exec_cmd_retry(cmd)
                 if self.edition in ['std-cert', 'ent-cert']:
                     cmd = "apt-get install -y pgbouncer"
-                    command_executor(cmd, self.remote, self.host,
-                                     REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                    self.exec_cmd_retry(cmd)
                 if self.edition == 'ent':
                     cmd = "apt-get install -y pg_repack%s%s" % (major, minor)
-                    command_executor(cmd, self.remote, self.host,
-                                     REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                    self.exec_cmd_retry(cmd)
 
             elif action == "upgrade":
                 if self.edition in ["ent", "ent-cert"]:
@@ -820,8 +786,7 @@ baseurl=%s
 
                 for pkg in ALT_PACKAGES:
                     cmd = "apt-get install -y %s-%s" % (pkg_name, pkg)
-                    command_executor(cmd, self.remote, self.host,
-                                     REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                    self.exec_cmd_retry(cmd)
 
     def __get_last_winstaller_file(self, url, arch):
         """Get last uploaded postgrespro installation file from our repo
@@ -851,8 +816,7 @@ baseurl=%s
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             cmd = "yum update -y && yum clean cache"
-            command_executor(cmd, self.remote, self.host,
-                             REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            self.exec_cmd_retry(cmd)
         elif self.os_name in DEB_BASED:
             repofile = "/etc/apt/sources.list.d/%s-%s.list" % (self.product,
                                                                self.version)
@@ -860,8 +824,7 @@ baseurl=%s
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             cmd = "apt-get update -y && apt-get clean cache"
-            command_executor(cmd, self.remote, self.host,
-                             REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            self.exec_cmd_retry(cmd)
         else:
             raise Exception("Unsupported distro %s." % self.os_name)
 
@@ -1257,3 +1220,24 @@ baseurl=%s
         # sys.stdout.encoding = 'cp866'?
         subprocess.check_call(cmd, shell=True, cwd=tempfile.gettempdir(),
                               env=self.env)
+
+    def exec_cmd_retry(self, cmd, retry_cnt=10):
+        timeout = 0
+        attempt = 1
+        while attempt < retry_cnt:
+            try:
+                return command_executor(cmd, self.remote, self.host,
+                                        REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            except Exception as ex:
+                print('Exception occured while running command "%s":' % cmd)
+                print(ex)
+                print('========')
+                attempt += 1
+                timeout += 5
+                print('Retrying (attempt %d with delay for %d seconds)...' %
+                      (attempt, timeout))
+                time.sleep(timeout)
+        if retry_cnt > 1:
+            print('Last attempt to execute the command...\n')
+        return command_executor(cmd, self.remote, self.host,
+                                REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
