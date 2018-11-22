@@ -50,7 +50,7 @@ tar fax postgres*.tar.bz2 ^&^& ^
 cd postgres*/ ^&^& ^
 set -o pipefail ^&^& ^
 echo "`date -Iseconds`: Configuring... "  ^&^& ^
-./configure --enable-tap-tests --host=$host --without-zlib --prefix="$PGPATH" 2^>^&1 ^| tee configure.log ^&^& ^
+CFLAGS=" -D WINVER=0x0600 -D _WIN32_WINNT=0x0600" LIBS="-lktmw32" ./configure --enable-tap-tests --host=$host --without-zlib --prefix="$PGPATH" 2^>^&1 ^| tee configure.log ^&^& ^
 echo "Fixing ECPG test for installcheck..." ^&^& ^
 sed -e "s@^ECPG = ../../preproc/ecpg@ECPG = ecpg@" ^
     -e "s@^ECPG_TEST_DEPENDENCIES = ../../preproc/ecpg\$(X)@ECPG_TEST_DEPENDENCIES = @" ^
