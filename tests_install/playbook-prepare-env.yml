@@ -494,3 +494,15 @@
       name: wuauserv
       start_mode: disabled
       state: stopped
+
+  - name: windows - enable usermode crashdumps collection
+    when: ansible_os_family == "Windows"
+    win_regedit:
+      path: 'HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps'
+      name: "{{ item.name }}"
+      data: "{{ item.data }}"
+      type: "{{ item.type }}"
+    with_items:
+      - { name: DumpFolder, data: 'C:\CrashDumps', type: String }
+      - { name: DumpCount, data: 10, type: DWord }
+      - { name: DumpType, data: 2, type: DWord }
