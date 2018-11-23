@@ -1,8 +1,8 @@
 diff --git a/src/Makefile.global.in b/src/Makefile.global.in
-index 91d7cb8..e23d95b 100644
+index 8792725d68..624ab28de3 100644
 --- a/src/Makefile.global.in
 +++ b/src/Makefile.global.in
-@@ -244,7 +244,13 @@ CPPFLAGS = @CPPFLAGS@
+@@ -263,7 +263,13 @@ PG_SYSROOT = @PG_SYSROOT@
  
  override CPPFLAGS := $(ICU_CFLAGS) $(CPPFLAGS)
  
@@ -16,7 +16,7 @@ index 91d7cb8..e23d95b 100644
  override CPPFLAGS := -I$(includedir_server) -I$(includedir_internal) $(CPPFLAGS)
  else # not PGXS
  override CPPFLAGS := -I$(top_srcdir)/src/include $(CPPFLAGS)
-@@ -305,7 +311,13 @@ with_gnu_ld = @with_gnu_ld@
+@@ -324,7 +330,13 @@ with_gnu_ld = @with_gnu_ld@
  # "LDFLAGS := something" anywhere, ditto for LDFLAGS_INTERNAL.
  # These initial assignments must be "=" type, and elsewhere we must only do
  # "LDFLAGS += something" or "LDFLAGS_INTERNAL += something".
@@ -31,7 +31,7 @@ index 91d7cb8..e23d95b 100644
  else
    LDFLAGS_INTERNAL = -L$(top_builddir)/src/port -L$(top_builddir)/src/common
 diff --git a/src/interfaces/ecpg/Makefile b/src/interfaces/ecpg/Makefile
-index 41460a1..d235059 100644
+index 41460a17c9..d235059f01 100644
 --- a/src/interfaces/ecpg/Makefile
 +++ b/src/interfaces/ecpg/Makefile
 @@ -26,5 +26,8 @@ install-ecpglib-recurse: install-pgtypeslib-recurse
@@ -45,7 +45,7 @@ index 41460a1..d235059 100644
 +installcheck:
 +	USE_INSTALLED_ASSETS=1 $(MAKE) -C test $@
 diff --git a/src/interfaces/ecpg/test/Makefile.regress b/src/interfaces/ecpg/test/Makefile.regress
-index 06c0461..1b803bc 100644
+index 06c0461f66..1b803bc832 100644
 --- a/src/interfaces/ecpg/test/Makefile.regress
 +++ b/src/interfaces/ecpg/test/Makefile.regress
 @@ -1,19 +1,26 @@
@@ -82,10 +82,10 @@ index 06c0461..1b803bc 100644
  	$(srcdir)/../../include/sqlca.h \
  	$(srcdir)/../../include/sqlda.h \
 diff --git a/src/makefiles/pgxs.mk b/src/makefiles/pgxs.mk
-index 158581b..3467841 100644
+index 070d151018..d11080c51f 100644
 --- a/src/makefiles/pgxs.mk
 +++ b/src/makefiles/pgxs.mk
-@@ -348,6 +348,7 @@ endif
+@@ -392,6 +392,7 @@ endif
  
  # against installed postmaster
  ifndef NO_INSTALLCHECK
@@ -93,8 +93,31 @@ index 158581b..3467841 100644
  installcheck: submake $(REGRESS_PREP)
  	$(pg_regress_installcheck) $(REGRESS_OPTS) $(REGRESS)
  endif
+diff --git a/src/pl/plperl/GNUmakefile b/src/pl/plperl/GNUmakefile
+index 9b1c514101..613ad4d05c 100644
+--- a/src/pl/plperl/GNUmakefile
++++ b/src/pl/plperl/GNUmakefile
+@@ -113,13 +113,17 @@ uninstall-data:
+ check: submake
+ 	$(pg_regress_check) $(REGRESS_OPTS) $(REGRESS)
+ 
+-installcheck: submake
++installcheck: installed-submake
+ 	$(pg_regress_installcheck) $(REGRESS_OPTS) $(REGRESS)
+ 
+ .PHONY: submake
+ submake:
+ 	$(MAKE) -C $(top_builddir)/src/test/regress pg_regress$(X)
+ 
++.PHONY: installed-submake
++installed-submake:
++	USE_INSTALLED_ASSETS=1 $(MAKE) -C $(top_builddir)/src/test/regress pg_regress$(X)
++
+ clean distclean maintainer-clean: clean-lib
+ 	rm -f SPI.c Util.c $(OBJS) perlchunks.h plperl_opmask.h
+ 	rm -rf $(pg_regress_clean_files)
 diff --git a/src/pl/plpgsql/src/Makefile b/src/pl/plpgsql/src/Makefile
-index 25a5a9d..c3e87b4 100644
+index 25a5a9d448..18e82b5379 100644
 --- a/src/pl/plpgsql/src/Makefile
 +++ b/src/pl/plpgsql/src/Makefile
 @@ -76,13 +76,16 @@ plerrcodes.h: $(top_srcdir)/src/backend/utils/errcodes.txt generate-plerrcodes.p
@@ -102,21 +125,68 @@ index 25a5a9d..c3e87b4 100644
  	$(pg_regress_check) $(REGRESS_OPTS) $(REGRESS)
  
 -installcheck: submake
-+installcheck: installed_submake
++installcheck: installed-submake
  	$(pg_regress_installcheck) $(REGRESS_OPTS) $(REGRESS)
  
  .PHONY: submake
  submake:
  	$(MAKE) -C $(top_builddir)/src/test/regress pg_regress$(X)
  
-+.PHONY: installed_submake
-+installed_submake:
++.PHONY: installed-submake
++installed-submake:
 +	USE_INSTALLED_ASSETS=1 $(MAKE) -C $(top_builddir)/src/test/regress pg_regress$(X)
  
  distprep: pl_gram.h pl_gram.c plerrcodes.h
  
+diff --git a/src/pl/plpython/Makefile b/src/pl/plpython/Makefile
+index 667a74469e..ec5c8c0afd 100644
+--- a/src/pl/plpython/Makefile
++++ b/src/pl/plpython/Makefile
+@@ -142,7 +142,7 @@ include $(srcdir)/regress-python3-mangle.mk
+ check: submake-pg-regress
+ 	$(pg_regress_check) $(REGRESS_OPTS) $(REGRESS)
+ 
+-installcheck: submake-pg-regress
++installcheck: installed-submake-pg-regress
+ 	$(pg_regress_installcheck) $(REGRESS_OPTS) $(REGRESS)
+ 
+ 
+@@ -150,6 +150,10 @@ installcheck: submake-pg-regress
+ submake-pg-regress: | submake-generated-headers
+ 	$(MAKE) -C $(top_builddir)/src/test/regress pg_regress$(X)
+ 
++.PHONY: installed-submake-pg-regress
++installed-submake-pg-regress: | submake-generated-headers
++	USE_INSTALLED_ASSETS=1 $(MAKE) -C $(top_builddir)/src/test/regress pg_regress$(X)
++
+ clean distclean: clean-lib
+ 	rm -f $(OBJS)
+ 	rm -rf $(pg_regress_clean_files)
+diff --git a/src/pl/tcl/Makefile b/src/pl/tcl/Makefile
+index ef61ee596e..5b054961a4 100644
+--- a/src/pl/tcl/Makefile
++++ b/src/pl/tcl/Makefile
+@@ -82,13 +82,17 @@ uninstall-data:
+ check: submake
+ 	$(pg_regress_check) $(REGRESS_OPTS) $(REGRESS)
+ 
+-installcheck: submake
++installcheck: installed-submake
+ 	$(pg_regress_installcheck) $(REGRESS_OPTS) $(REGRESS)
+ 
+ .PHONY: submake
+ submake:
+ 	$(MAKE) -C $(top_builddir)/src/test/regress pg_regress$(X)
+ 
++.PHONY: installed-submake
++installed-submake:
++	USE_INSTALLED_ASSETS=1 $(MAKE) -C $(top_builddir)/src/test/regress pg_regress$(X)
++
+ # pltclerrcodes.h is in the distribution tarball, so don't clean it here.
+ clean distclean: clean-lib
+ 	rm -f $(OBJS)
 diff --git a/src/test/isolation/Makefile b/src/test/isolation/Makefile
-index c3c8280..ef90762 100644
+index c3c8280ea2..ef90762a60 100644
 --- a/src/test/isolation/Makefile
 +++ b/src/test/isolation/Makefile
 @@ -9,12 +9,21 @@ subdir = src/test/isolation
@@ -160,7 +230,7 @@ index c3c8280..ef90762 100644
  
  check: all
 diff --git a/src/test/regress/GNUmakefile b/src/test/regress/GNUmakefile
-index 378bd01..ab24ecd 100644
+index 378bd01753..ab24ecd72a 100644
 --- a/src/test/regress/GNUmakefile
 +++ b/src/test/regress/GNUmakefile
 @@ -28,6 +28,11 @@ EXTRADEFS = '-DHOST_TUPLE="$(host_tuple)"' \
