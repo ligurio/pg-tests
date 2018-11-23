@@ -1,8 +1,8 @@
 diff --git a/src/Makefile.global.in b/src/Makefile.global.in
-index e8b3a51..47e7e62 100644
+index 03de156cba..b7ff29f669 100644
 --- a/src/Makefile.global.in
 +++ b/src/Makefile.global.in
-@@ -234,8 +234,14 @@ CPPFLAGS = @CPPFLAGS@
+@@ -253,8 +253,14 @@ PG_SYSROOT = @PG_SYSROOT@
  
  override CPPFLAGS := $(ICU_CFLAGS) $(CPPFLAGS)
  
@@ -18,7 +18,7 @@ index e8b3a51..47e7e62 100644
  else # not PGXS
  override CPPFLAGS := -I$(top_srcdir)/src/include $(CPPFLAGS)
  ifdef VPATH
-@@ -287,7 +287,13 @@ with_gnu_ld = @with_gnu_ld@
+@@ -306,7 +312,13 @@ with_gnu_ld = @with_gnu_ld@
  # "LDFLAGS := something" anywhere, ditto for LDFLAGS_INTERNAL.
  # These initial assignments must be "=" type, and elsewhere we must only do
  # "LDFLAGS += something" or "LDFLAGS_INTERNAL += something".
@@ -33,7 +33,7 @@ index e8b3a51..47e7e62 100644
  else
    LDFLAGS_INTERNAL = -L$(top_builddir)/src/port -L$(top_builddir)/src/common
 diff --git a/src/interfaces/ecpg/Makefile b/src/interfaces/ecpg/Makefile
-index 41460a1..d235059 100644
+index 41460a17c9..d235059f01 100644
 --- a/src/interfaces/ecpg/Makefile
 +++ b/src/interfaces/ecpg/Makefile
 @@ -26,5 +26,8 @@ install-ecpglib-recurse: install-pgtypeslib-recurse
@@ -47,7 +47,7 @@ index 41460a1..d235059 100644
 +installcheck:
 +	USE_INSTALLED_ASSETS=1 $(MAKE) -C test $@
 diff --git a/src/interfaces/ecpg/test/Makefile.regress b/src/interfaces/ecpg/test/Makefile.regress
-index b3d7c1e..dbac870 100644
+index 06c0461f66..1b803bc832 100644
 --- a/src/interfaces/ecpg/test/Makefile.regress
 +++ b/src/interfaces/ecpg/test/Makefile.regress
 @@ -1,19 +1,26 @@
@@ -84,10 +84,10 @@ index b3d7c1e..dbac870 100644
  	$(srcdir)/../../include/sqlca.h \
  	$(srcdir)/../../include/sqlda.h \
 diff --git a/src/makefiles/pgxs.mk b/src/makefiles/pgxs.mk
-index c27004e..982e2b2 100644
+index ff7f5297e7..595b7da91c 100644
 --- a/src/makefiles/pgxs.mk
 +++ b/src/makefiles/pgxs.mk
-@@ -271,6 +271,7 @@ endif
+@@ -273,6 +273,7 @@ endif
  
  # against installed postmaster
  ifndef NO_INSTALLCHECK
@@ -95,8 +95,78 @@ index c27004e..982e2b2 100644
  installcheck: submake $(REGRESS_PREP)
  	$(pg_regress_installcheck) $(REGRESS_OPTS) $(REGRESS)
  endif
+diff --git a/src/pl/plperl/GNUmakefile b/src/pl/plperl/GNUmakefile
+index 0846e60cd8..ef6bb07b89 100644
+--- a/src/pl/plperl/GNUmakefile
++++ b/src/pl/plperl/GNUmakefile
+@@ -112,13 +112,17 @@ uninstall-data:
+ check: submake
+ 	$(pg_regress_check) $(REGRESS_OPTS) $(REGRESS)
+ 
+-installcheck: submake
++installcheck: installed-submake
+ 	$(pg_regress_installcheck) $(REGRESS_OPTS) $(REGRESS)
+ 
+ .PHONY: submake
+ submake:
+ 	$(MAKE) -C $(top_builddir)/src/test/regress pg_regress$(X)
+ 
++.PHONY: installed-submake
++installed-submake:
++	USE_INSTALLED_ASSETS=1 $(MAKE) -C $(top_builddir)/src/test/regress pg_regress$(X)
++
+ clean distclean maintainer-clean: clean-lib
+ 	rm -f SPI.c Util.c $(OBJS) perlchunks.h plperl_opmask.h
+ 	rm -rf $(pg_regress_clean_files)
+diff --git a/src/pl/plpython/Makefile b/src/pl/plpython/Makefile
+index 7680d49cb6..7bb83b6bec 100644
+--- a/src/pl/plpython/Makefile
++++ b/src/pl/plpython/Makefile
+@@ -124,7 +124,7 @@ include $(srcdir)/regress-python3-mangle.mk
+ check: submake-pg-regress
+ 	$(pg_regress_check) $(REGRESS_OPTS) $(REGRESS)
+ 
+-installcheck: submake-pg-regress
++installcheck: installed-submake-pg-regress
+ 	$(pg_regress_installcheck) $(REGRESS_OPTS) $(REGRESS)
+ 
+ 
+@@ -132,6 +132,10 @@ installcheck: submake-pg-regress
+ submake-pg-regress:
+ 	$(MAKE) -C $(top_builddir)/src/test/regress pg_regress$(X)
+ 
++.PHONY: installed-submake-pg-regress
++installed-submake-pg-regress:
++	USE_INSTALLED_ASSETS=1 $(MAKE) -C $(top_builddir)/src/test/regress pg_regress$(X)
++
+ clean distclean: clean-lib
+ 	rm -f $(OBJS)
+ 	rm -rf $(pg_regress_clean_files)
+diff --git a/src/pl/tcl/Makefile b/src/pl/tcl/Makefile
+index b8971d3cc8..6946b74e4c 100644
+--- a/src/pl/tcl/Makefile
++++ b/src/pl/tcl/Makefile
+@@ -82,13 +82,17 @@ uninstall-data:
+ check: submake
+ 	$(pg_regress_check) $(REGRESS_OPTS) $(REGRESS)
+ 
+-installcheck: submake
++installcheck: installed-submake
+ 	$(pg_regress_installcheck) $(REGRESS_OPTS) $(REGRESS)
+ 
+ .PHONY: submake
+ submake:
+ 	$(MAKE) -C $(top_builddir)/src/test/regress pg_regress$(X)
+ 
++.PHONY: installed-submake
++installed-submake:
++	USE_INSTALLED_ASSETS=1 $(MAKE) -C $(top_builddir)/src/test/regress pg_regress$(X)
++
+ # pltclerrcodes.h is in the distribution tarball, so don't clean it here.
+ clean distclean: clean-lib
+ 	rm -f $(OBJS)
 diff --git a/src/test/isolation/Makefile b/src/test/isolation/Makefile
-index c3c8280..ef90762 100644
+index c3c8280ea2..ef90762a60 100644
 --- a/src/test/isolation/Makefile
 +++ b/src/test/isolation/Makefile
 @@ -9,12 +9,21 @@ subdir = src/test/isolation
@@ -140,7 +210,7 @@ index c3c8280..ef90762 100644
  
  check: all
 diff --git a/src/test/regress/GNUmakefile b/src/test/regress/GNUmakefile
-index 3ab5d7c..068cd8e 100644
+index 3ab5d7c723..068cd8e125 100644
 --- a/src/test/regress/GNUmakefile
 +++ b/src/test/regress/GNUmakefile
 @@ -28,6 +28,11 @@ EXTRADEFS = '-DHOST_TUPLE="$(host_tuple)"' \
