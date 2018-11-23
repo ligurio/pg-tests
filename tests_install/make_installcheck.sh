@@ -107,9 +107,17 @@ if patch -p1 --dry-run -i ../patches/make-installcheck-10.patch >/dev/null 2>&1;
 fi
 
 set -o pipefail
-sudo -u postgres ./configure --enable-tap-tests --without-readline --with-icu \
- --prefix=$1 $extraoption || exit $?
+sudo -u postgres ./configure --enable-tap-tests --without-readline --prefix=$1 $extraoption || exit $?
+
+# Pass to `make installcheck` all the options (with-*, enable-*), which were passed to configure
+confopts="python_majorversion=2"
+opts=`$1/bin/pg_config --configure | grep -Eo "'[^']*'|[^' ]*" | sed -e "s/^'//" -e "s/'$//"`
+while read -r opt;
+    do case "$opt" in --with-*=*) ;; --with-* | --enable-*) opt="${opt/#--/}"; opt="${opt//-/_}" confopts="$confopts $opt=yes ";; esac;
+done <<< "$opts";
+
 [ "$makeecpg" = true ] && sudo -u postgres sh -c "make -C src/interfaces/ecpg"
-sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make installcheck-world 2>&1" | tee /tmp/installcheck.log; exitcode=$?
+echo "Running: $confopts make -e installcheck-world ..."
+sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" $confopts make -e installcheck-world 2>&1" | tee /tmp/installcheck.log; exitcode=$?
 for df in `find . -name *.diffs`; do echo;echo "    vvvv $df vvvv    "; cat $df; echo "    ^^^^^^^^"; done
 exit $exitcode
