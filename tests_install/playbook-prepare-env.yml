@@ -23,6 +23,7 @@
   - name: Update repos and install acpid-events-power (ALT)
     shell: apt-get update &&
            apt-get install acpid-events-power && /sbin/service acpid restart;
+           sed s/#ZONE=/ZONE=/ -i /etc/sysconfig/clock; /sbin/service clock tzset;
            if [ -d /home/test/Python-2.7.1 ]; then rm -rf /home/test/Python-2.7.1; fi # Temporary solution to free space in altlinux-spt-7.qcow2 (3a6a8ee2...)
     args:
       warn: no
