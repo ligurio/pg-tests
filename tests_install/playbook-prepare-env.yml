@@ -366,7 +366,7 @@
     lineinfile:
       dest: /etc/sudoers
       regexp: '^Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin'
-      line: 'Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin'
+      line: 'Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin:/opt/python2.7/bin'
       state: present
     when:
       - ansible_os_family != "Windows"
