@@ -197,7 +197,7 @@ class PgInstall:
                     return self.get_base_package_name() + '*' + \
                         ' %s-*-%s' % (self.product,
                                       self.version.replace('.', '\\.')) + \
-                        ' libecpg*'
+                        ' %s-lib*' % (self.product)
         return self.get_base_package_name() + '*'
 
     def __is_os_redhat_based(self):
