@@ -10,12 +10,6 @@ cd /D c:\
 SET PGPATH=%1
 powershell -Command "((new-object net.webclient).DownloadFile('https://netcologne.dl.sourceforge.net/project/sevenzip/7-Zip/9.20/7za920.zip', '%TEMP%\7z.zip'))"
 powershell -Command "$shell = New-Object -ComObject Shell.Application; $zip_src = $shell.NameSpace('%TEMP%\7z.zip'); $zip_dest = $shell.NameSpace('%TEMP%'); $zip_dest.CopyHere($zip_src.Items(), 1044)"
-
-REM %TEMP%\7z.exe /S /D="C:\7z\"
-REM https://downloads.sourceforge.net/project/mingw/Installer/mingw-get/mingw-get-0.6.2-beta-20131004-1/mingw-get-0.6.2-mingw32-beta-20131004-1-bin.zip
-REM Alternative way (without 7z, but starts the shell)
-REM powershell -Command "((new-object net.webclient).DownloadFile('http://repo.msys2.org/distrib/x86_64/msys2-x86_64-20180531.exe', 'msys2.exe'))"
-REM msys2.exe --script install.qs
 powershell -Command "((new-object net.webclient).DownloadFile('http://repo.msys2.org/distrib/i686/msys2-base-i686-20180531.tar.xz', '%TEMP%\msys.tar.xz'))"
 %TEMP%\7za.exe x %TEMP%\msys.tar.xz -so 2>%TEMP%/7z-msys0.log | %TEMP%\7za.exe  x -aoa -si -ttar >%TEMP%/7z-msys1.log 2>&1
 
