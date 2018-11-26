@@ -256,6 +256,8 @@ class PgInstall:
                 distname = "rosa-sx"
             elif self.os_name == "SUSE Linux Enterprise Server ":
                 distname = "sles"
+                gpg_key_url = "%s/%s/keys/SUSE-GPG-KEY-POSTGRESPRO" % \
+                              (self.get_repo_base(), product_dir)
             elif self.os_name in ["AstraLinuxSE", "Astra Linux SE"]:
                 if self.os_version == "1.4":
                     distname = "astra-smolensk/1.4"
