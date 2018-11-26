@@ -62,11 +62,6 @@ if [ -d src/interfaces/ecpg/test/connect ]; then
 fi
 # ^^^ test5 Fails
 
-if grep 'SUSE Linux Enterprise Server 11' /etc/SuSE-release; then
-  # To workaround an "internal compiler error"
-  sed 's/log10(2)/0.3010/' -i src/interfaces/ecpg/compatlib/informix.c
-fi
-
 sudo chown -R postgres:postgres .
 if ./configure --help | grep '  --enable-svt5'; then
     extraoption="--enable-svt5"
