@@ -101,6 +101,9 @@ if patch -p1 --dry-run -i ../patches/make-installcheck-10.patch >/dev/null 2>&1;
     makeecpg=false
 fi
 
+# Workaround for pgsql-bugs #15349
+patch -p1 --dry-run -i ../patches/fix-libpq-test-for-ubuntu.patch >/dev/null 2>&1 && patch -p1 -i ../patches/fix-libpq-test-for-ubuntu.patch
+
 set -o pipefail
 sudo -u postgres ./configure --enable-tap-tests --without-readline --prefix=$1 $extraoption || exit $?
 
@@ -114,5 +117,9 @@ done <<< "$opts";
 [ "$makeecpg" = true ] && sudo -u postgres sh -c "make -C src/interfaces/ecpg"
 echo "Running: $confopts make -e installcheck-world ..."
 sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" $confopts make -e installcheck-world 2>&1" | tee /tmp/installcheck.log; exitcode=$?
+if [ $exitcode -eq 0 ]; then
+    # Extra tests
+    sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make installcheck -C src/interfaces/libpq"; exitcode=$?
+fi
 for df in `find . -name *.diffs`; do echo;echo "    vvvv $df vvvv    "; cat $df; echo "    ^^^^^^^^"; done
 exit $exitcode
