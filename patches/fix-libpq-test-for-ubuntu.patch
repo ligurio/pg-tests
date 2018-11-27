@@ -1,0 +1,18 @@
+diff --git a/src/interfaces/libpq/test/Makefile b/src/interfaces/libpq/test/Makefile
+index 4832fab9d2..01041fb15f 100644
+--- a/src/interfaces/libpq/test/Makefile
++++ b/src/interfaces/libpq/test/Makefile
+@@ -3,11 +3,11 @@ top_builddir = ../../../..
+ include $(top_builddir)/src/Makefile.global
+ 
+ ifeq ($(PORTNAME), win32)
+-LDFLAGS += -lws2_32
++LDLIBS += -lws2_32
+ endif
+ 
+ override CPPFLAGS := -I$(libpq_srcdir) $(CPPFLAGS)
+-LDFLAGS_INTERNAL += $(libpq_pgport)
++override LDLIBS := $(libpq_pgport) $(LDLIBS)
+ 
+ PROGS = uri-regress
+ 
