@@ -10,40 +10,6 @@ from helpers.pginstall import PgInstall
 from helpers.os_helpers import get_directory_size
 from helpers.os_helpers import get_process_pids
 
-PRELOAD_LIBRARIES = {
-    'std-11':
-        ['auth_delay', 'auto_explain',
-         'plantuner', 'shared_ispell', 'pg_pathman'],
-    'std-10':
-        ['auth_delay', 'auto_explain',
-         'plantuner', 'shared_ispell', 'pg_pathman'],
-    'ent-10':
-        ['auth_delay', 'auto_explain', 'in_memory',
-         'pg_shardman', 'pgpro_scheduler',
-         'plantuner', 'shared_ispell', 'pg_pathman'],
-    'std-cert-10':
-        ['auth_delay', 'auto_explain', 'pgaudit',
-         'plantuner', 'shared_ispell', 'pg_pathman'],
-    'std-9.6':
-        ['auth_delay', 'auto_explain',
-         'plantuner', 'shared_ispell', 'pg_pathman'],
-    'ent-9.6':
-        ['auth_delay', 'auto_explain', 'pgpro_scheduler',
-         'plantuner', 'shared_ispell', 'pg_pathman'],
-    'ent-cert-9.6':
-        ['auth_delay', 'auto_explain', 'passwordcheck',
-         'pgaudit', 'pgpro_scheduler', 'plantuner',
-         'shared_ispell', 'pg_pathman'],
-    'ent-cert-10':
-        ['auth_delay', 'auto_explain', 'in_memory', 'pgaudit',
-         'passwordcheck',
-         'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
-         'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
-         'pg_pathman'],
-    '1c-10':
-        ['auth_delay', 'auto_explain', 'plantuner'],
-}
-
 
 @pytest.mark.full_install
 class TestFullInstall():
@@ -113,12 +79,8 @@ class TestFullInstall():
     def test_all_extensions(self, request):
         pginst = request.cls.pginst
         iprops = pginst.get_initdb_props()
-        if request.cls.pgid in PRELOAD_LIBRARIES:
-            pginst.exec_psql(
-                "ALTER SYSTEM SET shared_preload_libraries = %s" %
-                ','.join(PRELOAD_LIBRARIES[request.cls.pgid]))
-            pginst.restart_service()
-            time.sleep(10)
+        pginst.load_shared_libraries()
+        time.sleep(10)
         share_path = iprops['share_path'].replace('/', os.sep)
         controls = glob.glob(os.path.join(share_path,
                                           'extension', '*.control'))

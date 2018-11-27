@@ -10,41 +10,6 @@ import pytest
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall
 
-PRELOAD_LIBRARIES = {
-    'std-11':
-        ['auth_delay', 'auto_explain',
-         'plantuner', 'shared_ispell', 'pg_pathman'],
-    'std-10':
-        ['auth_delay', 'auto_explain',
-         'plantuner', 'shared_ispell', 'pg_pathman'],
-    'ent-10':
-        ['auth_delay', 'auto_explain', 'in_memory',
-         'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
-         'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
-         'pg_pathman'],
-    'std-cert-10':
-        ['auth_delay', 'auto_explain', 'pgaudit',
-         'plantuner', 'shared_ispell', 'pg_pathman'],
-    'std-9.6':
-        ['auth_delay', 'auto_explain',
-         'plantuner', 'shared_ispell', 'pg_pathman'],
-    'ent-9.6':
-        ['auth_delay', 'auto_explain',
-         'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
-         'shared_ispell', 'pg_wait_sampling', 'pg_pathman'],
-    'ent-cert-9.6':
-        ['auth_delay', 'auto_explain',
-         'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
-         'shared_ispell', 'pg_wait_sampling', 'pg_pathman'],
-    'ent-cert-10':
-        ['auth_delay', 'auto_explain', 'in_memory', 'pgaudit',
-         'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
-         'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
-         'pg_pathman'],
-    '1c-10':
-        ['auth_delay', 'auto_explain', 'plantuner'],
-}
-
 
 @pytest.mark.make_check
 class TestMakeCheck(object):
@@ -97,11 +62,8 @@ class TestMakeCheck(object):
             pginst.initdb_start()
         else:
             pginst.install_postgres_win(port=55432)
-        if pgid in PRELOAD_LIBRARIES:
-            pginst.exec_psql("ALTER SYSTEM SET shared_preload_libraries = %s" %
-                             ','.join(PRELOAD_LIBRARIES[pgid]))
         pginst.exec_psql("ALTER SYSTEM SET max_worker_processes = 16")
-        pginst.restart_service()
+        pginst.load_shared_libraries()
         cmd = '"%s" --bindir' % os.path.join(pginst.get_default_bin_path(),
                                              'pg_config')
         binpath = subprocess.check_output(cmd, shell=True).strip()
