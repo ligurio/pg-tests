@@ -81,6 +81,23 @@ index 06c0461f66..1b803bc832 100644
  	$(srcdir)/../regression.h \
  	$(srcdir)/../../include/sqlca.h \
  	$(srcdir)/../../include/sqlda.h \
+diff --git a/src/interfaces/libpq/test/Makefile b/src/interfaces/libpq/test/Makefile
+index 4832fab9d2..d28e191170 100644
+--- a/src/interfaces/libpq/test/Makefile
++++ b/src/interfaces/libpq/test/Makefile
+@@ -13,7 +13,11 @@ PROGS = uri-regress
+ 
+ all: $(PROGS)
+ 
+-installcheck: all
++.PHONY: installed-all
++installed-all:
++	USE_INSTALLED_ASSETS=1 $(MAKE) all
++
++installcheck: installed-all
+ 	SRCDIR='$(top_srcdir)' SUBDIR='$(subdir)' \
+ 		   $(PERL) $(top_srcdir)/$(subdir)/regress.pl
+ 
 diff --git a/src/makefiles/pgxs.mk b/src/makefiles/pgxs.mk
 index 070d151018..d11080c51f 100644
 --- a/src/makefiles/pgxs.mk
@@ -186,7 +203,7 @@ index ef61ee596e..5b054961a4 100644
  clean distclean: clean-lib
  	rm -f $(OBJS)
 diff --git a/src/test/isolation/Makefile b/src/test/isolation/Makefile
-index c3c8280ea2..ef90762a60 100644
+index c3c8280ea2..7e48a86629 100644
 --- a/src/test/isolation/Makefile
 +++ b/src/test/isolation/Makefile
 @@ -9,12 +9,21 @@ subdir = src/test/isolation
@@ -205,7 +222,7 @@ index c3c8280ea2..ef90762a60 100644
  
  all: isolationtester$(X) pg_isolation_regress$(X)
  
-+installed_all:
++installed-all:
 +	USE_INSTALLED_ASSETS=1 $(MAKE) all
 +
  # Though we don't install these binaries, build them during installation
@@ -225,12 +242,12 @@ index c3c8280ea2..ef90762a60 100644
  	rm -f specparse.c specscanner.c
  
 -installcheck: all
-+installcheck: installed_all
++installcheck: installed-all
  	$(pg_isolation_regress_installcheck) --schedule=$(srcdir)/isolation_schedule
  
  check: all
 diff --git a/src/test/regress/GNUmakefile b/src/test/regress/GNUmakefile
-index 378bd01753..ab24ecd72a 100644
+index 378bd01753..46f59c28fc 100644
 --- a/src/test/regress/GNUmakefile
 +++ b/src/test/regress/GNUmakefile
 @@ -28,6 +28,11 @@ EXTRADEFS = '-DHOST_TUPLE="$(host_tuple)"' \
@@ -253,8 +270,8 @@ index 378bd01753..ab24ecd72a 100644
 +pg_regress$(X): pg_regress.o pg_regress_main.o $(WIN32RES) | $(SUBMAKE_LIBPGPORT)
  	$(CC) $(CFLAGS) $^ $(LDFLAGS) $(LDFLAGS_EX) $(LIBS) -o $@
  
-+.PHONY: installed_all
-+installed_all:
++.PHONY: installed-all
++installed-all:
 +	USE_INSTALLED_ASSETS=1 $(MAKE) all
 +
  # dependencies ensure that path changes propagate
@@ -290,19 +307,19 @@ index 378bd01753..ab24ecd72a 100644
  	$(pg_regress_check) $(REGRESS_OPTS) $(MAXCONNOPT) $(TESTS) $(EXTRA_TESTS)
  
 -installcheck: all tablespace-setup
-+installcheck: installed_all tablespace-setup
++installcheck: installed-all tablespace-setup
  	$(pg_regress_installcheck) $(REGRESS_OPTS) --schedule=$(srcdir)/serial_schedule $(EXTRA_TESTS)
  
 -installcheck-parallel: all tablespace-setup
-+installcheck-parallel: installed_all tablespace-setup
++installcheck-parallel: installed-all tablespace-setup
  	$(pg_regress_installcheck) $(REGRESS_OPTS) --schedule=$(srcdir)/parallel_schedule $(MAXCONNOPT) $(EXTRA_TESTS)
  
 -installcheck-tests: all tablespace-setup
-+installcheck-tests: installed_all tablespace-setup
++installcheck-tests: installed-all tablespace-setup
  	$(pg_regress_installcheck) $(REGRESS_OPTS) $(TESTS) $(EXTRA_TESTS)
  
 -standbycheck: all
-+standbycheck: installed_all
++standbycheck: installed-all
  	$(pg_regress_installcheck) $(REGRESS_OPTS) --schedule=$(srcdir)/standby_schedule --use-existing
  
  # old interfaces follow...
