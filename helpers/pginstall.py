@@ -62,6 +62,41 @@ dist = {"Oracle Linux Server": 'oraclelinux',
         "GosLinux": 'goslinux',
         "RED OS release MUROM (": 'redos'}
 
+PRELOAD_LIBRARIES = {
+    'std-11':
+        ['auth_delay', 'auto_explain',
+         'plantuner', 'shared_ispell', 'pg_pathman'],
+    'std-10':
+        ['auth_delay', 'auto_explain',
+         'plantuner', 'shared_ispell', 'pg_pathman'],
+    'ent-10':
+        ['auth_delay', 'auto_explain', 'in_memory',
+         'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
+         'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
+         'pg_pathman'],
+    'std-cert-10':
+        ['auth_delay', 'auto_explain', 'pgaudit',
+         'plantuner', 'shared_ispell', 'pg_pathman'],
+    'std-9.6':
+        ['auth_delay', 'auto_explain',
+         'plantuner', 'shared_ispell', 'pg_pathman'],
+    'ent-9.6':
+        ['auth_delay', 'auto_explain',
+         'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
+         'shared_ispell', 'pg_wait_sampling', 'pg_pathman'],
+    'ent-cert-9.6':
+        ['auth_delay', 'auto_explain',
+         'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
+         'shared_ispell', 'pg_wait_sampling', 'pg_pathman'],
+    'ent-cert-10':
+        ['auth_delay', 'auto_explain', 'in_memory', 'pgaudit',
+         'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
+         'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
+         'pg_pathman'],
+    '1c-10':
+        ['auth_delay', 'auto_explain', 'plantuner'],
+}
+
 
 class PgInstall:
 
@@ -1222,6 +1257,17 @@ baseurl=%s
         # sys.stdout.encoding = 'cp866'?
         subprocess.check_call(cmd, shell=True, cwd=tempfile.gettempdir(),
                               env=self.env)
+
+    def load_shared_libraries(self, libs=None, restart_service=True):
+        if libs is None:
+            pgid = '%s-%s' % (self.edition, self.version)
+            if pgid in PRELOAD_LIBRARIES:
+                libs = ','.join(PRELOAD_LIBRARIES[pgid])
+        if libs:
+            self.exec_psql(
+                "ALTER SYSTEM SET shared_preload_libraries = %s" % libs)
+            if restart_service:
+                self.restart_service()
 
     def exec_cmd_retry(self, cmd, retry_cnt=10):
         timeout = 0
