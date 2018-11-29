@@ -27,7 +27,7 @@ if ! perl -e "use IPC::Run"; then
     curl -O http://cpan.metacpan.org/authors/id/T/TO/TODDR/\
 IPC-Run-0.96.tar.gz && \
     tar fax IPC-Run* && \
-    (cd IPC-Run* && perl Makefile.PL && make && make install)
+    (cd IPC-Run*/ && perl Makefile.PL && make && make install)
 fi
 
 if [ -d ~test/pg-tests ]; then
@@ -38,7 +38,7 @@ fi
 if grep 'SUSE Linux Enterprise Server 11' /etc/SuSE-release; then
     # Update Test::More to minimum required version (0.87)
     tar fax extras/test-more* && \
-    (cd test-more* && perl Makefile.PL && make && make install)
+    (cd test-more*/ && perl Makefile.PL && make && make install)
 fi
 
 tar fax postgrespro*.tar*
