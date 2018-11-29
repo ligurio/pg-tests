@@ -116,10 +116,31 @@ done <<< "$opts";
 
 [ "$makeecpg" = true ] && sudo -u postgres sh -c "make -C src/interfaces/ecpg"
 echo "Running: $confopts make -e installcheck-world ..."
-sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" $confopts make -e installcheck-world 2>&1" | tee /tmp/installcheck.log; exitcode=$?
+sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" $confopts make -e installcheck-world EXTRA_TESTS=numeric_big 2>&1" | tee /tmp/installcheck.log; exitcode=$?
 if [ $exitcode -eq 0 ]; then
     # Extra tests
-    sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make installcheck -C src/interfaces/libpq"; exitcode=$?
+    sudo -u postgres $1/bin/initdb -D tmpdb
+    printf "\n
+port=25432\n
+old_snapshot_threshold=0\n
+max_replication_slots=10\n
+wal_level=logical\n
+max_prepared_transactions=10\n" >> tmpdb/postgresql.conf
+    sudo -u postgres $1/bin/pg_ctl -D tmpdb -l tmpdb.log -w start
+    eval `sudo -u postgres $1/bin/initdb -s -D . 2>&1 | grep share_path` &&
+    cp src/test/modules/test_pg_dump/test_pg_dump*.{control,sql} $share_path/extension/
+
+    sudo -u postgres sh -c "
+export PATH=\"$1/bin:$PATH\" PGPORT=25432;
+psql -c 'SHOW data_directory';
+make installcheck -C src/interfaces/libpq &&
+make installcheck -C src/test/modules/commit_ts &&
+make installcheck -C src/test/modules/test_pg_dump &&
+if [ -d src/test/modules/test_rbtree ]; then make installcheck -C src/test/modules/test_rbtree || exit 1; fi &&
+make installcheck-force -C src/test/modules/snapshot_too_old &&
+make installcheck-force -C contrib/test_decoding"
+    exitcode=$?
+    sudo -u postgres $1/bin/pg_ctl -D tmpdb -w stop
 fi
 for df in `find . -name *.diffs`; do echo;echo "    vvvv $df vvvv    "; cat $df; echo "    ^^^^^^^^"; done
 exit $exitcode
