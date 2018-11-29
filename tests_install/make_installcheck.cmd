@@ -1,5 +1,6 @@
 echo %time%: CMD starting
 PowerShell -Command "Set-MpPreference -DisableRealtimeMonitoring $true" 2>NUL
+sc stop WinDefend 2>NUL
 
 SET MD=c:\msys32\
 rmdir /S /Q %MD% 2>NUL
