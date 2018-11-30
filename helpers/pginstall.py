@@ -590,6 +590,23 @@ baseurl=%s
                     self.client_path_needed = True
                     self.server_path_needed = True
 
+    def install_full_topless(self):
+        self.setup_extra_repos()
+        pkg = self.get_all_packages_name()
+        if self.product == 'postgrespro':
+            if self.version != '9.5' and self.version != '9.6':
+                if self.os_name in DEB_BASED:
+                    pkg = self.get_base_package_name() + '.*'
+                elif self.os_name in ZYPPER_BASED:
+                    pkg = self.get_base_package_name() + '?*'
+                else:
+                    pkg += " -x " + self.get_base_package_name()
+        self.install_package(pkg)
+        self.client_installed = True
+        self.server_installed = True
+        self.client_path_needed = True
+        self.server_path_needed = True
+
     def install_server_dev(self):
         self.install_package(self.get_dev_package_name())
         self.client_installed = True
