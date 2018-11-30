@@ -590,6 +590,23 @@ baseurl=%s
                     self.client_path_needed = True
                     self.server_path_needed = True
 
+    def install_full_topless(self):
+        self.setup_extra_repos()
+        pkg = self.get_all_packages_name()
+        if self.product == 'postgrespro':
+            if self.version != '9.5' and self.version != '9.6':
+                if self.os_name in DEB_BASED:
+                    pkg = self.get_base_package_name() + '.*'
+                elif self.os_name in ZYPPER_BASED:
+                    pkg = self.get_base_package_name() + '?*'
+                else:
+                    pkg += " -x " + self.get_base_package_name()
+        self.install_package(pkg)
+        self.client_installed = True
+        self.server_installed = True
+        self.client_path_needed = True
+        self.server_path_needed = True
+
     def install_server_dev(self):
         self.install_package(self.get_dev_package_name())
         self.client_installed = True
@@ -967,18 +984,19 @@ baseurl=%s
         with os.fdopen(handle, 'w') as script_file:
             script_file.write(script)
         os.chmod(script_path, 0644)
+        self.exec_psql_file(script_path, options)
+        os.unlink(script_path)
 
+    def exec_psql_file(self, sql_file, options=''):
         cmd = '%s"%spsql" %s %s -f "%s"' % \
             (
                 self.pg_preexec,
                 self.get_client_bin_path(),
                 '' if not(self.port) else '-p ' + str(self.port),
-                options, script_path
+                options, sql_file
             )
-        result = subprocess.check_output(cmd, shell=True,
-                                         cwd="/", env=self.env).strip()
-        os.unlink(script_path)
-        return result
+        subprocess.check_call(cmd, shell=True,
+                              cwd="/", env=self.env)
 
     def get_server_version(self):
         return self.exec_psql_select("SELECT version()")
