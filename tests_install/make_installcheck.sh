@@ -136,7 +136,6 @@ psql -c 'SHOW data_directory';
 make installcheck -C src/interfaces/libpq &&
 make installcheck -C src/test/modules/commit_ts &&
 make installcheck -C src/test/modules/test_pg_dump &&
-if [ -d src/test/modules/test_rbtree ]; then make installcheck -C src/test/modules/test_rbtree || exit 1; fi &&
 make installcheck-force -C src/test/modules/snapshot_too_old &&
 make installcheck-force -C contrib/test_decoding"
     exitcode=$?
