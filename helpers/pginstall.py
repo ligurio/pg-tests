@@ -984,18 +984,19 @@ baseurl=%s
         with os.fdopen(handle, 'w') as script_file:
             script_file.write(script)
         os.chmod(script_path, 0644)
+        self.exec_psql_file(script_path, options)
+        os.unlink(script_path)
 
+    def exec_psql_file(self, sql_file, options=''):
         cmd = '%s"%spsql" %s %s -f "%s"' % \
             (
                 self.pg_preexec,
                 self.get_client_bin_path(),
                 '' if not(self.port) else '-p ' + str(self.port),
-                options, script_path
+                options, sql_file
             )
-        result = subprocess.check_output(cmd, shell=True,
-                                         cwd="/", env=self.env).strip()
-        os.unlink(script_path)
-        return result
+        subprocess.check_call(cmd, shell=True,
+                              cwd="/", env=self.env)
 
     def get_server_version(self):
         return self.exec_psql_select("SELECT version()")
