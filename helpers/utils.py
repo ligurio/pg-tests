@@ -59,7 +59,7 @@ def command_executor(cmd, remote=False, host=None,
                 out = subprocess.Popen(
                     shlex.split(cmd, posix=not(windows)),
                     stdout=subprocess.PIPE)
-                return out.stdout.readline().rstrip()
+                return out.stdout.read()
             else:
                 if windows:
                     return subprocess.check_call(

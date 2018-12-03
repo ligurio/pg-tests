@@ -408,7 +408,8 @@ baseurl=%s
                     cmd, self.remote, self.host,
                     REMOTE_ROOT, REMOTE_ROOT_PASSWORD)[1].rstrip()
             else:
-                codename = command_executor(cmd, self.remote, stdout=True)
+                codename = command_executor(
+                    cmd, self.remote, stdout=True).rstrip()
             repofile = "/etc/apt/sources.list.d/%s-%s.list" % (self.product,
                                                                self.version)
             if self.product == "postgresql":
