@@ -8,7 +8,6 @@ from helpers.pginstall import DEB_BASED
 from helpers.pginstall import RPM_BASED
 from helpers.os_helpers import create_tablespace_directory
 from helpers.os_helpers import pg_bindir
-from helpers.os_helpers import rmdir
 from helpers.utils import (command_executor,
                            get_distro,
                            REMOTE_ROOT,
@@ -273,17 +272,7 @@ def pg_initdb(connstring, *params):
     :param params:
     :return:
     """
-
-    data_dir = pg_get_option(connstring, "data_directory")
-    pg_manage_psql("stop", data_dir)
-    rmdir(data_dir)
-    initdb = os.path.join(pg_bindir(), "initdb")
-    print(initdb)
-    initdb_cmd = ["sudo", "-u", "postgres", initdb, "-D", data_dir]
-    print(initdb_cmd)
-    print(params)
-    subprocess.check_output(initdb_cmd + list(params))
-    pg_manage_psql("start", data_dir)
+    raise NotImplementedError()
 
 
 def create_tablespace(tablespace_name, compression=False):
