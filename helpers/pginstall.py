@@ -193,6 +193,10 @@ class PgInstall:
                                      self.version.replace('.', ''))
                 return '%s-%s' % (self.product, self.version)
             return '%s-%s-%s' % (self.product, self.alter_edtn, self.version)
+        elif self.product == 'postgresql':
+            if self.__is_os_redhat_based() or self.__is_os_suse():
+                return '%s%s' % (self.product, self.version.replace('.', ''))
+            return '%s-%s' % (self.product, self.version)
         return '%s-%s' % (self.product, self.version.replace('.', '')) \
             if self.version else '%s' % (self.product)
 
@@ -202,6 +206,10 @@ class PgInstall:
             if self.version in ['9.5', '9.6']:
                 if self.__is_os_debian_based():
                     return base_package
+            return base_package + '-server'
+        elif self.product == 'postgresql':
+            if self.__is_os_debian_based():
+                return base_package
             return base_package + '-server'
         return base_package
 
@@ -213,6 +221,10 @@ class PgInstall:
                     return '%s-client-%s' % (self.product, self.version)
                 return base_package
             return base_package + '-client'
+        elif self.product == 'postgresql':
+            if self.__is_os_debian_based():
+                return '%s-client-%s' % (self.product, self.version)
+            return base_package
         return base_package
 
     def get_dev_package_name(self):
@@ -223,7 +235,30 @@ class PgInstall:
                     return '%s-server-dev-%s' % (self.product, self.version)
             return base_package + (
                 '-dev' if self.__is_os_debian_based() else '-devel')
+        elif self.product == 'postgresql':
+            if self.__is_os_debian_based():
+                return '%s-server-dev-%s' % (self.product, self.version)
+            return base_package + '-devel'
         return base_package
+
+    def get_all_installable_packages(self, pkgnames):
+        result = []
+        if self.__is_os_suse():
+            cmd = "sh -c \"LANG=C zypper search '%s'\"" % pkgnames
+            zsout = command_executor(cmd, self.remote, self.host,
+                                     REMOTE_ROOT, REMOTE_ROOT_PASSWORD,
+                                     stdout=True).split('\n')
+            for line in zsout:
+                pkginfo = line.split('|')
+                if len(pkginfo) != 4:
+                    continue
+                pkgname = pkginfo[1].strip()
+                if (pkgname == 'Name'):
+                    continue
+                result.append(pkgname)
+        else:
+            raise NotImplementedError()
+        return result
 
     def get_all_packages_name(self):
         if self.product == 'postgrespro':
@@ -233,6 +268,21 @@ class PgInstall:
                         ' %s-*-%s' % (self.product,
                                       self.version.replace('.', '\\.')) + \
                         ' %s-lib*' % (self.product)
+        elif self.product == 'postgresql':
+            if self.__is_os_altlinux():
+                return '^%s%s.*$' % (self.product,
+                                     self.version.replace('.', '\\.'))
+            if self.__is_os_debian_based():
+                return '^%s-*%s$' % (self.product,
+                                     self.version.replace('.', '\\.'))
+            elif self.__is_os_suse():
+                pkgs = self.get_all_installable_packages(
+                    self.get_base_package_name() + '*')
+                # Filter out packages, which are not installable and
+                # not supported by Postgres Pro
+                packages = ' '.join(pkg for pkg in pkgs if not(
+                    pkg.endswith('-tcl') or pkg.endswith('-llvmjit')))
+                return packages
         return self.get_base_package_name() + '*'
 
     def __is_os_redhat_based(self):
@@ -247,6 +297,15 @@ class PgInstall:
     def __is_os_suse(self):
         return self.os_name in ZYPPER_BASED
 
+    def get_supported_vanilla_versions(self):
+        if self.__is_os_altlinux():
+            return ['10']
+        elif self.__is_os_redhat_based() or self.__is_os_debian_based():
+            return ['9.6', '10', '11']
+        elif self.__is_os_suse() and self.os_version != "11":
+            return ['9.6', '10', '11']
+        return []
+
     def __generate_repo_info(self, action="install"):
         """Generate information about repository: url to packages
             and path to gpg key
@@ -257,7 +316,7 @@ class PgInstall:
 
         distname = ""
         product_dir = ""
-        gpg_key_url = ""
+        gpg_key_url = None
         if self.product == "postgresql":
             if self.os_name in RPM_BASED:
                 gpg_key_url = "https://download.postgresql.org/" \
@@ -268,6 +327,10 @@ class PgInstall:
             elif self.os_name in DEB_BASED:
                 gpg_key_url = "https://www.postgresql.org/"\
                     "media/keys/ACCC4CF8.asc"
+            elif self.os_name in ZYPPER_BASED:
+                product_dir = "/repos/zypp/%s/suse/sles-%s-$basearch" % \
+                    (self.version,
+                     "$releasever" if self.os_version != "12" else "12")
             baseurl = PSQL_BASE + product_dir
             return baseurl, gpg_key_url
         elif self.product == "postgrespro":
@@ -412,9 +475,11 @@ baseurl=%s
                     cmd, self.remote, stdout=True).rstrip()
             repofile = "/etc/apt/sources.list.d/%s-%s.list" % (self.product,
                                                                self.version)
+            repo = None
             if self.product == "postgresql":
-                repo = "deb http://apt.postgresql.org/pub/repos/apt/" \
-                    " %s-pgdg main" % codename
+                if not self.__is_os_altlinux():
+                    repo = "deb http://apt.postgresql.org/pub/repos/apt/" \
+                        " %s-pgdg main" % codename
             elif self.product == "postgrespro":
                 repo = "deb %s %s main" % (baseurl, codename)
                 if self.os_name == "ALT Linux ":
@@ -431,9 +496,10 @@ baseurl=%s
                            "rpm %s/8 noarch pgpro\n" % \
                            (baseurl, baseurl)
 
-            write_file(repofile, repo, self.remote, self.host)
+            if repo:
+                write_file(repofile, repo, self.remote, self.host)
 
-            if "ALT " in self.os_name:
+            if self.__is_os_altlinux():
                 cmd = "apt-get update -y"
                 self.exec_cmd_retry(cmd)
             else:
@@ -449,27 +515,29 @@ baseurl=%s
         elif self.os_name in ZYPPER_BASED:
             reponame = "%s-%s" % (self.product, self.version)
             repofile = '/etc/zypp/repos.d/%s.repo' % reponame
-            cmd = "wget -nv %s -O gpg.key" % gpg_key_url
-            self.exec_cmd_retry(cmd)
-            cmd = "rpm --import ./gpg.key"
-            try:
-                # SLES 11 fails when the key is already imported
-                command_executor(cmd, self.remote, self.host,
-                                 REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-            except Exception:
-                pass
-            if self.os_name == 'SUSE Linux Enterprise Server ' and \
-               self.os_version == "12":
-                baseurl = os.path.join(baseurl, "12.1")
-            else:
-                baseurl = os.path.join(baseurl, self.os_version)
+            if gpg_key_url:
+                cmd = "wget -nv %s -O gpg.key" % gpg_key_url
+                self.exec_cmd_retry(cmd)
+                cmd = "rpm --import ./gpg.key"
+                try:
+                    # SLES 11 fails when the key is already imported
+                    command_executor(cmd, self.remote, self.host,
+                                     REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                except Exception:
+                    pass
+            if self.product == "postgrespro":
+                if self.os_name == 'SUSE Linux Enterprise Server ' and \
+                   self.os_version == "12":
+                    baseurl = os.path.join(baseurl, "12.1")
+                else:
+                    baseurl = os.path.join(baseurl, self.os_version)
             cmd = "zypper removerepo %s" % (reponame)
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             cmd = "zypper addrepo %s %s" % (baseurl, reponame)
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-            cmd = "zypper refresh"
+            cmd = "zypper --gpg-auto-import-keys refresh"
             self.exec_cmd_retry(cmd)
             return repofile
         elif self.os_name in WIN_BASED:
@@ -575,6 +643,12 @@ baseurl=%s
                    self.os_name in DEBIAN_BASED:
                     self.client_path_needed = True
                     self.server_path_needed = True
+        elif self.product == "postgresql":
+            if self.os_name in RPM_BASED or \
+               self.os_name in DEBIAN_BASED or \
+               self.os_name in ZYPPER_BASED:
+                self.client_path_needed = True
+                self.server_path_needed = True
 
     def install_full(self):
         self.setup_extra_repos()
@@ -583,13 +657,18 @@ baseurl=%s
         self.server_installed = True
         self.client_path_needed = False
         self.server_path_needed = False
-        if self.product == "postgrespro":
-            if self.version in ['9.5', '9.6']:
-                if self.os_name in ASTRA_BASED or \
-                   self.os_name in RPM_BASED or \
-                   self.os_name in DEBIAN_BASED:
-                    self.client_path_needed = True
-                    self.server_path_needed = True
+        if self.product == "postgrespro" and self.version in ['9.5', '9.6']:
+            if self.os_name in ASTRA_BASED or \
+               self.os_name in RPM_BASED or \
+               self.os_name in DEBIAN_BASED:
+                self.client_path_needed = True
+                self.server_path_needed = True
+        elif self.product == "postgresql":
+            if self.os_name in RPM_BASED or \
+               self.os_name in DEBIAN_BASED or \
+               self.os_name in ZYPPER_BASED:
+                self.client_path_needed = True
+                self.server_path_needed = True
 
     def install_full_topless(self):
         self.setup_extra_repos()
@@ -1073,6 +1152,14 @@ baseurl=%s
                 return '%s-%s-%s' % (self.product,
                                      self.alter_edtn,
                                      self.version)
+            elif self.product == "postgresql":
+                if self.__is_os_altlinux():
+                    return 'postgresql'
+                if self.__is_os_debian_based():
+                    if os.path.isdir('/run/systemd/system'):
+                        return 'postgresql@%s-main' % self.version
+                    return 'postgresql'
+                return '%s-%s' % (self.product, self.version)
             else:
                 raise Exception('Product %s is not supported.' % self.product)
 
@@ -1100,6 +1187,12 @@ baseurl=%s
                         self.version)
                 return '/opt/pgpro/%s-%s' % (self.alter_edtn,
                                              self.version)
+            elif self.product == 'postgresql':
+                if self.__is_os_altlinux():
+                    return '/usr'
+                if self.__is_os_debian_based():
+                    return '/usr/lib/postgresql/%s' % (self.version)
+                return '/usr/pgsql-%s' % (self.version)
         else:
             if self.product == 'postgrespro':
                 return 'C:\\Program Files\\%s%s\\%s' % \
@@ -1151,6 +1244,12 @@ baseurl=%s
                 return '/var/lib/pgpro/%s-%s/data' % (
                     self.alter_edtn,
                     self.version)
+            elif self.product == 'postgresql':
+                if self.__is_os_altlinux():
+                    return '/var/lib/pgsql/data'
+                if self.__is_os_debian_based():
+                    return '/var/lib/postgresql/%s/main' % (self.version)
+                return '/var/lib/pgsql/%s/data' % (self.version)
             raise Exception('Product %s is not supported.' % self.product)
         else:
             if self.product == 'postgrespro':
@@ -1195,6 +1294,27 @@ baseurl=%s
                                       self.version, shell=True)
                 self.start_service()
             elif self.os_name in ZYPPER_BASED:
+                self.start_service()
+            else:
+                raise Exception('OS %s is not supported.' % self.os_name)
+        elif self.product == 'postgresql':
+            if self.__is_os_debian_based():
+                return
+            if self.__is_os_redhat_based() or self.__is_os_suse():
+                if subprocess.call("which systemctl", shell=True) == 0:
+                    binpath = self.get_bin_path()
+                    cmd = '%s/postgresql%s-setup initdb' % \
+                        (binpath,
+                         self.version.replace('.', '') if
+                         self.version.startswith('9.') else
+                         '-' + self.version)
+                else:
+                    cmd = 'service "%s" initdb' % self.service_name
+                subprocess.check_call(cmd, shell=True)
+                self.start_service()
+            elif self.__is_os_altlinux():
+                subprocess.check_call('/etc/init.d/postgresql initdb',
+                                      shell=True)
                 self.start_service()
             else:
                 raise Exception('OS %s is not supported.' % self.os_name)
@@ -1282,7 +1402,7 @@ baseurl=%s
                               env=self.env)
 
     def load_shared_libraries(self, libs=None, restart_service=True):
-        if libs is None:
+        if libs is None and self.product == 'postgrespro':
             pgid = '%s-%s' % (self.edition, self.version)
             if pgid in PRELOAD_LIBRARIES:
                 libs = ','.join(PRELOAD_LIBRARIES[pgid])
