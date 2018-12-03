@@ -179,7 +179,7 @@ class PgInstall:
 
     def get_base_package_name(self):
         if self.product == 'postgrespro':
-            if self.version == '9.5' or self.version == '9.6':
+            if self.version in ['9.5', '9.6']:
                 if self.__is_os_altlinux():
                     if self.edition in ['ent', 'ent-cert']:
                         return '%s-%s%s' % (self.product, 'enterprise',
@@ -199,7 +199,7 @@ class PgInstall:
     def get_server_package_name(self):
         base_package = self.get_base_package_name()
         if self.product == 'postgrespro':
-            if self.version == '9.5' or self.version == '9.6':
+            if self.version in ['9.5', '9.6']:
                 if self.__is_os_debian_based():
                     return base_package
             return base_package + '-server'
@@ -208,7 +208,7 @@ class PgInstall:
     def get_client_package_name(self):
         base_package = self.get_base_package_name()
         if self.product == 'postgrespro':
-            if self.version == '9.5' or self.version == '9.6':
+            if self.version in ['9.5', '9.6']:
                 if self.__is_os_debian_based():
                     return '%s-client-%s' % (self.product, self.version)
                 return base_package
@@ -218,7 +218,7 @@ class PgInstall:
     def get_dev_package_name(self):
         base_package = self.get_base_package_name()
         if self.product == 'postgrespro':
-            if self.version == '9.5' or self.version == '9.6':
+            if self.version in ['9.5', '9.6']:
                 if self.__is_os_debian_based():
                     return '%s-server-dev-%s' % (self.product, self.version)
             return base_package + (
@@ -227,7 +227,7 @@ class PgInstall:
 
     def get_all_packages_name(self):
         if self.product == 'postgrespro':
-            if self.version == '9.5' or self.version == '9.6':
+            if self.version in ['9.5', '9.6']:
                 if self.__is_os_debian_based():
                     return self.get_base_package_name() + '*' + \
                         ' %s-*-%s' % (self.product,
@@ -558,7 +558,7 @@ baseurl=%s
     def install_base(self):
         self.install_package(self.get_base_package_name())
         if self.product == "postgrespro":
-            if self.version == '9.5' or self.version == '9.6':
+            if self.version in ['9.5', '9.6']:
                 if self.__is_os_altlinux() or \
                    self.__is_os_redhat_based() or \
                    self.__is_os_suse():
@@ -568,7 +568,7 @@ baseurl=%s
         self.client_path_needed = False
         self.server_path_needed = False
         if self.product == "postgrespro":
-            if self.version == '9.5' or self.version == '9.6':
+            if self.version in ['9.5', '9.6']:
                 if self.os_name in ASTRA_BASED or \
                    self.os_name in RPM_BASED or \
                    self.os_name in DEBIAN_BASED:
@@ -583,7 +583,7 @@ baseurl=%s
         self.client_path_needed = False
         self.server_path_needed = False
         if self.product == "postgrespro":
-            if self.version == '9.5' or self.version == '9.6':
+            if self.version in ['9.5', '9.6']:
                 if self.os_name in ASTRA_BASED or \
                    self.os_name in RPM_BASED or \
                    self.os_name in DEBIAN_BASED:
@@ -594,7 +594,7 @@ baseurl=%s
         self.setup_extra_repos()
         pkg = self.get_all_packages_name()
         if self.product == 'postgrespro':
-            if self.version != '9.5' and self.version != '9.6':
+            if self.version not in ['9.5', '9.6']:
                 if self.os_name in DEB_BASED:
                     pkg = self.get_base_package_name() + '.*'
                 elif self.os_name in ZYPPER_BASED:
@@ -1047,7 +1047,7 @@ baseurl=%s
                 raise Exception('Product %s is not supported.' % self.product)
         else:
             if self.product == "postgrespro":
-                if self.version == '9.5' or self.version == '9.6':
+                if self.version in ['9.5', '9.6']:
                     if self.os_name in ZYPPER_BASED:
                         return 'postgresql'
                     elif self.os_name in ASTRA_BASED:
@@ -1074,7 +1074,7 @@ baseurl=%s
     def get_default_pg_prefix(self):
         if self.os_name not in WIN_BASED:
             if self.product == 'postgrespro':
-                if self.version == '9.5' or self.version == '9.6':
+                if self.version in ['9.5', '9.6']:
                     if self.os_name in DEBIAN_BASED:
                         return '/usr/lib/postgresql/%s' % (self.version)
                     if self.__is_os_suse():
@@ -1129,7 +1129,7 @@ baseurl=%s
     def get_default_datadir(self):
         if self.os_name not in WIN_BASED:
             if self.product == 'postgrespro':
-                if self.version == '9.5' or self.version == '9.6':
+                if self.version in ['9.5', '9.6']:
                     if self.os_name in DEBIAN_BASED:
                         return '/var/lib/postgresql/%s/main' % (self.version)
                     if self.__is_os_suse():
