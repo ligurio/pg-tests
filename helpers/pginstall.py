@@ -595,7 +595,11 @@ baseurl=%s
         pkg = self.get_all_packages_name()
         if self.product == 'postgrespro':
             if self.version not in ['9.5', '9.6']:
-                if self.os_name in DEB_BASED:
+                if self.os_name in ALT_BASED:
+                    # Exclude {base_package}-debuginfo as
+                    # it requires {base_package}
+                    pkg = self.get_base_package_name() + '-[^d][^e][^b].*'
+                elif self.os_name in DEB_BASED:
                     pkg = self.get_base_package_name() + '.*'
                 elif self.os_name in ZYPPER_BASED:
                     pkg = self.get_base_package_name() + '?*'
