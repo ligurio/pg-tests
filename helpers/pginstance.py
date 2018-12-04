@@ -12,8 +12,7 @@ from helpers.sql_helpers import pg_set_option
 from helpers.sql_helpers import pg_check_option
 from helpers.sql_helpers import pg_manage_psql
 from helpers.sql_helpers import pg_start_script_name
-from helpers.pginstall import (RPM_BASED,
-                               PGPRO_ARCHIVE_STANDARD,
+from helpers.pginstall import (PGPRO_ARCHIVE_STANDARD,
                                PGPRO_ARCHIVE_ENTERPRISE)
 
 from helpers.utils import command_executor
@@ -179,47 +178,7 @@ class PgInstance:
         :param host:
         :return:
         """
-
-        major = version.split(".")[0]
-        minor = version.split(".")[1]
-
-        print "Setup PostgreSQL service"
-
-        distro = get_distro(remote, host)[0]
-        if distro in RPM_BASED or "ALT " in distro:
-            self.manage_psql("initdb", remote=remote, host=host)
-        self.manage_psql("start", remote=remote, host=host)
-
-        if remote:
-            cmd = "export PATH=$PATH:/usr/pgsql-%s.%s/bin/" % (major, minor)
-            command_executor(cmd, remote, host,
-                             login=REMOTE_ROOT, password=REMOTE_ROOT_PASSWORD)
-        else:
-            os.environ['PATH'] += ":/usr/pgsql-%s.%s/bin/" % (major, minor)
-        cmd = "sudo -u postgres psql -c \"ALTER USER postgres" \
-            " WITH PASSWORD \'%s\';\"" % self.PG_PASSWORD
-        command_executor(cmd, remote, host,
-                         login=REMOTE_ROOT, password=REMOTE_ROOT_PASSWORD)
-
-        if self.cluster:
-            hba_auth = """
-    local   all             postgres                                trust
-    local   all             all                                     peer
-    host    all             all             0.0.0.0/0               trust
-    host    all             all             ::0/0                   trust
-    host    replication     postgres    0.0.0.0/0       trust"""
-        else:
-            hba_auth = """
-    local   all             postgres                                trust
-    local   all             all                                     peer
-    host    all             all             0.0.0.0/0               trust
-    host    all             all             ::0/0                   trust"""
-        self.edit_pg_hba_conf(hba_auth, remote=remote, host=host)
-        cmd = "sudo -u postgres psql -c " \
-            "\"ALTER SYSTEM SET listen_addresses to \'*\';\""
-        command_executor(cmd, remote, host,
-                         login=REMOTE_ROOT, password=REMOTE_ROOT_PASSWORD)
-        self.manage_psql("restart", remote=remote, host=host)
+        raise NotImplementedError()
 
     def get_postmaster_pid(self):
         """
@@ -430,34 +389,6 @@ class PgInstance:
             if current_minor_version in version:
                 position = minor_versions.index(version)
         return minor_versions[position + 1:]
-
-    def move_data_direcory(self, version, edition="std",
-                           remote=False, host=None):
-        """Move data directory from one folder to another
-
-        :return: int
-        """
-        major = "9"
-        minor = version.split(".")[1]
-        distro = get_distro()[0]
-        self.kill_postgres_instance()
-        if distro in RPM_BASED:
-            if edition == "std":
-                cmd = "cp -r /var/lib/pgsql/%s.%s/data/" \
-                    " /var/lib/pgpro/%s.%s/" % (major, minor, major, minor)
-                command_executor(cmd)
-                cmd = "chown -R postgres:postgres" \
-                    " /var/lib/pgpro/%s.%s/data" % (major, minor)
-                return command_executor(cmd, remote, host,
-                                        REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-            elif edition == "ent":
-                cmd = "cp -r /var/lib/pgsql/%s.%s/data/" \
-                    " /var/lib/pgproee/%s.%s/" % (major, minor, major, minor)
-                command_executor(cmd)
-                cmd = "chown -R postgres:postgres " \
-                    "/var/lib/pgproee/%s.%s/data" % (major, minor)
-                return command_executor(cmd, remote, host,
-                                        REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
     def kill_postgres_instance(self):
         """
