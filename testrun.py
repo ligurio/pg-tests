@@ -170,10 +170,21 @@ def prepare_payload(tests_dir, clean):
     pgtd = os.path.join(tempdir, 'pg-tests')
     shutil.copytree('.', pgtd,
                     ignore=shutil.ignore_patterns('.git', 'reports'))
-    retcode = call("wget -q https://bootstrap.pypa.io/get-pip.py",
-                   cwd=pgtd, shell=True)
-    if retcode != 0:
-        raise Exception("Downloading get-pip failed.")
+    attempt = 1
+    timeout = 0
+    while True:
+        print('Downloading get-pip...')
+        retcode = call("wget -q https://bootstrap.pypa.io/get-pip.py",
+                       cwd=pgtd, shell=True)
+        if retcode == 0:
+            break
+        print('Retrying (attempt %d with delay for %d seconds)...' %
+              (attempt, timeout))
+        timeout += 5
+        time.sleep(timeout)
+        attempt += 1
+        if attempt > 10:
+            raise Exception("Downloading get-pip failed.")
 
     subprocess.check_call(
         "wget -q https://codeload.github.com/postgrespro/"
