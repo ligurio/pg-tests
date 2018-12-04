@@ -171,32 +171,6 @@ def preprocess(str):
     return replaced
 
 
-def diff(file1, file2):
-    print 'Diff started %s and %s' % (file1, file2)
-    with open(file1, 'rb') as hosts0, open(file2, 'rb') as hosts1:
-        lines1 = hosts0.readlines()
-        for i, v in enumerate(lines1):
-            lines1[i] = preprocess(v)
-        lines2 = hosts1.readlines()
-        for i, v in enumerate(lines2):
-            lines2[i] = preprocess(v)
-        diff = difflib.unified_diff(
-            lines1,
-            lines2,
-            fromfile='a',
-            tofile='b'
-        )
-    count = 0
-    diffs = []
-    for line in diff:
-        diffs.append(line)
-        count = count + 1
-    return {
-        'count': count,
-        'diffs': diffs
-    }
-
-
 def generate_db(pg, pgnew):
     key = "-".join([pg.product, pg.edition, pg.version])
     dump_file_name = "dump-%s.sql" % key
@@ -217,20 +191,42 @@ def generate_db(pg, pgnew):
                                 "%s-expected.sql" % key))
 
 
-def check_db(oldKey, pgNew, prefix):
+def diff_dbs(oldKey, pgNew, prefix):
     result_file_name = "%s-%s-result.sql" % (prefix, oldKey)
     tempdir = tempfile.gettempdir()
     dumpall(pgNew, result_file_name)
-    difference = diff(
-        os.path.join(tempdir, result_file_name),
-        os.path.join(tempdir, '%s-expected.sql' % oldKey)
+    file1 = os.path.join(tempdir, result_file_name)
+    file2 = os.path.join(tempdir, '%s-expected.sql' % oldKey)
+    lines1 = []
+    with open(file1, 'rb') as f:
+        for line in f:
+            lines1.append(preprocess(line))
+    lines2 = []
+    with open(file2, 'rb') as f:
+        for line in f:
+            lines2.append(preprocess(line))
+    difference = difflib.unified_diff(
+        lines1,
+        lines2,
+        fromfile=file1,
+        tofile=file2
     )
-    with open(os.path.join(tempdir, "%s-%s.sql.diff" %
-                                    (prefix, oldKey)), "w") as file:
-        file.writelines(difference['diffs'])
-    if difference['count'] > 0:
-        print "Difference found"
-        raise Exception("Difference found")
+    diff_file = os.path.join(tempdir, "%s-%s.sql.diff" % (prefix, oldKey))
+    with open(diff_file, "w") as file:
+        file.writelines(difference)
+        pos = file.tell()
+    if pos > 0:
+        with open(diff_file, "rb") as file:
+            lines = file.readlines()
+            i = 1
+            for line in lines:
+                if i > 20:
+                    print "..."
+                    break
+                else:
+                    print line
+                i = i + 1
+        raise Exception("Difference found. See file " + diff_file)
 
 
 def upgrade(pg, pgOld):
@@ -311,12 +307,9 @@ def backup_datadir_win(pg):
 
 
 def restore_datadir_win(pg):
-    backup_datadir = pg.get_datadir() + '.bak'
-    if not os.path.exists(backup_datadir):
-        raise Exception('Backup data directory does not exists')
     pg.remove_data()
     cmd = 'xcopy /S /E /O /X /I /Q "%s" "%s"' %\
-          (backup_datadir, pg.get_datadir())
+          (pg.get_datadir() + '.bak', pg.get_datadir())
     subprocess.check_call(cmd, shell=True)
 
 
@@ -405,7 +398,7 @@ class TestUpgrade():
             upgrade(pg, pgold)
             start(pg)
             after_upgrade(pg)
-            check_db(key, pg, 'upgrade')
+            diff_dbs(key, pg, 'upgrade')
             stop(pg)
             pgold.remove_full()
             init_cluster(pg, True)
@@ -467,7 +460,7 @@ class TestUpgrade():
             if (os.path.isfile(file_name)):
                 start(pg)
                 pg.exec_psql_file(file_name)
-                check_db(key, pg, 'dump-restore')
+                diff_dbs(key, pg, 'dump-restore')
             else:
                 pgold = install_server(
                     product=old_name, edition=old_edition,
@@ -481,7 +474,7 @@ class TestUpgrade():
 
                 start(pg)
                 pg.exec_psql_file(file_name)
-                check_db(key, pg, 'dump-restore')
+                diff_dbs(key, pg, 'dump-restore')
                 pgold.remove_full(True)
 
             stop(pg)
