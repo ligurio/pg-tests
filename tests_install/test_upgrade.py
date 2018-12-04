@@ -5,15 +5,19 @@ import pytest
 import os
 
 from allure_commons.types import LabelType
-from helpers.pginstall import PgInstall
+from helpers.pginstall import PgInstall, ALT_BASED
 import time
 import tempfile
 import subprocess
+import urllib
+import difflib
+import re
 
 system = platform.system()
 
-UPGRADE_ROUTES = {
+DUMPS_XREGRESS_URL = "http://webdav.l.postgrespro.ru/pgdatas/xregress/"
 
+UPGRADE_ROUTES = {
     'postgrespro-std-10': {
         'from': [
             {
@@ -52,7 +56,6 @@ UPGRADE_ROUTES = {
 }
 
 DUMP_RESTORE_ROUTES = {
-
     'postgrespro-std-10': {
         'from': [
             {
@@ -92,6 +95,9 @@ DUMP_RESTORE_ROUTES = {
 }
 
 
+upgrade_dir = os.path.join(tempfile.gettempdir(), 'upgrade')
+
+
 def start(pg):
     if not pg.pg_isready():
         if not system == "Windows":
@@ -122,89 +128,189 @@ def install_server(product, edition, version, milestone, branch, windows):
                    branch=branch, windows=windows)
     pg.setup_repo()
     if not windows:
-        pg.install_server_only()
-        stop(pg)
+        pg.install_full_topless()
+        # PGPRO - 2136
+        if pg.os_name in ALT_BASED:
+            subprocess.check_call(r"sudo sed -e 's/#\(Defaults:WHEEL_USERS"
+                                  r"\s\+!env_reset\)/\1/' -i /etc/sudoers",
+                                  shell=True)
+            with open('/etc/sysconfig/i18n', 'r') as file:
+                for line in file:
+                    kv = line.split('=')
+                    if len(kv) == 2:
+                        os.environ[kv[0]] = kv[1].strip()
         pg.init_cluster(True)
+        start(pg)
+        pg.load_shared_libraries(restart_service=False)
+        stop(pg)
+        start(pg)
     else:
         pg.install_postgres_win()
         pg.client_path_needed = True
         pg.server_path_needed = True
-    start(pg)
+        pg.load_shared_libraries()
     return pg
 
 
-def generate_db(pg):
-    pg.exec_psql(
-        "CREATE TABLE t(id bigserial, val numeric); "
-        "INSERT INTO t (val) (select random() from generate_series(1,10))"
+def preprocess(str):
+    replaced = re.sub(
+        r"(ALTER ROLE.*)PASSWORD\s'[^']+'",
+        r"\1PASSWORD ''",
+        str
     )
-
-    old_select = pg.exec_psql("SELECT * FROM t ORDER BY id")
-    file_name = os.path.join(
-        tempfile.gettempdir(),
-        "%s-expected.txt" % "-".join([pg.product, pg.edition, pg.version])
+    replaced = re.sub(
+        r"(CREATE DATABASE.*)LC_COLLATE\s*=\s*'([^@]+)@[^']+'(.*)",
+        r"\1LC_COLLATE = '\2'\3",
+        replaced
     )
-    with open(file_name, 'w') as file:
-        file.write(old_select)
+    replaced = re.sub(
+        r"\s?--.*",
+        r"",
+        replaced
+    )
+    return replaced
 
 
-def check_db(oldKey, pgNew):
-    new_select = pgNew.exec_psql("SELECT * FROM t ORDER BY id")
-    file_name = os.path.join(tempfile.gettempdir(), "%s-expected.txt" % oldKey)
-    with open(file_name, 'r') as file:
-        old_select = file.read()
-    assert new_select == old_select
+def generate_db(pg, pgnew):
+    key = "-".join([pg.product, pg.edition, pg.version])
+    dump_file_name = "dump-%s.sql" % key
+    dump_url = DUMPS_XREGRESS_URL + dump_file_name
+    dump_file = urllib.URLopener()
+
+    try:
+        dump_file_name = os.path.join(tempfile.gettempdir(), dump_file_name)
+        dump_file.retrieve(dump_url, dump_file_name)
+        pg.exec_psql_file(dump_file_name)
+    except Exception:
+        pg.exec_psql(
+            "CREATE TABLE t(id bigserial, val numeric); "
+            "INSERT INTO t (val) (select random() from generate_series(1,10))"
+        )
+
+    dumpall(pgnew, os.path.join(tempfile.gettempdir(),
+                                "%s-expected.sql" % key))
+
+
+def diff_dbs(oldKey, pgNew, prefix):
+    result_file_name = "%s-%s-result.sql" % (prefix, oldKey)
+    tempdir = tempfile.gettempdir()
+    dumpall(pgNew, result_file_name)
+    file1 = os.path.join(tempdir, result_file_name)
+    file2 = os.path.join(tempdir, '%s-expected.sql' % oldKey)
+    lines1 = []
+    with open(file1, 'rb') as f:
+        for line in f:
+            lines1.append(preprocess(line))
+    lines2 = []
+    with open(file2, 'rb') as f:
+        for line in f:
+            lines2.append(preprocess(line))
+    difference = difflib.unified_diff(
+        lines1,
+        lines2,
+        fromfile=file1,
+        tofile=file2
+    )
+    diff_file = os.path.join(tempdir, "%s-%s.sql.diff" % (prefix, oldKey))
+    with open(diff_file, "w") as file:
+        file.writelines(difference)
+        pos = file.tell()
+    if pos > 0:
+        with open(diff_file, "rb") as file:
+            lines = file.readlines()
+            i = 1
+            for line in lines:
+                if i > 20:
+                    print "..."
+                    break
+                else:
+                    print line
+                i = i + 1
+        raise Exception("Difference found. See file " + diff_file)
 
 
 def upgrade(pg, pgOld):
     # type: (PgInstall, PgInstall) -> str
     stop(pg)
     stop(pgOld)
+    if not os.path.exists(upgrade_dir):
+        os.makedirs(upgrade_dir)
+        if not system == "Windows":
+            subprocess.check_call("chown postgres:postgres ./",
+                                  shell=True, cwd=upgrade_dir)
 
-    cmd = '%s"%s/pg_upgrade" -d "%s" -b "%s" -D "%s" -B "%s"' % \
+    cmd = '%s"%s" -d "%s" -b "%s" -D "%s" -B "%s"' % \
           (
               pg.pg_preexec,
-              pg.get_default_bin_path(),
+              os.path.join(pg.get_default_bin_path(), 'pg_upgrade'),
               pgOld.get_datadir(),
               pgOld.get_default_bin_path(),
               pg.get_datadir(),
               pg.get_default_bin_path()
           )
 
-    subprocess.check_call(cmd, shell=True, cwd=tempfile.gettempdir())
+    subprocess.check_call(cmd, shell=True, cwd=upgrade_dir)
 
 
 def dumpall(pg, file):
-    cmd = '%s"%s/pg_dumpall" > "%s"' % \
+    cmd = '%s"%s" -h localhost -f "%s"' % \
           (
               pg.pg_preexec,
-              pg.get_default_bin_path(),
+              os.path.join(pg.get_default_bin_path(), 'pg_dumpall'),
               file
           )
     subprocess.check_call(cmd, shell=True, cwd=tempfile.gettempdir())
 
 
-def restore(pg, file):
-    cmd = '%s"%s/psql" < "%s"' % \
-          (
-              pg.pg_preexec,
-              pg.get_default_bin_path(),
-              file
-          )
+def after_upgrade(pg):
+    if not system == "Windows":
+        subprocess.check_call('sudo -u postgres ./analyze_new_cluster.sh',
+                              shell=True, cwd=upgrade_dir)
+        subprocess.check_call('./delete_old_cluster.sh',
+                              shell=True, cwd=upgrade_dir)
+    else:
+        subprocess.check_call('analyze_new_cluster.bat',
+                              shell=True, cwd=upgrade_dir)
+        subprocess.check_call('delete_old_cluster.bat',
+                              shell=True, cwd=upgrade_dir)
+    # Find any sql's after upgrade
+    for file in os.listdir(upgrade_dir):
+        if ".sql" in file:
+            file_name = os.path.join(upgrade_dir, file)
+            pg.exec_psql_file(file_name)
+    # PGPRO - 2223
+    key = "-".join([pg.product, pg.edition, pg.version])
+    dump_file_name = "dump-%s.sql" % key
+    if system == "Windows" and pg.version == '10' and os.path.exists(
+            os.path.join(tempfile.gettempdir(), dump_file_name)):
+        pg.exec_psql(
+            'ALTER DOMAIN str_domain2 VALIDATE CONSTRAINT str_domain2_check;',
+            '-d regression'
+        )
+
+
+def init_cluster(pg, force_remove=True):
+    if system == 'Windows':
+        restore_datadir_win(pg)
+    else:
+        pg.init_cluster(force_remove)
+        start(pg)
+        pg.load_shared_libraries(restart_service=False)
+        stop(pg)
+    start(pg)
+
+
+def backup_datadir_win(pg):
+    cmd = 'xcopy /S /E /O /X /I /Q "%s" "%s.bak"' %\
+          (pg.get_datadir(), pg.get_datadir())
     subprocess.check_call(cmd, shell=True)
 
 
-def after_upgrade():
-    if not system == "Windows":
-        subprocess.check_call('sudo -u postgres ./analyze_new_cluster.sh',
-                              shell=True, cwd=tempfile.gettempdir())
-        subprocess.check_call('./delete_old_cluster.sh',
-                              shell=True, cwd=tempfile.gettempdir())
-    else:
-        subprocess.check_call('analyze_new_cluster.bat',
-                              shell=True, cwd=tempfile.gettempdir())
-        subprocess.check_call('delete_old_cluster.bat',
-                              shell=True, cwd=tempfile.gettempdir())
+def restore_datadir_win(pg):
+    pg.remove_data()
+    cmd = 'xcopy /S /E /O /X /I /Q "%s" "%s"' %\
+          (pg.get_datadir() + '.bak', pg.get_datadir())
+    subprocess.check_call(cmd, shell=True)
 
 
 @pytest.mark.upgrade
@@ -262,8 +368,10 @@ class TestUpgrade():
         pg = install_server(product=name, edition=edition,
                             version=version, milestone=milestone,
                             branch=branch, windows=(self.system == 'Windows'))
-
         stop(pg)
+
+        if system == 'Windows':
+            backup_datadir_win(pg)
 
         for route in upgrade_route['from']:
             if ('unsupported_platforms' in route
@@ -284,16 +392,16 @@ class TestUpgrade():
                 branch=None, windows=(self.system == 'Windows')
             )
 
-            generate_db(pgold)
+            generate_db(pgold, pg)
             dumpall(pgold, os.path.join(tempfile.gettempdir(), "%s.sql" % key))
             stop(pgold)
             upgrade(pg, pgold)
             start(pg)
-            after_upgrade()
-            check_db(key, pg)
+            after_upgrade(pg)
+            diff_dbs(key, pg, 'upgrade')
             stop(pg)
             pgold.remove_full()
-            pg.init_cluster(True)
+            init_cluster(pg, True)
 
         request.cls.pg = pg
 
@@ -351,8 +459,8 @@ class TestUpgrade():
 
             if (os.path.isfile(file_name)):
                 start(pg)
-                restore(pg, file_name)
-                check_db(key, pg)
+                pg.exec_psql_file(file_name)
+                diff_dbs(key, pg, 'dump-restore')
             else:
                 pgold = install_server(
                     product=old_name, edition=old_edition,
@@ -360,14 +468,14 @@ class TestUpgrade():
                     branch=None, windows=(self.system == 'Windows')
                 )
 
-                generate_db(pgold)
+                generate_db(pgold, pg)
                 dumpall(pgold, file_name)
                 stop(pgold)
 
                 start(pg)
-                restore(pg, file_name)
-                check_db(key, pg)
+                pg.exec_psql_file(file_name)
+                diff_dbs(key, pg, 'dump-restore')
                 pgold.remove_full(True)
 
             stop(pg)
-            pg.init_cluster(True)
+            init_cluster(pg, True)
