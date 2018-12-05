@@ -260,7 +260,6 @@ def upgrade(pg, pgOld):
         subprocess.check_call("chown postgres:postgres ./",
                               shell=True, cwd=upgrade_dir)
 
-
     cmd = '%s"%spg_upgrade" -d "%s" -b "%s" -D "%s" -B "%s"' % \
           (
               pg.pg_preexec,
