@@ -43,7 +43,7 @@ else
 bitness=64; gcc=mingw-w64-x86_64-gcc; host=x86_64-w64-mingw32;
 fi
 pacman --noconfirm -S tar make diffutils patch perl $gcc
-export PATH="/mingw$bitness/bin:/usr/bin/core_perl:$PGPATH/bin:$PATH"
+export PATH="/mingw$bitness/bin:/usr/bin/core_perl:$PATH:$PGPATH/bin"
 echo PATH=$PATH
 echo PGPORT=$PGPORT
 unset PGDATA PGLOCALEDIR
