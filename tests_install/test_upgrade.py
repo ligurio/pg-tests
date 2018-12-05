@@ -12,6 +12,7 @@ import subprocess
 import urllib
 import difflib
 import re
+import shutil
 
 system = platform.system()
 
@@ -37,6 +38,15 @@ UPGRADE_ROUTES = {
                 'unsupported_platforms': [
                     "GosLinux 7.08", "RED OS release MUROM ( 7.1",
                     "Ubuntu 18.10"
+                ]
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '9.6',
+                'unsupported_platforms': [
+                    "GosLinux 7.08", "RED OS release MUROM ( 7.1",
+                    "Ubuntu 18.10",
+                    "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0\xb5\xd1"
+                    "\x80\xd0\xb0  6.3"
                 ]
             }
         ]
@@ -76,7 +86,17 @@ DUMP_RESTORE_ROUTES = {
                     "GosLinux 7.08", "RED OS release MUROM ( 7.1",
                     "Ubuntu 18.10"
                 ]
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '9.6',
+                'unsupported_platforms': [
+                    "GosLinux 7.08", "RED OS release MUROM ( 7.1",
+                    "Ubuntu 18.10",
+                    "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0\xb5\xd1"
+                    "\x80\xd0\xb0  6.3"
+                ]
             }
+
         ]
     },
 
@@ -233,11 +253,13 @@ def upgrade(pg, pgOld):
     # type: (PgInstall, PgInstall) -> str
     stop(pg)
     stop(pgOld)
-    if not os.path.exists(upgrade_dir):
-        os.makedirs(upgrade_dir)
-        if not system == "Windows":
-            subprocess.check_call("chown postgres:postgres ./",
-                                  shell=True, cwd=upgrade_dir)
+    if os.path.exists(upgrade_dir):
+        shutil.rmtree(upgrade_dir)
+    os.makedirs(upgrade_dir)
+    if not system == "Windows":
+        subprocess.check_call("chown postgres:postgres ./",
+                              shell=True, cwd=upgrade_dir)
+
 
     cmd = '%s"%spg_upgrade" -d "%s" -b "%s" -D "%s" -B "%s"' % \
           (
@@ -262,7 +284,7 @@ def dumpall(pg, file):
     subprocess.check_call(cmd, shell=True, cwd=tempfile.gettempdir())
 
 
-def after_upgrade(pg):
+def after_upgrade(pg, pgOld):
     if not system == "Windows":
         subprocess.check_call('sudo -u postgres ./analyze_new_cluster.sh',
                               shell=True, cwd=upgrade_dir)
@@ -279,11 +301,13 @@ def after_upgrade(pg):
             file_name = os.path.join(upgrade_dir, file)
             pg.exec_psql_file(file_name)
     # PGPRO - 2223
-    key = "-".join([pg.product, pg.edition, pg.version])
+    key = "-".join([pgOld.product, pgOld.edition, pgOld.version])
     dump_file_name = "dump-%s.sql" % key
-    if system == "Windows" and pg.version == '10' and os.path.exists(
+    if system == "Windows" and pgOld.version == '9.6' and os.path.exists(
             os.path.join(tempfile.gettempdir(), dump_file_name)):
-        pg.exec_psql(
+        print "Workaround PGPRO - 2223"
+        print 'ALTER DOMAIN str_domain2 VALIDATE CONSTRAINT str_domain2_check;'
+        print pg.exec_psql(
             'ALTER DOMAIN str_domain2 VALIDATE CONSTRAINT str_domain2_check;',
             '-d regression'
         )
@@ -397,11 +421,12 @@ class TestUpgrade():
             stop(pgold)
             upgrade(pg, pgold)
             start(pg)
-            after_upgrade(pg)
+            after_upgrade(pg, pgold)
             diff_dbs(key, pg, 'upgrade')
             stop(pg)
             pgold.remove_full()
             init_cluster(pg, True)
+            stop(pg)
 
         request.cls.pg = pg
 
@@ -476,6 +501,6 @@ class TestUpgrade():
                 pg.exec_psql_file(file_name)
                 diff_dbs(key, pg, 'dump-restore')
                 pgold.remove_full(True)
-
             stop(pg)
             init_cluster(pg, True)
+            stop(pg)
