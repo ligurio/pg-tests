@@ -120,11 +120,11 @@ class TestExtensions():
                     if tcre:
                         stats[tcre.group(1)] = int(tcre.group(2))
             print "Query statistics:", stats
-            if stats['SELECT'] < 1:
+            if 'SELECT' not in stats or stats['SELECT'] < 1:
                 raise Exception("No SELECT queries catched by pgbadger.")
-            if stats['INSERT'] < 1:
+            if 'INSERT' not in stats or stats['INSERT'] < 1:
                 raise Exception("No INSERT queries catched by pgbadger.")
-            if stats['DDL'] < 1:
+            if 'DDL' not in stats or stats['DDL'] < 1:
                 raise Exception("No DDL queries catched by pgbadger.")
             return
         raise Exception('Log files in "%s" are not found.' % logdir)
