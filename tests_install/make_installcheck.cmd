@@ -77,8 +77,6 @@ echo "Disabling recovery/*logical_decoding test (PGPRO-1527)"
 ls src/test/recovery/t/*logical_decoding*.pl >/dev/null 2>&1 && rm src/test/recovery/t/*logical_decoding*.pl
 echo "Dirty fix for undefined random()"
 sed -e "s@(long) random()@(long) rand()@" -i src/interfaces/libpq/fe-connect.c
-echo "Disabling isolation/timeouts test (Fails in pg-tests only with a message: step locktbl timed out after 75 seconds)"
-sed -e "s@test: timeouts@#test: timeouts@" -i src/test/isolation/isolation_schedule
 echo "`date -Iseconds`: Making native MinGW libs 1"
 (cd src/common && make -j4 2>&1 | tee /tmp/make_common.log)
 echo "`date -Iseconds`: Making native MinGW libs 2"
