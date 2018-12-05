@@ -139,6 +139,7 @@ def install_server(product, edition, version, milestone, branch, windows):
                     kv = line.split('=')
                     if len(kv) == 2:
                         os.environ[kv[0]] = kv[1].strip()
+        stop(pg)
         pg.init_cluster(True)
         start(pg)
         pg.load_shared_libraries(restart_service=False)
@@ -220,11 +221,10 @@ def diff_dbs(oldKey, pgNew, prefix):
             lines = file.readlines()
             i = 1
             for line in lines:
+                print line
                 if i > 20:
                     print "..."
                     break
-                else:
-                    print line
                 i = i + 1
         raise Exception("Difference found. See file " + diff_file)
 
@@ -239,10 +239,10 @@ def upgrade(pg, pgOld):
             subprocess.check_call("chown postgres:postgres ./",
                                   shell=True, cwd=upgrade_dir)
 
-    cmd = '%s"%s" -d "%s" -b "%s" -D "%s" -B "%s"' % \
+    cmd = '%s"%spg_upgrade" -d "%s" -b "%s" -D "%s" -B "%s"' % \
           (
               pg.pg_preexec,
-              os.path.join(pg.get_default_bin_path(), 'pg_upgrade'),
+              pg.get_server_bin_path(),
               pgOld.get_datadir(),
               pgOld.get_default_bin_path(),
               pg.get_datadir(),
@@ -253,10 +253,10 @@ def upgrade(pg, pgOld):
 
 
 def dumpall(pg, file):
-    cmd = '%s"%s" -h localhost -f "%s"' % \
+    cmd = '%s"%spg_dumpall" -h localhost -f "%s"' % \
           (
               pg.pg_preexec,
-              os.path.join(pg.get_default_bin_path(), 'pg_dumpall'),
+              pg.get_server_bin_path(),
               file
           )
     subprocess.check_call(cmd, shell=True, cwd=tempfile.gettempdir())
