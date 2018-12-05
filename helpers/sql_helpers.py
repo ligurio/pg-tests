@@ -4,8 +4,6 @@ import subprocess
 
 
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
-from helpers.pginstall import DEB_BASED
-from helpers.pginstall import RPM_BASED
 from helpers.os_helpers import create_tablespace_directory
 from helpers.os_helpers import pg_bindir
 from helpers.utils import (command_executor,
@@ -202,33 +200,7 @@ def pg_manage_psql(action, data_dir, version="9.6", start_script=None,
         :param init: Initialization before a first start
         :return:
         """
-        distro = get_distro(remote, host)
-        if start_script is None:
-            pg_ctl = os.path.join(pg_bindir(), "pg_ctl")
-            # cmd = ["sudo", "-u", "postgres", pg_ctl, "-D", data_dir, action]
-            cmd = "sudo -u postgres %s -w -D %s %s" % (
-                pg_ctl, data_dir, action)
-            print(cmd)
-            return command_executor(cmd, remote, host,
-                                    REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-        else:
-            # TODO add check that systemd enabled or not
-            # TODO if /run/systemd and binary file systemctl in file system
-            #       we need to execute via /etc/init.d
-            if distro[0] == "ALT ":
-                cmd = "/etc/init.d/%s %s" % (start_script, action)
-            elif version < "9.6.2.1" and distro[0] in RPM_BASED:
-                cmd = "/etc/init.d/%s %s" % (start_script, action)
-            else:
-                cmd = "service %s %s" % (start_script, action)
-            print(cmd)
-            return command_executor(cmd, remote=remote, host=host,
-                                    login=REMOTE_ROOT,
-                                    password=REMOTE_ROOT_PASSWORD)
-
-        # retcode = subprocess.check_call(cmd)
-        # time.sleep(2)
-        # return retcode
+        raise NotImplementedError()
 
 
 def pg_start_script_name(name, edition, version, distro):
@@ -240,29 +212,7 @@ def pg_start_script_name(name, edition, version, distro):
     :param distro:
     :return:
     """
-
-    major = version.split(".")[0]
-    minor = version.split(".")[1]
-    service_name = ""
-    if distro in RPM_BASED:
-        if name == 'postgresql':
-            service_name = "postgresql-%s.%s" % (major, minor)
-        elif name == 'postgrespro' and edition in ['ent', 'ent-cert']:
-            service_name = "postgrespro-enterprise-%s.%s" % (major, minor)
-        elif name == 'postgrespro' and edition == 'std':
-            service_name = "postgrespro-%s.%s" % (major, minor)
-        elif name == 'postgrespro' and edition == 'std-cert':
-            service_name = "postgrespro-%s.%s" % (major, minor)
-        assert service_name is not None
-        return service_name
-    elif "ALT " in distro:
-        service_name = "postgresql-%s.%s" % (major, minor)
-        assert service_name is not None
-        return service_name
-    elif distro in DEB_BASED:
-        service_name = "postgresql"
-        assert service_name is not None
-        return service_name
+    raise NotImplementedError()
 
 
 def pg_initdb(connstring, *params):

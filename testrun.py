@@ -694,6 +694,8 @@ def main():
                 print "Link to the xml report - %s.xml" % reporturl
 
             if retcode != 0:
+                if not args.keep:
+                    close_env(domname, saveimg=False, destroys0=True)
                 reporturl = os.path.join(REPORT_SERVER_URL, reportname)
                 print("Test return code (for target: %s, domain: %s,"
                       " IP address: %s) is not zero - %s.\n"
