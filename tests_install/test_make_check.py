@@ -61,6 +61,7 @@ class TestMakeCheck(object):
             pginst.install_full()
             pginst.initdb_start()
         else:
+            pginst.install_perl_win()
             pginst.install_postgres_win(port=55432)
         pginst.exec_psql("ALTER SYSTEM SET max_worker_processes = 16")
         pginst.load_shared_libraries()

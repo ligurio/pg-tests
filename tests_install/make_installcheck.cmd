@@ -61,6 +61,14 @@ set -o pipefail
 echo "`date -Iseconds`: Configuring... "
 CFLAGS=" -D WINVER=0x0600 -D _WIN32_WINNT=0x0600" LIBS="-lktmw32" ./configure --enable-tap-tests --host=$host --without-zlib --prefix="$PGPATH" 2>&1 | tee configure.log
 pwd
+
+# Pass to `make installcheck` all the options (with-*, enable-*), which were passed to configure
+confopts="python_majorversion=2"
+opts=`$PGPATH/bin/pg_config --configure | grep -Eo "'[^']*'|[^' ]*" | sed -e "s/^'//" -e "s/'$//"`
+while read -r opt;
+    do case "$opt" in --with-*=*) ;; --with-* | --enable-*) opt="${opt/#--/}"; opt="${opt//-/_}" confopts="$confopts $opt=yes ";; esac;
+done <<< "$opts";
+echo "confopts: $confopts"
 ls -l src/interfaces/ecpg/test/
 echo "Fixing ECPG test for installcheck..."
 sed -e "s@^ECPG = ../../preproc/ecpg@ECPG = ecpg@" \
@@ -87,7 +95,7 @@ echo "Workaround for inability to merge PGPRO-626-ICU"
 if [ -f src/test/default_collation/icu/t/001_default_collation.pl ] && ! patch -N --dry-run -R -p1 -i /var/src/patches/win-icu-test.patch ; then patch -p1 -i /var/src/patches/win-icu-test.patch; fi
 
 set +e
-echo "`date -Iseconds`: Running installcheck-world"
-with_icu=yes make -e installcheck-world 2>&1 | tee /tmp/installcheck.log; exitcode=$?
+echo "`date -Iseconds`: Running $confopts make -e installcheck-world ..."
+sh -c "$confopts make -e installcheck-world EXTRA_TESTS=numeric_big" 2>&1 | tee /tmp/installcheck.log; exitcode=$?
 for df in `find . -name *.diffs`; do echo;echo "    vvvv $df vvvv    "; cat $df; echo "    ^^^^^^^^"; done;
 exit $exitcode
