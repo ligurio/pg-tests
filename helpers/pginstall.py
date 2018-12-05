@@ -38,7 +38,7 @@ RPM_BASED = ['CentOS Linux', 'RHEL', 'CentOS',
              'RED OS release MUROM (']
 DEBIAN_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux', 'AstraLinuxSE',
                 'Astra Linux SE', "\"Astra Linux SE\"", "\"AstraLinuxSE\""]
-DEB_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux', 'AstraLinuxSE',
+APT_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux', 'AstraLinuxSE',
              'Astra Linux SE', "\"Astra Linux SE\"", "\"AstraLinuxSE\"",
              "ALT Linux ", "ALT "]
 ASTRA_BASED = ['AstraLinuxSE', 'Astra Linux SE', "\"Astra Linux SE\"",
@@ -324,7 +324,7 @@ class PgInstall:
                     self.version.replace('.', '')
                 product_dir = "/repos/yum/%s/redhat/" \
                     "rhel-$releasever-$basearch" % self.version
-            elif self.os_name in DEB_BASED:
+            elif self.os_name in APT_BASED:
                 gpg_key_url = "https://www.postgresql.org/"\
                     "media/keys/ACCC4CF8.asc"
             elif self.os_name in ZYPPER_BASED:
@@ -461,7 +461,7 @@ baseurl=%s
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             return repofile
-        elif self.os_name in DEB_BASED:
+        elif self.os_name in APT_BASED:
             cmd = "apt-get install -y lsb-release"
             self.exec_cmd_retry(cmd)
             cmd = "lsb_release -cs"
@@ -615,7 +615,7 @@ baseurl=%s
         if self.os_name in RPM_BASED:
             cmd = "yum install -y %s" % pkg_name
             self.exec_cmd_retry(cmd)
-        elif self.os_name in DEB_BASED:
+        elif self.os_name in APT_BASED:
             cmd = "apt-get install -y %s" % pkg_name.replace('*', '.*')
             self.exec_cmd_retry(cmd)
         elif self.os_name in ZYPPER_BASED:
@@ -679,7 +679,7 @@ baseurl=%s
                     # Exclude {base_package}-debuginfo as
                     # it requires {base_package}
                     pkg = self.get_base_package_name() + '-[^d][^e][^b].*'
-                elif self.os_name in DEB_BASED:
+                elif self.os_name in APT_BASED:
                     pkg = self.get_base_package_name() + '.*'
                 elif self.os_name in ZYPPER_BASED:
                     pkg = self.get_base_package_name() + '?*'
@@ -756,7 +756,7 @@ baseurl=%s
             cmd = "yum remove -y %s" % pkg_name
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-        elif self.os_name in DEB_BASED:
+        elif self.os_name in APT_BASED:
             cmd = "apt-get remove -y %s" % pkg_name.replace('*', '.*')
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
@@ -844,7 +844,7 @@ baseurl=%s
                     cmd = "yum install -y %s-%s" % (pkg_name, pkg)
                     self.exec_cmd_retry(cmd)
 
-        elif self.os_name in DEB_BASED and "ALT" not in self.os_name:
+        elif self.os_name in APT_BASED and "ALT" not in self.os_name:
             if action == "install":
                 cmd = "apt-get install -y %s-%s" % (
                     self.product, self.version)
@@ -955,7 +955,7 @@ baseurl=%s
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             cmd = "yum update -y && yum clean cache"
             self.exec_cmd_retry(cmd)
-        elif self.os_name in DEB_BASED:
+        elif self.os_name in APT_BASED:
             repofile = "/etc/apt/sources.list.d/%s-%s.list" % (self.product,
                                                                self.version)
             cmd = "rm -f %s" % repofile
@@ -993,7 +993,7 @@ baseurl=%s
                 command_executor(cmd, self.remote, self.host,
                                  REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
 
-        elif self.os_name in DEB_BASED and "ALT" not in self.os_name:
+        elif self.os_name in APT_BASED and "ALT" not in self.os_name:
             cmd = "apt-get remove -y %s-%s" % (
                 self.product, self.version)
             command_executor(cmd, self.remote, self.host,

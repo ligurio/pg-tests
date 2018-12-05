@@ -43,7 +43,7 @@ else
 bitness=64; gcc=mingw-w64-x86_64-gcc; host=x86_64-w64-mingw32;
 fi
 pacman --noconfirm -S tar make diffutils patch perl $gcc
-export PATH="/mingw$bitness/bin:/usr/bin/core_perl:$PGPATH/bin:$PATH"
+export PATH="/mingw$bitness/bin:/usr/bin/core_perl:$PATH:$PGPATH/bin"
 echo PATH=$PATH
 echo PGPORT=$PGPORT
 unset PGDATA PGLOCALEDIR
@@ -72,9 +72,9 @@ sed -e "s@^\t\./pg_regress@\techo skipped ./pg_regress@" -i src/interfaces/ecpg/
 echo "Disabling dblink test (msys doesn't see Windows processes)..."
 sed -e "s@^REGRESS = paths dblink@REGRESS = paths@" -i contrib/dblink/Makefile
 echo "Disabling pg_basebackup/030_pg_recvlogical test (PGPRO-1527)"
-rm src/bin/pg_basebackup/t/030_pg_recvlogical.pl
+[ -f src/bin/pg_basebackup/t/030_pg_recvlogical.pl ] && rm src/bin/pg_basebackup/t/030_pg_recvlogical.pl
 echo "Disabling recovery/*logical_decoding test (PGPRO-1527)"
-rm src/test/recovery/t/*logical_decoding*.pl
+[ -f src/test/recovery/t/*logical_decoding*.pl ] && rm src/test/recovery/t/*logical_decoding*.pl
 echo "Dirty fix for undefined random()"
 sed -e "s@(long) random()@(long) rand()@" -i src/interfaces/libpq/fe-connect.c
 echo "Disabling isolation/timeouts test (Fails in pg-tests only with a message: step locktbl timed out after 75 seconds)"
