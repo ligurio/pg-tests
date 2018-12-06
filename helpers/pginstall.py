@@ -306,6 +306,39 @@ class PgInstall:
             return ['9.6', '10', '11']
         return []
 
+    def get_distname_for_pgpro(self):
+        if self.os_name == "ALT Linux " and \
+           self.os_version in ["7.0.4", "6.0.1"]:
+            return "altlinux-spt"
+        elif self.os_name == "ALT Linux " and self.os_version == "7.0.5":
+            return "altlinux"
+        elif self.os_name == "ALT " and self.os_version == "8":
+            return "alt-sp"
+        elif self.os_name == "ROSA Enterprise Linux Server":
+            if self.os_version == "6.8":
+                return "rosa-chrome"
+            else:
+                return "rosa-el"
+        elif self.os_name == "ROSA SX \"COBALT\" " or \
+                self.os_name == "ROSA Enterprise Linux Cobalt":
+            return "rosa-sx"
+        elif self.os_name == "SUSE Linux Enterprise Server ":
+            return "sles"
+        elif self.os_name in ["AstraLinuxSE", "Astra Linux SE"]:
+            if self.os_version == "1.4":
+                return "astra-smolensk/1.4"
+            elif self.os_version == "1.5":
+                return "astra-smolensk/1.5"
+            elif self.os_version == "1.5.28":
+                return "astra-smolensk/1.6"
+        elif self.os_name == "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1" \
+                "\xd1\x84\xd0\xb5\xd1\x80\xd0\xb0 ":
+            return "msvsphere"
+        elif self.os_name in WIN_BASED:
+            return "Windows"
+        else:
+            return dist[self.os_name].lower()
+
     def __generate_repo_info(self, action="install"):
         """Generate information about repository: url to packages
             and path to gpg key
@@ -337,39 +370,11 @@ class PgInstall:
             product_dir = self.__get_product_dir()
             gpg_key_url = "%s/%s/keys/GPG-KEY-POSTGRESPRO" % \
                           (self.get_repo_base(), product_dir)
-            if self.os_name == "ALT Linux " and \
-               self.os_version in ["7.0.4", "6.0.1"]:
-                distname = "altlinux-spt"
-            elif self.os_name == "ALT Linux " and self.os_version == "7.0.5":
-                distname = "altlinux"
-            elif self.os_name == "ALT " and self.os_version == "8":
-                distname = "alt-sp"
-            elif self.os_name == "ROSA Enterprise Linux Server":
-                if self.os_version == "6.8":
-                    distname = "rosa-chrome"
-                else:
-                    distname = "rosa-el"
-            elif self.os_name == "ROSA SX \"COBALT\" " or \
-                    self.os_name == "ROSA Enterprise Linux Cobalt":
-                distname = "rosa-sx"
-            elif self.os_name == "SUSE Linux Enterprise Server ":
-                distname = "sles"
+            if self.os_name == "SUSE Linux Enterprise Server ":
+                # PGPRO-2209
                 gpg_key_url = "%s/%s/keys/SUSE-GPG-KEY-POSTGRESPRO" % \
                               (self.get_repo_base(), product_dir)
-            elif self.os_name in ["AstraLinuxSE", "Astra Linux SE"]:
-                if self.os_version == "1.4":
-                    distname = "astra-smolensk/1.4"
-                elif self.os_version == "1.5":
-                    distname = "astra-smolensk/1.5"
-                elif self.os_version == "1.5.28":
-                    distname = "astra-smolensk/1.6"
-            elif self.os_name == "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1" \
-                    "\xd1\x84\xd0\xb5\xd1\x80\xd0\xb0 ":
-                distname = "msvsphere"
-            elif self.os_name in WIN_BASED:
-                distname = "Windows"
-            else:
-                distname = dist[self.os_name].lower()
+            distname = self.get_distname_for_pgpro()
             if self.edition in ['std-cert', 'ent-cert']:
                 baseurl = "/".join([
                     PGPROCERT_BASE,
