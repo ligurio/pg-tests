@@ -29,8 +29,15 @@ PACKAGES = ['server', 'contrib', 'libs', 'docs', 'docs-ru',
 DEB_PACKAGES = ['plperl', 'plpython', 'plpython3', 'pltcl']
 ALT_PACKAGES = ['server', 'contrib', 'devel', 'docs', 'docs-ru',
                 'perl', 'python', 'tcl']
-RPM_BASED = ['CentOS Linux', 'RHEL', 'CentOS',
-             'Red Hat Enterprise Linux Server', 'Oracle Linux Server', 'SLES',
+REDHAT_BASED = ['CentOS Linux', 'RHEL', 'CentOS',
+                'Red Hat Enterprise Linux Server', 'Oracle Linux Server',
+                'ROSA Enterprise Linux Server', 'ROSA SX \"COBALT\" ',
+                'ROSA Enterprise Linux Cobalt', 'GosLinux',
+                '\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1'
+                '\xd1\x84\xd0\xb5\xd1\x80\xd0\xb0 ',
+                'RED OS release MUROM (']
+YUM_BASED = ['CentOS Linux', 'RHEL', 'CentOS',
+             'Red Hat Enterprise Linux Server', 'Oracle Linux Server',
              'ROSA Enterprise Linux Server', 'ROSA SX \"COBALT\" ',
              'ROSA Enterprise Linux Cobalt', 'GosLinux',
              '\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1'
@@ -44,6 +51,7 @@ APT_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux', 'AstraLinuxSE',
 ASTRA_BASED = ['AstraLinuxSE', 'Astra Linux SE', "\"Astra Linux SE\"",
                "\"AstraLinuxSE\""]
 ALT_BASED = ['ALT Linux ', 'ALT ']
+SUSE_BASED = ['SUSE Linux Enterprise Server ']
 ZYPPER_BASED = ['SUSE Linux Enterprise Server ']
 WIN_BASED = ['Windows-2012ServerR2', 'Windows-10', 'Windows-8.1', 'Windows-7']
 
@@ -286,7 +294,7 @@ class PgInstall:
         return self.get_base_package_name() + '*'
 
     def __is_os_redhat_based(self):
-        return self.os_name in RPM_BASED
+        return self.os_name in REDHAT_BASED
 
     def __is_os_debian_based(self):
         return self.os_name in DEBIAN_BASED
@@ -295,7 +303,7 @@ class PgInstall:
         return self.os_name in ALT_BASED
 
     def __is_os_suse(self):
-        return self.os_name in ZYPPER_BASED
+        return self.os_name in SUSE_BASED
 
     def get_supported_vanilla_versions(self):
         if self.__is_os_altlinux():
@@ -351,7 +359,7 @@ class PgInstall:
         product_dir = ""
         gpg_key_url = None
         if self.product == "postgresql":
-            if self.os_name in RPM_BASED:
+            if self.os_name in YUM_BASED:
                 gpg_key_url = "https://download.postgresql.org/" \
                     "pub/repos/yum/RPM-GPG-KEY-PGDG-%s" % \
                     self.version.replace('.', '')
@@ -414,12 +422,12 @@ class PgInstall:
         """ Setup yum or apt repo for Linux Based envs and
             download windows installer for Windows based
 
-        :return: exit code 0 if all is ok and 1 if failed
+        :return: repository file name in Linux, None in Windows, or Exception
         """
         repo_info = self.__generate_repo_info()
         baseurl = repo_info[0]
         gpg_key_url = repo_info[1]
-        if self.os_name in RPM_BASED:
+        if self.os_name in YUM_BASED:
             # Example:
             # http://repo.postgrespro.ru/pgproee-9.6-beta/
             #  centos/$releasever/os/$basearch/rpms
@@ -617,7 +625,7 @@ baseurl=%s
         :param pkg_name
         :return:
         """
-        if self.os_name in RPM_BASED:
+        if self.os_name in YUM_BASED:
             cmd = "yum install -y %s" % pkg_name
             self.exec_cmd_retry(cmd)
         elif self.os_name in APT_BASED:
@@ -644,14 +652,14 @@ baseurl=%s
         if self.product == "postgrespro":
             if self.version in ['9.5', '9.6']:
                 if self.os_name in ASTRA_BASED or \
-                   self.os_name in RPM_BASED or \
+                   self.os_name in REDHAT_BASED or \
                    self.os_name in DEBIAN_BASED:
                     self.client_path_needed = True
                     self.server_path_needed = True
         elif self.product == "postgresql":
-            if self.os_name in RPM_BASED or \
+            if self.os_name in REDHAT_BASED or \
                self.os_name in DEBIAN_BASED or \
-               self.os_name in ZYPPER_BASED:
+               self.os_name in SUSE_BASED:
                 self.client_path_needed = True
                 self.server_path_needed = True
 
@@ -664,14 +672,14 @@ baseurl=%s
         self.server_path_needed = False
         if self.product == "postgrespro" and self.version in ['9.5', '9.6']:
             if self.os_name in ASTRA_BASED or \
-               self.os_name in RPM_BASED or \
+               self.os_name in REDHAT_BASED or \
                self.os_name in DEBIAN_BASED:
                 self.client_path_needed = True
                 self.server_path_needed = True
         elif self.product == "postgresql":
-            if self.os_name in RPM_BASED or \
+            if self.os_name in REDHAT_BASED or \
                self.os_name in DEBIAN_BASED or \
-               self.os_name in ZYPPER_BASED:
+               self.os_name in SUSE_BASED:
                 self.client_path_needed = True
                 self.server_path_needed = True
 
@@ -757,7 +765,7 @@ baseurl=%s
         :param pkg_name
         :return:
         """
-        if self.os_name in RPM_BASED:
+        if self.os_name in YUM_BASED:
             cmd = "yum remove -y %s" % pkg_name
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
@@ -831,7 +839,7 @@ baseurl=%s
     def delete_repo(self):
         """ Delete repo file
         """
-        if self.os_name in RPM_BASED:
+        if self.os_name in YUM_BASED:
             repofile = "/etc/yum.repos.d/%s-%s.repo" % (
                 self.product, self.version)
             cmd = "rm -f %s" % repofile
@@ -935,7 +943,7 @@ baseurl=%s
         else:
             if self.product == "postgrespro":
                 if self.version in ['9.5', '9.6']:
-                    if self.os_name in ZYPPER_BASED:
+                    if self.os_name in SUSE_BASED:
                         return 'postgresql'
                     elif self.os_name in ASTRA_BASED:
                         return 'postgresql'
@@ -1081,7 +1089,7 @@ baseurl=%s
         if self.product == 'postgrespro' and self.version == '9.6':
             if self.os_name in DEBIAN_BASED:
                 return
-            if self.os_name in RPM_BASED:
+            if self.os_name in REDHAT_BASED:
                 if subprocess.call("which systemctl", shell=True) == 0:
                     binpath = self.get_bin_path()
                     if self.fullversion[:6] in ['9.6.0.', '9.6.1.']:
@@ -1096,7 +1104,7 @@ baseurl=%s
                 subprocess.check_call('/etc/init.d/postgresql-%s initdb' %
                                       self.version, shell=True)
                 self.start_service()
-            elif self.os_name in ZYPPER_BASED:
+            elif self.os_name in SUSE_BASED:
                 self.start_service()
             else:
                 raise Exception('OS %s is not supported.' % self.os_name)
