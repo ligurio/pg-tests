@@ -258,6 +258,20 @@ $$ LANGUAGE plpgsql;"""
         result = pginst.exec_psql_select("SHOW passwordcheck.with_nonletters")
         assert result == "on"
 
+    @pytest.mark.test_src_debug
+    def test_src_debug(self, request):
+        if self.system == 'Windows':
+            pytest.skip("This test is not for Windows.")
+        pgsrcdirs = glob.glob('/usr/src/debug/postgrespro*')
+        for pgsrcdir in pgsrcdirs:
+            dircontents = os.listdir(pgsrcdir)
+            if len(dircontents) > 0:
+                print("List of directory %s:" % pgsrcdir)
+                print("\n".join(dircontents))
+                raise Exception(
+                    "Directory /usr/src/debug/postgrespro* is not empty.")
+            print("Directory %s is empty." % pgsrcdir)
+
     @pytest.mark.test_full_remove
     def test_full_remove(self, request):
         """Try to delete all installed packages for version under test
