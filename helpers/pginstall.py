@@ -294,11 +294,26 @@ class PgInstall:
     def __is_os_debian_based(self):
         return self.os_name in DEBIAN_BASED
 
+    def __is_os_astra(self):
+        return self.os_name in ASTRA_BASED
+
     def __is_os_altlinux(self):
         return self.os_name in ALT_BASED
 
     def __is_os_suse(self):
         return self.os_name in SUSE_BASED
+
+    def __is_os_windows(self):
+        return self.os_name in WIN_BASED
+
+    def __is_pm_apt(self):
+        return self.os_name in APT_BASED
+
+    def __is_pm_zypper(self):
+        return self.os_name in ZYPPER_BASED
+
+    def __is_pm_yum(self):
+        return self.os_name in YUM_BASED
 
     def get_supported_vanilla_versions(self):
         if self.__is_os_altlinux():
@@ -337,7 +352,7 @@ class PgInstall:
         elif self.os_name == "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1" \
                 "\xd1\x84\xd0\xb5\xd1\x80\xd0\xb0 ":
             return "msvsphere"
-        elif self.os_name in WIN_BASED:
+        elif self.__is_os_windows():
             return "Windows"
         else:
             return dist[self.os_name].lower()
@@ -345,23 +360,22 @@ class PgInstall:
     def __generate_repo_info(self):
         """Generate information about repository: url to packages
             and path to gpg key
-
         """
 
         distname = ""
         product_dir = ""
         gpg_key_url = None
         if self.product == "postgresql":
-            if self.os_name in YUM_BASED:
+            if self.__is_pm_yum():
                 gpg_key_url = "https://download.postgresql.org/" \
                     "pub/repos/yum/RPM-GPG-KEY-PGDG-%s" % \
                     self.version.replace('.', '')
                 product_dir = "/repos/yum/%s/redhat/" \
                     "rhel-$releasever-$basearch" % self.version
-            elif self.os_name in APT_BASED:
+            elif self.__is_pm_apt():
                 gpg_key_url = "https://www.postgresql.org/"\
                     "media/keys/ACCC4CF8.asc"
-            elif self.os_name in ZYPPER_BASED:
+            elif self.__is_pm_zypper():
                 product_dir = "/repos/zypp/%s/suse/sles-%s-$basearch" % \
                     (self.version,
                      "$releasever" if self.os_version != "12" else "12")
@@ -381,7 +395,7 @@ class PgInstall:
                     PGPROCERT_BASE,
                     product_dir, distname])
             else:
-                if self.os_name in WIN_BASED:
+                if self.__is_os_windows():
                     baseurl = "{}{}/win/".format(self.get_repo_base(),
                                                  product_dir)
                 elif self.branch is not None:
@@ -406,7 +420,7 @@ class PgInstall:
         repo_info = self.__generate_repo_info()
         baseurl = repo_info[0]
         gpg_key_url = repo_info[1]
-        if self.os_name in YUM_BASED:
+        if self.__is_pm_yum():
             # Example:
             # http://repo.postgrespro.ru/pgproee-9.6-beta/
             #  centos/$releasever/os/$basearch/rpms
@@ -453,7 +467,7 @@ baseurl=%s
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             return repofile
-        elif self.os_name in APT_BASED:
+        elif self.__is_pm_apt():
             cmd = "apt-get install -y lsb-release"
             self.exec_cmd_retry(cmd)
             cmd = "lsb_release -cs"
@@ -504,7 +518,7 @@ baseurl=%s
                 cmd = "apt-get update -y"
                 self.exec_cmd_retry(cmd)
                 return repofile
-        elif self.os_name in ZYPPER_BASED:
+        elif self.__is_pm_zypper():
             reponame = "%s-%s" % (self.product, self.version)
             repofile = '/etc/zypp/repos.d/%s.repo' % reponame
             if gpg_key_url:
@@ -532,7 +546,7 @@ baseurl=%s
             cmd = "zypper --gpg-auto-import-keys refresh"
             self.exec_cmd_retry(cmd)
             return repofile
-        elif self.os_name in WIN_BASED:
+        elif self.__is_os_windows():
             installer_name = self.__get_last_winstaller_file(
                 baseurl, self.os_arch)
             windows_installer_url = baseurl + installer_name
@@ -604,13 +618,13 @@ baseurl=%s
         :param pkg_name
         :return:
         """
-        if self.os_name in YUM_BASED:
+        if self.__is_pm_yum():
             cmd = "yum install -y %s" % pkg_name
             self.exec_cmd_retry(cmd)
-        elif self.os_name in APT_BASED:
+        elif self.__is_pm_apt():
             cmd = "apt-get install -y %s" % pkg_name.replace('*', '.*')
             self.exec_cmd_retry(cmd)
-        elif self.os_name in ZYPPER_BASED:
+        elif self.__is_pm_zypper():
             cmd = "zypper install -y -l --force-resolution %s" % pkg_name
             self.exec_cmd_retry(cmd)
         else:
@@ -630,15 +644,15 @@ baseurl=%s
         self.server_path_needed = False
         if self.product == "postgrespro":
             if self.version in ['9.5', '9.6']:
-                if self.os_name in ASTRA_BASED or \
-                   self.os_name in REDHAT_BASED or \
-                   self.os_name in DEBIAN_BASED:
+                if self.__is_os_astra() or \
+                   self.__is_os_redhat_based() or \
+                   self.__is_os_debian_based():
                     self.client_path_needed = True
                     self.server_path_needed = True
         elif self.product == "postgresql":
-            if self.os_name in REDHAT_BASED or \
-               self.os_name in DEBIAN_BASED or \
-               self.os_name in SUSE_BASED:
+            if self.__is_os_redhat_based() or \
+               self.__is_os_debian_based() or \
+               self.__is_os_suse():
                 self.client_path_needed = True
                 self.server_path_needed = True
 
@@ -650,15 +664,15 @@ baseurl=%s
         self.client_path_needed = False
         self.server_path_needed = False
         if self.product == "postgrespro" and self.version in ['9.5', '9.6']:
-            if self.os_name in ASTRA_BASED or \
-               self.os_name in REDHAT_BASED or \
-               self.os_name in DEBIAN_BASED:
+            if self.__is_os_astra() or \
+               self.__is_os_redhat_based() or \
+               self.__is_os_debian_based():
                 self.client_path_needed = True
                 self.server_path_needed = True
         elif self.product == "postgresql":
-            if self.os_name in REDHAT_BASED or \
-               self.os_name in DEBIAN_BASED or \
-               self.os_name in SUSE_BASED:
+            if self.__is_os_redhat_based() or \
+               self.__is_os_debian_based() or \
+               self.__is_os_suse():
                 self.client_path_needed = True
                 self.server_path_needed = True
 
@@ -667,13 +681,13 @@ baseurl=%s
         pkg = self.get_all_packages_name()
         if self.product == 'postgrespro':
             if self.version not in ['9.5', '9.6']:
-                if self.os_name in ALT_BASED:
+                if self.__is_os_altlinux():
                     # Exclude {base_package}-debuginfo as
                     # it requires {base_package}
                     pkg = self.get_base_package_name() + '-[^d][^e][^b].*'
-                elif self.os_name in APT_BASED:
+                elif self.__is_pm_apt():
                     pkg = self.get_base_package_name() + '.*'
-                elif self.os_name in ZYPPER_BASED:
+                elif self.__is_pm_zypper():
                     pkg = self.get_base_package_name() + '?*'
                 else:
                     pkg += " -x " + self.get_base_package_name()
@@ -744,25 +758,25 @@ baseurl=%s
         :param pkg_name
         :return:
         """
-        if self.os_name in YUM_BASED:
+        if self.__is_pm_yum():
             cmd = "yum remove -y %s" % pkg_name
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-        elif self.os_name in APT_BASED:
+        elif self.__is_pm_apt():
             cmd = "apt-get remove -y %s" % pkg_name.replace('*', '.*')
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-        elif self.os_name in ZYPPER_BASED:
+        elif self.__is_pm_zypper():
             cmd = "zypper remove -y %s" % pkg_name
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-        elif self.os_name in WIN_BASED:
+        elif self.__is_os_windows():
             raise Exception("Not implemented on Windows.")
         else:
             raise Exception("Unsupported system: %s." % self.os_name)
 
     def remove_full(self, remove_data=False):
-        if self.os_name in WIN_BASED:
+        if self.__is_os_windows():
             # TODO: Don't stop the service manually
             if self.pg_isready():
                 self.stop_service()
@@ -783,7 +797,7 @@ baseurl=%s
             self.remove_package(self.get_all_packages_name())
         if remove_data:
             self.remove_data()
-            if self.os_name in WIN_BASED:
+            if self.__is_os_windows():
                 time.sleep(3)  # Let uninstallation finish
                 if os.path.exists(self.get_pg_prefix()):
                     shutil.rmtree(self.get_pg_prefix())
@@ -818,7 +832,7 @@ baseurl=%s
     def delete_repo(self):
         """ Delete repo file
         """
-        if self.os_name in YUM_BASED:
+        if self.__is_pm_yum():
             repofile = "/etc/yum.repos.d/%s-%s.repo" % (
                 self.product, self.version)
             cmd = "rm -f %s" % repofile
@@ -826,7 +840,7 @@ baseurl=%s
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             cmd = "yum update -y && yum clean cache"
             self.exec_cmd_retry(cmd)
-        elif self.os_name in APT_BASED:
+        elif self.__is_pm_apt():
             repofile = "/etc/apt/sources.list.d/%s-%s.list" % (self.product,
                                                                self.version)
             cmd = "rm -f %s" % repofile
@@ -903,7 +917,7 @@ baseurl=%s
             "SELECT setting FROM pg_settings WHERE name='%s'" % setting)
 
     def get_default_service_name(self):
-        if self.os_name in WIN_BASED:
+        if self.__is_os_windows():
             if self.product == "postgrespro":
                 if self.edition == "1c":
                     return 'postgresql-1c-' + \
@@ -922,15 +936,15 @@ baseurl=%s
         else:
             if self.product == "postgrespro":
                 if self.version in ['9.5', '9.6']:
-                    if self.os_name in SUSE_BASED:
+                    if self.__is_os_suse():
                         return 'postgresql'
-                    elif self.os_name in ASTRA_BASED:
+                    elif self.__is_os_astra():
                         return 'postgresql'
-                    elif self.os_name in DEBIAN_BASED:
+                    elif self.__is_os_debian_based():
                         if os.path.isdir('/run/systemd/system'):
                             return 'postgresql@%s-main' % self.version
                         return 'postgresql'
-                    elif (self.os_name in ALT_BASED or
+                    elif (self.__is_os_altlinux() or
                           self.fullversion[:6] in ['9.6.0.', '9.6.1.']):
                         return 'postgresql-%s' % self.version
                     return '%s-%s%s' % (self.product,
@@ -954,10 +968,10 @@ baseurl=%s
                 raise Exception('Product %s is not supported.' % self.product)
 
     def get_default_pg_prefix(self):
-        if self.os_name not in WIN_BASED:
+        if not self.__is_os_windows():
             if self.product == 'postgrespro':
                 if self.version in ['9.5', '9.6']:
-                    if self.os_name in DEBIAN_BASED:
+                    if self.__is_os_debian_based():
                         return '/usr/lib/postgresql/%s' % (self.version)
                     if self.__is_os_suse():
                         return '/usr/lib/postgrespro%s%s' % (
@@ -1015,10 +1029,10 @@ baseurl=%s
         return path
 
     def get_default_datadir(self):
-        if self.os_name not in WIN_BASED:
+        if not self.__is_os_windows():
             if self.product == 'postgrespro':
                 if self.version in ['9.5', '9.6']:
-                    if self.os_name in DEBIAN_BASED:
+                    if self.__is_os_debian_based():
                         return '/var/lib/postgresql/%s/main' % (self.version)
                     if self.__is_os_suse():
                         return '/var/lib/pgsql/data'
@@ -1050,7 +1064,7 @@ baseurl=%s
         return self.datadir
 
     def get_default_configdir(self):
-        if self.os_name in DEBIAN_BASED:
+        if self.__is_os_debian_based():
             if self.version in ['9.5', '9.6'] or \
                self.product == 'postgresql':
                 return '/etc/postgresql/%s/main' % (self.version)
@@ -1066,9 +1080,9 @@ baseurl=%s
 
     def initdb_start(self):
         if self.product == 'postgrespro' and self.version == '9.6':
-            if self.os_name in DEBIAN_BASED:
+            if self.__is_os_debian_based():
                 return
-            if self.os_name in REDHAT_BASED:
+            if self.__is_os_redhat_based():
                 if subprocess.call("which systemctl", shell=True) == 0:
                     binpath = self.get_bin_path()
                     if self.fullversion[:6] in ['9.6.0.', '9.6.1.']:
@@ -1079,11 +1093,11 @@ baseurl=%s
                     cmd = 'service "%s" initdb' % self.service_name
                 subprocess.check_call(cmd, shell=True)
                 self.start_service()
-            elif self.os_name in ALT_BASED:
+            elif self.__is_os_altlinux():
                 subprocess.check_call('/etc/init.d/postgresql-%s initdb' %
                                       self.version, shell=True)
                 self.start_service()
-            elif self.os_name in SUSE_BASED:
+            elif self.__is_os_suse():
                 self.start_service()
             else:
                 raise Exception('OS %s is not supported.' % self.os_name)
@@ -1115,7 +1129,7 @@ baseurl=%s
                 self.remove_data()
         os.makedirs(self.get_datadir())
         extraparam = ''
-        if self.os_name not in WIN_BASED:
+        if not self.__is_os_windows():
             subprocess.check_call('chown -R postgres:postgres %s' %
                                   self.get_datadir(), shell=True)
         else:
@@ -1136,7 +1150,7 @@ baseurl=%s
         self.configdir = self.get_datadir()
 
     def service_action(self, action='start'):
-        if self.os_name in WIN_BASED:
+        if self.__is_os_windows():
             if action == 'restart':
                 cmd = 'net stop "{0}" & net start "{0}"'.format(
                     self.service_name)
