@@ -24,11 +24,6 @@ PGPROALPHA_BASE = "http://localrepo.l.postgrespro.ru/dev/"
 PGPROCERT_BASE = "http://localrepo.l.postgrespro.ru/cert/"
 PSQL_BASE = "https://download.postgresql.org/pub"
 WIN_INST_DIR = "C:\\Users\\test\\pg-tests\\pg_installer"
-PACKAGES = ['server', 'contrib', 'libs', 'docs', 'docs-ru',
-            'plperl', 'plpython', 'pltcl']
-DEB_PACKAGES = ['plperl', 'plpython', 'plpython3', 'pltcl']
-ALT_PACKAGES = ['server', 'contrib', 'devel', 'docs', 'docs-ru',
-                'perl', 'python', 'tcl']
 REDHAT_BASED = ['CentOS Linux', 'RHEL', 'CentOS',
                 'Red Hat Enterprise Linux Server', 'Oracle Linux Server',
                 'ROSA Enterprise Linux Server', 'ROSA SX \"COBALT\" ',
@@ -347,12 +342,10 @@ class PgInstall:
         else:
             return dist[self.os_name].lower()
 
-    def __generate_repo_info(self, action="install"):
+    def __generate_repo_info(self):
         """Generate information about repository: url to packages
             and path to gpg key
 
-        :param action: action what we do install or upgrade
-        :return:
         """
 
         distname = ""
@@ -388,32 +381,18 @@ class PgInstall:
                     PGPROCERT_BASE,
                     product_dir, distname])
             else:
-                if action == "install":
-                    if self.os_name in WIN_BASED:
-                        baseurl = "{}{}/win/".format(self.get_repo_base(),
-                                                     product_dir)
-                    elif self.branch is not None:
-                        baseurl = os.path.join(PGPRO_BRANCH_BASE,
-                                               self.branch,
-                                               product_dir,
-                                               distname)
-                    else:
-                        baseurl = os.path.join(self.get_repo_base(),
-                                               product_dir,
-                                               distname)
-                elif action == "upgrade":
-                    if self.os_name in WIN_BASED:
-                        baseurl = "{}{}/win/".format(self.get_repo_base(),
-                                                     product_dir)
-                    elif self.edition == "ent":
-                        baseurl = os.path.join(
-                            PGPRO_ARCHIVE_ENTERPRISE, self.version, distname)
-                        gpg_key_url = PGPRO_ARCHIVE_ENTERPRISE + self.version
-                    elif self.edition == "std":
-                        baseurl = os.path.join(
-                            PGPRO_ARCHIVE_STANDARD, self.version, distname)
-                        gpg_key_url = PGPRO_ARCHIVE_STANDARD + self.version
-                    gpg_key_url += '/keys/GPG-KEY-POSTGRESPRO'
+                if self.os_name in WIN_BASED:
+                    baseurl = "{}{}/win/".format(self.get_repo_base(),
+                                                 product_dir)
+                elif self.branch is not None:
+                    baseurl = os.path.join(PGPRO_BRANCH_BASE,
+                                           self.branch,
+                                           product_dir,
+                                           distname)
+                else:
+                    baseurl = os.path.join(self.get_repo_base(),
+                                           product_dir,
+                                           distname)
             logging.debug("Installation repo path: %s", baseurl)
             logging.debug("GPG key url for installation %s", gpg_key_url)
             return baseurl, gpg_key_url
