@@ -415,7 +415,8 @@ class PgInstall:
         """ Setup yum or apt repo for Linux Based envs and
             download windows installer for Windows based
 
-        :return: repository file name in Linux, None in Windows, or Exception
+        :return: tuple (reponame, repofile) in Linux, None in Windows,
+                 or Exception
         """
         repo_info = self.__generate_repo_info()
         baseurl = repo_info[0]
@@ -449,13 +450,14 @@ class PgInstall:
                     baseurl = os.path.join(baseurl,
                                            "$releasever/os/$basearch/rpms")
 
+            reponame = "%s-%s" % (self.product, self.version)
             repo = """
-[%s-%s]
-name=%s-%s
+[%s]
+name=%s
 enabled=1
 baseurl=%s
-            """ % (self.product, self.version,
-                   self.product, self.version,
+            """ % (reponame,
+                   reponame,
                    baseurl)
             repofile = "/etc/yum.repos.d/%s-%s.repo" % (
                 self.product, self.version)
@@ -466,7 +468,7 @@ baseurl=%s
                 (self.product, self.version)
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-            return repofile
+            return (reponame, repofile)
         elif self.__is_pm_apt():
             cmd = "apt-get install -y lsb-release"
             self.exec_cmd_retry(cmd)
@@ -479,8 +481,8 @@ baseurl=%s
             else:
                 codename = command_executor(
                     cmd, self.remote, stdout=True).rstrip()
-            repofile = "/etc/apt/sources.list.d/%s-%s.list" % (self.product,
-                                                               self.version)
+            reponame = "%s-%s" % (self.product, self.version)
+            repofile = "/etc/apt/sources.list.d/%s.list" % (reponame)
             repo = None
             if self.product == "postgresql":
                 if not self.__is_os_altlinux():
@@ -517,7 +519,7 @@ baseurl=%s
                 self.exec_cmd_retry(cmd)
                 cmd = "apt-get update -y"
                 self.exec_cmd_retry(cmd)
-                return repofile
+                return (reponame, repofile)
         elif self.__is_pm_zypper():
             reponame = "%s-%s" % (self.product, self.version)
             repofile = '/etc/zypp/repos.d/%s.repo' % reponame
@@ -545,7 +547,7 @@ baseurl=%s
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             cmd = "zypper --gpg-auto-import-keys refresh"
             self.exec_cmd_retry(cmd)
-            return repofile
+            return (reponame, repofile)
         elif self.__is_os_windows():
             installer_name = self.__get_last_winstaller_file(
                 baseurl, self.os_arch)
