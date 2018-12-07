@@ -263,6 +263,91 @@ class PgInstall:
             raise NotImplementedError()
         return result
 
+    def get_packages_in_repo(self, reponame):
+        result = []
+        if self.__is_os_windows():
+            return result
+        if self.__is_pm_yum():
+            cmd = "sh -c \"LANG=C yum --disablerepo='*' "\
+                  "--enablerepo='%s' list available\"" % reponame
+            ysout = command_executor(cmd, self.remote, self.host,
+                                     REMOTE_ROOT, REMOTE_ROOT_PASSWORD,
+                                     stdout=True).split('\n')
+            for line in ysout:
+                if line == 'Available Packages' or line == '':
+                    continue
+                pkginfo = line.split()
+                if len(pkginfo) != 3:
+                    print("Invalid line in yum list output:", line)
+                    raise Exception('Invalid line in yum list output')
+                pkgname = re.sub(r'\.(x86_64|noarch)$', '', pkginfo[0])
+                result.append(pkgname)
+        elif self.__is_os_altlinux():
+            # Parsing binary package info in lists/ is unfeasible,
+            # so the only way to find packages from the repository is
+            # to parse `apt-cache showpkg` output
+            # Use only relevant lists in separate directory to optimize parsing
+            cmd = "sh -c \"mkdir /tmp/t_r;" \
+                "cp /var/lib/apt/lists/%s* /tmp/t_r/;" \
+                "echo 'Dir::State::Lists \\\"/tmp/t_r\\\";'>/tmp/t_apt.conf;" \
+                "APT_CONFIG=/tmp/t_apt.conf " \
+                "apt-cache --names-only search .\"" % reponame
+            acout = command_executor(cmd, self.remote, self.host,
+                                     REMOTE_ROOT, REMOTE_ROOT_PASSWORD,
+                                     stdout=True).split('\n')
+            ipkgs = []
+            for line in acout:
+                if line.strip() != '':
+                    ipkgs.append(line[:line.index(' - ')])
+
+            cmd = "sh -c \"APT_CONFIG=/tmp/t_apt.conf " \
+                "apt-cache showpkg %s \"" % (" ".join(ipkgs))
+            acout = command_executor(cmd, self.remote, self.host,
+                                     REMOTE_ROOT, REMOTE_ROOT_PASSWORD,
+                                     stdout=True).split('\n')
+            state = 0
+            for line in acout:
+                if line.strip() == '':
+                    state = 0
+                    pkgname = None
+                    continue
+                if state == 0:
+                    if line.startswith('Package:'):
+                        pkgname = re.sub(r'^Package:\s+', '', line)
+                        state = 1
+                elif state == 1:
+                    if line.strip() == 'Versions:':
+                        state = 2
+                elif state == 2:
+                    if ('(/tmp/t_r/' + reponame) in line:
+                        result.append(pkgname)
+                    pkgname = None
+        elif self.__is_pm_apt():
+            cmd = "sh -c \"grep -h -e 'Package:\\s\\+' "\
+                "/var/lib/apt/lists/%s*\"" % reponame
+            gsout = command_executor(cmd, self.remote, self.host,
+                                     REMOTE_ROOT, REMOTE_ROOT_PASSWORD,
+                                     stdout=True).split('\n')
+            for line in gsout:
+                pkgname = line.replace('Package: ', '')
+                if pkgname not in result:
+                    result.append(pkgname)
+        elif self.__is_pm_zypper():
+            cmd = "sh -c \"LANG=C zypper search --repo %s\"" % reponame
+            zsout = command_executor(cmd, self.remote, self.host,
+                                     REMOTE_ROOT, REMOTE_ROOT_PASSWORD,
+                                     stdout=True).split('\n')
+            for line in zsout:
+                pkginfo = line.split('|')
+                if len(pkginfo) != 4:
+                    continue
+                pkgname = pkginfo[1].strip()
+                if (pkgname == 'Name'):
+                    continue
+                result.append(pkgname)
+
+        return result
+
     def get_all_packages_name(self):
         if self.product == 'postgrespro':
             if self.version in ['9.5', '9.6']:
@@ -375,6 +460,8 @@ class PgInstall:
             elif self.__is_pm_apt():
                 gpg_key_url = "https://www.postgresql.org/"\
                     "media/keys/ACCC4CF8.asc"
+                baseurl = "http://apt.postgresql.org/pub/repos/apt/"
+                return baseurl, gpg_key_url
             elif self.__is_pm_zypper():
                 product_dir = "/repos/zypp/%s/suse/sles-%s-$basearch" % \
                     (self.version,
@@ -481,13 +568,12 @@ baseurl=%s
             else:
                 codename = command_executor(
                     cmd, self.remote, stdout=True).rstrip()
-            reponame = "%s-%s" % (self.product, self.version)
-            repofile = "/etc/apt/sources.list.d/%s.list" % (reponame)
+            repofile = "/etc/apt/sources.list.d/%s-%s.list" % (self.product,
+                                                               self.version)
             repo = None
             if self.product == "postgresql":
                 if not self.__is_os_altlinux():
-                    repo = "deb http://apt.postgresql.org/pub/repos/apt/" \
-                        " %s-pgdg main" % codename
+                    repo = "deb %s %s-pgdg main" % (baseurl, codename)
             elif self.product == "postgrespro":
                 repo = "deb %s %s main" % (baseurl, codename)
                 if self.os_name == "ALT Linux ":
@@ -504,22 +590,22 @@ baseurl=%s
                            "rpm %s/8 noarch pgpro\n" % \
                            (baseurl, baseurl)
 
-            if repo:
-                write_file(repofile, repo, self.remote, self.host)
+            if not repo:
+                return (None, None)
 
-            if self.__is_os_altlinux():
-                cmd = "apt-get update -y"
-                self.exec_cmd_retry(cmd)
-            else:
+            write_file(repofile, repo, self.remote, self.host)
+            reponame = re.sub(r"^http(s)?://", "", baseurl).replace('/', '_')
+
+            if not self.__is_os_altlinux():
                 cmd = "apt-get install -y wget ca-certificates"
                 self.exec_cmd_retry(cmd)
                 cmd = "wget -nv %s -O gpg.key" % gpg_key_url
                 self.exec_cmd_retry(cmd)
                 cmd = "apt-key add gpg.key"
                 self.exec_cmd_retry(cmd)
-                cmd = "apt-get update -y"
-                self.exec_cmd_retry(cmd)
-                return (reponame, repofile)
+            cmd = "apt-get update -y"
+            self.exec_cmd_retry(cmd)
+            return (reponame, repofile)
         elif self.__is_pm_zypper():
             reponame = "%s-%s" % (self.product, self.version)
             repofile = '/etc/zypp/repos.d/%s.repo' % reponame
@@ -560,6 +646,7 @@ baseurl=%s
                                                installer_name)
             windows_installer.retrieve(windows_installer_url,
                                        self.installer_name)
+            return (None, None)
         else:
             raise Exception("Unsupported distro %s" % self.os_name)
 
