@@ -299,6 +299,10 @@
 
   - name: install pip
     command: "python /home/test/pg-tests/get-pip.py"
+    retries: 5
+    delay: 10
+    register: result
+    until: result.rc == 0
     become_method: su
     become: true
     tags:
