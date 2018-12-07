@@ -244,25 +244,6 @@ class PgInstall:
             return base_package + '-devel'
         return base_package
 
-    def get_all_installable_packages(self, pkgnames):
-        result = []
-        if self.__is_os_suse():
-            cmd = "sh -c \"LANG=C zypper search '%s'\"" % pkgnames
-            zsout = command_executor(cmd, self.remote, self.host,
-                                     REMOTE_ROOT, REMOTE_ROOT_PASSWORD,
-                                     stdout=True).split('\n')
-            for line in zsout:
-                pkginfo = line.split('|')
-                if len(pkginfo) != 4:
-                    continue
-                pkgname = pkginfo[1].strip()
-                if (pkgname == 'Name'):
-                    continue
-                result.append(pkgname)
-        else:
-            raise NotImplementedError()
-        return result
-
     def get_packages_in_repo(self, reponame):
         result = []
         if self.__is_os_windows():
@@ -364,12 +345,14 @@ class PgInstall:
                 return '^%s-*%s$' % (self.product,
                                      self.version.replace('.', '\\.'))
             elif self.__is_os_suse():
-                pkgs = self.get_all_installable_packages(
-                    self.get_base_package_name() + '*')
+                pkgs = self.get_packages_in_repo("%s-%s" %
+                                                 (self.product, self.version))
                 # Filter out packages, which are not installable and
                 # not supported by Postgres Pro
-                packages = ' '.join(pkg for pkg in pkgs if not(
-                    pkg.endswith('-tcl') or pkg.endswith('-llvmjit')))
+                packages = ' '.join(
+                    pkg for pkg in pkgs if
+                    pkg.startswith(self.get_base_package_name()) and
+                    not(pkg.endswith('-tcl') or pkg.endswith('-llvmjit')))
                 return packages
         return self.get_base_package_name() + '*'
 
