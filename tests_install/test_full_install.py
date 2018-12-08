@@ -56,6 +56,7 @@ class TestFullInstall():
             print("All available packages in repo %s:\n" % reponame,
                   "\n".join(all_available_packages))
             pginst.install_full()
+            pginst.install_package(" ".join(all_available_packages))
             pginst.initdb_start()
         else:
             pginst.install_perl_win()

@@ -311,6 +311,8 @@ class PgInstall:
                                      stdout=True).split('\n')
             for line in gsout:
                 pkgname = line.replace('Package: ', '')
+                if pkgname == 'Auto-Built-debug-symbols':
+                    continue
                 if pkgname not in result:
                     result.append(pkgname)
         elif self.__is_pm_zypper():
