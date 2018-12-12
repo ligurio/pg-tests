@@ -323,6 +323,15 @@ class PgInstall:
                     continue
                 if pkgname not in result:
                     result.append(pkgname)
+            if self.version == '9.6':
+                # PGPRO-2286
+                exclude = []
+                for pkgname in result:
+                    if pkgname.startswith('lib'):
+                        if ('postgrespro-' + pkgname) in result:
+                            exclude.append(pkgname)
+                for pkgname in exclude:
+                    result.remove(pkgname)
         elif self.__is_pm_zypper():
             cmd = "sh -c \"LANG=C zypper search --repo %s\"" % reponame
             zsout = command_executor(cmd, self.remote, self.host,
