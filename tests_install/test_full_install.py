@@ -2,6 +2,7 @@ import os
 import platform
 import glob
 import time
+import subprocess
 
 import pytest
 
@@ -9,6 +10,36 @@ from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall
 from helpers.os_helpers import get_directory_size
 from helpers.os_helpers import get_process_pids
+
+
+def check_executables(pginst, packages):
+    for package in packages:
+        pfiles = pginst.get_files_in_package(package)
+        print('check_executables in', package)
+        for f in pfiles:
+            if f.startswith('/usr/lib/debug/'):
+                continue
+            fout = subprocess.check_output(
+                'LANG=C file "%s"' % f, shell=True).strip()
+            if fout.startswith(f + ': cannot open'):
+                print(fout)
+                raise Exception('Error opening file "%s".' % f)
+            if not fout.startswith(f + ': ELF '):
+                continue
+            print("ELF executable found: ", f)
+            lddout = subprocess.check_output(
+                'LANG=C ldd "%s"' % f, shell=True).strip().split("\n")
+            error = False
+            for l in lddout:
+                if l.startswith("\t/") or l.startswith("linux"):
+                    continue
+                if not (' => ' in l) or ' not found' in l:
+                    print("Invalid line: [%s]" % l)
+                    error = True
+                    break
+            if error:
+                print('ldd "%s":' % f, lddout)
+                raise Exception("Invalid dynamic dependencies")
 
 
 @pytest.mark.full_install
@@ -57,6 +88,7 @@ class TestFullInstall():
                   "\n".join(all_available_packages))
             pginst.install_full()
             pginst.install_package(" ".join(all_available_packages))
+            check_executables(pginst, all_available_packages)
             pginst.initdb_start()
         else:
             pginst.install_perl_win()
