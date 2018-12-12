@@ -316,6 +316,8 @@ class PgInstall:
                                      REMOTE_ROOT, REMOTE_ROOT_PASSWORD,
                                      stdout=True).split('\n')
             for line in gsout:
+                if line == '':
+                    continue
                 pkgname = line.replace('Package: ', '')
                 if pkgname == 'Auto-Built-debug-symbols':
                     continue
