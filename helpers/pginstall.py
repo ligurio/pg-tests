@@ -66,6 +66,12 @@ dist = {"Oracle Linux Server": 'oraclelinux',
         "RED OS release MUROM (": 'redos'}
 
 PRELOAD_LIBRARIES = {
+    'ent-11':
+        # TODO: Add pgpro_scheduler, pg_shardman
+        ['auth_delay', 'auto_explain', 'in_memory',
+         'pg_stat_statements', 'plantuner',
+         'shared_ispell', 'pg_wait_sampling',
+         'pg_pathman'],
     'std-11':
         ['auth_delay', 'auto_explain',
          'plantuner', 'shared_ispell', 'pg_pathman'],
