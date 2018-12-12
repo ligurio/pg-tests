@@ -15,30 +15,30 @@ from helpers.os_helpers import get_process_pids
 def check_executables(pginst, packages):
     for package in packages:
         pfiles = pginst.get_files_in_package(package)
-        print('check_executables in', package)
         for f in pfiles:
             if f.startswith('/usr/lib/debug/'):
                 continue
             fout = subprocess.check_output(
                 'LANG=C file "%s"' % f, shell=True).strip()
             if fout.startswith(f + ': cannot open'):
-                print(fout)
+                print fout
                 raise Exception('Error opening file "%s".' % f)
             if not fout.startswith(f + ': ELF '):
                 continue
-            print("ELF executable found: ", f)
+            print "ELF executable found:", f
             lddout = subprocess.check_output(
-                'LANG=C ldd "%s"' % f, shell=True).strip().split("\n")
+                'LANG=C ldd "%s"' % f, shell=True).split("\n")
             error = False
-            for l in lddout:
-                if l.startswith("\t/") or l.startswith("linux"):
+            for line in lddout:
+                if line.strip() == "" or line.startswith("\tlinux") or \
+                   line.startswith("\t/") or line == ("\tstatically linked"):
                     continue
-                if not (' => ' in l) or ' not found' in l:
-                    print("Invalid line: [%s]" % l)
+                if not (' => ' in line) or ' not found' in line:
+                    print "Invalid line: [%s]" % line
                     error = True
                     break
             if error:
-                print('ldd "%s":' % f, lddout)
+                print 'ldd "%s":' % f, lddout
                 raise Exception("Invalid dynamic dependencies")
 
 
