@@ -470,15 +470,17 @@ def export_results(domname, linux_os, domipaddress, reportname,
         pass
     finally:
         subprocess.call(
-            ['curl', '-s', '-S', '-T', 'reports/%s.html' % reportname,
+            ['curl', '-s', '-S', '-o', '/dev/null',
+             '-T', 'reports/%s.html' % reportname,
              REPORT_SERVER_URL])
         subprocess.call(
-            ['curl', '-s', '-S', '-T', 'reports/%s.xml' % reportname,
+            ['curl', '-s', '-S', '-o', '/dev/null',
+             '-T', 'reports/%s.xml' % reportname,
              REPORT_SERVER_URL])
         for file in os.listdir('reports'):
             if '.json' in file:
-                subprocess.call(['curl', '-s', '-S', '-T',
-                                 os.path.join('reports', file),
+                subprocess.call(['curl', '-s', '-S', '-o', '/dev/null',
+                                 '-T', os.path.join('reports', file),
                                  REPORT_SERVER_URL])
             else:
                 continue
