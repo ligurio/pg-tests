@@ -657,7 +657,8 @@ def main():
                 print("Restoring environment (%s)..." % domname)
                 restore_env(domname)
                 try:
-                    print("Creating environment (%s, %s)...", target, domname)
+                    print("Creating environment (%s, %s)..." %
+                          (target, domname))
                     domipaddress = create_env(
                         target, domname, get_dom_disk(domname))[0]
                     print("Waiting for boot (%s)..." % domipaddress)
