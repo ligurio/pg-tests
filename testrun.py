@@ -470,15 +470,17 @@ def export_results(domname, linux_os, domipaddress, reportname,
         pass
     finally:
         subprocess.call(
-            ['curl', '-s', '-S', '-T', 'reports/%s.html' % reportname,
+            ['curl', '-s', '-S', '-o', '/dev/null',
+             '-T', 'reports/%s.html' % reportname,
              REPORT_SERVER_URL])
         subprocess.call(
-            ['curl', '-s', '-S', '-T', 'reports/%s.xml' % reportname,
+            ['curl', '-s', '-S', '-o', '/dev/null',
+             '-T', 'reports/%s.xml' % reportname,
              REPORT_SERVER_URL])
         for file in os.listdir('reports'):
             if '.json' in file:
-                subprocess.call(['curl', '-s', '-S', '-T',
-                                 os.path.join('reports', file),
+                subprocess.call(['curl', '-s', '-S', '-o', '/dev/null',
+                                 '-T', os.path.join('reports', file),
                                  REPORT_SERVER_URL])
             else:
                 continue
@@ -649,14 +651,19 @@ def main():
             save_env(domname)
 
         for test in sorted(tests):
-            print("Running test %s..." % test)
+            print("Performing test %s..." % test)
             testname = test.split('/')[1].split('.')[0]
             if len(tests) > 1:
+                print("Restoring environment (%s)..." % domname)
                 restore_env(domname)
                 try:
+                    print("Creating environment (%s, %s)..." %
+                          (target, domname))
                     domipaddress = create_env(
                         target, domname, get_dom_disk(domname))[0]
+                    print("Waiting for boot (%s)..." % domipaddress)
                     wait_for_boot(domipaddress, linux=linux_os)
+                    print("Boot completed.")
                 except Exception as e:
                     # Don't leave a domain that is failed to boot running
                     close_env(domname, saveimg=False, destroys0=True)
@@ -672,6 +679,7 @@ def main():
                 args.branch)
             if DEBUG:
                 print("Test command:\n%s" % cmd)
+            print("Running test (%s)..." % testname)
             if not linux_os:
                 retcode, stdout, stderr = exec_command_win(
                     cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD,
