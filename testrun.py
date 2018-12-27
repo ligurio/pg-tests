@@ -187,12 +187,12 @@ def prepare_payload(tests_dir, clean):
             raise Exception("Downloading get-pip failed.")
 
     subprocess.check_call(
-        "wget -q https://codeload.github.com/postgrespro/"
+        "wget -T 60 -q https://codeload.github.com/postgrespro/"
         "pg_wait_sampling/tar.gz/master -O extras/pg_wait_sampling.tar.gz",
         cwd=pgtd, shell=True)
 
     subprocess.check_call(
-        "wget -q https://codeload.github.com/Test-More/"
+        "wget -T 60 -q https://codeload.github.com/Test-More/"
         "test-more/tar.gz/v0.90 -O extras/test-more.tar.gz",
         cwd=pgtd, shell=True)
 
