@@ -52,7 +52,7 @@ def setup(request):
             test_script = r"""
 if ps -o comm= -C systemd-coredump; then
     echo "The systemd-coredump process is running."
-    for i in {1..30}; do
+    for i in `seq 1 30`; do
         if ps -o comm= -C systemd-coredump >/dev/null; then
             sleep $i
         else
@@ -83,8 +83,7 @@ fi
 if [ ! -z "`which coredumpctl 2>/dev/null`" ]; then
     if coredumpctl; then
         echo "Coredump found. Check coredumpctl."
-        coredumpctl -o /tmp/dump dump
-        gdb --batch --eval-command=bt /tmp/dump
+        printf "set pagination off\nbt" | coredumpctl gdb
         exit 1
     fi
 fi
