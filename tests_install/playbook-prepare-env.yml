@@ -20,9 +20,9 @@
             distribution {{ ansible_distribution }} {{ ansible_distribution_major_version }} \
             ({{ ansible_architecture }})."
 
-  - name: Update repos and install acpid-events-power (ALT)
+  - name: Update repos and install acpid-events-power, gdb (ALT)
     shell: apt-get update &&
-           apt-get install acpid-events-power && /sbin/service acpid restart;
+           apt-get install -y gdb acpid-events-power && /sbin/service acpid restart;
            sed s/#ZONE=/ZONE=/ -i /etc/sysconfig/clock; /sbin/service clock tzset;
            if [ -d /home/test/Python-2.7.1 ]; then rm -rf /home/test/Python-2.7.1; fi # Temporary solution to free space in altlinux-spt-7.qcow2 (3a6a8ee2...)
     args:
@@ -166,6 +166,7 @@
     with_items:
         - acpid
         - gcc
+        - gdb
         - python-devel
     when: ansible_os_family != "Windows" and ansible_pkg_mgr == "yum"
     become_method: su
@@ -185,6 +186,7 @@
     with_items:
         - acpid
         - gcc
+        - gdb
         - python-dev
         - sudo
     when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu' or
@@ -242,6 +244,7 @@
     zypper: name={{ item }} state=present update_cache=yes force=yes
     with_items:
         - gcc
+        - gdb
         - python-devel
     when: ansible_os_family != "Windows" and ansible_pkg_mgr == "zypper"
     become_method: su
