@@ -52,21 +52,39 @@ def setup(request):
             test_script = r"""
 if ps -o comm= -C systemd-coredump; then
     echo "The systemd-coredump process is running."
-    exit 1
+    for i in {1..30}; do
+        if ps -o comm= -C systemd-coredump >/dev/null; then
+            sleep $i
+        else
+            break
+        fi
+    done
+    if ps -o comm= -C systemd-coredump; then
+        echo "The systemd-coredump process is not finished."
+        exit 1
+    fi
 fi
 if [ ! -z "`ls /var/coredumps`" ]; then
     echo "The /var/coredumps directory is not empty."
-    ls -l /var/coredumps
+    for dump in /var/coredumps/*; do
+        echo "Dump found: $dump"
+        gdb --batch --eval-command=bt $dump
+    done
     exit 1
 fi
 if [ -d /var/crash ] && [ ! -z "`ls /var/crash`" ]; then
     echo "The /var/crash directory is not empty."
-    ls -l /var/crash
+    for dump in /var/crash/*; do
+        echo "Dump found: $dump"
+        gdb --batch --eval-command=bt $dump
+    done
     exit 1
 fi
 if [ ! -z "`which coredumpctl 2>/dev/null`" ]; then
     if coredumpctl; then
         echo "Coredump found. Check coredumpctl."
+        coredumpctl -o /tmp/dump dump
+        gdb --batch --eval-command=bt /tmp/dump
         exit 1
     fi
 fi
