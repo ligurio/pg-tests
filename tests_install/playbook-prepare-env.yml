@@ -24,6 +24,8 @@
     shell: apt-get update &&
            apt-get install -y gdb acpid-events-power && /sbin/service acpid restart;
            sed s/#ZONE=/ZONE=/ -i /etc/sysconfig/clock; /sbin/service clock tzset;
+           echo "Enable coredump on altlinux-spt-7 ( https://www.altlinux.org/Features/Core )";
+           sed "s/^ulimit -Sc 0/# \1/" -i /etc/profile;
            if [ -d /home/test/Python-2.7.1 ]; then rm -rf /home/test/Python-2.7.1; fi # Temporary solution to free space in altlinux-spt-7.qcow2 (3a6a8ee2...)
     args:
       warn: no
@@ -401,7 +403,7 @@
     when: ansible_os_family == "GosLinux" or ansible_os_family == "ROSA"
 
   - name: change coredump filename pattern
-    sysctl: name="kernel.core_pattern" value="/var/coredumps/core-%e-%p-%t" sysctl_set=yes state=present
+    sysctl: name="kernel.core_pattern" value="/var/coredumps/core-%e-%p-%t-EXE:%E" sysctl_set=yes state=present
     become_method: su
     become: true
     when:
@@ -415,6 +417,16 @@
     become_method: su
     become: true
     when: (ansible_os_family == 'RedHat' and ansible_distribution_major_version == '7')
+
+  - name: enable coredump in Debian
+    shell: if [ -f /etc/systemd/system.conf ]; then
+               sed "s/^#DefaultLimitCORE=$/DefaultLimitCORE=infinity/" -i /etc/systemd/system.conf;
+               systemctl daemon-reexec;
+           fi
+    become_method: su
+    become: true
+    when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu' or
+          ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux')
 
   - name: windows - install Visual C++ Compiler for Python
     when: ansible_os_family == "Windows"
