@@ -403,7 +403,7 @@
     when: ansible_os_family == "GosLinux" or ansible_os_family == "ROSA"
 
   - name: change coredump filename pattern
-    sysctl: name="kernel.core_pattern" value="/var/coredumps/core-%e-%p-%t" sysctl_set=yes state=present
+    sysctl: name="kernel.core_pattern" value="/var/coredumps/core-%e-%p-%t-EXE:%E" sysctl_set=yes state=present
     become_method: su
     become: true
     when:
@@ -417,6 +417,16 @@
     become_method: su
     become: true
     when: (ansible_os_family == 'RedHat' and ansible_distribution_major_version == '7')
+
+  - name: enable coredump in Debian
+    shell: if [ -f /etc/systemd/system.conf ]; then
+               sed "s/^#DefaultLimitCORE=$/DefaultLimitCORE=infinity/" -i /etc/systemd/system.conf;
+               systemctl daemon-reexec;
+           fi
+    become_method: su
+    become: true
+    when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu' or
+          ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux')
 
   - name: windows - install Visual C++ Compiler for Python
     when: ansible_os_family == "Windows"

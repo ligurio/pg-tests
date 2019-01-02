@@ -49,10 +49,10 @@ def pytest_addoption(parser):
 def setup(request):
     def finalize():
         if dist != 'Windows':
-            test_script = r"""
+            script = r"""#!/bin/bash
 if ps -o comm= -C systemd-coredump; then
     echo "The systemd-coredump process is running."
-    for i in `seq 1 30`; do
+    for i in {1..30}; do
         if ps -o comm= -C systemd-coredump >/dev/null; then
             sleep $i
         else
@@ -68,7 +68,14 @@ if [ ! -z "`ls /var/coredumps`" ]; then
     echo "The /var/coredumps directory is not empty."
     for dump in /var/coredumps/*; do
         echo "Dump found: $dump"
-        gdb --batch --eval-command=bt $dump
+        exepath="${dump##*-EXE:}"
+        if [ X"$dump" = X"$exepath" ]; then
+            gdb --batch --eval-command=bt $dump;
+        else
+            exepath="${exepath//\!//}"
+            echo "exepath: $exepath"
+            gdb --batch --eval-command=bt $exepath --core="$dump";
+        fi
     done
     exit 1
 fi
@@ -92,7 +99,11 @@ if dmesg | grep ' segfault at '; then
     exit 1
 fi
 """
-            subprocess.check_call(test_script, shell=True)
+            script_file = '/tmp/check-coredumps.sh'
+            with open(script_file, 'w') as scrf:
+                scrf.write(script)
+            os.chmod(script_file, 0755)
+            subprocess.check_call(script_file, shell=True)
         else:
             pass
     request.addfinalizer(finalize)
