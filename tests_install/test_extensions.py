@@ -71,11 +71,9 @@ class TestExtensions():
             return
         request.cls.logdir = logdir
         pginst.stop_service()
-        time.sleep(5)
         for lf in os.listdir(logdir):
             os.remove(os.path.join(logdir, lf))
         pginst.start_service()
-        time.sleep(10)
 
     @pytest.mark.test_pgbadger
     def test_pgbadger(self, request):

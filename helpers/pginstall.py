@@ -1253,7 +1253,7 @@ baseurl=%s
         subprocess.check_call(cmd, shell=True, cwd="/")
         self.configdir = self.get_datadir()
 
-    def service_action(self, action='start'):
+    def service_action(self, action='start', wait_for_completion=True):
         if self.__is_os_windows():
             if action == 'restart':
                 cmd = 'net stop "{0}" & net start "{0}"'.format(
@@ -1263,6 +1263,19 @@ baseurl=%s
         else:
             cmd = 'service "%s" %s' % (self.service_name, action)
         subprocess.check_call(cmd, shell=True)
+        action_timeout = 120
+        if wait_for_completion:
+            for i in range(1, action_timeout):
+                if action == 'stop':
+                    if not self.pg_isready():
+                        return True
+                else:
+                    if self.pg_isready():
+                        return True
+                time.sleep(1)
+            raise Exception("Service action '%s' failed to complete"
+                            " in %d seconds." % (action, action_timeout))
+        return True
 
     def start_service(self):
         return self.service_action('start')
