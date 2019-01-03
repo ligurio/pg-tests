@@ -428,7 +428,7 @@
     become: true
     when: (ansible_os_family == 'RedHat' and ansible_distribution_major_version == '7')
 
-  - name: enable coredump in Debian
+  - name: enable coredump in systemd-based OS
     shell: if [ -f /etc/systemd/system.conf ]; then
                sed "s/^#DefaultLimitCORE=$/DefaultLimitCORE=infinity/" -i /etc/systemd/system.conf;
                systemctl daemon-reexec;
@@ -436,7 +436,8 @@
     become_method: su
     become: true
     when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu' or
-          ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux')
+          ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux') or
+          ansible_distribution == 'ROSA'
 
   - name: windows - install Visual C++ Compiler for Python
     when: ansible_os_family == "Windows"
