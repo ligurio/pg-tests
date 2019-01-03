@@ -1,5 +1,5 @@
 diff --git a/src/test/default_collation/icu/t/001_default_collation.pl b/src/test/default_collation/icu/t/001_default_collation.pl
-index 5f5753d400..a59c83e192 100644
+index 5f5753d400..f1b39a4935 100644
 --- a/src/test/default_collation/icu/t/001_default_collation.pl
 +++ b/src/test/default_collation/icu/t/001_default_collation.pl
 @@ -13,7 +13,7 @@ my $datadir = "$tempdir/data";
@@ -11,55 +11,7 @@ index 5f5753d400..a59c83e192 100644
  
  # check whether ICU can convert C locale to a language tag
  
-@@ -25,17 +25,6 @@ my $result = IPC::Run::run \@command, \$in_initdb, \$out_initdb, \$err_initdb;
- my $c_to_icu_language_tag = (
- 	not $err_initdb =~ /ICU error: could not convert locale name "C" to language tag: U_ILLEGAL_ARGUMENT_ERROR/);
- 
--# get the number of tests
--
--if ($has_posix_locale)
--{
--	plan tests => $c_to_icu_language_tag ? 187 : 167;
--}
--else
--{
--	plan tests => $c_to_icu_language_tag ? 153 : 143;
--}
--
- # test initdb
- 
- sub test_initdb
-@@ -155,7 +144,13 @@ test_initdb(
- 	"ICU language tag format locale",
- 	"--locale=und-x-icu",
- 	"",
--	"invalid locale name \"und-x-icu\"");
-+	"invalid locale name \"und-x-icu\"|failed to get the canonical name for collation locale \"und-x-icu\"");
-+
-+test_initdb(
-+	"invalid locale",
-+	"--locale=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-+	"",
-+	"invalid locale name \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"");
- 
- # --lc-collate with the same --lc-ctype if needed
- 
-@@ -248,7 +243,13 @@ test_initdb(
- 	"ICU language tag format lc_collate",
- 	"--lc-collate=und-x-icu",
- 	"",
--	"invalid locale name \"und-x-icu\"");
-+	"invalid locale name \"und-x-icu\"|failed to get the canonical name for collation locale \"und-x-icu\"");
-+
-+test_initdb(
-+	"invalid lc_collate",
-+	"--lc-collate=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-+	"",
-+	"invalid locale name \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"");
- 
- # --locale & --lc-collate
- 
-@@ -269,7 +270,10 @@ test_initdb(
+@@ -269,7 +269,10 @@ test_initdb(
  # test createdb and CREATE DATABASE
  
  my $node = get_new_node('main');
@@ -71,7 +23,7 @@ index 5f5753d400..a59c83e192 100644
  
  # prep pg_hba.conf and pg_ident.conf
  $node->run_log([
-@@ -313,14 +317,14 @@ sub test_createdb
+@@ -313,14 +316,14 @@ sub test_createdb
  		{
  			$node->command_like(
  				@command,
@@ -88,7 +40,7 @@ index 5f5753d400..a59c83e192 100644
  				"createdb: $test_name: check pg_database.datcollate");
  		}
  
-@@ -368,14 +372,14 @@ sub test_create_database
+@@ -368,14 +371,14 @@ sub test_create_database
  		{
  			$node->command_like(
  				@command,
@@ -105,71 +57,3 @@ index 5f5753d400..a59c83e192 100644
  				"CREATE DATABASE: $test_name: check pg_database.datcollate");
  		}
  
-@@ -513,11 +517,19 @@ test_createdb(
- 	"",
- 	"invalid locale name: \"C\@icu\"");
- 
-+# Use icu as the collation provider explicitly, because otherwise the collation
-+# provider of template0 will be used and this is libc.
- test_createdb(
- 	"ICU language tag format locale",
--	"--locale=und-x-icu",
-+	"--locale=und-x-icu\@icu",
- 	"",
--	"invalid locale name: \"und-x-icu\"");
-+	"invalid locale name: \"und-x-icu\"|failed to get the canonical name for collation locale \"und-x-icu\"");
-+
-+test_createdb(
-+	"invalid locale",
-+	"--locale=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-+	"",
-+	"invalid locale name: \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"");
- 
- # --lc-collate with the same --lc-ctype if needed
- 
-@@ -651,11 +663,19 @@ test_createdb(
- 	"",
- 	"invalid locale name: \"C\@icu\"");
- 
-+# Use icu as the collation provider explicitly, because otherwise the collation
-+# provider of template0 will be used and this is libc.
- test_createdb(
- 	"ICU language tag format lc_collate",
--	"--lc-collate=und-x-icu",
-+	"--lc-collate=und-x-icu\@icu",
- 	"",
--	"invalid locale name: \"und-x-icu\"");
-+	"invalid locale name: \"und-x-icu\"|failed to get the canonical name for collation locale \"und-x-icu\"");
-+
-+test_createdb(
-+	"invalid lc_collate",
-+	"--lc-collate=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-+	"",
-+	"invalid locale name: \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"");
- 
- # test CREATE DATABASE
- 
-@@ -803,11 +823,21 @@ test_create_database(
- 	"",
- 	"invalid locale name: \"C\@icu\"");
- 
-+# Use icu as the collation provider explicitly, because otherwise the collation
-+# provider of template0 will be used and this is libc.
- test_create_database(
- 	"ICU language tag format lc_collate",
--	"LC_COLLATE = 'und-x-icu'",
-+	"LC_COLLATE = 'und-x-icu\@icu'",
-+	"",
-+	"",
-+	"invalid locale name: \"und-x-icu\"|failed to get the canonical name for collation locale \"und-x-icu\"");
-+
-+test_create_database(
-+	"invalid lc_collate",
-+	"LC_COLLATE = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'",
- 	"",
- 	"",
--	"invalid locale name: \"und-x-icu\"");
-+	"invalid locale name: \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"");
- 
- $node->stop;
-+done_testing();

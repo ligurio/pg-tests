@@ -116,7 +116,6 @@ class TestFullInstall():
         pginst = request.cls.pginst
         iprops = pginst.get_initdb_props()
         pginst.load_shared_libraries()
-        time.sleep(10)
         share_path = iprops['share_path'].replace('/', os.sep)
         controls = glob.glob(os.path.join(share_path,
                                           'extension', '*.control'))
