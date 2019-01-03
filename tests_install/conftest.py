@@ -26,7 +26,7 @@ def pytest_addoption(parser):
         help="Operating system")
     parser.addoption(
         "--product_version", action="store", default='9.6',
-        help="Specify product version. Available values: 9.5, 9.6")
+        help="Specify product version. Available values: 9.6, 10, 11, ...")
     parser.addoption(
         "--product_name", action="store", default='postgrespro',
         help="Specify product name. Available values: postgrespro, postresql")
@@ -35,7 +35,7 @@ def pytest_addoption(parser):
         help="Specify product edition. Available values: ent, std")
     parser.addoption(
         "--product_milestone", action="store",
-        help="Specify product milestone. Available values: beta")
+        help="Specify product milestone. Available values: alpha, beta")
     parser.addoption(
         "--product_build", action="store",
         help="Specify product build.")
