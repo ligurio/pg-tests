@@ -83,7 +83,6 @@ if [ -d /var/crash ] && [ ! -z "`ls /var/crash`" ]; then
     echo "The /var/crash directory is not empty."
     for dump in /var/crash/*; do
         echo "Dump found: $dump"
-        gdb --batch --eval-command=bt $dump
     done
     exit 1
 fi

@@ -402,6 +402,16 @@
     become: true
     when: ansible_os_family == "GosLinux" or ansible_os_family == "ROSA"
 
+  - name: Disable apport service (Ubuntu)
+    lineinfile:
+      dest: /etc/default/apport
+      regexp: '^enabled='
+      line: 'enabled=0'
+      state: present
+    when: ansible_distribution == 'Ubuntu'
+    become_method: su
+    become: true
+
   - name: change coredump filename pattern
     sysctl: name="kernel.core_pattern" value="/var/coredumps/core-%e-%p-%t-EXE:%E" sysctl_set=yes state=present
     become_method: su
