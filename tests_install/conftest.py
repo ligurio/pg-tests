@@ -64,6 +64,13 @@ if ps -o comm= -C systemd-coredump; then
         exit 1
     fi
 fi
+if [ ! -z "`which coredumpctl 2>/dev/null`" ]; then
+    if coredumpctl; then
+        echo "Coredump found. Check coredumpctl."
+        printf "set pagination off\nbt" | coredumpctl gdb
+        exit 1
+    fi
+fi
 if [ ! -z "`ls /var/coredumps`" ]; then
     echo "The /var/coredumps directory is not empty."
     for dump in /var/coredumps/*; do
@@ -85,13 +92,6 @@ if [ -d /var/crash ] && [ ! -z "`ls /var/crash`" ]; then
         echo "Dump found: $dump"
     done
     exit 1
-fi
-if [ ! -z "`which coredumpctl 2>/dev/null`" ]; then
-    if coredumpctl; then
-        echo "Coredump found. Check coredumpctl."
-        printf "set pagination off\nbt" | coredumpctl gdb
-        exit 1
-    fi
 fi
 if dmesg | grep ' segfault at '; then
     echo "A segfault recorded in dmesg."
