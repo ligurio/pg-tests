@@ -45,7 +45,11 @@ ANSIBLE_INVENTORY_WIN = "%s ansible_host=%s \
                     ansible_password=%s \
                     ansible_winrm_server_cert_validation=ignore  \
                     ansible_port=5985  \
-                    ansible_connection=winrm \n"
+                    ansible_connection=winrm \
+                    ansible_winrm_read_timeout_sec=90 \
+                    ansible_winrm_operation_timeout_sec=60 \
+                    \n"
+
 REPORT_SERVER_URL = 'http://testrep.l.postgrespro.ru/'
 TESTS_PAYLOAD_DIR = 'resources'
 TESTS_PAYLOAD_TAR = 'pg-tests.tgz'
