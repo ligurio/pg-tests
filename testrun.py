@@ -15,6 +15,7 @@ import urllib
 import winrm
 import tempfile
 import glob
+import signal
 from subprocess import call
 
 from helpers.utils import (copy_file, copy_reports_win,
@@ -26,6 +27,7 @@ from helpers.utils import (copy_file, copy_reports_win,
 reload(sys)
 sys.setdefaultencoding('utf8')
 
+MAX_DURATION = 3 * 60 * 60
 DEBUG = False
 
 IMAGE_BASE_URL = 'http://webdav.l.postgrespro.ru/DIST/vm-images/test/'
@@ -573,7 +575,14 @@ def close_env(domname, saveimg=False, destroys0=False):
     conn.close()
 
 
+def timeout_handler(self, *args):
+    raise Exception("Timeout")
+
+
 def main():
+
+    signal.signal(signal.SIGALRM, timeout_handler)
+    signal.alarm(MAX_DURATION)
 
     start = time.time()
     names = list_images()
