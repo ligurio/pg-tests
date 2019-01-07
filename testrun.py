@@ -202,8 +202,8 @@ def prepare_payload(tests_dir, clean):
         "test-more/tar.gz/v0.90 -O extras/test-more.tar.gz",
         cwd=pgtd, shell=True)
 
-    retcode = call("zip -q -r _%s pg-tests" % TESTS_PAYLOAD_ZIP,
-                   cwd=tempdir, shell=True)
+    retcode = call("zip -q -x '*.pyc' -r _%s pg-tests" %
+                   TESTS_PAYLOAD_ZIP, cwd=tempdir, shell=True)
     if retcode != 0:
         raise Exception("Preparing zip payload failed.")
 
@@ -235,8 +235,8 @@ def prepare_payload(tests_dir, clean):
     if retcode != 0:
         raise Exception("Downloading pip-requirements(27mu) failed.")
 
-    retcode = call("tar -czf _%s pg-tests" % TESTS_PAYLOAD_TAR,
-                   cwd=tempdir, shell=True)
+    retcode = call("tar -czf _%s --exclude='*.pyc' pg-tests" %
+                   TESTS_PAYLOAD_TAR, cwd=tempdir, shell=True)
     if retcode != 0:
         raise Exception("Preparing tar payload failed.")
     # First move to the target directory to prepare for atomic rename
