@@ -3,6 +3,7 @@ import platform
 import glob
 import time
 import subprocess
+import re
 
 import pytest
 
@@ -40,6 +41,25 @@ def check_executables(pginst, packages):
             if error:
                 print 'ldd "%s":' % f, lddout
                 raise Exception("Invalid dynamic dependencies")
+            if f.endswith('.so') or '.so.' in os.path.basename(f):
+                continue
+            gdbout = subprocess.check_output(
+                'gdb --batch -ex "b main" -ex run -ex step -ex bt -ex cont'
+                ' --args  "%s" --version' % f,
+                stderr=subprocess.STDOUT, shell=True).split("\n")
+            good_lines = 0
+            for line in gdbout:
+                if 'Breakpoint 1, main ' in line:
+                    good_lines += 1
+                if re.match(r'#0\s+[a-z_]*main\s+\(', line):
+                    good_lines += 1
+            if good_lines != 2:
+                if f in ['/usr/bin/pzstd', '/usr/bin/zstd']:
+                    # a newer zstd can be installed from epel (on RH),
+                    # but zstd-debuginfo will still be ours
+                    continue
+                print("gdb for %s output:" % f, gdbout)
+                raise Exception("No valid backtrace for %s." % f)
 
 
 @pytest.mark.full_install
