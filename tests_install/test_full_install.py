@@ -15,6 +15,7 @@ from helpers.os_helpers import get_process_pids
 
 def check_executables(pginst, packages):
     for package in packages:
+        print('Analyzing package %s.' % package)
         pfiles = pginst.get_files_in_package(package)
         for f in pfiles:
             if f.startswith('/usr/lib/debug/'):
@@ -26,7 +27,7 @@ def check_executables(pginst, packages):
                 raise Exception('Error opening file "%s".' % f)
             if not fout.startswith(f + ': ELF '):
                 continue
-            print "ELF executable found:", f
+            print "\tELF executable found:", f
             lddout = subprocess.check_output(
                 'LANG=C ldd "%s"' % f, shell=True).split("\n")
             error = False
@@ -49,9 +50,9 @@ def check_executables(pginst, packages):
                 stderr=subprocess.STDOUT, shell=True).split("\n")
             good_lines = 0
             for line in gdbout:
-                if 'Breakpoint 1, main ' in line:
+                if re.match(r'Breakpoint 1, [a-z0-9_:]*main ', line):
                     good_lines += 1
-                if re.match(r'#0\s+[a-z_]*main\s+\(', line):
+                if re.match(r'#0\s+[a-z0-9_:]*main\s+\(', line):
                     good_lines += 1
             if good_lines != 2:
                 if f in ['/usr/bin/pzstd', '/usr/bin/zstd']:
