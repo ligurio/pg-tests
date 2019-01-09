@@ -45,14 +45,14 @@ def check_executables(pginst, packages):
             if f.endswith('.so') or '.so.' in os.path.basename(f):
                 continue
             gdbout = subprocess.check_output(
-                'gdb --batch -ex "b main" -ex run -ex step -ex bt -ex cont'
+                'gdb --batch -ex "b main" -ex run -ex next -ex bt -ex cont'
                 ' --args  "%s" --version' % f,
                 stderr=subprocess.STDOUT, shell=True).split("\n")
             good_lines = 0
             for line in gdbout:
                 if re.match(r'Breakpoint 1, [a-z0-9_:]*main ', line):
                     good_lines += 1
-                if re.match(r'#0\s+[a-z0-9_:]*main\s+\(', line):
+                if re.match(r'#0\s+([a-z0-9_:]*main|get_progname)\s+\(', line):
                     good_lines += 1
             if good_lines != 2:
                 if f in ['/usr/bin/pzstd', '/usr/bin/zstd']:
