@@ -122,6 +122,7 @@ if [ $exitcode -eq 0 ]; then
     sudo -u postgres $1/bin/initdb -D tmpdb
     printf "\n
 port=25432\n
+autovacuum=off\n
 old_snapshot_threshold=0\n
 max_replication_slots=10\n
 wal_level=logical\n
