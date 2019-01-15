@@ -22,7 +22,7 @@
 
   - name: Update repos and install acpid-events-power, gdb (ALT)
     shell: apt-get update &&
-           apt-get install -y gdb acpid-events-power && /sbin/service acpid restart;
+           apt-get install -y gdb acpid-events-power && /sbin/service acpid restart || exit 1;
            sed s/#ZONE=/ZONE=/ -i /etc/sysconfig/clock; /sbin/service clock tzset;
            echo "Enable coredump on altlinux-spt-7 ( https://www.altlinux.org/Features/Core )";
            sed "s/^\(ulimit -Sc 0\)/# \1/" -i /etc/profile;
