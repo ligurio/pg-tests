@@ -125,20 +125,22 @@ def copy_reports_win(reportname, reportsdir, destreports, domipaddress):
     :return:
     """
 
-    subprocess.call('net usershare list | grep pg-tests-reports && '
-                    'net usershare delete pg-tests-reports', shell=True)
-    subprocess.check_call('net usershare add pg-tests-reports %s '
-                          '"pg-tests reports" everyone:F guest_ok=y' %
-                          os.path.abspath(destreports), shell=True)
+    sharename = 'pg-tests-reports-%s' % domipaddress
+    subprocess.call(
+        'net usershare list | grep %s && net usershare delete %s' %
+        (sharename, sharename), shell=True)
+    subprocess.check_call(
+        'net usershare add %s %s "pg-tests reports" everyone:F guest_ok=y' %
+        (sharename, os.path.abspath(destreports)), shell=True)
 
-    share = r'\\%s\pg-tests-reports' % get_virt_ip()
+    share = r'\\%s\%s' % (get_virt_ip(), sharename)
     cmd = r'net use {0} /user:test test & ' \
           r'xcopy /Y /F .\pg-tests\{1}.* {0}\ & ' \
           r'xcopy /Y /F .\pg-tests\reports {0}\{2}\ '. \
           format(share, reportname, reportsdir.replace('/', '\\'))
     exec_command_win(cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD)
-    subprocess.check_call('net usershare delete pg-tests-reports',
-                          shell=True)
+    subprocess.check_call(
+        'net usershare delete %s' % sharename, shell=True)
 
 
 def exec_command(cmd, hostname, login, password,
