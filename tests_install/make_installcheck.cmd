@@ -96,6 +96,6 @@ if [ -f src/test/default_collation/icu/t/001_default_collation.pl ] && ! patch -
 
 set +e
 echo "`date -Iseconds`: Running $confopts make -e installcheck-world ..."
-sh -c "$confopts make -e installcheck-world EXTRA_TESTS=numeric_big" 2>&1 | tee /tmp/installcheck.log; exitcode=$?
+sh -c "$confopts make -e installcheck-world EXTRA_TESTS=numeric_big" 2>&1 | gawk '{ print strftime("%H:%M:%S "), $0; fflush() }' | tee /tmp/installcheck.log; exitcode=$?
 for df in `find . -name *.diffs`; do echo;echo "    vvvv $df vvvv    "; cat $df; echo "    ^^^^^^^^"; done;
 exit $exitcode
