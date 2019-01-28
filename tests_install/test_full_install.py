@@ -13,6 +13,88 @@ from helpers.os_helpers import get_directory_size
 from helpers.os_helpers import get_process_pids
 
 
+SERVER_APPLICATIONS = {
+    '1c-10':
+        ['initdb', 'pg_archivecleanup', 'pg_controldata', 'pg_ctl',
+         'pg_resetwal', 'pg_rewind', 'pg-setup', 'pg_test_fsync',
+         'pg_test_timing', 'pg_upgrade', 'pg_waldump', 'postgres',
+         'postmaster'],
+    'std-10':
+        ['initdb', 'pg_archivecleanup', 'pg_controldata', 'pg_ctl',
+         'pg_resetwal', 'pg_rewind', 'pg-setup', 'pg_test_fsync',
+         'pg_test_timing', 'pg_upgrade', 'pg_waldump', 'postgres',
+         'postmaster'],
+    'ent-10':
+        ['initdb', 'pg_archivecleanup', 'pg_controldata', 'pg_ctl',
+         'pg_resetwal', 'pg_rewind', 'pg-setup', 'pg_test_fsync',
+         'pg_test_timing', 'pg_upgrade', 'pg_waldump', 'postgres',
+         'postmaster'],
+    '1c-11':
+        ['initdb', 'pg_archivecleanup', 'pg_controldata', 'pg_ctl',
+         'pg_resetwal', 'pg_rewind', 'pg-setup', 'pg_test_fsync',
+         'pg_test_timing', 'pg_upgrade', 'pg_verify_checksums',
+         'pg_waldump', 'postgres', 'postmaster'],
+    'std-11':
+        ['initdb', 'pg_archivecleanup', 'pg_controldata', 'pg_ctl',
+         'pg_resetwal', 'pg_rewind', 'pg-setup', 'pg_test_fsync',
+         'pg_test_timing', 'pg_upgrade', 'pg_verify_checksums',
+         'pg_waldump', 'postgres', 'postmaster'],
+    'ent-11':
+        ['initdb', 'pg_archivecleanup', 'pg_controldata', 'pg_ctl',
+         'pg_resetwal', 'pg_rewind', 'pg-setup', 'pg_test_fsync',
+         'pg_test_timing', 'pg_upgrade', 'pg_verify_checksums',
+         'pg_waldump', 'postgres', 'postmaster'],
+}
+
+CLIENT_APPLICATIONS = {
+    '1c-10':
+        ['clusterdb', 'createdb', 'createuser', 'dropdb', 'dropuser',
+         'pg_basebackup', 'pgbench', 'pg_dump', 'pg_dumpall',
+         'pg_isready', 'pg_receivewal', 'pg_recvlogical', 'pg_restore',
+         'psql', 'reindexdb', 'vacuumdb'],
+    'std-10':
+        ['clusterdb', 'createdb', 'createuser', 'dropdb', 'dropuser',
+         'pg_basebackup', 'pgbench', 'pg_dump', 'pg_dumpall',
+         'pg_isready', 'pg_receivewal', 'pg_recvlogical', 'pg_restore',
+         'psql', 'reindexdb', 'vacuumdb'],
+    'ent-10':
+        ['clusterdb', 'createdb', 'createuser', 'dropdb', 'dropuser',
+         'pg_basebackup', 'pgbench', 'pg_dump', 'pg_dumpall',
+         'pg_isready', 'pg_receivewal', 'pg_recvlogical', 'pg_restore',
+         'psql', 'reindexdb', 'vacuumdb'],
+    '1c-11':
+        ['clusterdb', 'createdb', 'createuser', 'dropdb', 'dropuser',
+         'pg_basebackup', 'pgbench', 'pg_dump', 'pg_dumpall',
+         'pg_isready', 'pg_receivewal', 'pg_recvlogical', 'pg_restore',
+         'psql', 'reindexdb', 'vacuumdb'],
+    'std-11':
+        ['clusterdb', 'createdb', 'createuser', 'dropdb', 'dropuser',
+         'pg_basebackup', 'pgbench', 'pg_dump', 'pg_dumpall',
+         'pg_isready', 'pg_receivewal', 'pg_recvlogical', 'pg_restore',
+         'psql', 'reindexdb', 'vacuumdb'],
+    'ent-11':
+        ['clusterdb', 'createdb', 'createuser', 'dropdb', 'dropuser',
+         'pg_basebackup', 'pgbench', 'pg_dump', 'pg_dumpall',
+         'pg_isready', 'pg_receivewal', 'pg_recvlogical', 'pg_restore',
+         'psql', 'reindexdb', 'vacuumdb'],
+}
+
+DEV_APPLICATIONS = {
+    '1c-10':
+        ['ecpg', 'pg_config'],
+    'std-10':
+        ['ecpg', 'pg_config'],
+    'ent-10':
+        ['ecpg', 'pg_config'],
+    '1c-11':
+        ['ecpg', 'pg_config'],
+    'std-11':
+        ['ecpg', 'pg_config'],
+    'ent-11':
+        ['ecpg', 'pg_config'],
+}
+
+
 def check_executables(pginst, packages):
     for package in packages:
         print('Analyzing package %s.' % package)
@@ -63,6 +145,55 @@ def check_executables(pginst, packages):
                 raise Exception("No valid backtrace for %s." % f)
 
 
+def check_package_contents(pginst, packages):
+
+    def check_contents(package, contents, must_present, must_absent):
+        for pi in must_present:
+            found = False
+            for item in contents:
+                if item.endswith(os.sep + pi):
+                    found = True
+            if not found:
+                raise Exception(
+                    "Application %s not found in package %s." % (pi, package))
+        for item in contents:
+            for ai in must_absent:
+                if (package.endswith('-dev') or package.endswith('-devel')) \
+                   and '/include/' in item:
+                    continue
+                if (re.search('/' + ai + '$', item) or
+                   re.search('/man/.*/' + ai + r'\..*', item) or
+                   re.search('/' + ai + r'.*\.mo$', item)):
+                    raise Exception(
+                        "Application %s found in package %s (file: %s)." %
+                        (ai, package, item))
+
+    if pginst.product != "postgrespro":
+        return
+    if pginst.milestone != "alpha":  # TODO: Remove before 2019.02 release
+        return
+    pgid = '%s-%s' % (pginst.edition, pginst.version)
+    if (pgid not in SERVER_APPLICATIONS):
+        return
+    sapps = SERVER_APPLICATIONS[pgid]
+    capps = CLIENT_APPLICATIONS[pgid]
+    dapps = DEV_APPLICATIONS[pgid]
+    for package in packages:
+        if package.endswith('-debuginfo') or package.endswith('-dbg') or \
+           package.endswith('-docs') or package.endswith('-docs-ru'):
+            continue
+        pfiles = pginst.get_files_in_package(package)
+        if package.endswith('-server'):
+            check_contents(package, pfiles, sapps, capps + dapps)
+        elif package.endswith('-client'):
+            check_contents(package, pfiles, capps, sapps + dapps)
+        elif package.startswith('postgrespro') and (
+             package.endswith('-dev') or package.endswith('-devel')):
+            check_contents(package, pfiles, dapps, sapps + capps)
+        else:
+            check_contents(package, pfiles, [], sapps + capps + dapps)
+
+
 @pytest.mark.full_install
 class TestFullInstall():
 
@@ -109,6 +240,7 @@ class TestFullInstall():
                   "\n".join(all_available_packages))
             pginst.install_full()
             pginst.install_package(" ".join(all_available_packages))
+            check_package_contents(pginst, all_available_packages)
             check_executables(pginst, all_available_packages)
             pginst.initdb_start()
         else:
