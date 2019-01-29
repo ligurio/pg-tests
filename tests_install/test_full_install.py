@@ -161,6 +161,8 @@ def check_package_contents(pginst, packages):
                 if (package.endswith('-dev') or package.endswith('-devel')) \
                    and '/include/' in item:
                     continue
+                if package.endswith('-jit') and '/bitcode/' in item:
+                    continue
                 if (re.search('/' + ai + '$', item) or
                    re.search('/man/.*/' + ai + r'\..*', item) or
                    re.search('/' + ai + r'.*\.mo$', item)):
