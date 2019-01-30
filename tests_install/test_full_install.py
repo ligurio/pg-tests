@@ -165,7 +165,7 @@ def check_package_contents(pginst, packages):
                     continue
                 if (re.search('/' + ai + '$', item) or
                    re.search('/man/.*/' + ai + r'\..*', item) or
-                   re.search('/' + ai + r'.*\.mo$', item)):
+                   re.search('/' + ai + r'\b.*\.mo$', item)):
                     raise Exception(
                         "Application %s found in package %s (file: %s)." %
                         (ai, package, item))
