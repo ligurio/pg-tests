@@ -43,7 +43,7 @@ else
 bitness=64; gcc=mingw-w64-x86_64-gcc; host=x86_64-w64-mingw32;
 fi
 pacman --noconfirm -S tar make diffutils patch perl $gcc
-export PATH="/mingw$bitness/bin:/usr/bin/core_perl:$PGPATH/bin:$PATH"
+export PATH="/mingw$bitness/bin:/usr/bin/core_perl:$PATH:$PGPATH/bin"
 echo PATH=$PATH
 echo PGPORT=$PGPORT
 unset PGDATA PGLOCALEDIR
@@ -61,6 +61,14 @@ set -o pipefail
 echo "`date -Iseconds`: Configuring... "
 CFLAGS=" -D WINVER=0x0600 -D _WIN32_WINNT=0x0600" LIBS="-lktmw32" ./configure --enable-tap-tests --host=$host --without-zlib --prefix="$PGPATH" 2>&1 | tee configure.log
 pwd
+
+# Pass to `make installcheck` all the options (with-*, enable-*), which were passed to configure
+confopts="python_majorversion=2"
+opts=`$PGPATH/bin/pg_config --configure | grep -Eo "'[^']*'|[^' ]*" | sed -e "s/^'//" -e "s/'$//"`
+while read -r opt;
+    do case "$opt" in --with-*=*) ;; --with-* | --enable-*) opt="${opt/#--/}"; opt="${opt//-/_}" confopts="$confopts $opt=yes ";; esac;
+done <<< "$opts";
+echo "confopts: $confopts"
 ls -l src/interfaces/ecpg/test/
 echo "Fixing ECPG test for installcheck..."
 sed -e "s@^ECPG = ../../preproc/ecpg@ECPG = ecpg@" \
@@ -72,13 +80,11 @@ sed -e "s@^\t\./pg_regress@\techo skipped ./pg_regress@" -i src/interfaces/ecpg/
 echo "Disabling dblink test (msys doesn't see Windows processes)..."
 sed -e "s@^REGRESS = paths dblink@REGRESS = paths@" -i contrib/dblink/Makefile
 echo "Disabling pg_basebackup/030_pg_recvlogical test (PGPRO-1527)"
-rm src/bin/pg_basebackup/t/030_pg_recvlogical.pl
+[ -f src/bin/pg_basebackup/t/030_pg_recvlogical.pl ] && rm src/bin/pg_basebackup/t/030_pg_recvlogical.pl
 echo "Disabling recovery/*logical_decoding test (PGPRO-1527)"
-rm src/test/recovery/t/*logical_decoding*.pl
+ls src/test/recovery/t/*logical_decoding*.pl >/dev/null 2>&1 && rm src/test/recovery/t/*logical_decoding*.pl
 echo "Dirty fix for undefined random()"
 sed -e "s@(long) random()@(long) rand()@" -i src/interfaces/libpq/fe-connect.c
-echo "Disabling isolation/timeouts test (Fails in pg-tests only with a message: step locktbl timed out after 75 seconds)"
-sed -e "s@test: timeouts@#test: timeouts@" -i src/test/isolation/isolation_schedule
 echo "`date -Iseconds`: Making native MinGW libs 1"
 (cd src/common && make -j4 2>&1 | tee /tmp/make_common.log)
 echo "`date -Iseconds`: Making native MinGW libs 2"
@@ -89,7 +95,7 @@ echo "Workaround for inability to merge PGPRO-626-ICU"
 if [ -f src/test/default_collation/icu/t/001_default_collation.pl ] && ! patch -N --dry-run -R -p1 -i /var/src/patches/win-icu-test.patch ; then patch -p1 -i /var/src/patches/win-icu-test.patch; fi
 
 set +e
-echo "`date -Iseconds`: Running installcheck-world"
-with_icu=yes make -e installcheck-world 2>&1 | tee /tmp/installcheck.log; exitcode=$?
+echo "`date -Iseconds`: Running $confopts make -e installcheck-world ..."
+sh -c "$confopts make -e installcheck-world EXTRA_TESTS=numeric_big" 2>&1 | gawk '{ print strftime("%H:%M:%S "), $0; fflush() }' | tee /tmp/installcheck.log; exitcode=$?
 for df in `find . -name *.diffs`; do echo;echo "    vvvv $df vvvv    "; cat $df; echo "    ^^^^^^^^"; done;
 exit $exitcode

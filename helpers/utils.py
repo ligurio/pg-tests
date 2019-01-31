@@ -83,10 +83,23 @@ def copy_file(remote_path, local_path, hostname, dir=False,
               product_name=None, product_version=None, product_edition=None,
               tests=None):
     import paramiko
+    connect_retry_count = 3
 
-    transport = paramiko.Transport((hostname, SSH_PORT))
-    transport.connect(username=REMOTE_LOGIN, password=REMOTE_PASSWORD)
-    sftp = paramiko.SFTPClient.from_transport(transport)
+    for trc in range(connect_retry_count):
+        try:
+            transport = paramiko.Transport((hostname, SSH_PORT))
+            transport.connect(username=REMOTE_LOGIN, password=REMOTE_PASSWORD)
+            sftp = paramiko.SFTPClient.from_transport(transport)
+            break
+        except (paramiko.AuthenticationException,
+                paramiko.BadHostKeyException,
+                paramiko.SSHException,
+                socket.error,
+                Exception) as e:
+            if trc >= connect_retry_count - 1:
+                raise e
+            sleep(CONNECT_RETRY_DELAY)
+
     if dir:
         print(sftp.listdir(remote_path))
         for file in sftp.listdir(remote_path):
@@ -100,7 +113,6 @@ def copy_file(remote_path, local_path, hostname, dir=False,
         sftp.get(remote_path, local_path)
     sftp.close()
     transport.close()
-    return 0
 
 
 def copy_reports_win(reportname, reportsdir, destreports, domipaddress):
@@ -113,20 +125,22 @@ def copy_reports_win(reportname, reportsdir, destreports, domipaddress):
     :return:
     """
 
-    subprocess.call('net usershare list | grep pg-tests-reports && '
-                    'net usershare delete pg-tests-reports', shell=True)
-    subprocess.check_call('net usershare add pg-tests-reports %s '
-                          '"pg-tests reports" everyone:F guest_ok=y' %
-                          os.path.abspath(destreports), shell=True)
+    sharename = 'pg-tests-reports-%s' % domipaddress
+    subprocess.call(
+        'net usershare list | grep %s && net usershare delete %s' %
+        (sharename, sharename), shell=True)
+    subprocess.check_call(
+        'net usershare add %s %s "pg-tests reports" everyone:F guest_ok=y' %
+        (sharename, os.path.abspath(destreports)), shell=True)
 
-    share = r'\\%s\pg-tests-reports' % get_virt_ip()
+    share = r'\\%s\%s' % (get_virt_ip(), sharename)
     cmd = r'net use {0} /user:test test & ' \
           r'xcopy /Y /F .\pg-tests\{1}.* {0}\ & ' \
           r'xcopy /Y /F .\pg-tests\reports {0}\{2}\ '. \
           format(share, reportname, reportsdir.replace('/', '\\'))
     exec_command_win(cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD)
-    subprocess.check_call('net usershare delete pg-tests-reports',
-                          shell=True)
+    subprocess.check_call(
+        'net usershare delete %s' % sharename, shell=True)
 
 
 def exec_command(cmd, hostname, login, password,
@@ -171,6 +185,7 @@ def exec_command(cmd, hostname, login, password,
     while chan.recv_stderr_ready():
         stderr += chan.recv_stderr(buff_size)
 
+    chan.close()
     client.close()
 
     if skip_ret_code_check:

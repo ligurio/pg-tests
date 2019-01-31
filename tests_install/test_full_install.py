@@ -2,6 +2,8 @@ import os
 import platform
 import glob
 import time
+import subprocess
+import re
 
 import pytest
 
@@ -9,6 +11,189 @@ from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall
 from helpers.os_helpers import get_directory_size
 from helpers.os_helpers import get_process_pids
+
+
+SERVER_APPLICATIONS = {
+    '1c-10':
+        ['initdb', 'pg_archivecleanup', 'pg_controldata', 'pg_ctl',
+         'pg_resetwal', 'pg_rewind', 'pg-setup', 'pg_test_fsync',
+         'pg_test_timing', 'pg_upgrade', 'pg_waldump', 'postgres',
+         'postmaster'],
+    'std-10':
+        ['initdb', 'pg_archivecleanup', 'pg_controldata', 'pg_ctl',
+         'pg_resetwal', 'pg_rewind', 'pg-setup', 'pg_test_fsync',
+         'pg_test_timing', 'pg_upgrade', 'pg_waldump', 'postgres',
+         'postmaster'],
+    'ent-10':
+        ['initdb', 'pg_archivecleanup', 'pg_controldata', 'pg_ctl',
+         'pg_resetwal', 'pg_rewind', 'pg-setup', 'pg_test_fsync',
+         'pg_test_timing', 'pg_upgrade', 'pg_waldump', 'postgres',
+         'postmaster'],
+    '1c-11':
+        ['initdb', 'pg_archivecleanup', 'pg_controldata', 'pg_ctl',
+         'pg_resetwal', 'pg_rewind', 'pg-setup', 'pg_test_fsync',
+         'pg_test_timing', 'pg_upgrade', 'pg_verify_checksums',
+         'pg_waldump', 'postgres', 'postmaster'],
+    'std-11':
+        ['initdb', 'pg_archivecleanup', 'pg_controldata', 'pg_ctl',
+         'pg_resetwal', 'pg_rewind', 'pg-setup', 'pg_test_fsync',
+         'pg_test_timing', 'pg_upgrade', 'pg_verify_checksums',
+         'pg_waldump', 'postgres', 'postmaster'],
+    'ent-11':
+        ['initdb', 'pg_archivecleanup', 'pg_controldata', 'pg_ctl',
+         'pg_resetwal', 'pg_rewind', 'pg-setup', 'pg_test_fsync',
+         'pg_test_timing', 'pg_upgrade', 'pg_verify_checksums',
+         'pg_waldump', 'postgres', 'postmaster'],
+}
+
+CLIENT_APPLICATIONS = {
+    '1c-10':
+        ['clusterdb', 'createdb', 'createuser', 'dropdb', 'dropuser',
+         'pg_basebackup', 'pgbench', 'pg_dump', 'pg_dumpall',
+         'pg_isready', 'pg_receivewal', 'pg_recvlogical', 'pg_restore',
+         'psql', 'reindexdb', 'vacuumdb'],
+    'std-10':
+        ['clusterdb', 'createdb', 'createuser', 'dropdb', 'dropuser',
+         'pg_basebackup', 'pgbench', 'pg_dump', 'pg_dumpall',
+         'pg_isready', 'pg_receivewal', 'pg_recvlogical', 'pg_restore',
+         'psql', 'reindexdb', 'vacuumdb'],
+    'ent-10':
+        ['clusterdb', 'createdb', 'createuser', 'dropdb', 'dropuser',
+         'pg_basebackup', 'pgbench', 'pg_dump', 'pg_dumpall',
+         'pg_isready', 'pg_receivewal', 'pg_recvlogical', 'pg_restore',
+         'psql', 'reindexdb', 'vacuumdb'],
+    '1c-11':
+        ['clusterdb', 'createdb', 'createuser', 'dropdb', 'dropuser',
+         'pg_basebackup', 'pgbench', 'pg_dump', 'pg_dumpall',
+         'pg_isready', 'pg_receivewal', 'pg_recvlogical', 'pg_restore',
+         'psql', 'reindexdb', 'vacuumdb'],
+    'std-11':
+        ['clusterdb', 'createdb', 'createuser', 'dropdb', 'dropuser',
+         'pg_basebackup', 'pgbench', 'pg_dump', 'pg_dumpall',
+         'pg_isready', 'pg_receivewal', 'pg_recvlogical', 'pg_restore',
+         'psql', 'reindexdb', 'vacuumdb'],
+    'ent-11':
+        ['clusterdb', 'createdb', 'createuser', 'dropdb', 'dropuser',
+         'pg_basebackup', 'pgbench', 'pg_dump', 'pg_dumpall',
+         'pg_isready', 'pg_receivewal', 'pg_recvlogical', 'pg_restore',
+         'psql', 'reindexdb', 'vacuumdb'],
+}
+
+DEV_APPLICATIONS = {
+    '1c-10':
+        ['ecpg', 'pg_config'],
+    'std-10':
+        ['ecpg', 'pg_config'],
+    'ent-10':
+        ['ecpg', 'pg_config'],
+    '1c-11':
+        ['ecpg', 'pg_config'],
+    'std-11':
+        ['ecpg', 'pg_config'],
+    'ent-11':
+        ['ecpg', 'pg_config'],
+}
+
+
+def check_executables(pginst, packages):
+    for package in packages:
+        print('Analyzing package %s.' % package)
+        pfiles = pginst.get_files_in_package(package)
+        for f in pfiles:
+            if f.startswith('/usr/lib/debug/'):
+                continue
+            fout = subprocess.check_output(
+                'LANG=C file "%s"' % f, shell=True).strip()
+            if fout.startswith(f + ': cannot open'):
+                print fout
+                raise Exception('Error opening file "%s".' % f)
+            if not fout.startswith(f + ': ELF '):
+                continue
+            print "\tELF executable found:", f
+            lddout = subprocess.check_output(
+                'LANG=C ldd "%s"' % f, shell=True).split("\n")
+            error = False
+            for line in lddout:
+                if line.strip() == "" or line.startswith("\tlinux") or \
+                   line.startswith("\t/") or line == ("\tstatically linked"):
+                    continue
+                if not (' => ' in line) or ' not found' in line:
+                    print "Invalid line: [%s]" % line
+                    error = True
+                    break
+            if error:
+                print 'ldd "%s":' % f, lddout
+                raise Exception("Invalid dynamic dependencies")
+            if f.endswith('.so') or '.so.' in os.path.basename(f):
+                continue
+            gdbout = subprocess.check_output(
+                'gdb --batch -ex "b main" -ex run -ex next -ex bt -ex cont'
+                ' --args  "%s" --version' % f,
+                stderr=subprocess.STDOUT, shell=True).split("\n")
+            good_lines = 0
+            for line in gdbout:
+                if re.match(r'Breakpoint 1, [a-z0-9_:]*main ', line):
+                    good_lines += 1
+                if re.match(r'#0\s+([a-z0-9_:]*main|get_progname)\s+\(', line):
+                    good_lines += 1
+            if good_lines != 2:
+                if f in ['/usr/bin/pzstd', '/usr/bin/zstd']:
+                    # a newer zstd can be installed from epel (on RH),
+                    # but zstd-debuginfo will still be ours
+                    continue
+                print("gdb for %s output:" % f, gdbout)
+                raise Exception("No valid backtrace for %s." % f)
+
+
+def check_package_contents(pginst, packages):
+
+    def check_contents(package, contents, must_present, must_absent):
+        for pi in must_present:
+            found = False
+            for item in contents:
+                if item.endswith(os.sep + pi):
+                    found = True
+            if not found:
+                raise Exception(
+                    "Application %s not found in package %s." % (pi, package))
+        for item in contents:
+            for ai in must_absent:
+                if (package.endswith('-dev') or package.endswith('-devel')) \
+                   and '/include/' in item:
+                    continue
+                if package.endswith('-jit') and '/bitcode/' in item:
+                    continue
+                if (re.search('/' + ai + '$', item) or
+                   re.search('/man/.*/' + ai + r'\..*', item) or
+                   re.search('/' + ai + r'\b.*\.mo$', item)):
+                    raise Exception(
+                        "Application %s found in package %s (file: %s)." %
+                        (ai, package, item))
+
+    if pginst.product != "postgrespro":
+        return
+    if pginst.milestone != "alpha":  # TODO: Remove before 2019.02 release
+        return
+    pgid = '%s-%s' % (pginst.edition, pginst.version)
+    if (pgid not in SERVER_APPLICATIONS):
+        return
+    sapps = SERVER_APPLICATIONS[pgid]
+    capps = CLIENT_APPLICATIONS[pgid]
+    dapps = DEV_APPLICATIONS[pgid]
+    for package in packages:
+        if package.endswith('-debuginfo') or package.endswith('-dbg') or \
+           package.endswith('-docs') or package.endswith('-docs-ru'):
+            continue
+        pfiles = pginst.get_files_in_package(package)
+        if package.endswith('-server'):
+            check_contents(package, pfiles, sapps, capps + dapps)
+        elif package.endswith('-client'):
+            check_contents(package, pfiles, capps, sapps + dapps)
+        elif package.startswith('postgrespro') and (
+             package.endswith('-dev') or package.endswith('-devel')):
+            check_contents(package, pfiles, dapps, sapps + capps)
+        else:
+            check_contents(package, pfiles, [], sapps + capps + dapps)
 
 
 @pytest.mark.full_install
@@ -49,10 +234,16 @@ class TestFullInstall():
                            version=version, milestone=milestone,
                            branch=branch, windows=(self.system == 'Windows'))
         request.cls.pginst = pginst
-        pginst.setup_repo()
+        (reponame, repofile) = pginst.setup_repo()
         print("Running on %s." % target)
         if self.system != 'Windows':
+            all_available_packages = pginst.get_packages_in_repo(reponame)
+            print("All available packages in repo %s:\n" % reponame,
+                  "\n".join(all_available_packages))
             pginst.install_full()
+            pginst.install_package(" ".join(all_available_packages))
+            check_package_contents(pginst, all_available_packages)
+            check_executables(pginst, all_available_packages)
             pginst.initdb_start()
         else:
             pginst.install_perl_win()
@@ -80,7 +271,6 @@ class TestFullInstall():
         pginst = request.cls.pginst
         iprops = pginst.get_initdb_props()
         pginst.load_shared_libraries()
-        time.sleep(10)
         share_path = iprops['share_path'].replace('/', os.sep)
         controls = glob.glob(os.path.join(share_path,
                                           'extension', '*.control'))
@@ -257,6 +447,20 @@ $$ LANGUAGE plpgsql;"""
 
         result = pginst.exec_psql_select("SHOW passwordcheck.with_nonletters")
         assert result == "on"
+
+    @pytest.mark.test_src_debug
+    def test_src_debug(self, request):
+        if self.system == 'Windows':
+            pytest.skip("This test is not for Windows.")
+        pgsrcdirs = glob.glob('/usr/src/debug/postgrespro*')
+        for pgsrcdir in pgsrcdirs:
+            dircontents = os.listdir(pgsrcdir)
+            if len(dircontents) > 0:
+                print("List of directory %s:" % pgsrcdir)
+                print("\n".join(dircontents))
+                raise Exception(
+                    "Directory /usr/src/debug/postgrespro* is not empty.")
+            print("Directory %s is empty." % pgsrcdir)
 
     @pytest.mark.test_full_remove
     def test_full_remove(self, request):

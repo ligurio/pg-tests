@@ -15,6 +15,7 @@ import urllib
 import winrm
 import tempfile
 import glob
+import signal
 from subprocess import call
 
 from helpers.utils import (copy_file, copy_reports_win,
@@ -26,6 +27,7 @@ from helpers.utils import (copy_file, copy_reports_win,
 reload(sys)
 sys.setdefaultencoding('utf8')
 
+MAX_DURATION = 3 * 60 * 60
 DEBUG = False
 
 IMAGE_BASE_URL = 'http://webdav.l.postgrespro.ru/DIST/vm-images/test/'
@@ -43,7 +45,11 @@ ANSIBLE_INVENTORY_WIN = "%s ansible_host=%s \
                     ansible_password=%s \
                     ansible_winrm_server_cert_validation=ignore  \
                     ansible_port=5985  \
-                    ansible_connection=winrm \n"
+                    ansible_connection=winrm \
+                    ansible_winrm_read_timeout_sec=90 \
+                    ansible_winrm_operation_timeout_sec=60 \
+                    \n"
+
 REPORT_SERVER_URL = 'http://testrep.l.postgrespro.ru/'
 TESTS_PAYLOAD_DIR = 'resources'
 TESTS_PAYLOAD_TAR = 'pg-tests.tgz'
@@ -187,17 +193,17 @@ def prepare_payload(tests_dir, clean):
             raise Exception("Downloading get-pip failed.")
 
     subprocess.check_call(
-        "wget -q https://codeload.github.com/postgrespro/"
+        "wget -T 60 -q https://codeload.github.com/postgrespro/"
         "pg_wait_sampling/tar.gz/master -O extras/pg_wait_sampling.tar.gz",
         cwd=pgtd, shell=True)
 
     subprocess.check_call(
-        "wget -q https://codeload.github.com/Test-More/"
+        "wget -T 60 -q https://codeload.github.com/Test-More/"
         "test-more/tar.gz/v0.90 -O extras/test-more.tar.gz",
         cwd=pgtd, shell=True)
 
-    retcode = call("zip -q -r _%s pg-tests" % TESTS_PAYLOAD_ZIP,
-                   cwd=tempdir, shell=True)
+    retcode = call("zip -q -x '*.pyc' -r _%s pg-tests" %
+                   TESTS_PAYLOAD_ZIP, cwd=tempdir, shell=True)
     if retcode != 0:
         raise Exception("Preparing zip payload failed.")
 
@@ -229,8 +235,8 @@ def prepare_payload(tests_dir, clean):
     if retcode != 0:
         raise Exception("Downloading pip-requirements(27mu) failed.")
 
-    retcode = call("tar -czf _%s pg-tests" % TESTS_PAYLOAD_TAR,
-                   cwd=tempdir, shell=True)
+    retcode = call("tar -czf _%s --exclude='*.pyc' pg-tests" %
+                   TESTS_PAYLOAD_TAR, cwd=tempdir, shell=True)
     if retcode != 0:
         raise Exception("Preparing tar payload failed.")
     # First move to the target directory to prepare for atomic rename
@@ -470,15 +476,17 @@ def export_results(domname, linux_os, domipaddress, reportname,
         pass
     finally:
         subprocess.call(
-            ['curl', '-s', '-S', '-T', 'reports/%s.html' % reportname,
+            ['curl', '-s', '-S', '-o', '/dev/null',
+             '-T', 'reports/%s.html' % reportname,
              REPORT_SERVER_URL])
         subprocess.call(
-            ['curl', '-s', '-S', '-T', 'reports/%s.xml' % reportname,
+            ['curl', '-s', '-S', '-o', '/dev/null',
+             '-T', 'reports/%s.xml' % reportname,
              REPORT_SERVER_URL])
         for file in os.listdir('reports'):
             if '.json' in file:
-                subprocess.call(['curl', '-s', '-S', '-T',
-                                 os.path.join('reports', file),
+                subprocess.call(['curl', '-s', '-S', '-o', '/dev/null',
+                                 '-T', os.path.join('reports', file),
                                  REPORT_SERVER_URL])
             else:
                 continue
@@ -571,7 +579,14 @@ def close_env(domname, saveimg=False, destroys0=False):
     conn.close()
 
 
+def timeout_handler(self, *args):
+    raise Exception("Timeout")
+
+
 def main():
+
+    signal.signal(signal.SIGALRM, timeout_handler)
+    signal.alarm(MAX_DURATION)
 
     start = time.time()
     names = list_images()
@@ -649,14 +664,19 @@ def main():
             save_env(domname)
 
         for test in sorted(tests):
-            print("Running test %s..." % test)
+            print("Performing test %s..." % test)
             testname = test.split('/')[1].split('.')[0]
             if len(tests) > 1:
+                print("Restoring environment (%s)..." % domname)
                 restore_env(domname)
                 try:
+                    print("Creating environment (%s, %s)..." %
+                          (target, domname))
                     domipaddress = create_env(
                         target, domname, get_dom_disk(domname))[0]
+                    print("Waiting for boot (%s)..." % domipaddress)
                     wait_for_boot(domipaddress, linux=linux_os)
+                    print("Boot completed.")
                 except Exception as e:
                     # Don't leave a domain that is failed to boot running
                     close_env(domname, saveimg=False, destroys0=True)
@@ -672,6 +692,7 @@ def main():
                 args.branch)
             if DEBUG:
                 print("Test command:\n%s" % cmd)
+            print("Running test (%s)..." % testname)
             if not linux_os:
                 retcode, stdout, stderr = exec_command_win(
                     cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD,
