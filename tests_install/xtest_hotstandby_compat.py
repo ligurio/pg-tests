@@ -162,6 +162,7 @@ def prepare_pg_regress(pginst, target_dir):
         cmd = (r'c:\msys64\usr\bin\bash -c "'
                'source setenv.sh && '
                'patch -p1 -i ../patches/fix-pg_cancel_backend.patch && '
+               'patch -p1 -i ../patches/hs_standby_allowed~e8ec19cd.patch && '
                'make -j4 -C src/common && '
                'make -j4 -C src/backend libpostgres.a && '
                'make -j4 -C src/test/regress"')
@@ -169,6 +170,7 @@ def prepare_pg_regress(pginst, target_dir):
     else:
         cmd = ('sudo -u postgres sh -c "'
                'patch -p1 -i ../patches/fix-pg_cancel_backend.patch && '
+               'patch -p1 -i ../patches/hs_standby_allowed~e8ec19cd.patch && '
                'make -C src/test/regress pg_regress"')
         subprocess.check_call(cmd, cwd=pgsrcdir, shell=True)
     return pgsrcdir
