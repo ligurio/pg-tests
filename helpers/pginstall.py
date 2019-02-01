@@ -1227,12 +1227,11 @@ baseurl=%s
             else:
                 raise Exception('OS %s is not supported.' % self.os_name)
 
-    def init_cluster(self, force_remove):
+    def init_cluster(self, force_remove, params=''):
         if (os.path.exists(self.get_datadir())):
             if force_remove:
                 self.remove_data()
         os.makedirs(self.get_datadir())
-        extraparam = ''
         if not self.__is_os_windows():
             subprocess.check_call('chown -R postgres:postgres %s' %
                                   self.get_datadir(), shell=True)
@@ -1241,13 +1240,13 @@ baseurl=%s
                 'icacls "%s" /grant *S-1-5-32-545:(OI)(CI)F /T' %
                 self.get_datadir(),
                 shell=True)
-            extraparam = ' -U postgres '
+            params += ' -U postgres '
 
         cmd = '%s"%sinitdb" %s -D "%s"' % \
               (
                   self.pg_preexec,
                   self.get_server_bin_path(),
-                  extraparam,
+                  params,
                   self.get_datadir()
               )
         subprocess.check_call(cmd, shell=True, cwd="/")
