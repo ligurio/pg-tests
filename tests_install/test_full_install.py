@@ -182,7 +182,8 @@ def check_package_contents(pginst, packages):
     dapps = DEV_APPLICATIONS[pgid]
     for package in packages:
         if package.endswith('-debuginfo') or package.endswith('-dbg') or \
-           package.endswith('-docs') or package.endswith('-docs-ru'):
+           package.endswith('-docs') or package.endswith('-docs-ru') or \
+           package.endswith('-src'):
             continue
         pfiles = pginst.get_files_in_package(package)
         if package.endswith('-server'):
