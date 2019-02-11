@@ -39,12 +39,14 @@ YUM_BASED = ['CentOS Linux', 'RHEL', 'CentOS',
              '\xd1\x84\xd0\xb5\xd1\x80\xd0\xb0 ',
              'RED OS release MUROM (']
 DEBIAN_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux', 'AstraLinuxSE',
-                'Astra Linux SE', "\"Astra Linux SE\"", "\"AstraLinuxSE\""]
+                'Astra Linux SE', "\"Astra Linux SE\"", "\"AstraLinuxSE\"",
+                'AstraLinuxCE']
 APT_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux', 'AstraLinuxSE',
              'Astra Linux SE', "\"Astra Linux SE\"", "\"AstraLinuxSE\"",
+             'AstraLinuxCE',
              "ALT Linux ", "ALT "]
 ASTRA_BASED = ['AstraLinuxSE', 'Astra Linux SE', "\"Astra Linux SE\"",
-               "\"AstraLinuxSE\""]
+               "\"AstraLinuxSE\"", 'AstraLinuxCE']
 ALT_BASED = ['ALT Linux ', 'ALT ']
 SUSE_BASED = ['SUSE Linux Enterprise Server ']
 ZYPPER_BASED = ['SUSE Linux Enterprise Server ']
@@ -449,6 +451,9 @@ class PgInstall:
                 return "astra-smolensk/1.5"
             elif self.os_version == "1.5.28":
                 return "astra-smolensk/1.6"
+        elif self.os_name == "AstraLinuxCE":
+            if self.os_version.startswith("2.12"):
+                return "astra-orel/2.12"
         elif self.os_name == "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1" \
                 "\xd1\x84\xd0\xb5\xd1\x80\xd0\xb0 ":
             return "msvsphere"

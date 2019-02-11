@@ -23,6 +23,7 @@
   - name: Update repos and install acpid-events-power, gdb (ALT)
     shell: apt-get update &&
            apt-get install -y gdb acpid-events-power && /sbin/service acpid restart || exit 1;
+           apt-get install -y glibc-core;
            sed s/#ZONE=/ZONE=/ -i /etc/sysconfig/clock; /sbin/service clock tzset;
            echo "Enable coredump on altlinux-spt-7 ( https://www.altlinux.org/Features/Core )";
            sed "s/^\(ulimit -Sc 0\)/# \1/" -i /etc/profile;
@@ -34,18 +35,6 @@
     become: true
     tags:
     - skip_ansible_lint
-
-  - name: remove Astra Linux Orel frozen repository
-    apt_repository: repo="deb http://mirror.yandex.ru/astra/frozen/orel/1.11/repository orel main contrib non-free" state=absent
-    when: ansible_distribution == 'Astra Linux (Orel)'
-    become_method: su
-    become: true
-
-  - name: add Astra Linux Orel stable repository
-    apt_repository: repo="deb http://mirror.yandex.ru/astra/stable/orel/1.11/repository orel main contrib non-free" state=present
-    when: ansible_distribution == 'Astra Linux (Orel)'
-    become_method: su
-    become: true
 
   - name: Mount DVD(s) (if available)
     shell: if /sbin/blkid /dev/sr0; then
