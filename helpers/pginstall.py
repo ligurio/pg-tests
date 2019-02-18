@@ -90,11 +90,11 @@ PRELOAD_LIBRARIES = {
          'plantuner', 'shared_ispell', 'pg_pathman'],
     'std-9.6':
         ['auth_delay', 'auto_explain',
-         'plantuner', 'shared_ispell', 'pg_pathman'],
+         'plantuner', 'shared_ispell', 'pg_pageprep', 'pg_pathman'],
     'ent-9.6':
         ['auth_delay', 'auto_explain',
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
-         'shared_ispell', 'pg_wait_sampling', 'pg_pathman'],
+         'shared_ispell', 'pg_wait_sampling', 'pg_pageprep',  'pg_pathman'],
     'ent-cert-9.6':
         ['auth_delay', 'auto_explain',
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
