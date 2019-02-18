@@ -282,6 +282,16 @@
       remote_src: yes
     when: ansible_os_family != "Windows"
 
+  - name: set permissions to /home/test/pg-tests
+    file:
+      path: '{{ item.path }}'
+      mode: '{{ item.mode }}'
+    with_items:
+      - { path: '/home/test/pg-tests', mode: '0777' }
+      - { path: '/home/test', mode: '0771' }
+    when: ansible_os_family != "Windows"
+    become_method: su
+
   - name: update python-six on Ubuntu 14.04
     shell: wget http://archive.ubuntu.com/ubuntu/pool/main/s/six/python-six_1.10.0-3_all.deb &&
         dpkg -i python-six_1.10.0-3_all.deb
