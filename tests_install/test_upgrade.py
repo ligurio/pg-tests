@@ -348,7 +348,7 @@ def read_dump(file):
                 ):
                     copy_line = line
                     continue
-                if line == "\.":
+                if line == "\\.":
                     lines.append(copy_line)
                     copy_line = ''
                     lines_to_sort.sort()
