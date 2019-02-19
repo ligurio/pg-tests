@@ -17,19 +17,16 @@ import shutil
 UNSUPPORTED_PLATFORMS = {
     'postgresql--9.6': [
         "SUSE Linux Enterprise Server  11",
-        # "debian 8.4", "debian 9.0", "Ubuntu 18.10",
         "ALT Linux  7.0.4", "ALT Linux  6.0.1",
         "ALT Linux  7.0.5", "ALT  8.0", "ALT  8"
     ],
     'postgresql--10': [
         "SUSE Linux Enterprise Server  11",
-        # "debian 8.4", "debian 9.0", "Ubuntu 18.10",
         "ALT Linux  7.0.4", "ALT Linux  6.0.1",
         "ALT Linux  7.0.5", "ALT  8.0", "ALT  8"
     ],
     'postgresql--11': [
         "SUSE Linux Enterprise Server  11",
-        # "debian 8.4", "debian 9.0", "Ubuntu 18.10",
         "ALT Linux  7.0.4", "ALT Linux  6.0.1",
         "ALT Linux  7.0.5", "ALT  8.0", "ALT  8"
     ],
