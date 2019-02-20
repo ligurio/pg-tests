@@ -49,7 +49,7 @@ class TestExtensions():
         pginst.setup_repo()
         print("Running on %s." % target)
         if self.system != 'Windows':
-            pginst.install_base()
+            pginst.install_full()
             pginst.initdb_start()
         else:
             pginst.install_postgres_win()
@@ -126,3 +126,27 @@ class TestExtensions():
                 raise Exception("No DDL queries catched by pgbadger.")
             return
         raise Exception('Log files in "%s" are not found.' % logdir)
+
+    @pytest.mark.test_sr_plan
+    def test_sr_plan(self, request):
+        pginst = request.cls.pginst
+        if pginst.edition != 'ent' and pginst.edition != 'std':
+            print("sr_plan & pg_stat_statements test is only performed "
+                  "with standard and enterprise edition")
+            return
+        pginst.exec_psql("ALTER SYSTEM SET shared_preload_libraries = "
+                         "pg_stat_statements, sr_plan")
+        pginst.stop_service()
+        pginst.start_service()
+        pginst.exec_psql("CREATE EXTENSION pg_stat_statements;")
+        pginst.exec_psql("ALTER SYSTEM SET pg_stat_statements.track = 'all'")
+        pginst.exec_psql("ALTER SYSTEM SET pg_stat_statements.save = true")
+        pginst.stop_service()
+        pginst.start_service()
+        pginst.exec_psql("SELECT pg_stat_statements_reset()")
+        pginst.exec_psql("SELECT 'test string'")
+        pgs_count = pginst.exec_psql_select(
+            "SELECT COUNT(1) FROM pg_stat_statements")
+        if int(pgs_count) == 0:
+            raise Exception("No statements recorded in pg_stat_statements "
+                            "(due to conflict with sr_plan)")
