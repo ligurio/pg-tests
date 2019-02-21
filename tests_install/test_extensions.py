@@ -129,6 +129,7 @@ class TestExtensions():
 
     @pytest.mark.test_sr_plan
     def test_sr_plan(self, request):
+        return
         pginst = request.cls.pginst
         if pginst.edition != 'ent' and pginst.edition != 'std':
             print("sr_plan & pg_stat_statements test is only performed "
