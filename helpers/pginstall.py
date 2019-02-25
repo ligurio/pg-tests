@@ -148,6 +148,8 @@ class PgInstall:
         self.datadir = self.get_default_datadir()
         self.configdir = self.get_default_configdir()
         self.service_name = self.get_default_service_name()
+        self.reponame = None
+        self.all_packages_in_repo = None
 
     def get_repo_base(self):
         if self.milestone == "alpha":
@@ -252,13 +254,13 @@ class PgInstall:
             return base_package + '-devel'
         return base_package
 
-    def get_packages_in_repo(self, reponame):
+    def get_packages_in_repo(self):
         result = []
         if self.__is_os_windows():
             return result
         if self.__is_pm_yum():
             cmd = "sh -c \"LANG=C yum -q --disablerepo='*' "\
-                  "--enablerepo='%s' list available\"" % reponame
+                  "--enablerepo='%s' list available\"" % self.reponame
             ysout = command_executor(cmd, self.remote, self.host,
                                      REMOTE_ROOT, REMOTE_ROOT_PASSWORD,
                                      stdout=True).split('\n')
@@ -279,11 +281,11 @@ class PgInstall:
             # so the only way to find packages from the repository is
             # to parse `apt-cache showpkg` output
             # Use only relevant lists in separate directory to optimize parsing
-            cmd = "sh -c \"mkdir /tmp/t_r;" \
+            cmd = "sh -c \"rm -rf /tmp/t_r 2>/dev/null; mkdir /tmp/t_r;" \
                 "cp /var/lib/apt/lists/%s* /tmp/t_r/;" \
                 "echo 'Dir::State::Lists \\\"/tmp/t_r\\\";'>/tmp/t_apt.conf;" \
                 "APT_CONFIG=/tmp/t_apt.conf " \
-                "apt-cache --names-only search .\"" % reponame
+                "apt-cache --names-only search .\"" % self.reponame
             acout = command_executor(cmd, self.remote, self.host,
                                      REMOTE_ROOT, REMOTE_ROOT_PASSWORD,
                                      stdout=True).split('\n')
@@ -311,12 +313,11 @@ class PgInstall:
                     if line.strip() == 'Versions:':
                         state = 2
                 elif state == 2:
-                    if ('(/tmp/t_r/' + reponame) in line:
+                    if ('(/tmp/t_r/' + self.reponame) in line:
                         result.append(pkgname)
-                    pkgname = None
         elif self.__is_pm_apt():
             cmd = "sh -c \"grep -h -e 'Package:\\s\\+' "\
-                "/var/lib/apt/lists/%s*\"" % reponame
+                "/var/lib/apt/lists/%s*\"" % self.reponame
             gsout = command_executor(cmd, self.remote, self.host,
                                      REMOTE_ROOT, REMOTE_ROOT_PASSWORD,
                                      stdout=True).split('\n')
@@ -338,7 +339,7 @@ class PgInstall:
                 for pkgname in exclude:
                     result.remove(pkgname)
         elif self.__is_pm_zypper():
-            cmd = "sh -c \"LANG=C zypper search --repo %s\"" % reponame
+            cmd = "sh -c \"LANG=C zypper search --repo %s\"" % self.reponame
             zsout = command_executor(cmd, self.remote, self.host,
                                      REMOTE_ROOT, REMOTE_ROOT_PASSWORD,
                                      stdout=True).split('\n')
@@ -363,32 +364,27 @@ class PgInstall:
                                   stdout=True).strip().split('\n')
         return result
 
-    def get_all_packages_name(self):
-        if self.product == 'postgrespro':
-            if self.version in ['9.5', '9.6']:
-                if self.__is_os_debian_based():
-                    return self.get_base_package_name() + '*' + \
-                        ' %s-*-%s' % (self.product,
-                                      self.version.replace('.', '\\.')) + \
-                        ' %s-lib*' % (self.product)
-        elif self.product == 'postgresql':
-            if self.__is_os_altlinux():
-                return '^%s%s.*$' % (self.product,
-                                     self.version.replace('.', '\\.'))
-            if self.__is_os_debian_based():
-                return '^%s-*%s$' % (self.product,
-                                     self.version.replace('.', '\\.'))
-            elif self.__is_os_suse():
-                pkgs = self.get_packages_in_repo("%s-%s" %
-                                                 (self.product, self.version))
+    def get_all_packages_in_repo(self):
+        if self.product == 'postgresql':
+            if self.__is_os_suse():
                 # Filter out packages, which are not installable and
                 # not supported by Postgres Pro
-                packages = ' '.join(
-                    pkg for pkg in pkgs if
-                    pkg.startswith(self.get_base_package_name()) and
-                    not(pkg.endswith('-tcl') or pkg.endswith('-llvmjit')))
-                return packages
-        return self.get_base_package_name() + '*'
+                pkgs = [pkg for pkg in self.get_packages_in_repo() if
+                        pkg.startswith(self.get_base_package_name()) and
+                        not(pkg.endswith('-tcl') or pkg.endswith('-llvmjit'))]
+            elif self.__is_os_altlinux():
+                pkgs = ['^%s%s.*$' % (self.product,
+                                      self.version.replace('.', '\\.'))]
+            elif self.__is_os_debian_based():
+                pkgs = ['^%s-*%s$' % (self.product,
+                                      self.version.replace('.', '\\.'))]
+            else:
+                pkgs = [self.get_base_package_name() + '*']
+
+        else:
+            pkgs = self.get_packages_in_repo()
+
+        return pkgs
 
     def __is_os_redhat_based(self):
         return self.os_name in REDHAT_BASED
@@ -521,13 +517,11 @@ class PgInstall:
     def setup_repo(self):
         """ Setup yum or apt repo for Linux Based envs and
             download windows installer for Windows based
-
-        :return: tuple (reponame, repofile) in Linux, None in Windows,
-                 or Exception
         """
         repo_info = self.__generate_repo_info()
         baseurl = repo_info[0]
         gpg_key_url = repo_info[1]
+        reponame = None
         if self.__is_pm_yum():
             # Example:
             # http://repo.postgrespro.ru/pgproee-9.6-beta/
@@ -575,12 +569,10 @@ baseurl=%s
                 (self.product, self.version)
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-            return (reponame, repofile)
         elif self.__is_pm_apt():
             cmd = "apt-get install -y lsb-release"
             self.exec_cmd_retry(cmd)
             cmd = "lsb_release -cs"
-            codename = ""
             if self.remote:
                 codename = command_executor(
                     cmd, self.remote, self.host,
@@ -610,25 +602,22 @@ baseurl=%s
                            "rpm %s/8 noarch pgpro\n" % \
                            (baseurl, baseurl)
 
-            if not repo:
-                return (None, None)
+            if repo:
+                write_file(repofile, repo, self.remote, self.host)
+                reponame = re.sub(r"^http(s)?://", "", baseurl).\
+                    replace('/', '_')
 
-            write_file(repofile, repo, self.remote, self.host)
-            reponame = re.sub(r"^http(s)?://", "", baseurl).replace('/', '_')
-
-            if not self.__is_os_altlinux():
-                cmd = "apt-get install -y wget ca-certificates"
+                if not self.__is_os_altlinux():
+                    cmd = "apt-get install -y wget ca-certificates"
+                    self.exec_cmd_retry(cmd)
+                    cmd = "wget -nv %s -O gpg.key" % gpg_key_url
+                    self.exec_cmd_retry(cmd)
+                    cmd = "apt-key add gpg.key"
+                    self.exec_cmd_retry(cmd)
+                cmd = "apt-get update -y"
                 self.exec_cmd_retry(cmd)
-                cmd = "wget -nv %s -O gpg.key" % gpg_key_url
-                self.exec_cmd_retry(cmd)
-                cmd = "apt-key add gpg.key"
-                self.exec_cmd_retry(cmd)
-            cmd = "apt-get update -y"
-            self.exec_cmd_retry(cmd)
-            return (reponame, repofile)
         elif self.__is_pm_zypper():
             reponame = "%s-%s" % (self.product, self.version)
-            repofile = '/etc/zypp/repos.d/%s.repo' % reponame
             if gpg_key_url:
                 cmd = "wget -nv %s -O gpg.key" % gpg_key_url
                 self.exec_cmd_retry(cmd)
@@ -653,7 +642,6 @@ baseurl=%s
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             cmd = "zypper --gpg-auto-import-keys refresh"
             self.exec_cmd_retry(cmd)
-            return (reponame, repofile)
         elif self.__is_os_windows():
             installer_name = self.__get_last_winstaller_file(
                 baseurl, self.os_arch)
@@ -666,9 +654,10 @@ baseurl=%s
                                                installer_name)
             windows_installer.retrieve(windows_installer_url,
                                        self.installer_name)
-            return (None, None)
         else:
             raise Exception("Unsupported distro %s" % self.os_name)
+        self.reponame = reponame
+        self.all_packages_in_repo = self.get_all_packages_in_repo()
 
     def setup_extra_repos(self):
         if self.product == 'postgrespro' and self.__is_os_altlinux():
@@ -767,7 +756,7 @@ baseurl=%s
 
     def install_full(self):
         self.setup_extra_repos()
-        self.install_package(self.get_all_packages_name())
+        self.install_package(" ".join(self.all_packages_in_repo))
         self.client_installed = True
         self.server_installed = True
         self.client_path_needed = False
@@ -787,20 +776,21 @@ baseurl=%s
 
     def install_full_topless(self):
         self.setup_extra_repos()
-        pkg = self.get_all_packages_name()
-        if self.product == 'postgrespro':
-            if self.version not in ['9.5', '9.6']:
-                if self.__is_os_altlinux():
-                    # Exclude {base_package}-debuginfo as
-                    # it requires {base_package}
-                    pkg = self.get_base_package_name() + '-[^d][^e][^b].*'
-                elif self.__is_pm_apt():
-                    pkg = self.get_base_package_name() + '.*'
-                elif self.__is_pm_zypper():
-                    pkg = self.get_base_package_name() + '?*'
-                else:
-                    pkg += " -x " + self.get_base_package_name()
-        self.install_package(pkg)
+        pkgs = self.all_packages_in_repo
+        # pgbadger, pgprobackup (PGPRO-2478), pg-repack (PGPRO-2322)
+        for pkg in pkgs[:]:
+            if ('pgbadger' in pkg) or ('probackup' in pkg)\
+                    or ('repack' in pkg):
+                pkgs.remove(pkg)
+        if self.product == 'postgrespro' and \
+                self.version not in ['9.5', '9.6'] and \
+                self.get_base_package_name():
+            pkgs.remove(self.get_base_package_name())
+            if self.__is_os_altlinux():
+                for pkg in pkgs[:]:
+                    if re.match('.*-deb.*', pkg):
+                        pkgs.remove(pkg)
+        self.install_package(" ".join(pkgs))
         self.client_installed = True
         self.server_installed = True
         self.client_path_needed = True
@@ -903,7 +893,7 @@ baseurl=%s
                     raise Exception("Uninstallation failed.")
                 time.sleep(1)
         else:
-            self.remove_package(self.get_all_packages_name())
+            self.remove_package(" ".join(self.all_packages_in_repo))
         if remove_data:
             self.remove_data()
             if self.__is_os_windows():
