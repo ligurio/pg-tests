@@ -235,11 +235,11 @@ class TestFullInstall():
                            version=version, milestone=milestone,
                            branch=branch, windows=(self.system == 'Windows'))
         request.cls.pginst = pginst
-        (reponame, repofile) = pginst.setup_repo()
+        pginst.setup_repo()
         print("Running on %s." % target)
         if self.system != 'Windows':
-            all_available_packages = pginst.get_packages_in_repo(reponame)
-            print("All available packages in repo %s:\n" % reponame,
+            all_available_packages = pginst.all_packages_in_repo
+            print("All available packages in repo %s:\n" % pginst.reponame,
                   "\n".join(all_available_packages))
             pginst.install_full()
             pginst.install_package(" ".join(all_available_packages))
