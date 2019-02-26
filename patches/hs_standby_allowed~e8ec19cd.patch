@@ -32,10 +32,10 @@ index 0000000000..dc115215d1
 +\! cat /tmp/copy_test
 +1
 +-- Access sequence directly
-+select is_called from hsseq;
-+ is_called 
-+-----------
-+ f
++select min_value as sequence_min_value from hsseq;
++ sequence_min_value 
++--------------------
++                  1
 +(1 row)
 +
 +-- Transactions
