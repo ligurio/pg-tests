@@ -777,10 +777,9 @@ baseurl=%s
     def install_full_topless(self):
         self.setup_extra_repos()
         pkgs = self.all_packages_in_repo
-        # pgbadger, pgprobackup (PGPRO-2478), pg-repack (PGPRO-2322)
+        # pgbadger, pg-repack (PGPRO-2322)
         for pkg in pkgs[:]:
-            if ('pgbadger' in pkg) or ('probackup' in pkg)\
-                    or ('repack' in pkg):
+            if ('pgbadger' in pkg) or ('repack' in pkg):
                 pkgs.remove(pkg)
         if self.product == 'postgrespro' and \
                 self.version not in ['9.5', '9.6'] and \
