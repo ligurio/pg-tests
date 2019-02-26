@@ -25,21 +25,24 @@ UNSUPPORTED_PLATFORMS = {
         "ALT Linux  7.0.4", "ALT Linux  6.0.1",
         "ALT Linux  7.0.5", "ALT  8.0", "ALT  8",
         "GosLinux 7.08", "GosLinux 6.4",
-        "RED OS release MUROM ( 7.1"
+        "RED OS release MUROM ( 7.1",
+        '"AstraLinuxSE" 1.5', '"AstraLinuxSE" 1.5.28'
     ],
     'postgresql--10': [
         "SUSE Linux Enterprise Server  11",
         "ALT Linux  7.0.4", "ALT Linux  6.0.1",
         "ALT Linux  7.0.5", "ALT  8.0", "ALT  8",
         "GosLinux 7.08", "GosLinux 6.4",
-        "RED OS release MUROM ( 7.1"
+        "RED OS release MUROM ( 7.1",
+        '"AstraLinuxSE" 1.5', '"AstraLinuxSE" 1.5.28'
     ],
     'postgresql--11': [
         "SUSE Linux Enterprise Server  11",
         "ALT Linux  7.0.4", "ALT Linux  6.0.1",
         "ALT Linux  7.0.5", "ALT  8.0", "ALT  8",
         "GosLinux 7.08", "GosLinux 6.4",
-        "RED OS release MUROM ( 7.1"
+        "RED OS release MUROM ( 7.1",
+        '"AstraLinuxSE" 1.5', '"AstraLinuxSE" 1.5.28'
     ],
     'postgresql-std-11': [
         "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
@@ -525,10 +528,6 @@ class TestUpgrade():
             print "Platform not supported"
             return
 
-        if dist in ['"AstraLinuxSE" 1.5', '"AstraLinuxSE" 1.5.28']:
-            print 'AstraLinux not supported (PGPRO-2072)'
-            return
-
         if key not in UPGRADE_ROUTES:
             print 'No routes for upgrade'
             return
@@ -615,10 +614,6 @@ class TestUpgrade():
         key = request.cls.key
 
         print "Test dump-restore %s" % product_info
-
-        if dist in ['"AstraLinuxSE" 1.5', '"AstraLinuxSE" 1.5.28']:
-            print 'AstraLinux not supported (PGPRO-2072)'
-            return
 
         if key not in DUMP_RESTORE_ROUTES:
             print 'No routes for dump-restore'
