@@ -79,11 +79,11 @@ PRELOAD_LIBRARIES = {
          'plantuner', 'shared_ispell', 'pg_pathman'],
     'std-10':
         ['auth_delay', 'auto_explain',
-         'plantuner', 'shared_ispell', 'pg_pathman'],
+         'plantuner', 'shared_ispell', 'pg_pageprep', 'pg_pathman'],
     'ent-10':
         ['auth_delay', 'auto_explain', 'in_memory',
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
-         'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
+         'shared_ispell', 'pg_wait_sampling', 'pg_pageprep', 'pg_shardman',
          'pg_pathman'],
     'std-cert-10':
         ['auth_delay', 'auto_explain', 'pgaudit',
