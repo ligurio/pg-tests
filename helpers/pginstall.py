@@ -362,6 +362,8 @@ class PgInstall:
         result = command_executor(cmd, self.remote, self.host,
                                   REMOTE_ROOT, REMOTE_ROOT_PASSWORD,
                                   stdout=True).strip().split('\n')
+        if result and result[0] == '(contains no files)':
+            return []
         return result
 
     def get_all_packages_in_repo(self):
