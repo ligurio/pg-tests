@@ -669,7 +669,8 @@ class TestUpgrade():
                 # PGPRO-2459
                 if pgold.os_name in DEBIAN_BASED and \
                         old_name == "postgrespro" and old_version == "9.6":
-                    subprocess.check_call("apt-get purge -y postgrespro-common "
-                                          "postgrespro-client-common",
+                    subprocess.check_call(
+                        "apt-get purge -y "
+                        "postgrespro-common postgrespro-client-common",
                                           shell=True)
             stop(pg)
