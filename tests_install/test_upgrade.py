@@ -564,7 +564,7 @@ class TestUpgrade():
 
             key = "-".join([old_name, old_edition, old_version])
 
-            print "Check upgrage from %s" % key
+            print "=====Check upgrade from %s" % key
 
             pgold = install_server(
                 product=old_name, edition=old_edition,
@@ -586,7 +586,7 @@ class TestUpgrade():
             # PGPRO-2459
             if pgold.os_name in DEBIAN_BASED and \
                     old_name == "postgrespro" and old_version == "9.6":
-                subprocess.check_call("apt purge -y postgrespro-common "
+                subprocess.check_call("apt-get purge -y postgrespro-common "
                                       "postgrespro-client-common", shell=True)
 
         request.cls.pg = pg
@@ -641,7 +641,7 @@ class TestUpgrade():
 
             key = "-".join([old_name, old_edition, old_version])
 
-            print "Check dump-restore from %s" % key
+            print "=====Check dump-restore from %s" % key
 
             file_name = os.path.join(tempfile.gettempdir(), "%s.sql" % key)
 
@@ -669,7 +669,7 @@ class TestUpgrade():
                 # PGPRO-2459
                 if pgold.os_name in DEBIAN_BASED and \
                         old_name == "postgrespro" and old_version == "9.6":
-                    subprocess.check_call("apt purge -y postgrespro-common "
+                    subprocess.check_call("apt-get purge -y postgrespro-common "
                                           "postgrespro-client-common",
                                           shell=True)
             stop(pg)
