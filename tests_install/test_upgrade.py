@@ -543,6 +543,7 @@ class TestUpgrade():
         pg = install_server(product=name, edition=edition,
                             version=version, milestone=milestone,
                             branch=branch, windows=(self.system == 'Windows'))
+        request.cls.pg = pg
         stop(pg)
 
         if pg.os_name in DEBIAN_BASED and pg.version == '9.6':
@@ -594,7 +595,6 @@ class TestUpgrade():
                 subprocess.check_call("apt-get purge -y postgrespro-common "
                                       "postgrespro-client-common", shell=True)
 
-        request.cls.pg = pg
 
     @pytest.mark.test_dump_restore
     def test_dump_restore(self, request):
