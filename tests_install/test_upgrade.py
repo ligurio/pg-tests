@@ -595,7 +595,6 @@ class TestUpgrade():
                 subprocess.check_call("apt-get purge -y postgrespro-common "
                                       "postgrespro-client-common", shell=True)
 
-
     @pytest.mark.test_dump_restore
     def test_dump_restore(self, request):
         """
