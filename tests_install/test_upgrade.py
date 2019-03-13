@@ -320,7 +320,7 @@ def generate_db(pg, pgnew):
     dump_file = urllib.URLopener()
     dump_file_name = os.path.join(tempfile.gettempdir(), dump_file_name)
     dump_file.retrieve(dump_url, dump_file_name)
-    pg.exec_psql_file(dump_file_name)
+    pg.exec_psql_file(dump_file_name, '-q')
 
     dumpall(pgnew, os.path.join(tempfile.gettempdir(),
                                 "%s-expected.sql" % key))
@@ -545,6 +545,11 @@ class TestUpgrade():
                             branch=branch, windows=(self.system == 'Windows'))
         stop(pg)
 
+        if pg.os_name in DEBIAN_BASED and pg.version == '9.6':
+            print "Two products 9.6 cannot be " \
+                  "installed simultaneously on debian-based OS"
+            return
+
         if self.system == 'Windows':
             backup_datadir_win(pg)
 
@@ -623,6 +628,11 @@ class TestUpgrade():
 
         pg = request.cls.pg
 
+        if pg.os_name in DEBIAN_BASED and pg.version == '9.6':
+            print "Two products 9.6 cannot be " \
+                  "installed simultaneously on debian-based"
+            return
+
         for route in dump_restore_route['from']:
             initdb_params = route['initdb-params'] if \
                 'initdb-params' in route else ''
@@ -647,7 +657,7 @@ class TestUpgrade():
 
             if (os.path.isfile(file_name)):
                 start(pg)
-                pg.exec_psql_file(file_name)
+                pg.exec_psql_file(file_name, '-q')
                 diff_dbs(key, pg, 'dump-restore')
             else:
                 pgold = install_server(
@@ -663,7 +673,7 @@ class TestUpgrade():
                 stop(pgold)
 
                 start(pg)
-                pg.exec_psql_file(file_name)
+                pg.exec_psql_file(file_name, '-q')
                 diff_dbs(key, pg, 'dump-restore')
                 pgold.remove_full(True)
                 # PGPRO-2459
