@@ -273,9 +273,6 @@ class PgInstall:
                     raise Exception('Invalid line in yum list output')
                 pkgname = re.sub(r'\.(x86_64|noarch)$', '', pkginfo[0])
                 result.append(pkgname)
-            if self.version == '9.6':
-                if 'pgbadger' in result and 'pgpro-pgbadger' in result:
-                    result.remove('pgbadger')
         elif self.__is_os_altlinux():
             # Parsing binary package info in lists/ is unfeasible,
             # so the only way to find packages from the repository is
