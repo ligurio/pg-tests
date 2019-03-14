@@ -15,9 +15,11 @@ import difflib
 import re
 import shutil
 
-# STD-9.6 stable does not contains pg_pageprep
+# STD-9.6, STD-10 stable does not contains pg_pageprep
 PRELOAD_LIBRARIES['std-9.6'].remove('pg_pageprep')
 PRELOAD_LIBRARIES['ent-9.6'].remove('pg_pageprep')
+PRELOAD_LIBRARIES['std-10'].remove('pg_pageprep')
+PRELOAD_LIBRARIES['ent-10'].remove('pg_pageprep')
 
 UNSUPPORTED_PLATFORMS = {
     'postgresql--9.6': [
