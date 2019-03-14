@@ -776,6 +776,10 @@ baseurl=%s
     def install_full_topless(self):
         self.setup_extra_repos()
         pkgs = self.all_packages_in_repo
+        # pgbadger
+        for pkg in pkgs[:]:
+            if 'pgbadger' in pkg:
+                pkgs.remove(pkg)
         if self.product == 'postgrespro' and \
                 self.version not in ['9.5', '9.6'] and \
                 self.get_base_package_name():
