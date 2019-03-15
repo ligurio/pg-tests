@@ -54,7 +54,8 @@ UNSUPPORTED_PLATFORMS = {
     ],
     'postgrespro-std-9.6': [
         "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
-        "\xb5\xd1\x80\xd0\xb0  6.3", "GosLinux 7.08"
+        "\xb5\xd1\x80\xd0\xb0  6.3", "GosLinux 7.08",
+        "ALT  8.0"  # Remove after release 9.6.12.1
     ],
     'postgrespro-std-10': [
         "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
