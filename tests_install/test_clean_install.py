@@ -1,4 +1,6 @@
 import platform
+import os
+import subprocess
 
 import pytest
 
@@ -42,6 +44,7 @@ class TestCleanInstall():
                            version=version, milestone=milestone,
                            branch=branch, windows=(self.system == 'Windows'))
 
+        request.cls.pginst = pginst
         pginst.setup_repo()
         print("Running on %s." % target)
         if self.system != 'Windows':
@@ -54,3 +57,28 @@ class TestCleanInstall():
         print("Server version:\n%s\nClient version:\n%s" %
               (server_version, client_version))
         print("OK")
+
+    @pytest.mark.test_full_remove
+    def test_pg_setup(self, request):
+        pginst = request.cls.pginst
+
+        def exec_pg_setup(options=''):
+            cmd = '"%spg-setup" %s' % \
+                (
+                    pginst.get_client_bin_path(),
+                    options
+                )
+            return subprocess.check_output(cmd, shell=True)
+
+        if self.system == 'Windows' or \
+           pginst.product != "postgrespro" or \
+           pginst.version in ['9.5', '9.6']:
+            return
+        pginst.stop_service()
+        os.unlink('/etc/default/postgrespro-%s-%s' %
+                  (pginst.alter_edtn, pginst.version))
+        exec_pg_setup('initdb -D /tmp/db1')
+        exec_pg_setup('service start')
+        exec_pg_setup('service status')
+        pginst.get_server_version()
+        exec_pg_setup('service stop')
