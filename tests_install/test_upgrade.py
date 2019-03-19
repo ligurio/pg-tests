@@ -622,6 +622,10 @@ class TestUpgrade():
 
         print "Test dump-restore %s" % product_info
 
+        if key in UNSUPPORTED_PLATFORMS and dist in UNSUPPORTED_PLATFORMS[key]:
+            print "Platform not supported"
+            return
+
         if key not in DUMP_RESTORE_ROUTES:
             print 'No routes for dump-restore'
             return
