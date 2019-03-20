@@ -472,7 +472,7 @@ def init_cluster(pg, force_remove=True, initdb_params=''):
         restore_datadir_win(pg)
     else:
         stop(pg)
-        pg.init_cluster(force_remove, initdb_params)
+        pg.init_cluster(force_remove, '-k ' + initdb_params)
         start(pg)
         pg.load_shared_libraries(restart_service=False)
         stop(pg)
