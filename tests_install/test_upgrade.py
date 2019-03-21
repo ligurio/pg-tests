@@ -20,6 +20,8 @@ PRELOAD_LIBRARIES['std-9.6'].remove('pg_pageprep')
 PRELOAD_LIBRARIES['ent-9.6'].remove('pg_pageprep')
 PRELOAD_LIBRARIES['std-10'].remove('pg_pageprep')
 PRELOAD_LIBRARIES['ent-10'].remove('pg_pageprep')
+# PGPRO-2560
+PRELOAD_LIBRARIES['std-11'].remove('pg_pageprep')
 
 UNSUPPORTED_PLATFORMS = {
     'postgresql--9.6': [
@@ -456,15 +458,6 @@ def after_upgrade(pg, pgOld):
         if ".sql" in file:
             file_name = os.path.join(upgrade_dir, file)
             pg.exec_psql_file(file_name)
-    # PGPRO-2223
-    key = "-".join([pgOld.product, pgOld.edition, pgOld.version])
-    dump_file_name = "dump-%s.sql" % key
-    if system == "Windows" and pgOld.version == '9.6' and os.path.exists(
-            os.path.join(tempfile.gettempdir(), dump_file_name)):
-        pg.exec_psql(
-            'ALTER DOMAIN str_domain2 VALIDATE CONSTRAINT str_domain2_check;',
-            '-d regression'
-        )
 
 
 def init_cluster(pg, force_remove=True, initdb_params=''):
