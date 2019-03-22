@@ -780,10 +780,8 @@ baseurl=%s
         self.setup_extra_repos()
         pkgs = self.all_packages_in_repo
         # pgbadger
-        # probackup-debuginfo PGPRO-2478
         for pkg in pkgs[:]:
-            if 'pgbadger' in pkg or \
-                    ('probackup' in pkg and 'debuginfo' in pkg):
+            if 'pgbadger' in pkg:
                 pkgs.remove(pkg)
         if self.product == 'postgrespro' and \
                 self.version not in ['9.5', '9.6'] and \
