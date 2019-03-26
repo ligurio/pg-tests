@@ -276,7 +276,7 @@ def create_env(name, domname, domimage=None):
         clock = "localtime"
     else:
         network_driver = "virtio"
-        ram_size = 1536
+        ram_size = 2048
         cpus = 1
         clock = "utc"
     domisos = glob.glob(TEMPLATE_DIR + name + '*.iso')
