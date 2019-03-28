@@ -483,6 +483,10 @@ def export_results(domname, linux_os, domipaddress, reportname,
             ['curl', '-s', '-S', '-o', '/dev/null',
              '-T', 'reports/%s.xml' % reportname,
              REPORT_SERVER_URL])
+        subprocess.call(
+            ['curl', '-s', '-S', '-o', '/dev/null',
+             '-T', 'reports/%s.json' % reportname,
+             REPORT_SERVER_URL])
         for file in os.listdir('reports'):
             if '.json' in file:
                 subprocess.call(['curl', '-s', '-S', '-o', '/dev/null',
@@ -713,6 +717,7 @@ def main():
                 reporturl = os.path.join(REPORT_SERVER_URL, reportname)
                 print "Link to the html report - %s.html" % reporturl
                 print "Link to the xml report - %s.xml" % reporturl
+                print "Link to the json report - %s.json" % reporturl
 
             if retcode != 0:
                 if not args.keep:
