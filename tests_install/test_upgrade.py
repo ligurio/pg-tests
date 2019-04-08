@@ -281,7 +281,7 @@ def start(pg):
 
 
 def stop(pg, stopped=False):
-    if stopped == None:
+    if stopped is None:
         if (pg.os_name in DEBIAN_BASED) and \
                 (pg.version == '9.6' or pg.product == 'postgresql'):
             for i in range(1, 100):
