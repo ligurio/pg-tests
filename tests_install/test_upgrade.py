@@ -280,8 +280,16 @@ def start(pg):
             time.sleep(1)
 
 
-def stop(pg):
-    if pg.pg_isready():
+def stop(pg, stopped=False):
+    if stopped == None:
+        if (pg.os_name in DEBIAN_BASED) and \
+                (pg.version == '9.6' or pg.product == 'postgresql'):
+            for i in range(1, 100):
+                if not pg.pg_isready():
+                    break
+                time.sleep(1)
+
+    if not stopped and pg.pg_isready():
         if not system == "Windows":
             pg.pg_control("stop", pg.get_datadir())
         else:
@@ -460,11 +468,12 @@ def after_upgrade(pg, pgOld):
             pg.exec_psql_file(file_name)
 
 
-def init_cluster(pg, force_remove=True, initdb_params=''):
+def init_cluster(pg, force_remove=True, initdb_params='',
+                 stopped=None):
     if system == 'Windows':
         restore_datadir_win(pg)
     else:
-        stop(pg)
+        stop(pg, stopped)
         pg.init_cluster(force_remove, '-k ' + initdb_params)
         start(pg)
         pg.load_shared_libraries(restart_service=False)
@@ -553,7 +562,7 @@ class TestUpgrade():
         for route in upgrade_route['from']:
             initdb_params = route['initdb-params'] if \
                 'initdb-params' in route else ''
-            init_cluster(pg, True, initdb_params)
+            init_cluster(pg, True, initdb_params, True)
             stop(pg)
             old_name = route['name']
             old_edition = route['edition']
@@ -635,7 +644,7 @@ class TestUpgrade():
         for route in dump_restore_route['from']:
             initdb_params = route['initdb-params'] if \
                 'initdb-params' in route else ''
-            init_cluster(pg, True, initdb_params)
+            init_cluster(pg, True, initdb_params, True)
             stop(pg)
 
             old_name = route['name']
