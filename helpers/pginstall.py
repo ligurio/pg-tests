@@ -899,7 +899,6 @@ baseurl=%s
                 for pkg in pkgs[:]:
                     if 'icu' in pkg:
                         pkgs.remove(pkg)
-            print(pkgs)
             self.remove_package(" ".join(pkgs))
         if remove_data:
             self.remove_data()
