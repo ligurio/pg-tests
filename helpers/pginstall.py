@@ -894,7 +894,13 @@ baseurl=%s
                     raise Exception("Uninstallation failed.")
                 time.sleep(1)
         else:
-            self.remove_package(" ".join(self.all_packages_in_repo))
+            pkgs = self.all_packages_in_repo
+            if self.__is_os_suse() and self.os_version == '11':
+                for pkg in pkgs[:]:
+                    if 'icu' in pkg:
+                        pkgs.remove(pkg)
+            print(pkgs)
+            self.remove_package(" ".join(pkgs))
         if remove_data:
             self.remove_data()
             if self.__is_os_windows():
