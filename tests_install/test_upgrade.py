@@ -284,8 +284,9 @@ def stop(pg, stopped=False):
     if stopped is None:
         if (pg.os_name in DEBIAN_BASED) and \
                 (pg.version == '9.6' or pg.product == 'postgresql'):
+            print '***********Wait started'
             for i in range(1, 100):
-                if not pg.pg_isready():
+                if pg.pg_isready():
                     break
                 time.sleep(1)
 
