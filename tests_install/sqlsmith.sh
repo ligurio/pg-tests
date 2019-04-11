@@ -1,13 +1,14 @@
 set -x
-if grep 'ALT Linux 6\.' /etc/altlinux-release || \
-   grep 'PRETTY_NAME="ALT Linux 7' /etc/os-release || \
-   grep 'PRETTY_NAME="Astra Linux (Smolensk 1.5)"' /etc/os-release || \
-   grep 'PRETTY_NAME="Debian GNU/Linux 7' /etc/os-release || \
-   grep 'PRETTY_NAME="SUSE Linux Enterprise Server 11' /etc/os-release || \
-   grep 'GosLinux release 6' /etc/goslinux-release || \
-   grep 'ROSA Enterprise Linux Server release 6.6' /etc/system-release || \
-   grep 'CentOS release 6.7' /etc/system-release || \
-   grep 'cpe:/o:msvsphere:msvsphere:6server' /etc/system-release-cpe; \
+if grep -q 'ALT Linux 6\.' /etc/altlinux-release || \
+   grep -q 'PRETTY_NAME="ALT Linux 7' /etc/os-release || \
+   grep -q 'PRETTY_NAME="Astra Linux (Smolensk 1.5)"' /etc/os-release || \
+   grep -q 'PRETTY_NAME="Debian GNU/Linux 7' /etc/os-release || \
+   grep -q 'PRETTY_NAME="SUSE Linux Enterprise Server 11' /etc/os-release || \
+   grep -q 'GosLinux release 6' /etc/goslinux-release || \
+   grep -q 'ROSA Enterprise Linux Server release 6.6' /etc/system-release || \
+   grep -q 'CentOS release 6.7' /etc/system-release || \
+   grep -q 'cpe:/o:msvsphere:msvsphere:6server' /etc/system-release-cpe || \
+   grep -q '\(Red Hat\|ROSA\) Enterprise Linux Server release 6' /etc/redhat-release; \
 then
     echo 'C++11 is not present on this platform. Test skipped.'
     exit 0
@@ -33,33 +34,6 @@ elif which yum; then
     yum install -y autoconf autoconf-archive automake >/dev/null
     yum install -y gcc-c++ >/dev/null
     yum install -y boost-devel >/dev/null
-
-    if grep '\(Red Hat\|ROSA\) Enterprise Linux Server release 6' \
-        /etc/redhat-release; then
-        wget -qO- http://people.redhat.com/bkabrda/scl_python27.repo >> \
-            /etc/yum.repos.d/scl.repo
-        yum install -y python27
-        yum remove -y sqlite-devel
-
-        yum install -y \
-            http://mirror.centos.org/centos/6/sclo/x86_64/rh/devtoolset-3/\
-devtoolset-3-gcc-c++-4.9.2-6.2.el6.x86_64.rpm \
-            http://mirror.centos.org/centos/6/sclo/x86_64/rh/devtoolset-3/\
-devtoolset-3-gcc-4.9.2-6.2.el6.x86_64.rpm \
-            http://mirror.centos.org/centos/6/sclo/x86_64/rh/devtoolset-3/\
-devtoolset-3-runtime-3.1-12.el6.x86_64.rpm \
-            http://mirror.centos.org/centos/6/sclo/x86_64/rh/devtoolset-3/\
-devtoolset-3-libstdc++-devel-4.9.2-6.2.el6.x86_64.rpm \
-            http://mirror.centos.org/centos/6/sclo/x86_64/rh/devtoolset-3/\
-devtoolset-3-binutils-2.24-18.el6.x86_64.rpm
-
-        source /opt/rh/devtoolset-3/enable
-        source /opt/rh/python27/enable
-        yum install -y http://math.sgu.ru/soft/Linux/distributions/epel-bk/\
-6/x86_64/autoconf-archive-2012.09.08-1.el6.noarch.rpm
-        yum install -y https://dl.fedoraproject.org/pub/archive/fedora/\
-linux/releases/14/Fedora/x86_64/os/Packages/pkgconfig-0.25-2.fc14.x86_64.rpm
-    fi
 
     if grep '\(Red Hat\|ROSA\) Enterprise Linux \(Server\|Cobalt\) release 7'\
      /etc/redhat-release; then
