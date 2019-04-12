@@ -424,7 +424,7 @@
     sysctl: name="kernel.core_pattern" value="| /usr/lib/systemd/systemd-coredump %p %u %g %s %t %c %e" sysctl_set=yes state=present
     become_method: su
     become: true
-    when: (ansible_os_family == 'RedHat' and ansible_distribution_major_version == '7')
+    when: ((ansible_os_family == 'RedHat' or ansible_os_family == 'AlterOS') and ansible_distribution_major_version == '7')
 
   - name: enable coredump in systemd-based OS
     shell: if [ -f /etc/systemd/system.conf ]; then
