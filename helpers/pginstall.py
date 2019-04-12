@@ -30,14 +30,14 @@ REDHAT_BASED = ['CentOS Linux', 'RHEL', 'CentOS',
                 'ROSA Enterprise Linux Cobalt', 'GosLinux',
                 '\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1'
                 '\xd1\x84\xd0\xb5\xd1\x80\xd0\xb0 ',
-                'RED OS release MUROM (']
+                'RED OS release MUROM (', 'AlterOS']
 YUM_BASED = ['CentOS Linux', 'RHEL', 'CentOS',
              'Red Hat Enterprise Linux Server', 'Oracle Linux Server',
              'ROSA Enterprise Linux Server', 'ROSA SX \"COBALT\" ',
              'ROSA Enterprise Linux Cobalt', 'GosLinux',
              '\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1'
              '\xd1\x84\xd0\xb5\xd1\x80\xd0\xb0 ',
-             'RED OS release MUROM (']
+             'RED OS release MUROM (', 'AlterOS']
 DEBIAN_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux', 'AstraLinuxSE',
                 'Astra Linux SE', "\"Astra Linux SE\"", "\"AstraLinuxSE\"",
                 'AstraLinuxCE']
@@ -65,7 +65,8 @@ dist = {"Oracle Linux Server": 'oraclelinux',
         "SLES": 'sles',
         "ALT ": 'altlinux',
         "GosLinux": 'goslinux',
-        "RED OS release MUROM (": 'redos'}
+        "RED OS release MUROM (": 'redos',
+        "AlterOS": 'alteros'}
 
 PRELOAD_LIBRARIES = {
     'ent-11':
