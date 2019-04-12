@@ -30,7 +30,8 @@ UNSUPPORTED_PLATFORMS = {
         "ALT Linux  7.0.5", "ALT  8.0", "ALT  8",
         "GosLinux 7.08", "GosLinux 6.4",
         "RED OS release MUROM ( 7.1",
-        '"AstraLinuxSE" 1.5', '"AstraLinuxSE" 1.5.28'
+        '"AstraLinuxSE" 1.5', '"AstraLinuxSE" 1.5.28',
+        "AlterOS 7.5"
     ],
     'postgresql--10': [
         "SUSE Linux Enterprise Server  11",
@@ -38,7 +39,8 @@ UNSUPPORTED_PLATFORMS = {
         "ALT Linux  7.0.5", "ALT  8.0", "ALT  8",
         "GosLinux 7.08", "GosLinux 6.4",
         "RED OS release MUROM ( 7.1",
-        '"AstraLinuxSE" 1.5', '"AstraLinuxSE" 1.5.28'
+        '"AstraLinuxSE" 1.5', '"AstraLinuxSE" 1.5.28',
+        "AlterOS 7.5"
     ],
     'postgresql--11': [
         "SUSE Linux Enterprise Server  11",
@@ -46,40 +48,45 @@ UNSUPPORTED_PLATFORMS = {
         "ALT Linux  7.0.5", "ALT  8.0", "ALT  8",
         "GosLinux 7.08", "GosLinux 6.4",
         "RED OS release MUROM ( 7.1",
-        '"AstraLinuxSE" 1.5', '"AstraLinuxSE" 1.5.28'
+        '"AstraLinuxSE" 1.5', '"AstraLinuxSE" 1.5.28',
+        "AlterOS 7.5"
     ],
     'postgresql-std-11': [
         "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
         "\xb5\xd1\x80\xd0\xb0  6.3",
         "GosLinux 7.08", "RED OS release MUROM ( 7.1",
-        "Ubuntu 18.10",
+        "Ubuntu 18.10", "AlterOS 7.5"
     ],
     'postgrespro-std-9.6': [
         "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
         "\xb5\xd1\x80\xd0\xb0  6.3", "GosLinux 7.08",
-        "ALT  8.0"  # Remove after release 9.6.12.1
+        "AlterOS 7.5"
     ],
     'postgrespro-std-10': [
         "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
-        "\xb5\xd1\x80\xd0\xb0  6.3"
+        "\xb5\xd1\x80\xd0\xb0  6.3",
+        "AlterOS 7.5"
     ],
     'postgrespro-std-11': [
         "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
         "\xb5\xd1\x80\xd0\xb0  6.3",
         "GosLinux 7.08", "RED OS release MUROM ( 7.1",
-        "Ubuntu 18.10",
+        "Ubuntu 18.10", "AlterOS 7.5"
     ],
     'postgrespro-ent-9.6': [
         "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
-        "\xb5\xd1\x80\xd0\xb0  6.3"
+        "\xb5\xd1\x80\xd0\xb0  6.3",
+        "AlterOS 7.5"
     ],
     'postgrespro-ent-10': [
         "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
-        "\xb5\xd1\x80\xd0\xb0  6.3"
+        "\xb5\xd1\x80\xd0\xb0  6.3",
+        "AlterOS 7.5"
     ],
     'postgrespro-ent-11': [
         "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
-        "\xb5\xd1\x80\xd0\xb0  6.3"
+        "\xb5\xd1\x80\xd0\xb0  6.3",
+        "AlterOS 7.5"
     ]
 }
 
