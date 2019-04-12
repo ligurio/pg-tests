@@ -64,7 +64,7 @@ UNSUPPORTED_PLATFORMS = {
     'postgrespro-std-11': [
         "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
         "\xb5\xd1\x80\xd0\xb0  6.3",
-        "Ubuntu 18.10", "AlterOS 7.5"
+        "AlterOS 7.5"
     ],
     'postgrespro-ent-9.6': [
         "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
