@@ -51,12 +51,6 @@ UNSUPPORTED_PLATFORMS = {
         '"AstraLinuxSE" 1.5', '"AstraLinuxSE" 1.5.28',
         "AlterOS 7.5"
     ],
-    'postgresql-std-11': [
-        "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
-        "\xb5\xd1\x80\xd0\xb0  6.3",
-        "GosLinux 7.08", "RED OS release MUROM ( 7.1",
-        "Ubuntu 18.10", "AlterOS 7.5"
-    ],
     'postgrespro-std-9.6': [
         "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
         "\xb5\xd1\x80\xd0\xb0  6.3", "GosLinux 7.08",
@@ -70,7 +64,6 @@ UNSUPPORTED_PLATFORMS = {
     'postgrespro-std-11': [
         "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
         "\xb5\xd1\x80\xd0\xb0  6.3",
-        "GosLinux 7.08", "RED OS release MUROM ( 7.1",
         "Ubuntu 18.10", "AlterOS 7.5"
     ],
     'postgrespro-ent-9.6': [
@@ -291,7 +284,6 @@ def stop(pg, stopped=False):
     if stopped is None:
         if (pg.os_name in DEBIAN_BASED) and \
                 (pg.version == '9.6' or pg.product == 'postgresql'):
-            print '***********Wait started'
             for i in range(1, 100):
                 if pg.pg_isready():
                     break
