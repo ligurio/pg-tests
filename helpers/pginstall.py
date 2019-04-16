@@ -131,6 +131,7 @@ class PgInstall:
         self.os_name = self.dist_info[0]
         self.os_version = self.dist_info[1]
         self.os_arch = self.dist_info[2]
+        self.host = None
         self.port = None
         self.env = None
         self.pg_preexec = ('' if windows else
@@ -962,10 +963,11 @@ baseurl=%s
             raise Exception("Unsupported distro %s." % self.os_name)
 
     def exec_psql(self, query, options=''):
-        cmd = '%s"%spsql" %s %s -c "%s"' % \
+        cmd = '%s"%spsql" %s %s %s -c "%s"' % \
             (
                 self.pg_preexec,
                 self.get_client_bin_path(),
+                '' if not(self.host) else '-h ' + self.host,
                 '' if not(self.port) else '-p ' + str(self.port),
                 options, query
             )
@@ -986,10 +988,11 @@ baseurl=%s
         os.unlink(script_path)
 
     def exec_psql_file(self, sql_file, options=''):
-        cmd = '%s"%spsql" %s %s -f "%s"' % \
+        cmd = '%s"%spsql" %s %s %s -f "%s"' % \
             (
                 self.pg_preexec,
                 self.get_client_bin_path(),
+                '' if not(self.host) else '-h ' + self.host,
                 '' if not(self.port) else '-p ' + str(self.port),
                 options, sql_file
             )
@@ -1303,10 +1306,11 @@ baseurl=%s
                                        cwd="/", env=self.env)
 
     def pg_isready(self):
-        cmd = '%s"%spg_isready" %s' % \
+        cmd = '%s"%spg_isready" %s %s' % \
             (
                 self.pg_preexec,
                 self.get_server_bin_path(),
+                '' if not(self.host) else '-h ' + self.host,
                 '' if not(self.port) else '-p ' + str(self.port)
             )
         return subprocess.call(cmd, shell=True, env=self.env) == 0
