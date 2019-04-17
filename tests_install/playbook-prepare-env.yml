@@ -223,6 +223,9 @@
     shell: if [ -d /mnt/dvd/suse ]; then
               zypper addrepo /mnt/dvd/suse/x86_64/ disk1;
            fi;
+           if [ -d /mnt/dvd/media.1 ]; then
+              zypper addrepo /mnt/dvd/ disk1;
+           fi;
            if [ -d /mnt/dvd2/suse ]; then
               zypper addrepo /mnt/dvd2/suse/x86_64/ disk2;
            fi
