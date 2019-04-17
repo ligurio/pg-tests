@@ -13,7 +13,7 @@ if which apt-get; then
     apt-get install -y perl-devel || true
     apt-get install -y perl-bignum || true
 elif which zypper; then
-    zypper install -y gcc make flex bison perl
+    zypper install -y gcc make flex bison perl patch
     zypper install -y --force --force-resolution zlib-devel
     zypper install -y --force --force-resolution libicu-devel
     zypper install -y libipc-run-perl
@@ -35,7 +35,7 @@ if [ -d ~test/pg-tests ]; then
     cd ~test/pg-tests
 fi
 
-if grep 'SUSE Linux Enterprise Server 11' /etc/SuSE-release; then
+if grep 'SUSE Linux Enterprise Server 11' /etc/SuSE-release >/dev/null 2>&1; then
     # Update Test::More to minimum required version (0.87)
     tar fax extras/test-more* && \
     (cd test-more*/ && perl Makefile.PL && make && make install)
@@ -45,7 +45,7 @@ tar fax postgrespro*.tar*
 
 cd postgres*/
 
-if grep 'SUSE Linux Enterprise Server' /etc/SuSE-release; then #PGPRO-1294
+if grep 'SUSE Linux Enterprise Server' /etc/SuSE-release >/dev/null 2>&1; then #PGPRO-1294
     patch -p0 -i ../patches/SUSE-postgresql-regress.patch
 fi
 
