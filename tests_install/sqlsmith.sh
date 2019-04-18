@@ -18,7 +18,7 @@ if which apt-get; then
     apt-get install -y autoconf-archive
     apt-get install -y libboost-regex-dev
     if grep 'PRETTY_NAME="Ubuntu 14\.04' /etc/os-release; then
-         CONF_OPTIONS="--with-boost-libdir=/usr/lib/x86_64-linux-gnu"
+        CONF_OPTIONS="--with-boost-libdir=/usr/lib/x86_64-linux-gnu"
     fi
     if grep 'PRETTY_NAME="ALT 8' /etc/os-release; then
         apt-get install -y gcc5-c++ autoconf_2.60 automake_1.14 \
@@ -27,9 +27,14 @@ if which apt-get; then
 elif which zypper; then
     zypper install -y gcc-c++
     zypper install -y boost-devel
-    wget http://download.opensuse.org/distribution/\
+    if grep -q 'PRETTY_NAME="SUSE Linux Enterprise Server 12' /etc/os-release; then
+      wget http://download.opensuse.org/distribution/\
 openSUSE-stable/repo/oss/noarch/autoconf-archive-2017.09.28-lp150.1.4.noarch.rpm
-    rpm -i autoconf-archive-2017.09.28-lp150.1.4.noarch.rpm
+      rpm -i autoconf-archive-2017.09.28-lp150.1.4.noarch.rpm
+    else
+      zypper install -y autoconf autoconf-archive automake
+      zypper install -y libboost_regex*
+    fi
 elif which yum; then
     yum install -y autoconf autoconf-archive automake >/dev/null
     yum install -y gcc-c++ >/dev/null
