@@ -131,7 +131,7 @@ class PgInstall:
         self.os_name = self.dist_info[0]
         self.os_version = self.dist_info[1]
         self.os_arch = self.dist_info[2]
-        self.host = None
+        self.srvhost = None
         self.port = None
         self.env = None
         self.pg_preexec = ('' if windows else
@@ -967,7 +967,7 @@ baseurl=%s
             (
                 self.pg_preexec,
                 self.get_client_bin_path(),
-                '' if not(self.host) else '-h ' + self.host,
+                '' if not(self.srvhost) else '-h ' + self.srvhost,
                 '' if not(self.port) else '-p ' + str(self.port),
                 options, query
             )
@@ -992,7 +992,7 @@ baseurl=%s
             (
                 self.pg_preexec,
                 self.get_client_bin_path(),
-                '' if not(self.host) else '-h ' + self.host,
+                '' if not(self.srvhost) else '-h ' + self.srvhost,
                 '' if not(self.port) else '-p ' + str(self.port),
                 options, sql_file
             )
@@ -1310,7 +1310,7 @@ baseurl=%s
             (
                 self.pg_preexec,
                 self.get_server_bin_path(),
-                '' if not(self.host) else '-h ' + self.host,
+                '' if not(self.srvhost) else '-h ' + self.srvhost,
                 '' if not(self.port) else '-p ' + str(self.port)
             )
         return subprocess.call(cmd, shell=True, env=self.env) == 0
@@ -1321,11 +1321,12 @@ baseurl=%s
         :param data_dir: data directory of the Postgres instance
         :return:
         """
-        cmd = '%s%s"%spg_ctl" -w -D "%s" %s >pg_ctl-%s.log 2>&1' % \
+        cmd = '%s%s"%spg_ctl" -w -D "%s" %s >"%s" 2>&1' % \
             (
                 self.pg_preexec,
                 preaction,
-                self.get_server_bin_path(), data_dir, action, self.get_port()
+                self.get_server_bin_path(), data_dir,
+                action, os.path.join(data_dir, 'pg_ctl.log')
             )
         # sys.stdout.encoding = 'cp866'?
         subprocess.check_call(cmd, shell=True, cwd=tempfile.gettempdir(),
