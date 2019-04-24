@@ -7,12 +7,10 @@ import os
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall, ALT_BASED, DEBIAN_BASED,\
     PRELOAD_LIBRARIES
+from helpers.utils import diff_dbs, download_dump
 import time
 import tempfile
 import subprocess
-import urllib
-import difflib
-import re
 import shutil
 
 # STD-9.6, STD-10 stable does not contains pg_pageprep
@@ -31,7 +29,8 @@ UNSUPPORTED_PLATFORMS = {
         "GosLinux 7.08", "GosLinux 6.4",
         "RED OS release MUROM ( 7.1",
         '"AstraLinuxSE" 1.5', '"AstraLinuxSE" 1.5.28',
-        "AlterOS 7.5", "SUSE Linux Enterprise Server  15"
+        "AlterOS 7.5", "SUSE Linux Enterprise Server  15",
+        "Ubuntu 19.04"
     ],
     'postgresql--10': [
         "SUSE Linux Enterprise Server  11",
@@ -40,7 +39,8 @@ UNSUPPORTED_PLATFORMS = {
         "GosLinux 7.08", "GosLinux 6.4",
         "RED OS release MUROM ( 7.1",
         '"AstraLinuxSE" 1.5', '"AstraLinuxSE" 1.5.28',
-        "AlterOS 7.5", "SUSE Linux Enterprise Server  15"
+        "AlterOS 7.5", "SUSE Linux Enterprise Server  15",
+        "Ubuntu 19.04"
     ],
     'postgresql--11': [
         "SUSE Linux Enterprise Server  11",
@@ -49,43 +49,49 @@ UNSUPPORTED_PLATFORMS = {
         "GosLinux 7.08", "GosLinux 6.4",
         "RED OS release MUROM ( 7.1",
         '"AstraLinuxSE" 1.5', '"AstraLinuxSE" 1.5.28',
-        "AlterOS 7.5", "SUSE Linux Enterprise Server  15"
+        "AlterOS 7.5", "SUSE Linux Enterprise Server  15",
+        "Ubuntu 19.04"
     ],
     'postgrespro-std-9.6': [
         "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
         "\xb5\xd1\x80\xd0\xb0  6.3", "GosLinux 7.08",
-        "AlterOS 7.5", "SUSE Linux Enterprise Server  15"
+        "AlterOS 7.5", "SUSE Linux Enterprise Server  15",
+        "Ubuntu 19.04"
     ],
     'postgrespro-std-10': [
         "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
         "\xb5\xd1\x80\xd0\xb0  6.3",
-        "AlterOS 7.5", "SUSE Linux Enterprise Server  15"
+        "AlterOS 7.5", "SUSE Linux Enterprise Server  15",
+        "Ubuntu 19.04"
     ],
     'postgrespro-std-11': [
         "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
         "\xb5\xd1\x80\xd0\xb0  6.3",
-        "AlterOS 7.5", "SUSE Linux Enterprise Server  15"
+        "AlterOS 7.5", "SUSE Linux Enterprise Server  15",
+        "Ubuntu 19.04"
     ],
     'postgrespro-ent-9.6': [
         "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
         "\xb5\xd1\x80\xd0\xb0  6.3",
-        "AlterOS 7.5", "SUSE Linux Enterprise Server  15"
+        "AlterOS 7.5", "SUSE Linux Enterprise Server  15",
+        "Ubuntu 19.04"
     ],
     'postgrespro-ent-10': [
         "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
         "\xb5\xd1\x80\xd0\xb0  6.3",
-        "AlterOS 7.5", "SUSE Linux Enterprise Server  15"
+        "AlterOS 7.5", "SUSE Linux Enterprise Server  15",
+        "Ubuntu 19.04"
     ],
     'postgrespro-ent-11': [
         "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
         "\xb5\xd1\x80\xd0\xb0  6.3",
-        "AlterOS 7.5", "SUSE Linux Enterprise Server  15"
+        "AlterOS 7.5", "SUSE Linux Enterprise Server  15",
+        "Ubuntu 19.04"
     ]
 }
 
 system = platform.system()
-
-DUMPS_XREGRESS_URL = "http://webdav.l.postgrespro.ru/pgdatas/xregress/"
+tempdir = tempfile.gettempdir()
 
 UPGRADE_ROUTES = {
 
@@ -326,94 +332,23 @@ def install_server(product, edition, version, milestone, branch, windows):
 
 
 def generate_db(pg, pgnew):
-
     key = "-".join([pg.product, pg.edition, pg.version])
-    dump_file_name = "dump-%s.sql" % key
-    dump_url = DUMPS_XREGRESS_URL + dump_file_name
-    dump_file = urllib.URLopener()
-    dump_file_name = os.path.join(tempfile.gettempdir(), dump_file_name)
-    dump_file.retrieve(dump_url, dump_file_name)
+    dump_file_name = download_dump(pg.product, pg.edition, pg.version,
+                                   tempfile.gettempdir())
     pg.exec_psql_file(dump_file_name, '-q')
-
-    dumpall(pgnew, os.path.join(tempfile.gettempdir(),
-                                "%s-expected.sql" % key))
-
-
-def preprocess(str):
-    replaced = re.sub(
-        r"(ALTER ROLE.*)PASSWORD\s'[^']+'",
-        r"\1PASSWORD ''",
-        str
-    )
-    replaced = re.sub(
-        r"(CREATE DATABASE.*)LC_COLLATE\s*=\s*'([^@]+)@[^']+'(.*)",
-        r"\1LC_COLLATE = '\2'\3",
-        replaced
-    )
-    replaced = re.sub(
-        r"\s?--.*",
-        r"",
-        replaced
-    )
-    return replaced
+    expected_file_name = os.path.join(tempfile.gettempdir(),
+                                      "%s-expected.sql" % key)
+    dumpall(pgnew, expected_file_name)
 
 
-def read_dump(file):
-    lines = []
-    lines_to_sort = []
-    copy_line = ''
-    with open(file, 'rb') as f:
-        for line in f:
-            line = preprocess(line).strip()
-            if line:
-                if re.match(
-                    r"\s?COPY\s+.*FROM\sstdin.*",
-                    line
-                ):
-                    copy_line = line
-                    continue
-                if line == "\\.":
-                    lines.append(copy_line)
-                    copy_line = ''
-                    lines_to_sort.sort()
-                    lines.extend(lines_to_sort)
-                    lines_to_sort = []
-                if not copy_line:
-                    lines.append(line)
-                else:
-                    lines_to_sort.append(line)
-    return lines
-
-
-def diff_dbs(oldKey, pgNew, prefix):
+def dump_and_diff_dbs(oldKey, pgNew, prefix):
     result_file_name = "%s-%s-result.sql" % (prefix, oldKey)
     tempdir = tempfile.gettempdir()
     dumpall(pgNew, result_file_name)
     file1 = os.path.join(tempdir, result_file_name)
     file2 = os.path.join(tempdir, '%s-expected.sql' % oldKey)
-    lines1 = read_dump(file1)
-    lines2 = read_dump(file2)
-    difference = difflib.unified_diff(
-        lines1,
-        lines2,
-        fromfile=file1,
-        tofile=file2
-    )
     diff_file = os.path.join(tempdir, "%s-%s.sql.diff" % (prefix, oldKey))
-    with open(diff_file, "w") as file:
-        file.writelines(difference)
-        pos = file.tell()
-    if pos > 0:
-        with open(diff_file, "rb") as file:
-            lines = file.readlines()
-            i = 1
-            for line in lines:
-                print line
-                if i > 20:
-                    print "..."
-                    break
-                i = i + 1
-        raise Exception("Difference found. See file " + diff_file)
+    diff_dbs(file1, file2, diff_file)
 
 
 def upgrade(pg, pgOld):
@@ -591,7 +526,7 @@ class TestUpgrade():
             upgrade(pg, pgold)
             start(pg)
             after_upgrade(pg, pgold)
-            diff_dbs(key, pg, 'upgrade')
+            dump_and_diff_dbs(key, pg, 'upgrade')
             stop(pg)
             pgold.remove_full()
             # PGPRO-2459
@@ -666,7 +601,7 @@ class TestUpgrade():
             if (os.path.isfile(file_name)):
                 start(pg)
                 pg.exec_psql_file(file_name, '-q')
-                diff_dbs(key, pg, 'dump-restore')
+                dump_and_diff_dbs(key, pg, 'dump-restore')
             else:
                 pgold = install_server(
                     product=old_name, edition=old_edition,
@@ -682,7 +617,7 @@ class TestUpgrade():
 
                 start(pg)
                 pg.exec_psql_file(file_name, '-q')
-                diff_dbs(key, pg, 'dump-restore')
+                dump_and_diff_dbs(key, pg, 'upgrade')
                 pgold.remove_full(True)
                 # PGPRO-2459
                 if pgold.os_name in DEBIAN_BASED and \

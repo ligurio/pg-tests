@@ -736,6 +736,22 @@ baseurl=%s
         else:
             raise Exception("Unsupported system: %s" % self.os_name)
 
+    def update_all_packages(self):
+        """
+        :return:
+        """
+        if self.__is_pm_yum():
+            cmd = "yum update -y"
+            self.exec_cmd_retry(cmd)
+        elif self.__is_pm_apt():
+            cmd = "apt-get dist-upgrade -y"
+            self.exec_cmd_retry(cmd)
+        elif self.__is_pm_zypper():
+            cmd = "zypper update -y"
+            self.exec_cmd_retry(cmd)
+        else:
+            raise Exception("Unsupported system: %s" % self.os_name)
+
     def install_base(self):
         self.install_package(self.get_base_package_name())
         if self.product == "postgrespro":
