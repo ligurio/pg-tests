@@ -30,7 +30,8 @@ ARCHIVE_VERSIONS = {
         'ent-9.6': None,
         'ent-10': None
     },
-    'ALT  8.0': { # Wait for 9.6.13
+    # Wait for 9.6.13 for ALT 8.0
+    'ALT  8.0': {
         'std-9.6': None,
         'ent-9.6': None,
     },
