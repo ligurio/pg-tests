@@ -611,7 +611,7 @@ class TestUpgrade():
                 if self.system != 'Windows':
                     init_cluster(pgold, True, initdb_params)
 
-                expected_file_name = generate_db(pgold, pg)
+                generate_db(pgold, pg)
                 dumpall(pgold, file_name)
                 stop(pgold)
 
