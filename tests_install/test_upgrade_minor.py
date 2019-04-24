@@ -212,11 +212,6 @@ class TestUpgradeMinor():
         else:
             raise Exception("OS %s is not supported." % self.system)
 
-        # PGPRO-2651
-        if windows_os:
-            print "Windows not supported PGPRO-2651"
-            return
-
         version = request.config.getoption('--product_version')
         name = request.config.getoption('--product_name')
         edition = request.config.getoption('--product_edition')
@@ -263,7 +258,7 @@ class TestUpgradeMinor():
             pgnew.remove_full()
         else:
             pgnew.install_postgres_win()
-            pgnew.start_service()
+            pgnew.stop_service()
             subprocess.check_call('xcopy /S /E /O /X /I /Q "%s" "%s"' %
                                   (pgnew.get_pg_prefix(),
                                    os.path.join(tempdir, 'client')),
@@ -296,10 +291,10 @@ class TestUpgradeMinor():
             pgold.stop_service()
             if not windows_os:
                 pgnew.update_all_packages()
+                pgnew.start_service()
             else:
                 pgnew.install_postgres_win()
 
-            pgnew.start_service()
             result_file_name = os.path.join(tempdir,
                                             "%s-result.sql" % key)
             dumpall(pgnew, result_file_name)
