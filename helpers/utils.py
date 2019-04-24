@@ -7,6 +7,9 @@ import shutil
 import socket
 import subprocess
 import sys
+import re
+import difflib
+import urllib
 
 from enum import Enum
 from time import sleep
@@ -395,3 +398,84 @@ def refresh_env_win():
 #     else:
 #         if "systemd" in result:
 #             return True
+
+
+def read_dump(file):
+
+    def preprocess(str):
+        replaced = re.sub(
+            r"(ALTER ROLE.*)PASSWORD\s'[^']+'",
+            r"\1PASSWORD ''",
+            str
+        )
+        replaced = re.sub(
+            r"(CREATE DATABASE.*)LC_COLLATE\s*=\s*'([^@]+)@[^']+'(.*)",
+            r"\1LC_COLLATE = '\2'\3",
+            replaced
+        )
+        replaced = re.sub(
+            r"\s?--.*",
+            r"",
+            replaced
+        )
+        return replaced
+
+    lines = []
+    lines_to_sort = []
+    copy_line = ''
+    with open(file, 'rb') as f:
+        for line in f:
+            line = preprocess(line).strip()
+            if line:
+                if re.match(
+                    r"\s?COPY\s+.*FROM\sstdin.*",
+                    line
+                ):
+                    copy_line = line
+                    continue
+                if line == "\\.":
+                    lines.append(copy_line)
+                    copy_line = ''
+                    lines_to_sort.sort()
+                    lines.extend(lines_to_sort)
+                    lines_to_sort = []
+                if not copy_line:
+                    lines.append(line)
+                else:
+                    lines_to_sort.append(line)
+    return lines
+
+
+def diff_dbs(file1, file2, diff_file):
+    lines1 = read_dump(file1)
+    lines2 = read_dump(file2)
+    difference = difflib.unified_diff(
+        lines1,
+        lines2,
+        fromfile=file1,
+        tofile=file2
+    )
+    with open(diff_file, "w") as file:
+        file.writelines(difference)
+        pos = file.tell()
+    if pos > 0:
+        with open(diff_file, "rb") as file:
+            lines = file.readlines()
+            i = 1
+            for line in lines:
+                print line
+                if i > 20:
+                    print "..."
+                    break
+                i = i + 1
+        raise Exception("Difference found. See file " + diff_file)
+
+
+def download_dump(product, edition, version, dir):
+    dump_file_name = "dump-%s.sql" % "-".join([product, edition, version])
+    dump_url = "http://webdav.l.postgrespro.ru/pgdatas/xregress/%s" % \
+               dump_file_name
+    dump_file = urllib.URLopener()
+    dump_file_name = os.path.join(dir, dump_file_name)
+    dump_file.retrieve(dump_url, dump_file_name)
+    return dump_file_name
