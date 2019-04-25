@@ -748,7 +748,8 @@ baseurl=%s
             if self.__is_os_altlinux():
                 cmd = "apt-get dist-upgrade -y"
             else:
-                cmd = "sh -c ""DEBIAN_FRONTEND='noninteractive' apt-get -y -o " \
+                cmd = "sh -c ""DEBIAN_FRONTEND='noninteractive' " \
+                      "apt-get -y -o " \
                       "Dpkg::Options::='--force-confdef' -o " \
                       "Dpkg::Options::='--force-confold' dist-upgrade"""
             self.exec_cmd_retry(cmd)
