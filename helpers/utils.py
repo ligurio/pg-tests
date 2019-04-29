@@ -269,8 +269,8 @@ def wait_for_boot(host, time=300, linux=True):
                          connect_retry_count=(time / CONNECT_RETRY_DELAY))
 
 
-def gen_name(name):
-    return 'pgt--' + name + '-' + str(random.getrandbits(15))
+def gen_name(name, prefix="pgt"):
+    return prefix + '--' + name + '-' + str(random.getrandbits(15))
 
 
 def write_file(file, text, remote=False, host=None):
