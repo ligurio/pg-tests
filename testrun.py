@@ -12,10 +12,9 @@ import subprocess
 import sys
 import time
 import urllib
-import winrm
 import tempfile
 import glob
-import signal
+from multiprocessing import Pipe, Process
 from subprocess import call
 
 from helpers.utils import (copy_file, copy_reports_win,
@@ -583,15 +582,7 @@ def close_env(domname, saveimg=False, destroys0=False):
     conn.close()
 
 
-def timeout_handler(self, *args):
-    raise Exception("Timeout")
-
-
-def main():
-
-    signal.signal(signal.SIGALRM, timeout_handler)
-    signal.alarm(MAX_DURATION)
-
+def main(conn):
     start = time.time()
     names = list_images()
     parser = argparse.ArgumentParser(
@@ -620,6 +611,9 @@ def main():
                         help='export results', action='store_true')
     parser.add_argument('--clean', dest="clean",
                         help='clean resources before run', action='store_true')
+    parser.add_argument('--vm_prefix', dest="vm_prefix",
+                        help='virtual machine prefix', action='store',
+                        default="pgt")
 
     args = parser.parse_args()
 
@@ -655,7 +649,8 @@ def main():
         print("Starting target %s..." % target)
         linux_os = target[0:3] != 'win'
         target_start = time.time()
-        domname = gen_name(target)
+        domname = gen_name(target, args.vm_prefix)
+        conn.send([domname, args.keep])
         try:
             domipaddress = create_env(target, domname)[0]
             setup_env(domipaddress, domname, linux_os, tests_dir)
@@ -745,4 +740,22 @@ def main():
 
 
 if __name__ == "__main__":
-    exit(main())
+    parent_conn, child_conn = Pipe()
+    p = Process(target=main, args=(child_conn,))
+    p.daemon = True
+    p.start()
+    start_time = time.time()
+    while True:
+        time.sleep(0.1)
+        if p.is_alive():
+            if time.time() - start_time >= MAX_DURATION:
+                domname, keep = parent_conn.recv()
+                p.terminate()
+                if not keep:
+                    try:
+                        close_env(domname, False, False)
+                    except Exception:
+                        pass
+                raise Exception('Timed out')
+        else:
+            exit(p.exitcode)
