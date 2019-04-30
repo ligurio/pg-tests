@@ -6,7 +6,8 @@ import re
 import tempfile
 import pytest
 from allure_commons.types import LabelType
-from helpers.pginstall import PgInstall, PRELOAD_LIBRARIES, DEBIAN_BASED
+from helpers.pginstall import PgInstall, PRELOAD_LIBRARIES, DEBIAN_BASED,\
+    SUSE_BASED
 from helpers.pginstall import PGPRO_ARCHIVE_STANDARD, PGPRO_ARCHIVE_ENTERPRISE
 from BeautifulSoup import BeautifulSoup
 from helpers.utils import diff_dbs, download_dump
@@ -266,6 +267,9 @@ class TestUpgradeMinor():
             pgnew.remove_full(True)
 
         for oldversion in test_versions:
+            if pgnew.os_name in SUSE_BASED and version == '10' \
+                    and oldversion == '10.6.1':
+                continue
             print("Installing", oldversion)
             key = "-".join([name, edition, oldversion])
             pgold = PgInstall(product=name, edition=edition,
