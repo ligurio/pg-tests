@@ -51,6 +51,9 @@ cd /var/src
 curl -s -O http://cpan.metacpan.org/authors/id/T/TO/TODDR/IPC-Run-0.96.tar.gz
 tar fax IPC-Run*
 (cd IPC-Run*/ && perl Makefile.PL && make && make install)
+curl -s -O http://cpan.metacpan.org/authors/id/G/GB/GBARR/TimeDate-2.30.tar.gz
+tar fax TimeDate*
+(cd TimeDate*/ && perl Makefile.PL && make && make install)
 echo "Switching log messages language to English (for src/bin/scripts/ tests)"
 printf "\nlc_messages = 'English_United States.1252'\n" >> "$PGPATH/share/postgresql.conf.sample"
 echo "`date -Iseconds`: Source archive extracting... "
