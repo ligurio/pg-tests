@@ -70,11 +70,10 @@ dist = {"Oracle Linux Server": 'oraclelinux',
 
 PRELOAD_LIBRARIES = {
     'ent-11':
-        # TODO: Add pg_shardman
         ['auth_delay', 'auto_explain', 'in_memory',
          'pgpro_scheduler',
          'pg_stat_statements', 'plantuner',
-         'shared_ispell', 'pg_wait_sampling', 'pg_pageprep',
+         'shared_ispell', 'pg_wait_sampling', 'pg_pageprep', 'pg_shardman',
          'pg_pathman'],
     'std-11':
         ['auth_delay', 'auto_explain',
@@ -686,7 +685,8 @@ baseurl=%s
                 self.exec_cmd_retry("sed -i s/https:/http:/ "
                                     "/etc/yum.repos.d/epel.repo", 0)
             elif (self.os_name in ['Oracle Linux Server',
-                                   'Red Hat Enterprise Linux Server'] and
+                                   'Red Hat Enterprise Linux Server',
+                                   'AlterOS'] and
                   self.os_version.startswith('7.')):
                 cmd = "yum install -y https://dl.fedoraproject.org/pub/" \
                     "epel/epel-release-latest-7.noarch.rpm"
