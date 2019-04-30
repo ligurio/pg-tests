@@ -9,6 +9,7 @@ if which apt-get; then
     apt-get install -y libicu-devel || true
     apt-get install -y pkg-config
     apt-get install -y libipc-run-perl || apt-get install -y perl-IPC-Run
+    apt-get install -y perl-TimeDate || true
     apt-get install -y patch || true
     apt-get install -y perl-devel || true
     apt-get install -y perl-bignum || true
