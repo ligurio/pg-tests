@@ -619,15 +619,15 @@ def main(conn):
 
     if len(sys.argv) == 1:
         parser.print_help()
-        return 0
+        sys.exit(0)
 
     if args.target is None:
         print "No target name"
-        return 1
+        sys.exit(1)
 
     if not (os.path.exists(args.run_tests)):
         print "Test(s) '%s' is not found." % args.run_tests
-        return 1
+        sys.exit(1)
     tests = []
     for test in args.run_tests.split(','):
         if os.path.isdir(test):
@@ -638,7 +638,7 @@ def main(conn):
             tests.append(test)
     if not tests:
         print "No tests scripts found in %s." % args.run_tests
-        return 1
+        sys.exit(1)
 
     tests_dir = args.run_tests if os.path.isdir(args.run_tests) else \
         os.path.dirname(args.run_tests)
@@ -724,7 +724,7 @@ def main(conn):
                       (target, domname, domipaddress, retcode, reporturl))
                 print stdout
                 print stderr
-                return 1
+                sys.exit(1)
 
         if not args.keep or len(tests) > 1:
             close_env(domname, saveimg=False, destroys0=True)
