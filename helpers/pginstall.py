@@ -20,6 +20,7 @@ PGPRO_ARCHIVE_STANDARD = "http://repo.postgrespro.ru/pgpro-archive/"
 PGPRO_ARCHIVE_ENTERPRISE = "http://repoee.l.postgrespro.ru/archive/"
 PGPRO_BRANCH_BASE = "http://localrepo.l.postgrespro.ru/branches/"
 PGPRO_BASE = "http://repo.postgrespro.ru/"
+PGPRO_BASE_ENTERPRISE = "http://repoee.l.postgrespro.ru/"
 PGPROALPHA_BASE = "http://localrepo.l.postgrespro.ru/dev/"
 PGPROCERT_BASE = "http://localrepo.l.postgrespro.ru/cert/"
 PSQL_BASE = "https://download.postgresql.org/pub"
@@ -165,6 +166,8 @@ class PgInstall:
             else:
                 raise Exception("Archived versions are not supported for %s." %
                                 self.product)
+        if self.product == "postgrespro" and self.edition == "ent":
+            return PGPRO_BASE_ENTERPRISE
         return PGPRO_BASE
 
     def __get_product_dir(self):
