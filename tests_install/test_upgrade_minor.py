@@ -230,6 +230,9 @@ class TestUpgradeMinor():
 
         small_key = "-".join([edition, version])
         test_versions = get_test_versions(edition, version)
+        if test_versions is None:
+            print("No previous versions found.")
+            return
 
         if dist in ARCHIVE_VERSIONS \
                 and small_key in ARCHIVE_VERSIONS[dist]:
