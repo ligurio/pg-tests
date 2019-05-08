@@ -21,6 +21,7 @@ PRELOAD_LIBRARIES['ent-10'].remove('pg_pageprep')
 # PGPRO-2560
 PRELOAD_LIBRARIES['std-11'].remove('pg_pageprep')
 
+
 UNSUPPORTED_PLATFORMS = {
     'postgresql--9.6': [
         "SUSE Linux Enterprise Server  11",
@@ -30,7 +31,7 @@ UNSUPPORTED_PLATFORMS = {
         "RED OS release MUROM ( 7.1",
         '"AstraLinuxSE" 1.5', '"AstraLinuxSE" 1.5.28',
         "AlterOS 7.5", "SUSE Linux Enterprise Server  15",
-        "Ubuntu 19.04"
+        "Ubuntu 19.04", '"AstraLinuxCE" 2.12.7'
     ],
     'postgresql--10': [
         "SUSE Linux Enterprise Server  11",
@@ -40,7 +41,7 @@ UNSUPPORTED_PLATFORMS = {
         "RED OS release MUROM ( 7.1",
         '"AstraLinuxSE" 1.5', '"AstraLinuxSE" 1.5.28',
         "AlterOS 7.5", "SUSE Linux Enterprise Server  15",
-        "Ubuntu 19.04"
+        "Ubuntu 19.04", '"AstraLinuxCE" 2.12.7'
     ],
     'postgresql--11': [
         "SUSE Linux Enterprise Server  11",
@@ -50,43 +51,43 @@ UNSUPPORTED_PLATFORMS = {
         "RED OS release MUROM ( 7.1",
         '"AstraLinuxSE" 1.5', '"AstraLinuxSE" 1.5.28',
         "AlterOS 7.5", "SUSE Linux Enterprise Server  15",
-        "Ubuntu 19.04"
+        "Ubuntu 19.04", '"AstraLinuxCE" 2.12.7'
     ],
     'postgrespro-std-9.6': [
         "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
         "\xb5\xd1\x80\xd0\xb0  6.3", "GosLinux 7.08",
         "AlterOS 7.5", "SUSE Linux Enterprise Server  15",
-        "Ubuntu 19.04"
+        "Ubuntu 19.04", '"AstraLinuxCE" 2.12.7'
     ],
     'postgrespro-std-10': [
         "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
         "\xb5\xd1\x80\xd0\xb0  6.3",
         "AlterOS 7.5", "SUSE Linux Enterprise Server  15",
-        "Ubuntu 19.04"
+        "Ubuntu 19.04", '"AstraLinuxCE" 2.12.7'
     ],
     'postgrespro-std-11': [
         "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
         "\xb5\xd1\x80\xd0\xb0  6.3",
         "AlterOS 7.5", "SUSE Linux Enterprise Server  15",
-        "Ubuntu 19.04"
+        "Ubuntu 19.04", '"AstraLinuxCE" 2.12.7'
     ],
     'postgrespro-ent-9.6': [
         "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
         "\xb5\xd1\x80\xd0\xb0  6.3",
         "AlterOS 7.5", "SUSE Linux Enterprise Server  15",
-        "Ubuntu 19.04"
+        "Ubuntu 19.04", '"AstraLinuxCE" 2.12.7'
     ],
     'postgrespro-ent-10': [
         "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
         "\xb5\xd1\x80\xd0\xb0  6.3",
         "AlterOS 7.5", "SUSE Linux Enterprise Server  15",
-        "Ubuntu 19.04"
+        "Ubuntu 19.04", '"AstraLinuxCE" 2.12.7'
     ],
     'postgrespro-ent-11': [
         "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
         "\xb5\xd1\x80\xd0\xb0  6.3",
         "AlterOS 7.5", "SUSE Linux Enterprise Server  15",
-        "Ubuntu 19.04"
+        "Ubuntu 19.04", '"AstraLinuxCE" 2.12.7'
     ]
 }
 
