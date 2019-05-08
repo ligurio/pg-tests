@@ -35,6 +35,8 @@ ARCHIVE_VERSIONS = {
     'ALT  8.0': {
         'std-9.6': None,
         'ent-9.6': None,
+        'std-10': '10.6.1',
+        'ent-10': '10.6.1'
     },
     'ALT Linux  7.0.4': {
         'ent-9.6': None,
@@ -131,6 +133,13 @@ ARCHIVE_VERSIONS = {
         'std-11': None
     },
     'SUSE Linux Enterprise Server  15': {
+        'std-9.6': None,
+        'std-10': None,
+        'ent-9.6': None,
+        'ent-10': None,
+        'std-11': None
+    },
+    '"AstraLinuxCE" 2.12.7': {
         'std-9.6': None,
         'std-10': None,
         'ent-9.6': None,
