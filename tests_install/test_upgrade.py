@@ -405,14 +405,15 @@ def after_upgrade(pg, pgOld):
 
 
 def init_cluster(pg, force_remove=True, initdb_params='',
-                 stopped=None):
+                 stopped=None, load_libs=True):
     if system == 'Windows':
         restore_datadir_win(pg)
     else:
         stop(pg, stopped)
         pg.init_cluster(force_remove, '-k ' + initdb_params)
         start(pg)
-        pg.load_shared_libraries(restart_service=False)
+        if load_libs:
+            pg.load_shared_libraries(restart_service=False)
         stop(pg)
     start(pg)
 
@@ -498,7 +499,7 @@ class TestUpgrade():
         for route in upgrade_route['from']:
             initdb_params = route['initdb-params'] if \
                 'initdb-params' in route else ''
-            init_cluster(pg, True, initdb_params, True)
+            init_cluster(pg, True, initdb_params, True, False)
             stop(pg)
             old_name = route['name']
             old_edition = route['edition']
@@ -519,7 +520,7 @@ class TestUpgrade():
                 branch=None, windows=(self.system == 'Windows')
             )
             if self.system != 'Windows':
-                init_cluster(pgold, True, initdb_params)
+                init_cluster(pgold, True, initdb_params, None, True)
 
             generate_db(pgold, pg)
             dumpall(pgold, os.path.join(tempfile.gettempdir(), "%s.sql" % key))
@@ -580,7 +581,7 @@ class TestUpgrade():
         for route in dump_restore_route['from']:
             initdb_params = route['initdb-params'] if \
                 'initdb-params' in route else ''
-            init_cluster(pg, True, initdb_params, True)
+            init_cluster(pg, True, initdb_params, True, False)
             stop(pg)
 
             old_name = route['name']
@@ -610,7 +611,7 @@ class TestUpgrade():
                     branch=None, windows=(self.system == 'Windows')
                 )
                 if self.system != 'Windows':
-                    init_cluster(pgold, True, initdb_params)
+                    init_cluster(pgold, True, initdb_params, None, True)
 
                 generate_db(pgold, pg)
                 dumpall(pgold, file_name)
