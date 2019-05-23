@@ -636,11 +636,7 @@ baseurl=%s
                 except Exception:
                     pass
             if self.product == "postgrespro":
-                if self.os_name == 'SUSE Linux Enterprise Server ' and \
-                   self.os_version == "12":
-                    baseurl = os.path.join(baseurl, "12.1")
-                else:
-                    baseurl = os.path.join(baseurl, self.os_version)
+                baseurl = os.path.join(baseurl, self.os_version)
             cmd = "zypper removerepo %s" % (reponame)
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
