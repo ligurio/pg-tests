@@ -927,7 +927,8 @@ baseurl=%s
                 time.sleep(1)
         else:
             pkgs = self.all_packages_in_repo
-            if self.__is_os_suse() and self.os_version in ['11', '12']:
+            if (self.__is_os_suse() and self.os_version in ['11', '12']) or \
+                (self.__is_os_altlinux() and self.os_version in ['7.0.4']):
                 for pkg in pkgs[:]:
                     if 'icu' in pkg or 'zstd' in pkg:
                         pkgs.remove(pkg)
