@@ -84,9 +84,6 @@ class TestExtensions():
         if pginst.edition != 'ent':
             print("pg_badger test is only performed with enterprise edition")
             return
-        # PGPRO-2225
-        if pginst.version == '9.6':
-            return
         if pginst.windows:
             print("pg_badger test is not supported on Windows")
             return
