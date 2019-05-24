@@ -291,6 +291,11 @@ class TestUpgradeMinor():
 
             pgold.setup_repo()
             if not windows_os:
+                if pgnew.os_name in SUSE_BASED and version == '11' \
+                        and oldversion == '11.1.1':
+                    for pkg in pgold.all_packages_in_repo[:]:
+                        if 'bouncer' in pkg:
+                            pgold.all_packages_in_repo.remove(pkg)
                 pgold.install_full()
                 pgold.initdb_start()
             else:
