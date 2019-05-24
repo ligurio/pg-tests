@@ -98,6 +98,7 @@ ARCHIVE_VERSIONS = {
         'ent-10': '10.2.1'
     },
     'ROSA Enterprise Linux Cobalt 7.3': {
+        'std-9.6': '9.6.10.1',
         'ent-9.6': '9.6.9.1',
         'ent-10': '10.6.1'
     },
