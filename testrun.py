@@ -718,10 +718,9 @@ def main(conn):
                 if not args.keep:
                     close_env(domname, saveimg=False, destroys0=True)
                 reporturl = os.path.join(REPORT_SERVER_URL, reportname)
-                print("Test return code (for target: %s, domain: %s,"
-                      " IP address: %s) is not zero - %s.\n"
-                      "Please check report: %s" %
-                      (target, domname, domipaddress, retcode, reporturl))
+                print("Test (for target: %s, domain: %s,"
+                      " IP address: %s) returned error: %d.\n" %
+                      (target, domname, domipaddress, retcode))
                 print stdout
                 print stderr
                 sys.exit(1)
