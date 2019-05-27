@@ -137,7 +137,7 @@ def copy_reports_win(reportname, reportsdir, destreports, domipaddress):
         (sharename, os.path.abspath(destreports)), shell=True)
 
     share = r'\\%s\%s' % (get_virt_ip(), sharename)
-    cmd = r'net use {0} /user:test test & ' \
+    cmd = r'net use {0} /user:localhost\test test & ' \
           r'xcopy /Y /F .\pg-tests\{1}.* {0}\ & ' \
           r'xcopy /Y /F .\pg-tests\reports {0}\{2}\ '. \
           format(share, reportname, reportsdir.replace('/', '\\'))
