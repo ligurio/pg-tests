@@ -730,8 +730,8 @@ def main(conn):
                         close_env(domname, saveimg=False, destroys0=True)
                     reporturl = os.path.join(REPORT_SERVER_URL, reportname)
                     print("Test (for target: %s, domain: %s,"
-                        " IP address: %s) returned error: %d.\n" %
-                        (target, domname, domipaddress, retcode))
+                          " IP address: %s) returned error: %d.\n" %
+                          (target, domname, domipaddress, retcode))
                     print stdout
                     print stderr
                     sys.exit(1)
