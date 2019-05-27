@@ -106,3 +106,9 @@ fi
         else:
             pass
     request.addfinalizer(finalize)
+
+
+@pytest.hookimpl(trylast=True)
+def pytest_sessionfinish(session, exitstatus):
+    if exitstatus == 0 and hasattr(session, 'customexitstatus'):
+        session.exitstatus = session.customexitstatus
