@@ -526,3 +526,12 @@
       - { name: DumpFolder, data: 'C:\CrashDumps', type: String }
       - { name: DumpCount, data: 10, type: DWord }
       - { name: DumpType, data: 2, type: DWord }
+
+  # Non-interactive alternative for adding 'Remote Management Users' via 'winrm configSDDL default'
+  - name: windows - allow winrm connections for Remote Management Users
+    when: ansible_os_family == "Windows"
+    win_regedit:
+      path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WSMAN\Service
+      name: rootSDDL
+      data: "O:NSG:BAD:P(A;;GA;;;BA)(A;;GR;;;IU)(A;;GAGR;;;RM)S:P(AU;FA;GA;;;WD)(AU;SA;GXGW;;;WD)"
+      type: string
