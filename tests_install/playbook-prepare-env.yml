@@ -535,3 +535,11 @@
       name: rootSDDL
       data: "O:NSG:BAD:P(A;;GA;;;BA)(A;;GR;;;IU)(A;;GAGR;;;RM)S:P(AU;FA;GA;;;WD)(AU;SA;GXGW;;;WD)"
       type: string
+
+  - name: windows - restart WinRM service
+    when: ansible_os_family == "Windows"
+    win_command: 'powershell -Command "Register-ScheduledTask -TaskName Restart-WinRM -User System -Action (New-ScheduledTaskAction -Execute \"Powershell.exe\" -Argument \"-Command Restart-Service -Name WinRM\"); Start-ScheduledTask -TaskName Restart-WinRM"'
+
+  - name: Wait for system to become reachable (2)
+    when: ansible_os_family == "Windows"
+    wait_for_connection: delay=10 timeout=600
