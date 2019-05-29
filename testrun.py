@@ -698,7 +698,7 @@ def main(conn):
                     print("Test command:\n%s" % cmd)
                 print("Running test %s%s..." % (
                     testname,
-                    '' if stage == 0 else ' (stage: %d)' % (stage + 1)))
+                    '' if stage == 0 else ' (stage %d)' % (stage + 1)))
                 if not linux_os:
                     retcode, stdout, stderr = exec_command_win(
                         cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD,
