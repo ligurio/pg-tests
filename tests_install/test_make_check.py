@@ -11,6 +11,14 @@ from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall
 
 
+def get_pg_prefix(pginst):
+    cmd = '"%s" --bindir' % os.path.join(pginst.get_default_bin_path(),
+                                         'pg_config')
+    binpath = subprocess.check_output(cmd, shell=True).strip()
+    pg_prefix = re.sub('bin$', '', binpath)
+    return pg_prefix
+
+
 @pytest.mark.make_check
 class TestMakeCheck(object):
     """
@@ -26,6 +34,11 @@ class TestMakeCheck(object):
         Scenario:
         1. Install current version
         2. Check that setup successfull
+
+        We need to perform the test on Windows in two stages:
+        First we setup the server and prepare environment,
+        then we exclude current user from the Administrators group.
+        Second we execute `make installcheck` without admin rights.
 
         :return:
         """
@@ -47,13 +60,27 @@ class TestMakeCheck(object):
         tag_mark = pytest.allure.label(LabelType.TAG, product_info)
         request.node.add_marker(tag_mark)
         branch = request.config.getoption('--branch')
-
         # Step 1
         pginst = PgInstall(product=name, edition=edition,
                            version=version, milestone=milestone,
                            branch=branch, windows=(self.system == 'Windows'))
         request.cls.pginst = pginst
         pginst.make_check_passed = False
+        curpath = os.path.dirname(os.path.abspath(__file__))
+
+        if self.system == 'Windows':
+            if os.path.exists(pginst.get_default_bin_path()):
+                # The instance is already installed and
+                # installcheck environment is presumably prepared,
+                # so just run make_installcheck (once more)
+                subprocess.check_call(
+                    '"%s" "%s"' % (os.path.join(curpath,
+                                                'make_installcheck.cmd'),
+                                   get_pg_prefix(pginst)),
+                    shell=True)
+                pginst.make_check_passed = True
+                return
+
         pginst.setup_repo()
         print("Running on %s." % target)
         pginst.download_source()
@@ -65,36 +92,34 @@ class TestMakeCheck(object):
             pginst.install_postgres_win(port=55432)
         pginst.exec_psql("ALTER SYSTEM SET max_worker_processes = 16")
         pginst.load_shared_libraries()
-        cmd = '"%s" --bindir' % os.path.join(pginst.get_default_bin_path(),
-                                             'pg_config')
-        binpath = subprocess.check_output(cmd, shell=True).strip()
-        pg_prefix = re.sub('bin$', '', binpath)
-        curpath = os.path.dirname(os.path.abspath(__file__))
+
         if self.system != 'Windows':
             subprocess.check_call(
                 '"%s" "%s"' % (os.path.join(curpath, 'make_installcheck.sh'),
-                               pg_prefix),
+                               get_pg_prefix(pginst)),
                 shell=True)
             pginst.make_check_passed = True
         else:
+            # First run is performed to setup the environment
             subprocess.check_call(
                 '"%s" "%s"' % (os.path.join(curpath, 'make_installcheck.cmd'),
-                               pg_prefix),
+                               get_pg_prefix(pginst)),
                 shell=True)
-            pginst.make_check_passed = True
+            request.session.customexitstatus = 222
 
     @pytest.mark.test_sqlsmith
     def test_sqlsmith(self, request):
         pginst = request.cls.pginst
         if not pginst.make_check_passed:
-            print("sqlsmith test skipped (make_check hasn't passed)")
             return
         pginst.exec_psql("CREATE ROLE tester LOGIN PASSWORD 'test'")
         pginst.exec_psql("GRANT ALL ON DATABASE regression TO tester")
         pg_prefix = pginst.get_default_pg_prefix()
         curpath = os.path.dirname(os.path.abspath(__file__))
-        if self.system != 'Windows':
-            subprocess.check_call(
-                '"%s" "%s"' % (os.path.join(curpath, 'sqlsmith.sh'),
-                               pg_prefix),
-                shell=True)
+        if self.system == 'Windows':
+            print("sqlsmith is not supported on Windows")
+            return
+        subprocess.check_call(
+            '"%s" "%s"' % (os.path.join(curpath, 'sqlsmith.sh'),
+                           pg_prefix),
+            shell=True)

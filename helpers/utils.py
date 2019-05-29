@@ -137,7 +137,7 @@ def copy_reports_win(reportname, reportsdir, destreports, domipaddress):
         (sharename, os.path.abspath(destreports)), shell=True)
 
     share = r'\\%s\%s' % (get_virt_ip(), sharename)
-    cmd = r'net use {0} /user:test test & ' \
+    cmd = r'net use {0} /user:localhost\test test & ' \
           r'xcopy /Y /F .\pg-tests\{1}.* {0}\ & ' \
           r'xcopy /Y /F .\pg-tests\reports {0}\{2}\ '. \
           format(share, reportname, reportsdir.replace('/', '\\'))
@@ -244,8 +244,17 @@ def exec_command_win(cmd, hostname,
     print "Executing '%s' on %s..." % (cmd, hostname)
     command_id = p.run_command(shell_id, cmd)
     stdout, stderr, retcode = p.get_command_output(shell_id, command_id)
-    p.cleanup_command(shell_id, command_id)
-    p.close_shell(shell_id)
+
+    # These operations fail when the current user excluded from
+    # the Administrators group, so just ignore the error.
+    try:
+        p.cleanup_command(shell_id, command_id)
+    except winrm.exceptions.WinRMError:
+        pass
+    try:
+        p.close_shell(shell_id)
+    except winrm.exceptions.WinRMError:
+        pass
 
     if skip_ret_code_check:
         return retcode, stdout, stderr

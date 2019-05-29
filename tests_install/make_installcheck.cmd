@@ -1,7 +1,9 @@
-echo %time%: CMD starting
+SET MD=c:\msys32
+
+IF EXIST %MD%\NUL GOTO main
+:setup
 PowerShell -Command "Set-MpPreference -DisableRealtimeMonitoring $true" 2>NUL
 
-SET MD=c:\msys32\
 rmdir /S /Q %MD% 2>NUL
 mkdir %MD%\var\src
 copy postgres*.tar.bz2 %MD%\var\src\
@@ -19,21 +21,33 @@ powershell -Command "$shell = New-Object -ComObject Shell.Application; $zip_src 
 powershell -Command "((new-object net.webclient).DownloadFile('http://repo.msys2.org/distrib/i686/msys2-base-i686-20180531.tar.xz', '%TEMP%\msys.tar.xz'))"
 %TEMP%\7za.exe x %TEMP%\msys.tar.xz -so 2>%TEMP%/7z-msys0.log | %TEMP%\7za.exe  x -aoa -si -ttar >%TEMP%/7z-msys1.log 2>&1
 
-@REM First run is performed to setup the environment
-%MD%\usr\bin\bash --login -i -c exit >%TEMP%\msys-setup.log 2>&1
-
 @REM Grant access to Users (including postgres user) to src/test/regress/testtablespace/
 icacls %MD%\var\src /grant *S-1-5-32-545:(OI)(CI)F /T
 
+@REM "Switching log messages language to English (for src/bin/scripts/ tests)"
+(echo. & echo lc_messages = 'English_United States.1252') >> %1\share\postgresql.conf.sample
+
+@REM Add current user to the Remote Management Users group
+powershell -Command "$group=(New-Object System.Security.Principal.SecurityIdentifier('S-1-5-32-580')).Translate([System.Security.Principal.NTAccount]).Value.Split('\\')[1]; net localgroup $group %username% /add"
+
+@REM Exclude current user from the Administrators group
+powershell -Command "$group=(New-Object System.Security.Principal.SecurityIdentifier('S-1-5-32-544')).Translate([System.Security.Principal.NTAccount]).Value.Split('\\')[1]; net localgroup $group %username% /delete"
+@exit /b 0
+
+:main
+echo %time%: Main cmd script starting
+
+@REM First run is performed to setup the environment
+%MD%\usr\bin\bash --login -i -c exit >%TEMP%\msys-setup.log 2>&1
+
 %MD%\usr\bin\bash --login -i /var/src/make_check.sh %1
 SET LEVEL=%ERRORLEVEL%
-echo %time%: CMD finishing
+echo %time%: Main cmd script finishing
 exit /b %LEVEL%
 
 ___BASH_SCRIPT___
 
 set -e
-
 echo "`date -Iseconds`: Starting shell... ";
 PGPATH=$(echo $1 | sed -e "s@c:[/\\\\]@/c/@i" -e "s@\\\\@/@g");
 if file "$PGPATH/bin/postgres.exe" | grep '80386. for MS Windows$'; then
@@ -54,8 +68,6 @@ tar fax IPC-Run*
 curl -s -O http://cpan.metacpan.org/authors/id/G/GB/GBARR/TimeDate-2.30.tar.gz
 tar fax TimeDate*
 (cd TimeDate*/ && perl Makefile.PL && make && make install)
-echo "Switching log messages language to English (for src/bin/scripts/ tests)"
-printf "\nlc_messages = 'English_United States.1252'\n" >> "$PGPATH/share/postgresql.conf.sample"
 echo "`date -Iseconds`: Source archive extracting... "
 tar fax postgres*.tar.bz2
 cd postgres*/
@@ -64,14 +76,13 @@ echo "`date -Iseconds`: Configuring... "
 CFLAGS=" -D WINVER=0x0600 -D _WIN32_WINNT=0x0600" LIBS="-lktmw32" ./configure --enable-tap-tests --host=$host --without-zlib --prefix="$PGPATH" 2>&1 | tee configure.log
 pwd
 
-# Pass to `make installcheck` all the options (with-*, enable-*), which were passed to configure
+# Pass to `make installcheck` all the options (with-*, enable-*), that were passed to configure
 confopts="python_majorversion=2"
-opts=`$PGPATH/bin/pg_config --configure | grep -Eo "'[^']*'|[^' ]*" | sed -e "s/^'//" -e "s/'$//"`
+opts=`"$PGPATH/bin/pg_config" --configure | grep -Eo "'[^']*'|[^' ]*" | sed -e "s/^'//" -e "s/'$//"`
 while read -r opt;
     do case "$opt" in --with-*=*) ;; --with-* | --enable-*) opt="${opt/#--/}"; opt="${opt//-/_}" confopts="$confopts $opt=yes ";; esac;
 done <<< "$opts";
 echo "confopts: $confopts"
-ls -l src/interfaces/ecpg/test/
 echo "Fixing ECPG test for installcheck..."
 sed -e "s@^ECPG = ../../preproc/ecpg@ECPG = ecpg@" \
     -e "s@^ECPG_TEST_DEPENDENCIES = ../../preproc/ecpg\$(X)@ECPG_TEST_DEPENDENCIES = @" \

@@ -680,50 +680,62 @@ def main(conn):
                     # Don't leave a domain that is failed to boot running
                     close_env(domname, saveimg=False, destroys0=True)
                     raise e
-            reportname = "report-%s_%s_%s" % (
-                time.strftime('%Y-%m-%d-%H-%M-%S'), testname, target)
-            cmd = make_test_cmd(
-                domname, linux_os, reportname, test,
-                args.product_name,
-                args.product_version,
-                args.product_edition,
-                args.product_milestone,
-                args.branch)
-            if DEBUG:
-                print("Test command:\n%s" % cmd)
-            print("Running test (%s)..." % testname)
-            if not linux_os:
-                retcode, stdout, stderr = exec_command_win(
-                    cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD,
-                    skip_ret_code_check=True)
-            else:
-                retcode, stdout, stderr = exec_command(
-                    cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD,
-                    skip_ret_code_check=True)
+            stage = 0
+            while True:
+                reportname = "report-%s_%s%s_%s" % (
+                    target,
+                    testname,
+                    '' if stage == 0 else ('#%d' % (stage + 1)),
+                    time.strftime('%Y-%m-%d-%H-%M-%S'))
+                cmd = make_test_cmd(
+                    domname, linux_os, reportname, test,
+                    args.product_name,
+                    args.product_version,
+                    args.product_edition,
+                    args.product_milestone,
+                    args.branch)
+                if DEBUG:
+                    print("Test command:\n%s" % cmd)
+                print("Running test %s%s..." % (
+                    testname,
+                    '' if stage == 0 else ' (stage %d)' % (stage + 1)))
+                if not linux_os:
+                    retcode, stdout, stderr = exec_command_win(
+                        cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD,
+                        skip_ret_code_check=True)
+                else:
+                    retcode, stdout, stderr = exec_command(
+                        cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD,
+                        skip_ret_code_check=True)
 
-            if args.export:
-                export_results(
-                    domname, linux_os, domipaddress, reportname,
-                    operating_system=target,
-                    product_name=args.product_name,
-                    product_version=args.product_version,
-                    product_edition=args.product_edition,
-                    tests=testname)
-                reporturl = os.path.join(REPORT_SERVER_URL, reportname)
-                print "Link to the html report - %s.html" % reporturl
-                print "Link to the xml report - %s.xml" % reporturl
-                print "Link to the json report - %s.json" % reporturl
+                if args.export:
+                    export_results(
+                        domname, linux_os, domipaddress, reportname,
+                        operating_system=target,
+                        product_name=args.product_name,
+                        product_version=args.product_version,
+                        product_edition=args.product_edition,
+                        tests=testname)
+                    reporturl = os.path.join(REPORT_SERVER_URL, reportname)
+                    print "Link to the html report - %s.html" % reporturl
+                    print "Link to the xml report - %s.xml" % reporturl
+                    print "Link to the json report - %s.json" % reporturl
 
-            if retcode != 0:
-                if not args.keep:
-                    close_env(domname, saveimg=False, destroys0=True)
-                reporturl = os.path.join(REPORT_SERVER_URL, reportname)
-                print("Test (for target: %s, domain: %s,"
-                      " IP address: %s) returned error: %d.\n" %
-                      (target, domname, domipaddress, retcode))
-                print stdout
-                print stderr
-                sys.exit(1)
+                if retcode == 222:
+                    stage += 1
+                    continue
+
+                if retcode != 0:
+                    if not args.keep:
+                        close_env(domname, saveimg=False, destroys0=True)
+                    reporturl = os.path.join(REPORT_SERVER_URL, reportname)
+                    print("Test (for target: %s, domain: %s,"
+                          " IP address: %s) returned error: %d.\n" %
+                          (target, domname, domipaddress, retcode))
+                    print stdout
+                    print stderr
+                    sys.exit(1)
+                break
 
         if not args.keep or len(tests) > 1:
             close_env(domname, saveimg=False, destroys0=True)
