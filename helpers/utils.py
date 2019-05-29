@@ -244,8 +244,17 @@ def exec_command_win(cmd, hostname,
     print "Executing '%s' on %s..." % (cmd, hostname)
     command_id = p.run_command(shell_id, cmd)
     stdout, stderr, retcode = p.get_command_output(shell_id, command_id)
-    p.cleanup_command(shell_id, command_id)
-    p.close_shell(shell_id)
+
+    # These operations fail when the current user excluded from
+    # the Administrators group, so just ignore the error.
+    try:
+        p.cleanup_command(shell_id, command_id)
+    except winrm.exceptions.WinRMError:
+        pass
+    try:
+        p.close_shell(shell_id)
+    except winrm.exceptions.WinRMError:
+        pass
 
     if skip_ret_code_check:
         return retcode, stdout, stderr
