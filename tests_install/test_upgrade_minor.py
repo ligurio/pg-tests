@@ -33,8 +33,8 @@ ARCHIVE_VERSIONS = {
     },
     # Wait for 9.6.13 for ALT 8.0
     'ALT  8.0': {
-        'std-9.6': None,
-        'ent-9.6': None,
+        'std-9.6': '9.6.13.1',
+        'ent-9.6': '9.6.13.1',
         'std-10': '10.6.1',
         'ent-10': '10.6.1'
     },
@@ -47,8 +47,7 @@ ARCHIVE_VERSIONS = {
     },
     '"AstraLinuxSE" 1.5.28': {
         'std-9.6': '9.6.11.1',
-        'std-10': None,
-        'ent-9.6': '10.6.1',
+        'std-10': '10.7.1',
         'ent-10': '10.6.2'
     },
     'CentOS 6.7': {
@@ -98,12 +97,12 @@ ARCHIVE_VERSIONS = {
         'ent-10': '10.2.1'
     },
     'ROSA Enterprise Linux Server 7.3': {
-        'std-9.6': None,
-        'std-10': None,
-        'std-11': None,
-        'ent-9.6': None,
-        'ent-10': None,
-        'ent-11': None
+        'std-9.6': '9.6.13.1',
+        'std-10': '10.8.1',
+        'std-11': '11.3.1',
+        'ent-9.6': '9.6.13.1',
+        'ent-10': '10.8.1',
+        'ent-11': '11.3.1'
     },
     'ROSA Enterprise Linux Cobalt 7.3': {
         'std-9.6': '9.6.10.1',
@@ -118,7 +117,7 @@ ARCHIVE_VERSIONS = {
     },
     'Ubuntu 18.10': {
         'std-9.6': '9.6.11.1',
-        'std-10': None,
+        'std-10': '10.7.1',
         'ent-9.6': None,
         'ent-10': None
     },
@@ -129,36 +128,39 @@ ARCHIVE_VERSIONS = {
     },
     'Ubuntu 19.04': {
         'std-9.6': None,
-        'std-10': None,
+        'std-10': '10.8.1',
         'ent-9.6': None,
         'ent-10': None,
         'std-11': None
     },
     'AlterOS 7.5': {
         'std-9.6': None,
-        'std-10': None,
+        'std-10': '10.8.1',
+        'std-11': '11.3.1',
         'ent-9.6': None,
-        'ent-10': None,
-        'std-11': None
+        'ent-10': '10.8.1',
+        'ent-11': '11.3.1'
     },
     'SUSE Linux Enterprise Server  15': {
         'std-9.6': None,
-        'std-10': None,
+        'std-10': '10.8.1',
+        'std-11': '11.3.1',
         'ent-9.6': None,
-        'ent-10': None,
-        'std-11': None
+        'ent-10': '10.8.1',
+        'ent-11': '11.3.1'
     },
     '"AstraLinuxCE" 2.12.7': {
-        'std-9.6': None,
-        'std-10': None,
-        'ent-9.6': None,
-        'ent-10': None,
-        'std-11': None
+        'std-9.6': '9.6.13.1',
+        'std-10': '10.7.1',
+        'std-11': '11.2.1',
+        'ent-9.6': '9.6.13.1',
+        'ent-10': '10.7.1',
+        'ent-11': '11.2.1'
     }
 }
 
 
-def get_test_versions(edition, version):
+def get_test_versions(edition, version, specified_version):
 
     if edition == "ent":
         archive_url = PGPRO_ARCHIVE_ENTERPRISE
@@ -170,13 +172,19 @@ def get_test_versions(edition, version):
     # Choose two versions -- newest and oldest supported
     soup = BeautifulSoup(urllib.urlopen(archive_url))
     arcversions = []
+    specified_version_found = False
     for link in soup.findAll('a'):
         href = link.get('href')
         if href.startswith('pgpro') and href.endswith('/'):
             vere = re.search(r'\w+-([0-9.]+)/', href)
             if vere:
                 if vere.group(1).startswith(version):
-                    arcvers = vere.group(1).split('.')
+                    ver = vere.group(1)
+                    arcvers = ver.split('.')
+                    if not specified_version_found and \
+                            ver == specified_version:
+                        specified_version_found = True
+
                     arcversion = '.'.join([d.rjust(4) for d in arcvers])
                     if version == '9.6':
                         # Due to CATALOG_VERSION_NO change
@@ -190,9 +198,13 @@ def get_test_versions(edition, version):
         return None
 
     # Choose first and last versions
-    if len(arcversions) > 2:
-        return [arcversions[0].replace(' ', ''),
-                arcversions[-2].replace(' ', '')]
+    if specified_version and not specified_version_found:
+        print "Specified first version is not present in archive yet."
+        return None
+    if len(arcversions) > 1:
+        return [specified_version if
+                specified_version else arcversions[0].replace(' ', ''),
+                arcversions[-1].replace(' ', '')]
     else:
         return [arcversions[0].replace(' ', '')]
 
@@ -247,21 +259,21 @@ class TestUpgradeMinor():
             return
 
         small_key = "-".join([edition, version])
-        test_versions = get_test_versions(edition, version)
-        if test_versions is None:
-            print("No previous versions found.")
-            return
-
+        specified_version = False
         if dist in ARCHIVE_VERSIONS \
                 and small_key in ARCHIVE_VERSIONS[dist]:
-            first = ARCHIVE_VERSIONS[dist][small_key]
-            if first is None:
-                return "%s %s %s does not support archived versions on %s." % \
-                    (name, edition, version, dist)
-            elif len(test_versions) > 1 and first == test_versions[1]:
-                test_versions = [first]
-            elif len(test_versions) > 0 and first != test_versions[0]:
-                test_versions[0] = first
+            specified_version = ARCHIVE_VERSIONS[dist][small_key]
+
+        if specified_version is None:
+            return "%s %s %s does not support archived versions on %s." % \
+                (name, edition, version, dist)
+
+        test_versions = get_test_versions(edition, version,
+                                          specified_version)
+
+        if test_versions is None:
+            print("No archive versions found.")
+            return
 
         dump_file_name = download_dump(name, edition, version, tempdir)
 
