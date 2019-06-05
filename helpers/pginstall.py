@@ -679,7 +679,7 @@ baseurl=%s
                   self.os_version.startswith('6.')):
                 self.exec_cmd_retry("wget https://dl.fedoraproject.org/pub/"
                                     "epel/epel-release-latest-6.noarch.rpm")
-                self.exec_cmd_retry("rpm -ivh "
+                self.exec_cmd_retry("rpm -iv --force "
                                     "epel-release-latest-6.noarch.rpm", 0)
                 self.exec_cmd_retry("sed -i s/https:/http:/ "
                                     "/etc/yum.repos.d/epel.repo", 0)
