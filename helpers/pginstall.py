@@ -547,7 +547,7 @@ class PgInstall:
                     baseurl = os.path.join(baseurl,
                                            "6.3Server/os/$basearch/rpms")
                 elif self.os_name == "GosLinux" and \
-                        self.os_version == "7.08":
+                        self.os_version.startswith("7."):
                     baseurl = os.path.join(baseurl,
                                            "7/os/$basearch/rpms")
                 elif self.os_name == "RED OS release MUROM (" and \
