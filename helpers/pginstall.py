@@ -742,19 +742,27 @@ baseurl=%s
         :return:
         """
         if self.__is_pm_yum():
-            cmd = "yum update -y"
+            cmd = "yum update -y --disablerepo='*'   --enablerepo='%s'" % \
+                  self.reponame
             self.exec_cmd_retry(cmd)
         elif self.__is_pm_apt():
+            precmd = "rm -rf /tmp/t_r 2>/dev/null;" \
+                     "mkdir /tmp/t_r /tmp/t_r/partial;" \
+                     "cp /var/lib/apt/lists/%s* /tmp/t_r/;" \
+                     "echo 'Dir::State::Lists \\\"/tmp/t_r\\\";'" \
+                     ">/tmp/t_apt.conf; " \
+                     "APT_CONFIG=/tmp/t_apt.conf " % self.reponame
             if self.__is_os_altlinux():
-                cmd = "apt-get dist-upgrade -y"
+                cmd = "sh -c \"%sapt-get dist-upgrade -y\"" % precmd
             else:
-                cmd = "sh -c \"DEBIAN_FRONTEND='noninteractive' " \
+                cmd = "sh -c \"%sDEBIAN_FRONTEND='noninteractive' " \
                       "apt-get -y -o " \
                       "Dpkg::Options::='--force-confdef' -o " \
-                      "Dpkg::Options::='--force-confold' dist-upgrade\""
+                      "Dpkg::Options::='--force-confold' dist-upgrade\"" % \
+                      precmd
             self.exec_cmd_retry(cmd)
         elif self.__is_pm_zypper():
-            cmd = "zypper update -y"
+            cmd = "zypper update -y -r %s" % self.reponame
             self.exec_cmd_retry(cmd)
         else:
             raise Exception("Unsupported system: %s" % self.os_name)
