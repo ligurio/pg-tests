@@ -921,9 +921,14 @@ baseurl=%s
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         elif self.__is_pm_zypper():
-            cmd = "zypper remove -y %s" % pkg_name
-            command_executor(cmd, self.remote, self.host,
-                             REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+            cmd = "rpm -qa %s" % pkg_name
+            installed_pkgs = subprocess.check_output(cmd, shell=True).\
+                splitlines()
+            if (len(installed_pkgs)):
+                pkg_name = ' '.join(installed_pkgs)
+                cmd = "zypper remove -y %s" % pkg_name
+                command_executor(cmd, self.remote, self.host,
+                                 REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         elif self.__is_os_windows():
             raise Exception("Not implemented on Windows.")
         else:
