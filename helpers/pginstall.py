@@ -922,7 +922,8 @@ baseurl=%s
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         elif self.__is_pm_zypper():
             cmd = "rpm -qa %s" % pkg_name
-            installed_pkgs = subprocess.check_output(cmd, shell=True).splitlines()
+            installed_pkgs = subprocess.check_output(cmd, shell=True).\
+                splitlines()
             if (len(installed_pkgs)):
                 pkg_name = ' '.join(installed_pkgs)
                 cmd = "zypper remove -y %s" % pkg_name
