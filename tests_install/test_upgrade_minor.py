@@ -113,6 +113,8 @@ ARCHIVE_VERSIONS = {
         'ent-10': None
     },
     'SUSE Linux Enterprise Server  12': {
+        'std-9.6': '9.6.13.1',
+        'ent-9.6': '9.6.13.1',
         'ent-10': None
     },
     'Ubuntu 18.10': {
