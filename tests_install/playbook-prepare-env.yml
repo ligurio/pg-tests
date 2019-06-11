@@ -225,14 +225,11 @@
     become: true
 
   - name: add extra repository (SUSE)
-    shell: if [ -d /mnt/dvd/suse ]; then
-              zypper addrepo /mnt/dvd/suse/x86_64/ disk1;
+    shell: if [ -f /mnt/dvd/content ]; then
+              zypper addrepo -t yast2 /mnt/dvd/ disk1;
            fi;
-           if [ -d /mnt/dvd/media.1 ]; then
-              zypper addrepo /mnt/dvd/ disk1;
-           fi;
-           if [ -d /mnt/dvd2/suse ]; then
-              zypper addrepo /mnt/dvd2/suse/x86_64/ disk2;
+           if [ -f /mnt/dvd2/content ]; then
+              zypper addrepo -t yast2 file:///mnt/dvd2/./ disk2;
            fi
     when: ansible_os_family == 'Suse'
     become_method: su
