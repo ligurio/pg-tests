@@ -408,6 +408,9 @@ class PgInstall:
     def __is_os_suse(self):
         return self.os_name in SUSE_BASED
 
+    def __is_os_debian(self):
+        return self.os_name == 'debian'
+
     def __is_os_windows(self):
         return self.os_name in WIN_BASED
 
@@ -955,7 +958,10 @@ baseurl=%s
         else:
             pkgs = self.all_packages_in_repo
             if (self.__is_os_suse() and self.os_version in ['11', '12']) or \
-                    (self.__is_os_altlinux() and self.os_version in ['7.0.4']):
+                    (self.__is_os_altlinux() and
+                     self.os_version in ['7.0.4']) or \
+                    (self.__is_os_debian() and
+                     self.os_version.startswith('8.')):
                 for pkg in pkgs[:]:
                     if 'icu' in pkg or 'zstd' in pkg:
                         pkgs.remove(pkg)
