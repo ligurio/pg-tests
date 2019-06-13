@@ -961,7 +961,8 @@ baseurl=%s
                     (self.__is_os_altlinux() and
                      self.os_version in ['7.0.4']) or \
                     (self.__is_os_debian() and
-                     self.os_version.startswith('8.')):
+                     self.os_version.startswith('8.')) or \
+                    self.__is_os_astra():
                 for pkg in pkgs[:]:
                     if 'icu' in pkg or 'zstd' in pkg:
                         pkgs.remove(pkg)
