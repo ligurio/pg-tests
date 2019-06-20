@@ -4,6 +4,7 @@ import subprocess
 import urllib
 import re
 import tempfile
+import time
 import pytest
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall, PRELOAD_LIBRARIES, DEBIAN_BASED,\
@@ -47,6 +48,7 @@ ARCHIVE_VERSIONS = {
     },
     '"AstraLinuxSE" 1.5.28': {
         'std-9.6': '9.6.11.1',
+        'ent-9.6': '9.6.7.1',
         'std-10': '10.7.1',
         'ent-10': '10.6.2'
     },
@@ -58,7 +60,11 @@ ARCHIVE_VERSIONS = {
         'ent-9.6': '9.6.9.1'
     },
     'debian 9.0': {
-        'std-9.6': '9.6.10.2'
+        'std-9.6': '9.6.10.2',
+        'ent-9.6': '9.6.7.1'
+    },
+    'debian 8.4': {
+        'ent-9.6': '9.6.7.1'
     },
     'GosLinux 6.4': {
         'std-9.6': None,
@@ -117,6 +123,9 @@ ARCHIVE_VERSIONS = {
         'std-9.6': '9.6.13.1',
         'ent-9.6': '9.6.13.1',
         'ent-10': None
+    },
+    'Ubuntu 16.04': {
+        'ent-9.6': '9.6.7.1'
     },
     'Ubuntu 18.10': {
         'std-9.6': '9.6.11.1',
@@ -353,3 +362,7 @@ class TestUpgradeMinor():
                                           shell=True)
                 except Exception:
                     pass
+            # PGPRO-2563
+            if pgold.os_name == 'Ubuntu' and version == '9.6' and \
+                    edition == 'ent':
+                time.sleep(20)
