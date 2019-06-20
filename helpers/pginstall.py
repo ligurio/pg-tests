@@ -749,7 +749,15 @@ baseurl=%s
             cmd = "yum install -y %s" % pkg_name
             self.exec_cmd_retry(cmd)
         elif self.__is_pm_apt():
-            cmd = "apt-get install -y %s" % pkg_name.replace('*', '.*')
+            if self.__is_os_altlinux():
+                cmd = "sh -c \"apt-get install -y %s\"" % \
+                      pkg_name.replace('*', '.*')
+            else:
+                cmd = "sh -c \"DEBIAN_FRONTEND='noninteractive' " \
+                      "apt-get -y -o " \
+                      "Dpkg::Options::='--force-confdef' -o " \
+                      "Dpkg::Options::='--force-confold' install %s\"" % \
+                      pkg_name.replace('*', '.*')
             self.exec_cmd_retry(cmd)
         elif self.__is_pm_zypper():
             cmd = "zypper install -y -l --force-resolution %s" % pkg_name
