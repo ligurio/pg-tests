@@ -163,6 +163,7 @@
         - gcc
         - gdb
         - python-devel
+        - libicu-devel
     when: ansible_os_family != "Windows" and ansible_pkg_mgr == "yum"
     become_method: su
     become: true
