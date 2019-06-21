@@ -1374,6 +1374,17 @@ baseurl=%s
         return subprocess.check_output(cmd, shell=True,
                                        cwd="/", env=self.env)
 
+    def exec_server_bin(self, bin, options=''):
+        cmd = '%s"%s%s" %s' % \
+            (
+                self.pg_preexec,
+                self.get_server_bin_path(),
+                bin,
+                options
+            )
+        return subprocess.check_output(cmd, shell=True,
+                                       cwd="/", env=self.env)
+
     def pg_isready(self):
         cmd = '%s"%spg_isready" %s %s' % \
             (
