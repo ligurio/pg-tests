@@ -265,6 +265,19 @@ class TestFullInstall():
                 assert ppedition == 'standard'
             print('pgpro_source_id:',
                   pginst.exec_psql_select("SELECT pgpro_build()"))
+        if not (version == "9.6" or version == "10"):
+            env = os.environ.copy()
+            env["LANG"] = 'C'
+            pginst.env = env
+            cdout = pginst.exec_server_bin('pg_controldata',
+                                           pginst.get_datadir()).split('\n')
+            if name == 'postgrespro' and not (edition in ['1c', 'sql']):
+                assert cdout[0].startswith('pg_control edition:')
+                cdedition = cdout[0].replace('pg_control edition:', '').strip()
+                if edition == 'ent':
+                    assert cdedition == 'Postgres Pro Enterprise'
+                elif edition == 'std':
+                    assert cdedition == 'Postgres Pro Standard'
         print("OK")
 
     @pytest.mark.test_all_extensions
