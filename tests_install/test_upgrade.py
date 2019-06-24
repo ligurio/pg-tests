@@ -67,7 +67,8 @@ UNSUPPORTED_PLATFORMS = {
         "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
         "\xb5\xd1\x80\xd0\xb0  6.3",
         "AlterOS 7.5", "SUSE Linux Enterprise Server  15",
-        "Ubuntu 19.04", '"AstraLinuxCE" 2.12.7'
+        "Ubuntu 19.04", '"AstraLinuxCE" 2.12.7',
+        "ROSA Enterprise Linux Server 7.3"  # remove after 9.6.14 release
     ],
     'postgrespro-ent-10': [
         "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
