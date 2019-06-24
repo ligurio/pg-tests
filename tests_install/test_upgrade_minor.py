@@ -329,6 +329,13 @@ class TestUpgradeMinor():
                     for pkg in pgold.all_packages_in_repo[:]:
                         if 'bouncer' in pkg:
                             pgold.all_packages_in_repo.remove(pkg)
+                if pgnew.os_name == 'ROSA Enterprise Linux Server' \
+                        and pgnew.os_version.startswith('7.3') \
+                        and edition == 'std' \
+                        and version == '9.6' and oldversion == '9.6.13.1':
+                    for pkg in pgold.all_packages_in_repo[:]:
+                        if 'probackup' in pkg:
+                            pgold.all_packages_in_repo.remove(pkg)
                 pgold.install_full()
                 pgold.initdb_start()
             else:
