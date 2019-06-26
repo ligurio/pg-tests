@@ -432,10 +432,28 @@ def read_dump(file):
     lines = []
     lines_to_sort = []
     copy_line = ''
+    sort_patterns = [
+        r"\s?CREATE\s+(UNIQUE\s+)?INDEX\s.*",
+        r"\s?ALTER\s+TABLE\s+(ONLY\s+)?.*(ADD\sCONSTRAINT\s)?.*"
+    ]
+    sort_item = []
+    sort_items = []
     with open(file, 'rb') as f:
         for line in f:
             line = preprocess(line).strip()
             if line:
+                for pattern in sort_patterns:
+                    if re.match(pattern, line):
+                        sort_item.append('')
+                        break
+
+                if (sort_item):
+                    sort_item.append(line)
+                    if (line.endswith(';')):
+                        sort_items.append("\n".join(sort_item))
+                        sort_item = []
+                    continue
+
                 if re.match(
                     r"\s?COPY\s+.*FROM\sstdin.*",
                     line
@@ -452,6 +470,8 @@ def read_dump(file):
                     lines.append(line)
                 else:
                     lines_to_sort.append(line)
+    sort_items.sort()
+    lines.extend(sort_items)
     return lines
 
 
