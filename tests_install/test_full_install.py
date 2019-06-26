@@ -172,8 +172,6 @@ def check_package_contents(pginst, packages):
 
     if pginst.product != "postgrespro":
         return
-    if pginst.milestone != "alpha":  # TODO: Remove before 2019.02 release
-        return
     pgid = '%s-%s' % (pginst.edition, pginst.version)
     if (pgid not in SERVER_APPLICATIONS):
         return
