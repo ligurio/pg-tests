@@ -14,6 +14,7 @@ from BeautifulSoup import BeautifulSoup
 from helpers.utils import diff_dbs, download_dump
 
 tempdir = tempfile.gettempdir()
+client_dir = os.path.join(tempdir, 'client')
 
 # 9.6 stable, 10 stable, 11std stable does not contains pg_pageprep
 PRELOAD_LIBRARIES['std-9.6'].remove('pg_pageprep')
@@ -235,7 +236,7 @@ def dumpall(pg, file):
     cmd = '%s"%spg_dumpall" -f "%s"' % \
           (
               pg.pg_preexec,
-              os.path.join(tempdir, "client", "bin", ""),
+              os.path.join(client_dir, "bin", ""),
               file
           )
     subprocess.check_call(cmd, shell=True)
@@ -297,22 +298,21 @@ class TestUpgradeMinor():
         pgnew.setup_repo()
         if not windows_os:
             pgnew.install_client_only()
+            current_psql_version = pgnew.get_psql_version()
             subprocess.check_call('cp -a "%s" "%s"' %
                                   (pgnew.get_pg_prefix(),
-                                   os.path.join(tempdir, 'client')),
+                                   client_dir),
                                   shell=True)
             pgnew.remove_full()
         else:
             pgnew.install_postgres_win()
+            current_psql_version = pgnew.get_psql_version()
             pgnew.stop_service()
             subprocess.check_call('xcopy /S /E /O /X /I /Q "%s" "%s"' %
                                   (pgnew.get_pg_prefix(),
-                                   os.path.join(tempdir, 'client')),
+                                   client_dir),
                                   shell=True)
             pgnew.remove_full(True)
-        current_psql_version = subprocess.check_output(
-            '%spsql --version' % os.path.join(tempdir, 'client', 'bin', ''),
-            shell=True)
         vere = re.search(r'([0-9.]+)', current_psql_version)
         current_ver = '.'.join([d.rjust(4) for d in vere.group(1).split('.')])
         test_versions = get_test_versions(edition, version,
