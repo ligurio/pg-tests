@@ -172,7 +172,7 @@ ARCHIVE_VERSIONS = {
 }
 
 
-def get_test_versions(edition, version, specified_version, milestone='alpha'):
+def get_test_versions(edition, version, specified_version, current_version):
 
     if edition == "ent":
         archive_url = PGPRO_ARCHIVE_ENTERPRISE
@@ -214,12 +214,21 @@ def get_test_versions(edition, version, specified_version, milestone='alpha'):
         print "Specified first version is not present in archive yet."
         return None
     if len(arcversions) > 1:
-        return [specified_version if
-                specified_version else arcversions[0].replace(' ', ''),
-                arcversions[-2 if milestone == 'stable' else -1].
-                replace(' ', '')]
+        n = 1
+        while n <= len(arcversions) and current_version < arcversions[-n]:
+            n = n + 1
+        if n > len(arcversions):
+            return None
+        res = [specified_version if
+               specified_version else arcversions[0].replace(' ', ''),
+               arcversions[-n].replace(' ', '')]
+        if res[0] == res[1]:
+            return [res[0]]
+        else:
+            return res
     else:
-        return [arcversions[0].replace(' ', '')]
+        return None if current_version <= arcversions[0] else \
+            [arcversions[0].replace(' ', '')]
 
 
 def dumpall(pg, file):
@@ -281,16 +290,6 @@ class TestUpgradeMinor():
             return "%s %s %s does not support archived versions on %s." % \
                 (name, edition, version, dist)
 
-        test_versions = get_test_versions(edition, version,
-                                          specified_version, milestone)
-
-        if test_versions is None:
-            print("No archive versions found.")
-            return
-
-        dump_file_name = download_dump(name, edition, version, tempdir)
-
-        print test_versions
         print("Running on %s." % target)
         pgnew = PgInstall(product=name, edition=edition,
                           version=version, milestone=milestone,
@@ -311,6 +310,21 @@ class TestUpgradeMinor():
                                    os.path.join(tempdir, 'client')),
                                   shell=True)
             pgnew.remove_full(True)
+        current_psql_version = subprocess.check_output(
+            '%spsql --version' % os.path.join(tempdir, 'client', 'bin', ''),
+            shell=True)
+        vere = re.search(r'([0-9.]+)', current_psql_version)
+        current_ver = '.'.join([d.rjust(4) for d in vere.group(1).split('.')])
+        test_versions = get_test_versions(edition, version,
+                                          specified_version, current_ver)
+
+        if test_versions is None:
+            print("No archive versions found.")
+            return
+
+        print test_versions
+
+        dump_file_name = download_dump(name, edition, version, tempdir)
 
         for oldversion in test_versions:
             if pgnew.os_name in SUSE_BASED and version == '10' \
