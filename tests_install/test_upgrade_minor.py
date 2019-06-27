@@ -172,7 +172,7 @@ ARCHIVE_VERSIONS = {
 }
 
 
-def get_test_versions(edition, version, specified_version):
+def get_test_versions(edition, version, specified_version, milestone='alpha'):
 
     if edition == "ent":
         archive_url = PGPRO_ARCHIVE_ENTERPRISE
@@ -216,7 +216,8 @@ def get_test_versions(edition, version, specified_version):
     if len(arcversions) > 1:
         return [specified_version if
                 specified_version else arcversions[0].replace(' ', ''),
-                arcversions[-1].replace(' ', '')]
+                arcversions[-2 if milestone == 'stable' else -1].
+                replace(' ', '')]
     else:
         return [arcversions[0].replace(' ', '')]
 
@@ -281,7 +282,7 @@ class TestUpgradeMinor():
                 (name, edition, version, dist)
 
         test_versions = get_test_versions(edition, version,
-                                          specified_version)
+                                          specified_version, milestone)
 
         if test_versions is None:
             print("No archive versions found.")
