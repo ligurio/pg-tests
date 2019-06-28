@@ -214,29 +214,25 @@ def get_test_versions(edition, version, specified_version, current_version):
     if specified_version and not specified_version_found:
         print "Specified first version is not present in archive yet."
         return None
-    if len(arcversions) > 1:
-        n = 1
-        while n <= len(arcversions) and current_version < arcversions[-n]:
-            n = n + 1
-        if n > len(arcversions):
-            return None
-        res = [specified_version if
-               specified_version else arcversions[0].replace(' ', ''),
-               arcversions[-n].replace(' ', '')]
-        if res[0] == res[1]:
-            return [res[0]]
-        else:
-            return res
+    n = len(arcversions) - 1
+    while n >= 0 and current_version <= arcversions[n]:
+        n = n - 1
+    if n < 0:
+        return None
+    res = [specified_version if
+           specified_version else arcversions[0].replace(' ', ''),
+           arcversions[n].replace(' ', '')]
+    if res[0] == res[1]:
+        return [res[0]]
     else:
-        return None if current_version <= arcversions[0] else \
-            [arcversions[0].replace(' ', '')]
+        return res
 
 
 def dumpall(pg, file):
-    cmd = '%s"%spg_dumpall" -f "%s"' % \
+    cmd = '%s"%s" -f "%s"' % \
           (
               pg.pg_preexec,
-              os.path.join(client_dir, "bin", ""),
+              os.path.join(client_dir, 'bin', 'pg_dumpall'),
               file
           )
     subprocess.check_call(cmd, shell=True)
@@ -298,7 +294,7 @@ class TestUpgradeMinor():
         pgnew.setup_repo()
         if not windows_os:
             pgnew.install_client_only()
-            current_psql_version = pgnew.get_psql_version()
+            pgnew.install_package(pgnew.get_dev_package_name())
             subprocess.check_call('cp -a "%s" "%s"' %
                                   (pgnew.get_pg_prefix(),
                                    client_dir),
@@ -306,15 +302,23 @@ class TestUpgradeMinor():
             pgnew.remove_full()
         else:
             pgnew.install_postgres_win()
-            current_psql_version = pgnew.get_psql_version()
             pgnew.stop_service()
             subprocess.check_call('xcopy /S /E /O /X /I /Q "%s" "%s"' %
                                   (pgnew.get_pg_prefix(),
                                    client_dir),
                                   shell=True)
             pgnew.remove_full(True)
-        vere = re.search(r'([0-9.]+)', current_psql_version)
-        current_ver = '.'.join([d.rjust(4) for d in vere.group(1).split('.')])
+        pgconfig = subprocess.check_output('"%s"' %
+                                           os.path.join(client_dir, 'bin',
+                                                        'pg_config'),
+                                           shell=True)
+        vere = re.search(r'PGPRO\_VERSION\s=\s([0-9.]+)', pgconfig)
+        if (vere):
+            current_ver = vere.group(1)
+        else:
+            vere = re.search(r'VERSION\s=\s\w+\s([0-9.]+)', pgconfig)
+            current_ver = vere.group(1)
+        current_ver = '.'.join([d.rjust(4) for d in current_ver.split('.')])
         test_versions = get_test_versions(edition, version,
                                           specified_version, current_ver)
 
