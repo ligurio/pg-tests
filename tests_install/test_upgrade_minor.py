@@ -14,6 +14,7 @@ from BeautifulSoup import BeautifulSoup
 from helpers.utils import diff_dbs, download_dump
 
 tempdir = tempfile.gettempdir()
+client_dir = os.path.join(tempdir, 'client')
 
 # 9.6 stable, 10 stable, 11std stable does not contains pg_pageprep
 PRELOAD_LIBRARIES['std-9.6'].remove('pg_pageprep')
@@ -172,7 +173,7 @@ ARCHIVE_VERSIONS = {
 }
 
 
-def get_test_versions(edition, version, specified_version):
+def get_test_versions(edition, version, specified_version, current_version):
 
     if edition == "ent":
         archive_url = PGPRO_ARCHIVE_ENTERPRISE
@@ -213,19 +214,25 @@ def get_test_versions(edition, version, specified_version):
     if specified_version and not specified_version_found:
         print "Specified first version is not present in archive yet."
         return None
-    if len(arcversions) > 1:
-        return [specified_version if
-                specified_version else arcversions[0].replace(' ', ''),
-                arcversions[-1].replace(' ', '')]
+    n = len(arcversions) - 1
+    while n >= 0 and current_version <= arcversions[n]:
+        n = n - 1
+    if n < 0:
+        return None
+    res = [specified_version if
+           specified_version else arcversions[0].replace(' ', ''),
+           arcversions[n].replace(' ', '')]
+    if res[0] == res[1]:
+        return [res[0]]
     else:
-        return [arcversions[0].replace(' ', '')]
+        return res
 
 
 def dumpall(pg, file):
-    cmd = '%s"%spg_dumpall" -f "%s"' % \
+    cmd = '%s"%s" -f "%s"' % \
           (
               pg.pg_preexec,
-              os.path.join(tempdir, "client", "bin", ""),
+              os.path.join(client_dir, 'bin', 'pg_dumpall'),
               file
           )
     subprocess.check_call(cmd, shell=True)
@@ -280,16 +287,6 @@ class TestUpgradeMinor():
             return "%s %s %s does not support archived versions on %s." % \
                 (name, edition, version, dist)
 
-        test_versions = get_test_versions(edition, version,
-                                          specified_version)
-
-        if test_versions is None:
-            print("No archive versions found.")
-            return
-
-        dump_file_name = download_dump(name, edition, version, tempdir)
-
-        print test_versions
         print("Running on %s." % target)
         pgnew = PgInstall(product=name, edition=edition,
                           version=version, milestone=milestone,
@@ -297,9 +294,10 @@ class TestUpgradeMinor():
         pgnew.setup_repo()
         if not windows_os:
             pgnew.install_client_only()
+            pgnew.install_package(pgnew.get_dev_package_name())
             subprocess.check_call('cp -a "%s" "%s"' %
                                   (pgnew.get_pg_prefix(),
-                                   os.path.join(tempdir, 'client')),
+                                   client_dir),
                                   shell=True)
             pgnew.remove_full()
         else:
@@ -307,9 +305,30 @@ class TestUpgradeMinor():
             pgnew.stop_service()
             subprocess.check_call('xcopy /S /E /O /X /I /Q "%s" "%s"' %
                                   (pgnew.get_pg_prefix(),
-                                   os.path.join(tempdir, 'client')),
+                                   client_dir),
                                   shell=True)
             pgnew.remove_full(True)
+        pgconfig = subprocess.check_output('"%s"' %
+                                           os.path.join(client_dir, 'bin',
+                                                        'pg_config'),
+                                           shell=True)
+        vere = re.search(r'PGPRO\_VERSION\s=\s([0-9.]+)', pgconfig)
+        if (vere):
+            current_ver = vere.group(1)
+        else:
+            vere = re.search(r'VERSION\s=\s\w+\s([0-9.]+)', pgconfig)
+            current_ver = vere.group(1)
+        current_ver = '.'.join([d.rjust(4) for d in current_ver.split('.')])
+        test_versions = get_test_versions(edition, version,
+                                          specified_version, current_ver)
+
+        if test_versions is None:
+            print("No archive versions found.")
+            return
+
+        print test_versions
+
+        dump_file_name = download_dump(name, edition, version, tempdir)
 
         for oldversion in test_versions:
             if pgnew.os_name in SUSE_BASED and version == '10' \
