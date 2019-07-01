@@ -693,7 +693,7 @@ baseurl=%s
             cmd = None
             if (self.os_name == 'CentOS Linux' and
                self.os_version.startswith('7.')):
-                cmd = "yum install -y epel-release"
+                cmd = "yum localinstall -y epel-release"
             elif (self.os_name in ['Oracle Linux Server', 'CentOS',
                                    'Red Hat Enterprise Linux Server'] and
                   self.os_version.startswith('6.')):
@@ -708,7 +708,7 @@ baseurl=%s
                                    'AlterOS',
                                    'ROSA Enterprise Linux Cobalt'] and
                   self.os_version.startswith('7.')):
-                cmd = "yum install -y https://dl.fedoraproject.org/pub/" \
+                cmd = "yum localinstall -y https://dl.fedoraproject.org/pub/" \
                     "epel/epel-release-latest-7.noarch.rpm"
             if cmd:
                 self.exec_cmd_retry(cmd)
