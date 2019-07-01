@@ -131,6 +131,7 @@ ARCHIVE_VERSIONS = {
     'Ubuntu 18.10': {
         'std-9.6': '9.6.11.1',
         'std-10': '10.7.1',
+        'std-11': '11.2.1',
         'ent-9.6': None,
         'ent-10': None
     },
