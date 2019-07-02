@@ -693,7 +693,7 @@ baseurl=%s
             cmd = None
             if (self.os_name == 'CentOS Linux' and
                self.os_version.startswith('7.')):
-                cmd = "yum localinstall -y epel-release"
+                cmd = "yum install -y epel-release"
             elif (self.os_name in ['Oracle Linux Server', 'CentOS',
                                    'Red Hat Enterprise Linux Server'] and
                   self.os_version.startswith('6.')):
