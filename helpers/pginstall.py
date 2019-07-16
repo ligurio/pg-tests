@@ -168,9 +168,8 @@ class PgInstall:
                 raise Exception("Archived versions are not supported for %s." %
                                 self.product)
         if self.product == "postgrespro" and self.edition == "ent":
-            if self.milestone == "beta":
-                return (PGPRO_BASE_ENTERPRISE_BETA if self.milestone == "beta"
-                        else PGPRO_BASE_ENTERPRISE)
+            return (PGPRO_BASE_ENTERPRISE_BETA if self.milestone == "beta"
+                    else PGPRO_BASE_ENTERPRISE)
         return PGPRO_BASE
 
     def __get_product_dir(self):
