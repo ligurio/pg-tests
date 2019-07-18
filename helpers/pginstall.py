@@ -691,7 +691,8 @@ baseurl=%s
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             self.exec_cmd_retry('apt-get update')
-        if self.product == 'postgrespro' and self.version == '11':
+        if self.version not in ['9.5', '9.6', '10']:
+            # Install epel for v.11+
             cmd = None
             if (self.os_name == 'CentOS Linux' and
                self.os_version.startswith('7.')):
@@ -708,7 +709,8 @@ baseurl=%s
             elif (self.os_name in ['Oracle Linux Server',
                                    'Red Hat Enterprise Linux Server',
                                    'AlterOS',
-                                   'ROSA Enterprise Linux Cobalt'] and
+                                   'ROSA Enterprise Linux Cobalt',
+                                   'ROSA Enterprise Linux Server'] and
                   self.os_version.startswith('7.')):
                 cmd = "yum localinstall -y https://dl.fedoraproject.org/pub/" \
                     "epel/epel-release-latest-7.noarch.rpm"
