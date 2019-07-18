@@ -716,7 +716,8 @@ def main(conn):
                         product_version=args.product_version,
                         product_edition=args.product_edition,
                         tests=testname)
-                    reporturl = os.path.join(REPORT_SERVER_URL, reportname)
+                    reporturl = os.path.join(REPORT_SERVER_URL,
+                                             reportname.replace('#', '%23'))
                     print "Link to the html report - %s.html" % reporturl
                     print "Link to the xml report - %s.xml" % reporturl
                     print "Link to the json report - %s.json" % reporturl
