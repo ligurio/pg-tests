@@ -8,7 +8,7 @@ import time
 import pytest
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall, PRELOAD_LIBRARIES, DEBIAN_BASED,\
-    SUSE_BASED
+    SUSE_BASED, REDHAT_BASED
 from helpers.pginstall import PGPRO_ARCHIVE_STANDARD, PGPRO_ARCHIVE_ENTERPRISE
 from BeautifulSoup import BeautifulSoup
 from helpers.utils import diff_dbs, download_dump
@@ -332,9 +332,6 @@ class TestUpgradeMinor():
         dump_file_name = download_dump(name, edition, version, tempdir)
 
         for oldversion in test_versions:
-            if pgnew.os_name in SUSE_BASED and version == '10' \
-                    and oldversion == '10.6.1':
-                continue
             print("Installing", oldversion)
             key = "-".join([name, edition, oldversion])
             pgold = PgInstall(product=name, edition=edition,
@@ -343,16 +340,24 @@ class TestUpgradeMinor():
                               branch=None, windows=windows_os)
 
             pgold.setup_repo()
+            old_ver = '.'.join([d.rjust(4) for d in oldversion.split('.')])
             if not windows_os:
+                # PGPRO-2874
+                if version == '11' and old_ver < '  11.   4.   2' and \
+                        pgnew.os_name in REDHAT_BASED:
+                    for pkg in pgold.all_packages_in_repo[:]:
+                        if 'filedump' in pkg:
+                            pgold.all_packages_in_repo.remove(pkg)
                 if pgnew.os_name in SUSE_BASED and version == '11' \
-                        and oldversion == '11.1.1':
+                        and old_ver == '  11.   1.   1':
                     for pkg in pgold.all_packages_in_repo[:]:
                         if 'bouncer' in pkg:
                             pgold.all_packages_in_repo.remove(pkg)
                 if pgnew.os_name == 'ROSA Enterprise Linux Server' \
                         and pgnew.os_version.startswith('7.3') \
                         and edition == 'std' \
-                        and version == '9.6' and oldversion == '9.6.13.1':
+                        and version == '9.6' \
+                        and old_ver == '   9.   6.  13.   1':
                     for pkg in pgold.all_packages_in_repo[:]:
                         if 'probackup' in pkg:
                             pgold.all_packages_in_repo.remove(pkg)
@@ -389,6 +394,10 @@ class TestUpgradeMinor():
                                           shell=True)
                 except Exception:
                     pass
+            if version == '11' and old_ver < '  11.   4.   2' and \
+                    pgnew.os_name in REDHAT_BASED:
+                subprocess.check_call('yum remove -y '
+                                      'pg_repack-ent-11-debuginfo', shell=True)
             # PGPRO-2563
             if pgold.os_name == 'Ubuntu' and version == '9.6' and \
                     edition == 'ent':
