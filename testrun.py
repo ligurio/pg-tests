@@ -326,6 +326,11 @@ def create_env(name, domname, domimage=None):
                       <source mode="bind"/>
                       <target type='virtio' name='org.qemu.guest_agent.0'/>
                     </channel>
+                    <rng model='virtio'>
+                      <backend model='random'>/dev/random</backend>
+                      <address type='pci' domain='0x0000'
+                      bus='0x00' slot='0x06' function='0x0'/>
+                    </rng>
                   </devices>
                 </domain>
                 """ % (domname, ram_size, cpus, clock, qemu_path, domimage,
