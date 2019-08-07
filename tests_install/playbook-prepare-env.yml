@@ -74,11 +74,14 @@
 
   - name: Setup DVD as yum repository (RHEL) # Based on https://access.redhat.com/solutions/328863
     shell: if [ -f /mnt/dvd/media.repo ]; then
-             cp /mnt/dvd/media.repo /etc/yum.repos.d/rhel-dvd.repo &&
-             chmod 644 /etc/yum.repos.d/rhel-dvd.repo &&
+             cp --no-preserve=all /mnt/dvd/media.repo /etc/yum.repos.d/rhel-dvd.repo &&
              echo "enabled=1" >> /etc/yum.repos.d/rhel-dvd.repo &&
              if [ -d /mnt/dvd/repodata ]; then echo "baseurl=file:///mnt/dvd" >> /etc/yum.repos.d/rhel-dvd.repo; fi;
              if [ -d /mnt/dvd/Server/repodata ]; then echo "baseurl=file:///mnt/dvd/Server" >> /etc/yum.repos.d/rhel-dvd.repo; fi;
+             if [ -d /mnt/dvd/BaseOS/repodata ]; then echo "baseurl=file:///mnt/dvd/BaseOS" >> /etc/yum.repos.d/rhel-dvd.repo; fi;
+             if [ -d /mnt/dvd/AppStream/repodata ]; then
+               printf "[InstallAppMedia]\nname=AppStream\nmetadata_expire=-1\ngpgcheck=0\nenabled=1\nbaseurl=file:///mnt/dvd/AppStream\n" > /etc/yum.repos.d/rhel-dvd-apps.repo;
+             fi
            fi
     when: ansible_distribution == "RedHat"
     become_method: su
