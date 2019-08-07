@@ -27,14 +27,16 @@ PGPROCERT_BASE = "http://localrepo.l.postgrespro.ru/cert/"
 PSQL_BASE = "https://download.postgresql.org/pub"
 WIN_INST_DIR = "C:\\Users\\test\\pg-tests\\pg_installer"
 REDHAT_BASED = ['CentOS Linux', 'RHEL', 'CentOS',
-                'Red Hat Enterprise Linux Server', 'Oracle Linux Server',
+                'Red Hat Enterprise Linux Server', 'Red Hat Enterprise Linux',
+                'Oracle Linux Server',
                 'ROSA Enterprise Linux Server', 'ROSA SX \"COBALT\" ',
                 'ROSA Enterprise Linux Cobalt', 'GosLinux',
                 '\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1'
                 '\xd1\x84\xd0\xb5\xd1\x80\xd0\xb0 ',
                 'RED OS release MUROM (', 'AlterOS']
 YUM_BASED = ['CentOS Linux', 'RHEL', 'CentOS',
-             'Red Hat Enterprise Linux Server', 'Oracle Linux Server',
+             'Red Hat Enterprise Linux Server', 'Red Hat Enterprise Linux',
+             'Oracle Linux Server',
              'ROSA Enterprise Linux Server', 'ROSA SX \"COBALT\" ',
              'ROSA Enterprise Linux Cobalt', 'GosLinux',
              '\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1'
@@ -59,6 +61,7 @@ dist = {"Oracle Linux Server": 'oraclelinux',
         "CentOS": 'centos',
         "RHEL": 'rhel',
         "Red Hat Enterprise Linux Server": 'rhel',
+        "Red Hat Enterprise Linux": 'rhel',
         "debian": 'debian',
         "Debian GNU/Linux": 'debian',
         "Ubuntu": 'ubuntu',
