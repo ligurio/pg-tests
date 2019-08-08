@@ -36,11 +36,11 @@ openSUSE-stable/repo/oss/noarch/autoconf-archive-2017.09.28-lp151.2.1.noarch.rpm
       zypper install -y libboost_regex*
     fi
 elif which yum; then
-    yum install -y autoconf autoconf-archive automake >/dev/null
+    yum install -y autoconf automake >/dev/null
     yum install -y gcc-c++ >/dev/null
     yum install -y boost-devel >/dev/null
-
-    if grep '\(Red Hat\|ROSA\) Enterprise Linux \(Server\|Cobalt\) release 7'\
+    yum install -y autoconf-archive >/dev/null || \
+    if grep -q '\(Red Hat\|ROSA\) Enterprise Linux \(Server \|Cobalt \|\)release \(7\|8\)'\
      /etc/redhat-release; then
         yum install -y http://mirror.centos.org/centos/\
 7/os/x86_64/Packages/autoconf-archive-2017.03.21-1.el7.noarch.rpm
