@@ -28,6 +28,10 @@ FIRST_RELEASE = {
         'postgresql--9,6': None,
         'postgresql--10': None,
         'postgresql--11': None,
+        'postgrespro-std-9.6': None,
+        'postgrespro-ent-9.6': None,
+        'postgrespro-ent-10': None,
+        'postgrespro-ent-11': None,
     },
     "GosLinux 6.4": {
         'postgresql--9,6': None,
