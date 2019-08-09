@@ -491,7 +491,7 @@ class TestUpgrade():
             upgrade(pg, pgold)
             start(pg)
             after_upgrade(pg, pgold)
-            dump_and_diff_dbs(key, pg, 'upgrade')
+            dump_and_diff_dbs(old_key, pg, 'upgrade')
             stop(pg)
             pgold.remove_full()
             # PGPRO-2459
