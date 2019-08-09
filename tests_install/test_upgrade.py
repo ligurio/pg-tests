@@ -5,84 +5,17 @@ import pytest
 import os
 
 from allure_commons.types import LabelType
-from helpers.pginstall import PgInstall, ALT_BASED, DEBIAN_BASED,\
-    PRELOAD_LIBRARIES
+from helpers.pginstall import PgInstall, PGPRO_ARCHIVE_ENTERPRISE,\
+    PGPRO_ARCHIVE_STANDARD, ALT_BASED, DEBIAN_BASED
+from helpers.constants import FIRST_RELEASE
 from helpers.utils import diff_dbs, download_dump
 import time
 import tempfile
 import subprocess
 import shutil
-
-
-UNSUPPORTED_PLATFORMS = {
-    'postgresql--9.6': [
-        "SUSE Linux Enterprise Server  11",
-        "ALT Linux  7.0.4", "ALT Linux  6.0.1",
-        "ALT Linux  7.0.5", "ALT  8.0", "ALT  8",
-        "GosLinux 7.08", "GosLinux 6.4",
-        "RED OS release MUROM ( 7.1",
-        '"AstraLinuxSE" 1.5', '"AstraLinuxSE" 1.5.28',
-        "AlterOS 7.5", "SUSE Linux Enterprise Server  15",
-        "Ubuntu 19.04", '"AstraLinuxCE" 2.12.7'
-    ],
-    'postgresql--10': [
-        "SUSE Linux Enterprise Server  11",
-        "ALT Linux  7.0.4", "ALT Linux  6.0.1",
-        "ALT Linux  7.0.5", "ALT  8.0", "ALT  8",
-        "GosLinux 7.08", "GosLinux 6.4",
-        "RED OS release MUROM ( 7.1",
-        '"AstraLinuxSE" 1.5', '"AstraLinuxSE" 1.5.28',
-        "AlterOS 7.5", "SUSE Linux Enterprise Server  15",
-        "Ubuntu 19.04", '"AstraLinuxCE" 2.12.7'
-    ],
-    'postgresql--11': [
-        "SUSE Linux Enterprise Server  11",
-        "ALT Linux  7.0.4", "ALT Linux  6.0.1",
-        "ALT Linux  7.0.5", "ALT  8.0", "ALT  8",
-        "GosLinux 7.08", "GosLinux 6.4",
-        "RED OS release MUROM ( 7.1",
-        '"AstraLinuxSE" 1.5', '"AstraLinuxSE" 1.5.28',
-        "AlterOS 7.5", "SUSE Linux Enterprise Server  15",
-        "Ubuntu 19.04", '"AstraLinuxCE" 2.12.7'
-    ],
-    'postgrespro-std-9.6': [
-        "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
-        "\xb5\xd1\x80\xd0\xb0  6.3", "GosLinux 7.08",
-        "AlterOS 7.5", "SUSE Linux Enterprise Server  15",
-        "Ubuntu 19.04", '"AstraLinuxCE" 2.12.7'
-    ],
-    'postgrespro-std-10': [
-        "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
-        "\xb5\xd1\x80\xd0\xb0  6.3",
-        "AlterOS 7.5", "SUSE Linux Enterprise Server  15",
-        "Ubuntu 19.04", '"AstraLinuxCE" 2.12.7'
-    ],
-    'postgrespro-std-11': [
-        "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
-        "\xb5\xd1\x80\xd0\xb0  6.3",
-        "AlterOS 7.5", "SUSE Linux Enterprise Server  15",
-        "Ubuntu 19.04", '"AstraLinuxCE" 2.12.7'
-    ],
-    'postgrespro-ent-9.6': [
-        "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
-        "\xb5\xd1\x80\xd0\xb0  6.3",
-        "AlterOS 7.5", "SUSE Linux Enterprise Server  15",
-        "Ubuntu 19.04", '"AstraLinuxCE" 2.12.7',
-        "ROSA Enterprise Linux Server 7.3"  # remove after 9.6.14 release
-    ],
-    'postgrespro-ent-10': [
-        "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
-        "\xb5\xd1\x80\xd0\xb0  6.3",
-        "AlterOS 7.5", "SUSE Linux Enterprise Server  15",
-        "Ubuntu 19.04", '"AstraLinuxCE" 2.12.7'
-    ],
-    'postgrespro-ent-11': [
-        "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
-        "\xb5\xd1\x80\xd0\xb0  6.3",
-        "AlterOS 7.5", "SUSE Linux Enterprise Server  15",
-        "Ubuntu 19.04", '"AstraLinuxCE" 2.12.7'
-    ]
-}
+from BeautifulSoup import BeautifulSoup
+import urllib
+import re
 
 system = platform.system()
 tempdir = tempfile.gettempdir()
@@ -325,10 +258,10 @@ def install_server(product, edition, version, milestone, branch, windows):
     return pg
 
 
-def generate_db(pg, pgnew):
+def generate_db(pg, pgnew, custom_dump=None):
     key = "-".join([pg.product, pg.edition, pg.version])
     dump_file_name = download_dump(pg.product, pg.edition, pg.version,
-                                   tempfile.gettempdir())
+                                   tempfile.gettempdir(), custom_dump)
     pg.exec_psql_file(dump_file_name, '-q')
     expected_file_name = os.path.join(tempfile.gettempdir(),
                                       "%s-expected.sql" % key)
@@ -424,6 +357,38 @@ def restore_datadir_win(pg):
     subprocess.check_call(cmd, shell=True)
 
 
+def get_last_version(edition, version):
+
+    if edition == "ent":
+        archive_url = PGPRO_ARCHIVE_ENTERPRISE
+    elif edition == "std":
+        archive_url = PGPRO_ARCHIVE_STANDARD
+    else:
+        raise Exception("Unsupported postgrespro edition (%s)." % edition)
+
+    # Choose two versions -- newest and oldest supported
+    soup = BeautifulSoup(urllib.urlopen(archive_url))
+    arcversions = []
+    for link in soup.findAll('a'):
+        href = link.get('href')
+        if href.startswith('pgpro') and href.endswith('/'):
+            vere = re.search(r'\w+-([0-9.]+)/', href)
+            if vere:
+                if vere.group(1).startswith(version):
+                    ver = vere.group(1)
+                    arcvers = ver.split('.')
+                    arcversion = '.'.join([d.rjust(4) for d in arcvers])
+                    if version == '9.6':
+                        # Due to CATALOG_VERSION_NO change
+                        # we don't support lower 9.6 versions
+                        if arcversion < '   9.   6.   4.   1':
+                            arcversion = None
+                    if arcversion:
+                        arcversions.append(arcversion)
+    arcversions.sort()
+    return arcversions[-1]
+
+
 @pytest.mark.upgrade
 class TestUpgrade():
     system = system
@@ -446,7 +411,7 @@ class TestUpgrade():
             dist = " ".join(platform.win32_ver()[0:2])
         else:
             raise Exception("OS %s is not supported." % self.system)
-
+        request.cls.dist = dist
         version = request.config.getoption('--product_version')
         name = request.config.getoption('--product_name')
         edition = request.config.getoption('--product_edition')
@@ -459,7 +424,8 @@ class TestUpgrade():
 
         print("Running on %s." % target)
 
-        if key in UNSUPPORTED_PLATFORMS and dist in UNSUPPORTED_PLATFORMS[key]:
+        if dist in FIRST_RELEASE and key in FIRST_RELEASE[dist] and \
+                FIRST_RELEASE[dist][key] is None:
             print "Platform not supported"
             return
 
@@ -474,7 +440,6 @@ class TestUpgrade():
         request.node.add_marker(tag_mark)
         # Install the tested version
         branch = request.config.getoption('--branch')
-
         pg = install_server(product=name, edition=edition,
                             version=version, milestone=milestone,
                             branch=branch, windows=(self.system == 'Windows'))
@@ -498,14 +463,18 @@ class TestUpgrade():
             old_edition = route['edition']
             old_version = route['version']
             old_key = "-".join([old_name, old_edition, old_version])
-            if (old_key in UNSUPPORTED_PLATFORMS
-                    and dist in UNSUPPORTED_PLATFORMS[old_key]) \
-                    or (old_name == 'postgresql' and self.system == 'Windows'):
-                continue
+            if dist in FIRST_RELEASE and old_key in FIRST_RELEASE[dist]:
+                if FIRST_RELEASE[dist][old_key] is None:
+                    print "Distributive is not supported"
+                    continue
+                first_release = '.'.join(
+                    [d.rjust(4) for d in FIRST_RELEASE[dist][old_key].
+                        split('.')])
+                if first_release > get_last_version(old_edition, old_version):
+                    print "Wait for %s" % FIRST_RELEASE[dist][old_key]
+                    continue
 
-            key = "-".join([old_name, old_edition, old_version])
-
-            print "=====Check upgrade from %s" % key
+            print "=====Check upgrade from %s" % old_key
 
             pgold = install_server(
                 product=old_name, edition=old_edition,
@@ -516,7 +485,8 @@ class TestUpgrade():
                 init_cluster(pgold, True, initdb_params, None, True)
 
             generate_db(pgold, pg)
-            dumpall(pgold, os.path.join(tempfile.gettempdir(), "%s.sql" % key))
+            dumpall(pgold,
+                    os.path.join(tempfile.gettempdir(), "%s.sql" % old_key))
             stop(pgold)
             upgrade(pg, pgold)
             start(pg)
@@ -538,23 +508,18 @@ class TestUpgrade():
         7. Check that upgrade successfull (select from table)
         :return:
         """
-        if self.system == 'Linux':
-            dist = " ".join(platform.linux_distribution()[0:2])
-        elif self.system == 'Windows':
-            dist = "Windows"
-        else:
-            raise Exception("OS %s is not supported." % self.system)
-
         product_info = request.cls.product_info
         # pylint: disable=no-member
         tag_mark = pytest.allure.label(LabelType.TAG, product_info)
         request.node.add_marker(tag_mark)
 
         key = request.cls.key
+        dist = request.cls.dist
 
         print "Test dump-restore %s" % product_info
 
-        if key in UNSUPPORTED_PLATFORMS and dist in UNSUPPORTED_PLATFORMS[key]:
+        if dist in FIRST_RELEASE and key in FIRST_RELEASE[dist] and \
+                FIRST_RELEASE[dist][key] is None:
             print "Platform not supported"
             return
 
@@ -581,22 +546,25 @@ class TestUpgrade():
             old_edition = route['edition']
             old_version = route['version']
             old_key = "-".join([old_name, old_edition, old_version])
+            if dist in FIRST_RELEASE and old_key in FIRST_RELEASE[dist]:
+                if FIRST_RELEASE[dist][old_key] is None:
+                    print "Distributive is not supported"
+                    continue
+                first_release = '.'.join(
+                    [d.rjust(4) for d in FIRST_RELEASE[dist][old_key].
+                        split('.')])
+                if first_release > get_last_version(old_edition, old_version):
+                    print "Wait for %s" % FIRST_RELEASE[dist][old_key]
+                    continue
 
-            if (old_key in UNSUPPORTED_PLATFORMS
-                    and dist in UNSUPPORTED_PLATFORMS[old_key]) \
-                    or (old_name == 'postgresql' and self.system == 'Windows'):
-                continue
+            print "=====Check dump-restore from %s" % old_key
 
-            key = "-".join([old_name, old_edition, old_version])
-
-            print "=====Check dump-restore from %s" % key
-
-            file_name = os.path.join(tempfile.gettempdir(), "%s.sql" % key)
+            file_name = os.path.join(tempfile.gettempdir(), "%s.sql" % old_key)
 
             if (os.path.isfile(file_name)):
                 start(pg)
                 pg.exec_psql_file(file_name, '-q')
-                dump_and_diff_dbs(key, pg, 'dump-restore')
+                dump_and_diff_dbs(old_key, pg, 'dump-restore')
             else:
                 pgold = install_server(
                     product=old_name, edition=old_edition,
@@ -612,7 +580,7 @@ class TestUpgrade():
 
                 start(pg)
                 pg.exec_psql_file(file_name, '-q')
-                dump_and_diff_dbs(key, pg, 'upgrade')
+                dump_and_diff_dbs(old_key, pg, 'upgrade')
                 pgold.remove_full(True)
                 # PGPRO-2459
                 if pgold.os_name in DEBIAN_BASED and \

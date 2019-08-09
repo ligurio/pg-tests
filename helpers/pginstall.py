@@ -566,6 +566,12 @@ class PgInstall:
                     baseurl = os.path.join(baseurl,
                                            "$releasever/os/$basearch/rpms")
 
+            if self.product == 'postgresql' and \
+                    self.os_name == "Red Hat Enterprise Linux" and \
+                    self.os_version == "8.0":
+                cmd = 'yum -qy module disable postgresql'
+                self.exec_cmd_retry(cmd)
+
             reponame = "%s-%s" % (self.product, self.version)
             repo = """
 [%s]
@@ -1050,8 +1056,8 @@ baseurl=%s
         return subprocess.check_output(cmd, shell=True,
                                        cwd="/", env=self.env).strip()
 
-    def exec_psql_select(self, query):
-        return self.exec_psql(query, '-t -P format=unaligned')
+    def exec_psql_select(self, query, options=''):
+        return self.exec_psql(query, '%s -t -P format=unaligned' % options)
 
     def exec_psql_script(self, script, options=''):
         handle, script_path = \
@@ -1456,3 +1462,6 @@ baseurl=%s
             print('Last attempt to execute the command...\n')
         return command_executor(cmd, self.remote, self.host,
                                 REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+
+    def get_product_dir(self):
+        return self.__get_product_dir()

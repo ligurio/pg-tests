@@ -7,9 +7,10 @@ import tempfile
 import time
 import pytest
 from allure_commons.types import LabelType
-from helpers.pginstall import PgInstall, PRELOAD_LIBRARIES, DEBIAN_BASED,\
-    SUSE_BASED, REDHAT_BASED
-from helpers.pginstall import PGPRO_ARCHIVE_STANDARD, PGPRO_ARCHIVE_ENTERPRISE
+from helpers.pginstall import PgInstall, PRELOAD_LIBRARIES,\
+    PGPRO_ARCHIVE_STANDARD, PGPRO_ARCHIVE_ENTERPRISE,\
+    DEBIAN_BASED, SUSE_BASED, REDHAT_BASED
+from helpers.constants import FIRST_RELEASE
 from BeautifulSoup import BeautifulSoup
 from helpers.utils import diff_dbs, download_dump
 
@@ -25,153 +26,161 @@ PRELOAD_LIBRARIES['std-11'].remove('pg_pageprep')
 
 ARCHIVE_VERSIONS = {
     'ALT Linux  7.0.5': {
-        'std-9.6': '9.6.9.1',
-        'ent-9.6': None,
-        'ent-10': None
+        'postgrespro-std-9.6': '9.6.9.1',
+        'postgrespro-ent-9.6': None,
+        'postgrespro-ent-10': None
     },
     'ALT Linux  6.0.1': {
-        'ent-9.6': None,
-        'ent-10': None
+        'postgrespro-ent-9.6': None,
+        'postgrespro-ent-10': None
     },
-    # Wait for 9.6.13 for ALT 8.0
     'ALT  8.0': {
-        'std-9.6': '9.6.13.1',
-        'ent-9.6': '9.6.13.1',
-        'std-10': '10.6.1',
-        'ent-10': '10.6.1'
+        'postgrespro-std-9.6': '9.6.13.1',
+        'postgrespro-ent-9.6': '9.6.13.1',
+        'postgrespro-std-10': '10.6.1',
+        'postgrespro-ent-10': '10.6.1'
     },
     'ALT Linux  7.0.4': {
-        'ent-9.6': None,
-        'ent-10': '10.6.1'
+        'postgrespro-ent-9.6': None,
+        'postgrespro-ent-10': '10.6.1'
     },
     '"AstraLinuxSE" 1.5': {
-        'ent-9.6': None
+        'postgrespro-ent-9.6': None
     },
     '"AstraLinuxSE" 1.5.28': {
-        'std-9.6': '9.6.11.1',
-        'ent-9.6': '9.6.7.1',
-        'std-10': '10.7.1',
-        'ent-10': '10.6.2'
+        'postgrespro-std-9.6': '9.6.11.1',
+        'postgrespro-ent-9.6': '9.6.7.1',
+        'postgrespro-std-10': '10.7.1',
+        'postgrespro-ent-10': '10.6.2'
     },
     'CentOS 6.7': {
-        'ent-9.6': '9.6.8.1',
-        'ent-10': '10.2.1'
+        'postgrespro-ent-9.6': '9.6.8.1',
+        'postgrespro-ent-10': '10.2.1'
     },
     'CentOS Linux 7.2.1511': {
-        'ent-9.6': '9.6.9.1'
+        'postgrespro-ent-9.6': '9.6.9.1'
     },
     'debian 9.0': {
-        'std-9.6': '9.6.10.2',
-        'ent-9.6': '9.6.12.1'
+        'postgrespro-std-9.6': '9.6.10.2',
+        'postgrespro-ent-9.6': '9.6.12.1'
     },
     'debian 8.4': {
-        'ent-9.6': '9.6.7.1'
+        'postgrespro-ent-9.6': '9.6.7.1'
     },
     'GosLinux 6.4': {
-        'std-9.6': None,
-        'ent-9.6': None,
-        'ent-10': None
+        'postgrespro-std-9.6': None,
+        'postgrespro-ent-9.6': None,
+        'postgrespro-ent-10': None
     },
     'GosLinux 7.08': {
-        'std-9.6': None,
-        'std-10': '10.6.1',
-        'ent-9.6': None,
-        'ent-10': None
+        'postgrespro-std-9.6': None,
+        'postgrespro-std-10': '10.6.1',
+        'postgrespro-ent-9.6': None,
+        'postgrespro-ent-10': None
     },
     'Oracle Linux Server 6.7': {
-        'ent-9.6': None,
-        'ent-10': None
+        'postgrespro-ent-9.6': None,
+        'postgrespro-ent-10': None
     },
     'Oracle Linux Server 7.2': {
-        'ent-9.6': '9.6.8.1',
-        'ent-10': '10.2.1'
+        'postgrespro-ent-9.6': '9.6.8.1',
+        'postgrespro-ent-10': '10.2.1'
     },
     'RED OS release MUROM ( 7.1': {
-        'std-9.6': '9.6.11.1',
-        'std-10': '10.6.1',
-        'ent-9.6': None,
-        'ent-10': None
+        'postgrespro-std-9.6': '9.6.11.1',
+        'postgrespro-std-10': '10.6.1',
+        'postgrespro-ent-9.6': None,
+        'postgrespro-ent-10': None
     },
     'Red Hat Enterprise Linux Server 6.7': {
-        'ent-9.6': None,
-        'ent-10': None
+        'postgrespro-ent-9.6': None,
+        'postgrespro-ent-10': None
     },
     'Red Hat Enterprise Linux Server 7.5': {
-        'ent-9.6': '9.6.8.1',
-        'ent-10': '10.3.1'
+        'postgrespro-ent-9.6': '9.6.8.1',
+        'postgrespro-ent-10': '10.3.1'
     },
     'ROSA Enterprise Linux Server 6.6': {
-        'ent-10': '10.2.1'
+        'postgrespro-ent-10': '10.2.1'
     },
     'ROSA Enterprise Linux Server 7.3': {
-        'std-9.6': '9.6.13.1',
-        'std-10': '10.8.1',
-        'std-11': '11.3.1',
-        'ent-9.6': '9.6.13.1',
-        'ent-10': '10.8.1',
-        'ent-11': '11.3.1'
+        'postgrespro-std-9.6': '9.6.13.1',
+        'postgrespro-std-10': '10.8.1',
+        'postgrespro-std-11': '11.3.1',
+        'postgrespro-ent-9.6': '9.6.13.1',
+        'postgrespro-ent-10': '10.8.1',
+        'postgrespro-ent-11': '11.3.1'
     },
     'ROSA Enterprise Linux Cobalt 7.3': {
-        'std-9.6': '9.6.10.1',
-        'ent-9.6': '9.6.9.1',
-        'ent-10': '10.6.1'
+        'postgrespro-std-9.6': '9.6.10.1',
+        'postgrespro-ent-9.6': '9.6.9.1',
+        'postgrespro-ent-10': '10.6.1'
     },
     'SUSE Linux Enterprise Server  11': {
-        'ent-9.6': '9.6.10.1',
-        'ent-10': None
+        'postgrespro-ent-9.6': '9.6.10.1',
+        'postgrespro-ent-10': None
     },
     'SUSE Linux Enterprise Server  12': {
-        'std-9.6': '9.6.13.1',
-        'ent-9.6': '9.6.13.1',
-        'ent-10': None
+        'postgrespro-std-9.6': '9.6.13.1',
+        'postgrespro-ent-9.6': '9.6.13.1',
+        'postgrespro-ent-10': None
     },
     'Ubuntu 16.04': {
-        'ent-9.6': '9.6.7.1'
+        'postgrespro-ent-9.6': '9.6.7.1'
     },
     'Ubuntu 18.10': {
-        'std-9.6': '9.6.11.1',
-        'std-10': '10.7.1',
-        'std-11': '11.2.1',
-        'ent-9.6': None,
-        'ent-10': None
+        'postgrespro-std-9.6': '9.6.11.1',
+        'postgrespro-std-10': '10.7.1',
+        'postgrespro-std-11': '11.2.1',
+        'postgrespro-ent-9.6': None,
+        'postgrespro-ent-10': None
     },
     'Ubuntu 18.04': {
-        'std-9.6': '9.6.10.2',
-        'std-10': '10.2.1',
-        'ent-9.6': '9.6.7.1'
+        'postgrespro-std-9.6': '9.6.10.2',
+        'postgrespro-std-10': '10.2.1',
+        'postgrespro-ent-9.6': '9.6.7.1'
     },
     'Ubuntu 19.04': {
-        'std-9.6': None,
-        'std-10': '10.8.1',
-        'ent-9.6': None,
-        'ent-10': None,
-        'std-11': None
+        'postgrespro-std-9.6': None,
+        'postgrespro-std-10': '10.8.1',
+        'postgrespro-ent-9.6': None,
+        'postgrespro-ent-10': None,
+        'postgrespro-std-11': None
     },
     'AlterOS 7.5': {
-        'std-9.6': None,
-        'std-10': '10.8.1',
-        'std-11': '11.3.1',
-        'ent-9.6': None,
-        'ent-10': '10.8.1',
-        'ent-11': '11.3.1'
+        'postgrespro-std-9.6': None,
+        'postgrespro-std-10': '10.8.1',
+        'postgrespro-std-11': '11.3.1',
+        'postgrespro-ent-9.6': None,
+        'postgrespro-ent-10': '10.8.1',
+        'postgrespro-ent-11': '11.3.1'
     },
     'SUSE Linux Enterprise Server  15': {
-        'std-9.6': None,
-        'std-10': '10.8.1',
-        'std-11': '11.3.1',
-        'ent-9.6': None,
-        'ent-10': '10.8.1',
-        'ent-11': '11.3.1'
+        'postgrespro-std-9.6': None,
+        'postgrespro-std-10': '10.8.1',
+        'postgrespro-std-11': '11.3.1',
+        'postgrespro-ent-9.6': None,
+        'postgrespro-ent-10': '10.8.1',
+        'postgrespro-ent-11': '11.3.1'
     },
     '"AstraLinuxCE" 2.12.7': {
-        'std-9.6': '9.6.13.1',
-        'std-10': '10.7.1',
-        'std-11': '11.2.1',
-        'ent-9.6': '9.6.13.1',
-        'ent-10': '10.7.1',
-        'ent-11': '11.2.1'
+        'postgrespro-std-9.6': '9.6.13.1',
+        'postgrespro-std-10': '10.7.1',
+        'postgrespro-std-11': '11.2.1',
+        'postgrespro-ent-9.6': '9.6.13.1',
+        'postgrespro-ent-10': '10.7.1',
+        'postgrespro-ent-11': '11.2.1'
     }
 }
+
+for distr in FIRST_RELEASE:
+    if distr in ARCHIVE_VERSIONS:
+        for product in FIRST_RELEASE[distr]:
+            if product not in ARCHIVE_VERSIONS[distr]:
+                ARCHIVE_VERSIONS[distr][product] = \
+                    FIRST_RELEASE[distr][product]
+    else:
+        ARCHIVE_VERSIONS[distr] = FIRST_RELEASE[distr]
 
 
 def get_test_versions(edition, version, specified_version, current_version):
@@ -278,7 +287,7 @@ class TestUpgradeMinor():
             print("Minor upgrade test is only for postgrespro.")
             return
 
-        small_key = "-".join([edition, version])
+        small_key = "-".join([name, edition, version])
         specified_version = False
         if dist in ARCHIVE_VERSIONS \
                 and small_key in ARCHIVE_VERSIONS[dist]:
@@ -287,7 +296,7 @@ class TestUpgradeMinor():
         if specified_version is None:
             return "%s %s %s does not support archived versions on %s." % \
                 (name, edition, version, dist)
-
+        print("specified version is %s" % specified_version)
         print("Running on %s." % target)
         pgnew = PgInstall(product=name, edition=edition,
                           version=version, milestone=milestone,
@@ -319,6 +328,7 @@ class TestUpgradeMinor():
         else:
             vere = re.search(r'VERSION\s=\s\w+\s([0-9.]+)', pgconfig)
             current_ver = vere.group(1)
+        print("Current version is %s" % current_ver)
         current_ver = '.'.join([d.rjust(4) for d in current_ver.split('.')])
         test_versions = get_test_versions(edition, version,
                                           specified_version, current_ver)
