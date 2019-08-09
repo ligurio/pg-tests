@@ -407,7 +407,7 @@ class TestUpgradeMinor():
             if version == '11' and old_ver < '  11.   4.   2' and \
                     pgnew.os_name in REDHAT_BASED:
                 subprocess.check_call('yum remove -y '
-                                      'pg_repack-ent-11-debuginfo', shell=True)
+                                      'pg_repack-*-11-debuginfo', shell=True)
             # PGPRO-2563
             if pgold.os_name == 'Ubuntu' and version == '9.6' and \
                     edition == 'ent':
