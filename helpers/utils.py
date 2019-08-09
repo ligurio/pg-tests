@@ -500,8 +500,11 @@ def diff_dbs(file1, file2, diff_file):
         raise Exception("Difference found. See file " + diff_file)
 
 
-def download_dump(product, edition, version, dir):
-    dump_file_name = "dump-%s.sql" % "-".join([product, edition, version])
+def download_dump(product, edition, version, dir, custom_dump=None):
+    if custom_dump:
+        dump_file_name = custom_dump
+    else:
+        dump_file_name = "dump-%s.sql" % "-".join([product, edition, version])
     dump_url = "http://webdav.l.postgrespro.ru/pgdatas/xregress/%s" % \
                dump_file_name
     dump_file = urllib.URLopener()
