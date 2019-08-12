@@ -1,31 +1,31 @@
 FIRST_RELEASE = {
     "SUSE Linux Enterprise Server  11": {
-        'postgresql--9,6': None,
+        'postgresql--9.6': None,
         'postgresql--10': None,
         'postgresql--11': None,
     },
     "ALT Linux  7.0.4": {
-        'postgresql--9,6': None,
+        'postgresql--9.6': None,
         'postgresql--10': None,
         'postgresql--11': None,
     },
     "ALT Linux  6.0.1": {
-        'postgresql--9,6': None,
+        'postgresql--9.6': None,
         'postgresql--10': None,
         'postgresql--11': None,
     },
     "ALT Linux  7.0.5": {
-        'postgresql--9,6': None,
+        'postgresql--9.6': None,
         'postgresql--10': None,
         'postgresql--11': None,
     },
     "ALT  8.0": {
-        'postgresql--9,6': None,
+        'postgresql--9.6': None,
         'postgresql--10': None,
         'postgresql--11': None,
     },
     "GosLinux 7.08": {
-        'postgresql--9,6': None,
+        'postgresql--9.6': None,
         'postgresql--10': None,
         'postgresql--11': None,
         'postgrespro-std-9.6': None,
@@ -34,27 +34,27 @@ FIRST_RELEASE = {
         'postgrespro-ent-11': None,
     },
     "GosLinux 6.4": {
-        'postgresql--9,6': None,
+        'postgresql--9.6': None,
         'postgresql--10': None,
         'postgresql--11': None,
     },
     "RED OS release MUROM ( 7.1": {
-        'postgresql--9,6': None,
+        'postgresql--9.6': None,
         'postgresql--10': None,
         'postgresql--11': None,
     },
     '"AstraLinuxSE" 1.5': {
-        'postgresql--9,6': None,
+        'postgresql--9.6': None,
         'postgresql--10': None,
         'postgresql--11': None,
     },
     '"AstraLinuxSE" 1.5.28': {
-        'postgresql--9,6': None,
+        'postgresql--9.6': None,
         'postgresql--10': None,
         'postgresql--11': None,
     },
     "AlterOS 7.5": {
-        'postgresql--9,6': None,
+        'postgresql--9.6': None,
         'postgresql--10': None,
         'postgresql--11': None,
         'postgrespro-std-9.6': None,
@@ -65,7 +65,7 @@ FIRST_RELEASE = {
         'postgrespro-ent-11': '11.4.1',
     },
     "SUSE Linux Enterprise Server  15": {
-        'postgresql--9,6': None,
+        'postgresql--9.6': None,
         'postgresql--10': None,
         'postgresql--11': None,
         'postgrespro-std-9.6': None,
@@ -113,6 +113,11 @@ FIRST_RELEASE = {
         'postgrespro-ent-9.6': '9.6.15.1',
         'postgrespro-ent-10': '10.10.1',
         'postgrespro-ent-11': '11.5.1',
+    },
+    '2012ServerR2 6.3.9600': {
+        'postgresql--9.6': None,
+        'postgresql--10': None,
+        'postgresql--11': None,
     },
 
 }
