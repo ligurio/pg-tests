@@ -353,8 +353,10 @@ class TestUpgradeMinor():
             old_ver = '.'.join([d.rjust(4) for d in oldversion.split('.')])
             if not windows_os:
                 # PGPRO-2874
-                if version == '11' and old_ver < '  11.   4.   2' and \
-                        pgnew.os_name in REDHAT_BASED:
+                if ((version == '11' and old_ver < '  11.   4.   2') or
+                    (version == '10' and old_ver < '  10.  10.   1') or
+                    (version == '9.6' and old_ver < '   9.   6.  15.   1')) \
+                        and pgnew.os_name in REDHAT_BASED:
                     for pkg in pgold.all_packages_in_repo[:]:
                         if 'filedump' in pkg:
                             pgold.all_packages_in_repo.remove(pkg)
