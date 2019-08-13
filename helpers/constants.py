@@ -121,5 +121,10 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
     },
+    '10 10.0.14393': {
+        'postgresql--9.6': None,
+        'postgresql--10': None,
+        'postgresql--11': None,
+    },
 
 }
