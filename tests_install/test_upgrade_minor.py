@@ -184,7 +184,12 @@ for distr in FIRST_RELEASE:
 
 
 def get_test_versions(edition, version, specified_version, current_version):
-
+    # Do not upgrade himself
+    if specified_version and current_version:
+        specified_ver = '.'.join([d.rjust(4)
+                                  for d in specified_version.split('.')])
+        if current_version <= specified_ver:
+            return None
     if edition == "ent":
         archive_url = PGPRO_ARCHIVE_ENTERPRISE
     elif edition == "std":
