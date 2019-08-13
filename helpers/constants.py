@@ -92,6 +92,8 @@ FIRST_RELEASE = {
         'postgresql--9.6': None,
         'postgresql--10': None,
         'postgresql--11': None,
+        'postgrespro-std-9.6': None,
+        'postgrespro-ent-9.6': None,
     },
     "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0"
     "\xb5\xd1\x80\xd0\xb0  6.3": {
