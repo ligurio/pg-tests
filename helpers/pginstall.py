@@ -562,6 +562,10 @@ class PgInstall:
                         self.os_version == "7.1":
                     baseurl = os.path.join(baseurl,
                                            "7/os/$basearch/rpms")
+                elif self.os_name == "Red Hat Enterprise Linux" and \
+                        self.os_version.startswith("8."):
+                    baseurl = os.path.join(baseurl,
+                                           "8Server/os/$basearch/rpms")
                 else:
                     baseurl = os.path.join(baseurl,
                                            "$releasever/os/$basearch/rpms")
