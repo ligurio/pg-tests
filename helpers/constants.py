@@ -48,10 +48,12 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
     },
+    # astra-smolensk-1.6
     '"AstraLinuxSE" 1.5.28': {
         'postgresql--9.6': None,
         'postgresql--10': None,
         'postgresql--11': None,
+        'postgrespro-ent-9.6': '9.6.12.1'
     },
     "AlterOS 7.5": {
         'postgresql--9.6': None,

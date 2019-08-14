@@ -49,7 +49,6 @@ ARCHIVE_VERSIONS = {
     },
     '"AstraLinuxSE" 1.5.28': {
         'postgrespro-std-9.6': '9.6.11.1',
-        'postgrespro-ent-9.6': '9.6.7.1',
         'postgrespro-std-10': '10.7.1',
         'postgrespro-ent-10': '10.6.2'
     },
@@ -138,7 +137,7 @@ ARCHIVE_VERSIONS = {
     'Ubuntu 18.04': {
         'postgrespro-std-9.6': '9.6.10.2',
         'postgrespro-std-10': '10.2.1',
-        'postgrespro-ent-9.6': '9.6.7.1'
+        'postgrespro-ent-9.6': '9.6.11.1'
     },
     'Ubuntu 19.04': {
         'postgrespro-std-9.6': None,
