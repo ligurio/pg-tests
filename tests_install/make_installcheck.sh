@@ -21,7 +21,8 @@ elif which zypper; then
 elif which yum; then
     yum install -y gcc make flex bison perl bzip2 zlib-devel libicu-devel patch
     yum install -y perl-devel || true
-    yum install -y perl-IPC-Run perl-Test-Simple perl-Time-HiRes perl-TimeDate
+    yum install -y perl-IPC-Run
+    yum install -y perl-Test-Simple perl-Time-HiRes perl-TimeDate
     # perl-IPC-Run is not present in some distributions (rhel-7, rosa-sx-7...)
 fi
 if ! perl -e "use IPC::Run"; then
