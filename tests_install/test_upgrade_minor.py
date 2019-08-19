@@ -410,10 +410,12 @@ class TestUpgradeMinor():
                                           shell=True)
                 except Exception:
                     pass
-            if version == '11' and old_ver < '  11.   4.   2' and \
-                    pgnew.os_name in REDHAT_BASED:
-                subprocess.check_call('yum remove -y '
-                                      'pg_repack-*-11-debuginfo', shell=True)
+            if pgnew.os_name in REDHAT_BASED:
+                repo_diff = list(set(pgold.all_packages_in_repo)
+                                 - set(pgnew.all_packages_in_repo))
+                print "repo diff is %s" % repo_diff
+                if len(repo_diff):
+                    pgnew.remove_package(' '.join(repo_diff))
             # PGPRO-2563
             if pgold.os_name == 'Ubuntu' and version == '9.6' and \
                     edition == 'ent':
