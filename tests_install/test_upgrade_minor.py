@@ -356,6 +356,10 @@ class TestUpgradeMinor():
             pgold.setup_repo()
             old_ver = '.'.join([d.rjust(4) for d in oldversion.split('.')])
             if not windows_os:
+                # PGPRO-2954
+                for pkg in pgold.all_packages_in_repo[:]:
+                    if 'bouncer' in pkg or 'badger' in pkg:
+                        pgold.all_packages_in_repo.remove(pkg)
                 # PGPRO-2874
                 if ((version == '11' and old_ver < '  11.   4.   2') or
                     (version == '10' and old_ver < '  10.  10.   1') or
@@ -363,11 +367,6 @@ class TestUpgradeMinor():
                         and pgnew.os_name in REDHAT_BASED:
                     for pkg in pgold.all_packages_in_repo[:]:
                         if 'filedump' in pkg:
-                            pgold.all_packages_in_repo.remove(pkg)
-                if pgnew.os_name in SUSE_BASED and version == '11' \
-                        and old_ver == '  11.   1.   1':
-                    for pkg in pgold.all_packages_in_repo[:]:
-                        if 'bouncer' in pkg:
                             pgold.all_packages_in_repo.remove(pkg)
                 if pgnew.os_name == 'ROSA Enterprise Linux Server' \
                         and pgnew.os_version.startswith('7.3') \
@@ -403,6 +402,16 @@ class TestUpgradeMinor():
             diff_dbs(expected_file_name, result_file_name,
                      os.path.join(tempdir, "%s.sql.diff" % key))
             pgnew.stop_service()
+
+            repo_diff = list(set(pgold.all_packages_in_repo)
+                             - set(pgnew.all_packages_in_repo))
+            print "repo diff is %s" % repo_diff
+            for package in repo_diff:
+                try:
+                    pgold.remove_package(package)
+                except Exception:
+                    pass
+
             pgnew.remove_full(True)
             if pgold.os_name in DEBIAN_BASED and version == '9.6':
                 try:
@@ -410,12 +419,6 @@ class TestUpgradeMinor():
                                           shell=True)
                 except Exception:
                     pass
-            if pgnew.os_name in REDHAT_BASED:
-                repo_diff = list(set(pgold.all_packages_in_repo)
-                                 - set(pgnew.all_packages_in_repo))
-                print "repo diff is %s" % repo_diff
-                if len(repo_diff):
-                    pgnew.remove_package(' '.join(repo_diff))
             # PGPRO-2563
             if pgold.os_name == 'Ubuntu' and version == '9.6' and \
                     edition == 'ent':
