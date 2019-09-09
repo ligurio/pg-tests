@@ -70,8 +70,13 @@ if ./configure --help | grep '  --enable-svt5'; then
     if which apt-get; then
         apt-get install -y fuse
         apt-get install -y fuse-devel || apt-get install -y libfuse-dev || apt-get install -y libfuse-devel
+        apt-get install -y libssl-devel
     elif which yum; then
         yum install -y fuse fuse-devel
+        yum install -y openssl-devel
+    elif which zypper; then
+        zypper install -y fuse fuse-devel
+        zypper install -y openssl-devel
     fi
     getent group fuse && usermod -a -G fuse postgres
 

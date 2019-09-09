@@ -69,6 +69,28 @@ UPGRADE_ROUTES = {
             },
         ]
     },
+    'postgrespro-std-cert-11': {
+        'from': [
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '10'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '11',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '10',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '9.6',
+                'initdb-params': '--locale=C'
+            },
+        ]
+    },
 
     'postgrespro-ent-10': {
         'from': [
@@ -119,6 +141,29 @@ DUMP_RESTORE_ROUTES = {
     },
 
     'postgrespro-std-11': {
+        'from': [
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '10'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '11',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '10',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '9.6',
+                'initdb-params': '--locale=C'
+            },
+        ]
+    },
+
+    'postgrespro-std-cert-11': {
         'from': [
             {
                 'name': 'postgrespro', 'edition': 'std', 'version': '10'
