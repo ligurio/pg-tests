@@ -286,7 +286,9 @@ class TestUpgradeMinor():
         tag_mark = pytest.allure.label(LabelType.TAG, product_info)
         request.node.add_marker(tag_mark)
         branch = request.config.getoption('--branch')
-
+        if milestone not in ['std', 'ent']:
+            print "Minor upgrade only for std and ent"
+            return
         if name != 'postgrespro':
             print("Minor upgrade test is only for postgrespro.")
             return

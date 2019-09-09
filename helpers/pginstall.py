@@ -83,6 +83,9 @@ PRELOAD_LIBRARIES = {
     'std-11':
         ['auth_delay', 'auto_explain',
          'plantuner', 'shared_ispell', 'pg_pageprep', 'pg_pathman'],
+    'std-cert-11':
+        ['auth_delay', 'auto_explain',
+         'plantuner', 'shared_ispell', 'pg_pageprep', 'pg_pathman', 'pgaudit'],
     'std-10':
         ['auth_delay', 'auto_explain',
          'plantuner', 'shared_ispell', 'pg_pageprep', 'pg_pathman'],
@@ -159,6 +162,8 @@ class PgInstall:
         self.all_packages_in_repo = None
 
     def get_repo_base(self):
+        if self.edition in ['std-cert', 'ent-cert']:
+            return PGPROCERT_BASE
         if self.milestone == "alpha":
             return PGPROALPHA_BASE
         if self.milestone == "archive":
@@ -192,6 +197,8 @@ class PgInstall:
                 product_dir = "pgpro-ent-10.3.3/repo"
             elif self.edition == "std-cert" and self.version == "10":
                 product_dir = "pgpro-std-10.4.1/repo"
+            elif self.edition == "std-cert" and self.version == "11":
+                product_dir = "pgpro-std-11.5.1/repo"
             elif self.edition == "1c":
                 product_dir = "1c-%s" % product_version
             elif self.edition == "sql":
@@ -361,7 +368,11 @@ class PgInstall:
                 if (pkgname == 'Name'):
                     continue
                 result.append(pkgname)
-
+        # PGPRO-2563
+        if self.edition == 'std-cert' and self.version == '11':
+            for package in result[:]:
+                if 'mamonsu' in package:
+                    result.remove(package)
         return result
 
     def get_files_in_package(self, pkgname):
@@ -727,6 +738,10 @@ baseurl=%s
                   self.os_version.startswith('7.')):
                 cmd = "yum localinstall -y https://dl.fedoraproject.org/pub/" \
                     "epel/epel-release-latest-7.noarch.rpm"
+            elif (self.os_name in ['Red Hat Enterprise Linux'] and
+                  self.os_version.startswith('8.')):
+                cmd = "yum localinstall -y https://dl.fedoraproject.org/pub/" \
+                    "epel/epel-release-latest-8.noarch.rpm"
             if cmd:
                 self.exec_cmd_retry(cmd)
 
