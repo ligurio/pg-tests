@@ -96,6 +96,10 @@ DEV_APPLICATIONS = {
 
 
 def check_executables(pginst, packages):
+    # PGPRO-2761
+    if pginst.os_name == '\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1'\
+                         '\xd1\x84\xd0\xb5\xd1\x80\xd0\xb0 ':
+        return
     for package in packages:
         print('Analyzing package %s.' % package)
         pfiles = pginst.get_files_in_package(package)
