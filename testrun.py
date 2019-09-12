@@ -116,7 +116,7 @@ def create_image(domname, name):
         try:
             image.retrieve(image_url, image_original)
         except Exception as e:
-            print("Could not retrieve %s. (%s)" % (image_url, str(e)))
+            print("Could not retrieve %s." % image_url)
             raise e
 
     page = ''
@@ -665,7 +665,10 @@ def main(conn):
             setup_env(domipaddress, domname, linux_os, tests_dir)
         except Exception as e:
             # Don't leave a domain that is failed to setup running
-            close_env(domname, saveimg=False, destroys0=True)
+            try:
+                close_env(domname, saveimg=False, destroys0=True)
+            except Exception:
+                pass
             raise e
         print("Environment deployed without errors. Ready to run tests")
         if len(tests) > 1:
@@ -687,7 +690,10 @@ def main(conn):
                     print("Boot completed.")
                 except Exception as e:
                     # Don't leave a domain that is failed to boot running
-                    close_env(domname, saveimg=False, destroys0=True)
+                    try:
+                        close_env(domname, saveimg=False, destroys0=True)
+                    except Exception:
+                        pass
                     raise e
             stage = 0
             while True:
