@@ -111,10 +111,10 @@ FIRST_RELEASE = {
     },
     'Red Hat Enterprise Linux 8.0': {
         'postgresql--9.6': None,
-        'postgrespro-std-9.6': '9.6.15.1',
+        'postgrespro-std-9.6': None,
         'postgrespro-std-10': '10.10.1',
         'postgrespro-std-11': '11.5.1',
-        'postgrespro-ent-9.6': '9.6.15.1',
+        'postgrespro-ent-9.6': None,
         'postgrespro-ent-10': '10.10.1',
         'postgrespro-ent-11': '11.5.1',
     },
