@@ -92,6 +92,72 @@ def get_process_pids(process_names):
     return pids
 
 
+def get_systemd_version():
+    sysctl = subprocess.Popen("systemctl --version",
+                              shell=True,
+                              stdout=subprocess.PIPE,
+                              stderr=subprocess.PIPE)
+    scout, scerr = sysctl.communicate()
+    if sysctl.returncode != 0:
+        return None
+    firstline = scout.splitlines()[0]
+    m = re.match(r'systemd\s+(\d+)', firstline)
+    if not m:
+        return None
+    return int(m.group(1))
+
+
+def is_service_installed(service, windows=False):
+        if windows:
+            winsrv = None
+            try:
+                winsrv = psutil.win_service_get(service)
+            except psutil.NoSuchProcess:
+                return False
+            return winsrv is not None
+        systemd_version = get_systemd_version()
+        if systemd_version > 210:
+            cmd = 'LANG=C systemctl list-unit-files' \
+                  ' --no-legend --no-pager "%s.service"' % service
+            result = subprocess.check_output(cmd, shell=True).strip()
+            if result:
+                if result.endswith(' masked'):
+                    return False
+                return True
+            return False
+        cmd = 'LANG=C service "%s" status' % service
+        srv = subprocess.Popen(cmd,
+                               shell=True,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE)
+        srvout, srverr = srv.communicate()
+        if srv.returncode == 0:
+            return True
+        elif srv.returncode == 1 or srv.returncode == 4:
+            if srverr.strip().lower().endswith(': unrecognized service') or \
+               srverr.strip().endswith(' could not be found.') or \
+               srverr.startswith('service: no such service'):
+                return False
+        return True
+
+
+def is_service_running(service, windows=False):
+        if windows:
+            winsrv = None
+            try:
+                winsrv = psutil.win_service_get(service).as_dict()
+            except psutil.NoSuchProcess:
+                return False
+            if winsrv:
+                return winsrv['status'] == 'running'
+        cmd = 'service "%s" status' % service
+        result = subprocess.call(cmd,
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE,
+                                 shell=True)
+        return result == 0
+
+
 def create_tablespace_directory():
     """Create new  directory for tablespace
     :return: str path to tablespace

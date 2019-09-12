@@ -113,7 +113,11 @@ def create_image(domname, name):
             os.makedirs(TEMPLATE_DIR)
         print("Downloading %s.qcow2..." % name)
         image = urllib.URLopener()
-        image.retrieve(image_url, image_original)
+        try:
+            image.retrieve(image_url, image_original)
+        except Exception as e:
+            print("Could not retrieve %s. (%s)" % (image_url, str(e)))
+            raise e
 
     page = ''
     try:
