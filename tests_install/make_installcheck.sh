@@ -18,6 +18,7 @@ elif which zypper; then
     zypper install -y --force --force-resolution zlib-devel
     zypper install -y --force --force-resolution libicu-devel
     zypper install -y libipc-run-perl
+    zypper install -y perl-TimeDate
 elif which yum; then
     yum install -y gcc make flex bison perl bzip2 zlib-devel libicu-devel patch
     yum install -y perl-devel || true
