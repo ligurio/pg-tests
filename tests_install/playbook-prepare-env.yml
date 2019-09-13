@@ -20,7 +20,7 @@
             distribution {{ ansible_distribution }} {{ ansible_distribution_major_version }} \
             ({{ ansible_architecture }})."
 
-  - name: Update repos and install acpid-events-power, gdb (Alt Linux)
+  - name: Update repos and install acpid-events-power, gdb (ALT)
     shell: apt-get update &&
            apt-get install -y gdb acpid-events-power && /sbin/service acpid restart || exit 1;
            apt-get install -y glibc-core;
@@ -29,7 +29,7 @@
            sed "s/^\(ulimit -Sc 0\)/# \1/" -i /etc/profile;
     args:
       warn: no
-    when: ansible_distribution == 'Altlinux'
+    when: ansible_distribution == 'ALT'
     become_method: su
     become: true
     tags:
@@ -209,11 +209,11 @@
     become_method: su
     become: true
 
-  - name: install required packages (Alt Linux 8)
+  - name: install required packages (ALT 8)
     shell: apt-get install -y gcc5
     args:
       warn: no
-    when: ansible_distribution == "Altlinux" and ansible_distribution_major_version == "8"
+    when: ansible_distribution == "ALT" and ansible_distribution_major_version == "8"
     become_method: su
     become: true
     tags:
@@ -373,7 +373,7 @@
       state: present
     when:
       - ansible_os_family != "Windows"
-      - ansible_distribution != "Altlinux"
+      - ansible_distribution != "ALT"
     become_method: su
     become: true
 
