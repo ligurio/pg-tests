@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # TODO: Enable test5 (PGPRO-1289)
-if which apt-get; then
+if which apt-get >/dev/null 2>&1; then
     apt-get install -y gcc || true
     apt-get install -y make flex bison perl
     apt-get install -y zlib1g-dev || apt-get install -y zlib-devel
@@ -13,20 +13,20 @@ if which apt-get; then
     apt-get install -y patch || true
     apt-get install -y perl-devel || true
     apt-get install -y perl-bignum || true
-elif which zypper; then
+elif which zypper >/dev/null 2>&1; then
     zypper install -y gcc make flex bison perl patch
     zypper install -y --force --force-resolution zlib-devel
     zypper install -y --force --force-resolution libicu-devel
     zypper install -y libipc-run-perl
     zypper install -y perl-TimeDate
-elif which yum; then
+elif which yum >/dev/null 2>&1; then
     yum install -y gcc make flex bison perl bzip2 zlib-devel libicu-devel patch
     yum install -y perl-devel || true
     yum install -y perl-IPC-Run
     yum install -y perl-Test-Simple perl-Time-HiRes perl-TimeDate
     # perl-IPC-Run is not present in some distributions (rhel-7, rosa-sx-7...)
 fi
-if ! perl -e "use IPC::Run"; then
+if ! perl -e "use IPC::Run"  >/dev/null 2>&1; then
     curl -O http://cpan.metacpan.org/authors/id/T/TO/TODDR/\
 IPC-Run-0.96.tar.gz && \
     tar fax IPC-Run* && \
@@ -68,23 +68,23 @@ fi
 sudo chown -R postgres:postgres .
 if ./configure --help | grep '  --enable-svt5'; then
     extraoption="--enable-svt5"
-    if which apt-get; then
+    if which apt-get >/dev/null 2>&1; then
         apt-get install -y fuse
         apt-get install -y fuse-devel || apt-get install -y libfuse-dev || apt-get install -y libfuse-devel
         apt-get install -y libssl-devel
-    elif which yum; then
+    elif which yum >/dev/null 2>&1; then
         yum install -y fuse fuse-devel
         yum install -y openssl-devel
-    elif which zypper; then
+    elif which zypper >/dev/null 2>&1; then
         zypper install -y fuse fuse-devel
         zypper install -y openssl-devel
     fi
     getent group fuse && usermod -a -G fuse postgres
 
-    if ! perl -e "use Fuse"; then
+    if ! perl -e "use Fuse" >/dev/null 2>&1; then
         (
         cd ..
-        if which wget; then
+        if which wget >/dev/null 2>&1; then
         wget http://www.cpan.org/authors/id/D/DP/DPATES/Fuse-0.16.tar.gz
         else
         curl -O http://www.cpan.org/authors/id/D/DP/DPATES/Fuse-0.16.tar.gz

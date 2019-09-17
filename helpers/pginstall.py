@@ -1088,7 +1088,7 @@ baseurl=%s
         self.exec_psql_file(script_path, options)
         os.unlink(script_path)
 
-    def exec_psql_file(self, sql_file, options=''):
+    def exec_psql_file(self, sql_file, options='', stdout=None):
         cmd = '%s"%spsql" %s %s %s -f "%s"' % \
             (
                 self.pg_preexec,
@@ -1098,7 +1098,7 @@ baseurl=%s
                 options, sql_file
             )
         subprocess.check_call(cmd, shell=True,
-                              cwd="/", env=self.env)
+                              cwd="/", env=self.env, stdout=stdout)
 
     def get_server_version(self):
         return self.exec_psql_select("SELECT version()")
