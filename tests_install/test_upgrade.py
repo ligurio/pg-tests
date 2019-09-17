@@ -306,9 +306,11 @@ def install_server(product, edition, version, milestone, branch, windows):
 def generate_db(pg, pgnew, custom_dump=None):
     key = "-".join([pg.product, pg.edition, pg.version])
     dump_file_name = download_dump(pg.product, pg.edition, pg.version,
-                                   tempfile.gettempdir(), custom_dump)
-    pg.exec_psql_file(dump_file_name, '-q')
-    expected_file_name = os.path.join(tempfile.gettempdir(),
+                                   tempdir, custom_dump)
+    with open(os.path.join(tempdir, 'load-%s.log' % key), 'wba') as out:
+        pg.exec_psql_file(dump_file_name, '-q',
+                          stdout=out)
+    expected_file_name = os.path.join(tempdir,
                                       "%s-expected.sql" % key)
     dumpall(pgnew, expected_file_name)
 
@@ -344,7 +346,12 @@ def upgrade(pg, pgOld):
               pg.get_default_bin_path()
           )
 
-    subprocess.check_call(cmd, shell=True, cwd=upgrade_dir)
+    with open(os.path.join(tempdir,
+                           'pg_upgrade-%s.log' %
+                           "-".join([pgOld.product, pgOld.edition,
+                                     pgOld.version])),
+              'wba') as out:
+        subprocess.check_call(cmd, shell=True, cwd=upgrade_dir, stdout=out)
 
 
 def dumpall(pg, file):
@@ -372,7 +379,12 @@ def after_upgrade(pg, pgOld):
     for file in os.listdir(upgrade_dir):
         if ".sql" in file:
             file_name = os.path.join(upgrade_dir, file)
-            pg.exec_psql_file(file_name)
+            with open(os.path.join(tempdir,
+                                   'after-%s.log' %
+                                   [pgOld.product, pgOld.edition,
+                                    pgOld.version]),
+                      'wba') as out:
+                pg.exec_psql_file(file_name, stdout=out)
 
 
 def init_cluster(pg, force_remove=True, initdb_params='',
@@ -608,7 +620,9 @@ class TestUpgrade():
 
             if (os.path.isfile(file_name)):
                 start(pg)
-                pg.exec_psql_file(file_name, '-q')
+                with open(os.path.join(tempdir, 'load-dr-%s.log' % old_key),
+                          'wba') as out:
+                    pg.exec_psql_file(file_name, '-q', stdout=out)
                 dump_and_diff_dbs(old_key, pg, 'dump-restore')
             else:
                 pgold = install_server(
@@ -624,7 +638,9 @@ class TestUpgrade():
                 stop(pgold)
 
                 start(pg)
-                pg.exec_psql_file(file_name, '-q')
+                with open(os.path.join(tempdir, 'load-dr-%s.log' % old_key),
+                          'wba') as out:
+                    pg.exec_psql_file(file_name, '-q', stdout=out)
                 dump_and_diff_dbs(old_key, pg, 'upgrade')
                 pgold.remove_full(True)
                 # PGPRO-2459
