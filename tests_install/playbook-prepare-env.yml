@@ -117,6 +117,14 @@
     become_method: su
     become: true
 
+  - name: Free some disk space in the SLES 11 VM (temporary solution)
+    shell: zypper remove -y gnome*
+    args:
+      warn: no
+    when: ansible_distribution == "SLES" and ansible_distribution_major_version == "11"
+    become_method: su
+    become: true
+
   - name: Disable automatic updates (Debian-based)
     shell: for aptconf in `grep -E '^\s*APT::Periodic::(Update-Package-Lists|Unattended-Upgrade)' -l -r /etc/apt/apt.conf.d/`;
              do sed -e 's#^\(\s*APT::Periodic::\(Update-Package-Lists\|Unattended-Upgrade\)\)#// \1#' -i $aptconf; done; \
