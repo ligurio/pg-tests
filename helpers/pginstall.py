@@ -738,10 +738,6 @@ baseurl=%s
                   self.os_version.startswith('7.')):
                 cmd = "yum localinstall -y https://dl.fedoraproject.org/pub/" \
                     "epel/epel-release-latest-7.noarch.rpm"
-            elif (self.os_name in ['Red Hat Enterprise Linux'] and
-                  self.os_version.startswith('8.')):
-                cmd = "yum localinstall -y https://dl.fedoraproject.org/pub/" \
-                    "epel/epel-release-latest-8.noarch.rpm"
             if cmd:
                 self.exec_cmd_retry(cmd)
 
