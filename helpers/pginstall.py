@@ -927,7 +927,6 @@ baseurl=%s
         self.server_path_needed = False
 
     def install_perl_win(self):
-        # Workaround for PGPRO-2021
         if self.os_arch == 'AMD64':
             exename = 'ActivePerl-5.26.1.2601-MSWin32-x64-404865.exe'
             url = 'http://downloads.activestate.com/ActivePerl/' \
