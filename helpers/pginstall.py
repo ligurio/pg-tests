@@ -1471,11 +1471,6 @@ baseurl=%s
             pgid = '%s-%s' % (self.edition, self.version)
             if pgid in PRELOAD_LIBRARIES:
                 preload_libs = PRELOAD_LIBRARIES[pgid]
-                # PGPRO-2502
-                if self.__is_os_windows():
-                    for lib in preload_libs[:]:
-                        if ('pageprep' in lib):
-                            preload_libs.remove(lib)
                 libs = ','.join(preload_libs)
         if libs:
             self.exec_psql(
