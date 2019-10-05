@@ -6,6 +6,7 @@ import urllib
 import re
 import time
 import shutil
+import glob
 
 from BeautifulSoup import BeautifulSoup
 
@@ -703,6 +704,12 @@ baseurl=%s
                                                installer_name)
             windows_installer.retrieve(windows_installer_url,
                                        self.installer_name)
+            msi_files = self.__get_msi_files(baseurl)
+            for msi in msi_files:
+                windows_installer = urllib.URLopener()
+                windows_installer.retrieve(
+                    baseurl + msi,
+                    os.path.join(WIN_INST_DIR, msi))
         else:
             raise Exception("Unsupported distro %s" % self.os_name)
         self.reponame = reponame
@@ -922,6 +929,12 @@ baseurl=%s
                       (("port=%s\n" % port) if port else ""))
         cmd = "%s /S /init=%s" % (self.installer_name, ininame)
         command_executor(cmd, windows=True)
+        msis = glob.glob(os.path.join(WIN_INST_DIR, '*.msi'))
+        for msi in sorted(msis):
+            msilog = "%s.log" % msi
+            cmd = 'msiexec /i %s /quiet /qn /norestart /log %s' % \
+                (msi, msilog)
+            command_executor(cmd, windows=True)
         refresh_env_win()
         self.client_path_needed = False
         self.server_path_needed = False
@@ -1035,6 +1048,20 @@ baseurl=%s
             raise Exception("No Postgres (%s) setup files found in %s." %
                             (exe_arch, url))
         return setup_files[-1]
+
+    def __get_msi_files(self, url):
+        """Get all msi files from our repo
+        :param url: str:
+        :return: array with file names
+        """
+
+        msi_files = []
+        soup = BeautifulSoup(urllib.urlopen(url))
+        for link in soup.findAll('a'):
+            href = link.get('href')
+            if re.search(r'\.msi$', href, re.I):
+                msi_files.append(href)
+        return msi_files
 
     def delete_repo(self):
         """ Delete repo file
