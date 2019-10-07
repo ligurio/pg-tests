@@ -41,12 +41,13 @@ elif which yum; then
     yum install -y boost-devel >/dev/null
     yum install -y autoconf-archive >/dev/null || \
     if grep -q '\(Red Hat\|ROSA\) Enterprise Linux \(Server \|Cobalt \|\)release \(7\|8\)'\
-     /etc/redhat-release; then
+     /etc/redhat-release || \
+       grep -q 'CentOS Linux release 8.' /etc/redhat-release; then
         yum install -y http://mirror.centos.org/centos/\
 7/os/x86_64/Packages/autoconf-archive-2017.03.21-1.el7.noarch.rpm
     fi
 
-    if grep 'CentOS release 6.7' /etc/redhat-release; then
+    if grep -q 'CentOS release 6.7' /etc/redhat-release; then
         yum install -y centos-release-scl
         yum install -y devtoolset-3-toolchain python27
         source /opt/rh/devtoolset-3/enable
