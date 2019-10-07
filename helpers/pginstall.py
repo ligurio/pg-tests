@@ -86,7 +86,7 @@ PRELOAD_LIBRARIES = {
          'plantuner', 'shared_ispell', 'pg_pageprep', 'pg_pathman'],
     'std-cert-11':
         ['auth_delay', 'auto_explain',
-         'plantuner', 'shared_ispell', 'pg_pageprep', 'pg_pathman', 'pgaudit'],
+         'plantuner', 'shared_ispell', 'pg_pageprep', 'pg_pathman', 'pg_proaudit'],
     'std-10':
         ['auth_delay', 'auto_explain',
          'plantuner', 'shared_ispell', 'pg_pageprep', 'pg_pathman'],
@@ -96,7 +96,7 @@ PRELOAD_LIBRARIES = {
          'shared_ispell', 'pg_wait_sampling', 'pg_pageprep', 'pg_shardman',
          'pg_pathman'],
     'std-cert-10':
-        ['auth_delay', 'auto_explain', 'pgaudit',
+        ['auth_delay', 'auto_explain', 'pg_proaudit',
          'plantuner', 'shared_ispell', 'pg_pathman'],
     'std-9.6':
         ['auth_delay', 'auto_explain',
@@ -199,7 +199,7 @@ class PgInstall:
             elif self.edition == "std-cert" and self.version == "10":
                 product_dir = "pgpro-std-10.4.1/repo"
             elif self.edition == "std-cert" and self.version == "11":
-                product_dir = "pgpro-std-11.5.1/repo"
+                product_dir = "pgpro-std-11.5.3/repo"
             elif self.edition == "1c":
                 product_dir = "1c-%s" % product_version
             elif self.edition == "sql":
