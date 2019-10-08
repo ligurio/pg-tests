@@ -97,7 +97,7 @@ PRELOAD_LIBRARIES = {
          'shared_ispell', 'pg_wait_sampling', 'pg_pageprep', 'pg_shardman',
          'pg_pathman'],
     'std-cert-10':
-        ['auth_delay', 'auto_explain', 'pg_proaudit',
+        ['auth_delay', 'auto_explain', 'pgaudit',
          'plantuner', 'shared_ispell', 'pg_pathman'],
     'std-9.6':
         ['auth_delay', 'auto_explain',

@@ -384,7 +384,7 @@ class TestUpgradeMinor():
                 pgold.install_postgres_win()
             pgold.load_shared_libraries()
             with open(os.path.join(tempdir, 'load-%s.log' % oldversion),
-                      'wba') as out:
+                      'wb') as out:
                 pgold.exec_psql_file(dump_file_name, '-q',
                                      stdout=out)
 
