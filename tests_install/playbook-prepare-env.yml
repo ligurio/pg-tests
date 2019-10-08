@@ -142,11 +142,11 @@
 # https://www.mail-archive.com/debian-user@lists.debian.org/msg747870.html
   - name: Fix Debian 10 repository url (temporary workaround)
     shell: sed 's/deb.debian.org/ftp.us.debian.org/' -i /etc/apt/sources.list
-    args:
-      warn: no
     when: ansible_distribution == 'Debian' and ansible_distribution_major_version == '10'
     become_method: su
     become: true
+    tags:
+    - skip_ansible_lint
 
   - name: Disable RedHat subscription (RedHat 7)
     shell: subscription-manager remove --all;
