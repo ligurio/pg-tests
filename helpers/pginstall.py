@@ -723,8 +723,8 @@ baseurl=%s
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             self.exec_cmd_retry('apt-get update')
-        if self.version not in ['9.5', '9.6', '10']:
-            # Install epel for v.11+
+        if self.version not in ['9.5', '9.6']:
+            # Install epel for v.10+
             cmd = None
             if (self.os_name == 'CentOS Linux' and
                self.os_version.startswith('7.')):
