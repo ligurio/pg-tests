@@ -72,6 +72,9 @@ UPGRADE_ROUTES = {
     'postgrespro-std-cert-11': {
         'from': [
             {
+                'name': 'postgrespro', 'edition': 'std-cert', 'version': '10'
+            },
+            {
                 'name': 'postgrespro', 'edition': 'std', 'version': '10'
             },
             {
@@ -165,6 +168,9 @@ DUMP_RESTORE_ROUTES = {
 
     'postgrespro-std-cert-11': {
         'from': [
+            {
+                'name': 'postgrespro', 'edition': 'std-cert', 'version': '10'
+            },
             {
                 'name': 'postgrespro', 'edition': 'std', 'version': '10'
             },
@@ -307,7 +313,7 @@ def generate_db(pg, pgnew, custom_dump=None):
     key = "-".join([pg.product, pg.edition, pg.version])
     dump_file_name = download_dump(pg.product, pg.edition, pg.version,
                                    tempdir, custom_dump)
-    with open(os.path.join(tempdir, 'load-%s.log' % key), 'wba') as out:
+    with open(os.path.join(tempdir, 'load-%s.log' % key), 'wb') as out:
         pg.exec_psql_file(dump_file_name, '-q',
                           stdout=out)
     expected_file_name = os.path.join(tempdir,
@@ -350,7 +356,7 @@ def upgrade(pg, pgOld):
                            'pg_upgrade-%s.log' %
                            "-".join([pgOld.product, pgOld.edition,
                                      pgOld.version])),
-              'wba') as out:
+              'wb') as out:
         subprocess.check_call(cmd, shell=True, cwd=upgrade_dir, stdout=out)
 
 
@@ -381,9 +387,9 @@ def after_upgrade(pg, pgOld):
             file_name = os.path.join(upgrade_dir, file)
             with open(os.path.join(tempdir,
                                    'after-%s.log' %
-                                   [pgOld.product, pgOld.edition,
-                                    pgOld.version]),
-                      'wba') as out:
+                                   '-'.join([pgOld.product, pgOld.edition,
+                                             pgOld.version])),
+                      'wb') as out:
                 pg.exec_psql_file(file_name, stdout=out)
 
 
@@ -621,7 +627,7 @@ class TestUpgrade():
             if (os.path.isfile(file_name)):
                 start(pg)
                 with open(os.path.join(tempdir, 'load-dr-%s.log' % old_key),
-                          'wba') as out:
+                          'wb') as out:
                     pg.exec_psql_file(file_name, '-q', stdout=out)
                 dump_and_diff_dbs(old_key, pg, 'dump-restore')
             else:
@@ -639,7 +645,7 @@ class TestUpgrade():
 
                 start(pg)
                 with open(os.path.join(tempdir, 'load-dr-%s.log' % old_key),
-                          'wba') as out:
+                          'wb') as out:
                     pg.exec_psql_file(file_name, '-q', stdout=out)
                 dump_and_diff_dbs(old_key, pg, 'upgrade')
                 pgold.remove_full(True)
