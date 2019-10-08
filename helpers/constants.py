@@ -57,11 +57,14 @@ FIRST_RELEASE = {
     },
     "CentOS Linux 8.0.1905": {
         'postgrespro-std-9.6': None,
-        'postgrespro-std-10': '10.10.2',
-        'postgrespro-std-11': '11.5.4',
+        'postgrespro-std-10': '10.11.1',
+        'postgrespro-std-11': '11.6.1',
         'postgrespro-ent-9.6': None,
-        'postgrespro-ent-10': '10.10.2',
-        'postgrespro-ent-11': '11.5.4',
+        'postgrespro-ent-10': '10.11.1',
+        'postgrespro-ent-11': '11.6.1',
+        'postgresql--9.6': None,
+        'postgresql--10': None,
+        'postgresql--11': None,
     },
     "AlterOS 7.5": {
         'postgresql--9.6': None,
