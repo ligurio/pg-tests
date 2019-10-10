@@ -200,7 +200,7 @@ class PgInstall:
             elif self.edition == "std-cert" and self.version == "10":
                 product_dir = "pgpro-std-10.4.1/repo"
             elif self.edition == "std-cert" and self.version == "11":
-                product_dir = "pgpro-std-11.5.3/repo"
+                product_dir = "pgpro-std-11.5.4/repo"
             elif self.edition == "1c":
                 product_dir = "1c-%s" % product_version
             elif self.edition == "sql":
