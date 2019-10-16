@@ -66,8 +66,8 @@ class TestExtensions():
                 datadir = pginst.exec_psql_select('SHOW data_directory')
                 logdir = os.path.join(datadir, logdir)
         else:
-            request.cls.logdir = None  # PGPRO-2048
-            print("Test skipped because logging_collector is disabled.")
+            if pginst.edition in ['std', 'std-cert', 'ent', 'ent-cert']:
+                raise Exception("logging_collector is disabled")
             return
         request.cls.logdir = logdir
         pginst.stop_service()
@@ -81,11 +81,11 @@ class TestExtensions():
         if logdir is None:
             return
         pginst = request.cls.pginst
-        if pginst.edition != 'ent':
-            print("pg_badger test is only performed with enterprise edition")
-            return
+        if pginst.edition not in ['std', 'std-cert', 'ent', 'ent-cert']:
+            print("The pgbadger test is only performed "
+                  "with Standard and Enterprise editions")
         if pginst.windows:
-            print("pg_badger test is not supported on Windows")
+            print("The pgbadger test is not supported on Windows")
             return
         pginst.install_package('pgpro-pgbadger')
         cmd = "pgbadger -V"
@@ -131,9 +131,9 @@ class TestExtensions():
     def test_sr_plan(self, request):
         return
         pginst = request.cls.pginst
-        if pginst.edition != 'ent' and pginst.edition != 'std':
-            print("sr_plan & pg_stat_statements test is only performed "
-                  "with standard and enterprise edition")
+        if pginst.edition not in ['std', 'std-cert', 'ent', 'ent-cert']:
+            print("The sr_plan & pg_stat_statements test is only performed "
+                  "with Standard and Enterprise editions")
             return
         pginst.exec_psql("ALTER SYSTEM SET shared_preload_libraries = "
                          "pg_stat_statements, sr_plan")
