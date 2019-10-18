@@ -9,8 +9,8 @@ import pytest
 
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall
-from helpers.os_helpers import get_directory_size
-from helpers.os_helpers import get_process_pids
+from helpers.os_helpers import get_directory_size, get_process_pids
+from helpers.os_helpers import is_service_running, is_service_installed
 
 
 SERVER_APPLICATIONS = {
@@ -284,6 +284,13 @@ class TestFullInstall():
                     assert cdedition == 'Postgres Pro Standard'
         print("OK")
 
+    @pytest.mark.test_mamonsu
+    def test_mamonsu(self, request):
+        if self.system == 'Windows':
+            pytest.skip("This test is not implemented on Windows yet.")
+        assert is_service_installed('mamonsu')
+        assert not (is_service_running('mamonsu'))
+
     @pytest.mark.test_all_extensions
     def test_all_extensions(self, request):
         pginst = request.cls.pginst
@@ -504,3 +511,6 @@ $$ LANGUAGE plpgsql;"""
         assert len(pids1) == 0
         # TODO: Uncomment (PGPRO-1534)
         # assert not(os.path.exists(pginst.get_default_bin_path()))
+        if self.system != 'Windows':
+            assert not (is_service_installed('mamonsu'))
+            assert not (is_service_running('mamonsu'))
