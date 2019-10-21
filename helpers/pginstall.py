@@ -370,11 +370,6 @@ class PgInstall:
                 if (pkgname == 'Name'):
                     continue
                 result.append(pkgname)
-        # PGPRO-2563
-        if self.edition == 'std-cert' and self.version == '11':
-            for package in result[:]:
-                if 'mamonsu' in package:
-                    result.remove(package)
         return result
 
     def get_files_in_package(self, pkgname):
