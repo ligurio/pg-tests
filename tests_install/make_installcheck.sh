@@ -67,6 +67,7 @@ fi
 
 sudo chown -R postgres:postgres .
 if ./configure --help | grep '  --enable-svt5'; then
+    chown -R postgres:postgres $1
     extraoption="--enable-svt5"
     if which apt-get >/dev/null 2>&1; then
         apt-get install -y fuse
@@ -78,6 +79,7 @@ if ./configure --help | grep '  --enable-svt5'; then
     elif which zypper >/dev/null 2>&1; then
         zypper install -y fuse fuse-devel
         zypper install -y openssl-devel
+        chmod 666 /dev/fuse
     fi
     getent group fuse && usermod -a -G fuse postgres
 
