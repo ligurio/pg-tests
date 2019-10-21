@@ -4,10 +4,15 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
     },
+    "SUSE Linux Enterprise Server  12": {
+        'postgrespro-std-cert-10': None,
+    },
+    # altlinux-spt-7
     "ALT Linux  7.0.4": {
         'postgresql--9.6': None,
         'postgresql--10': None,
         'postgresql--11': None,
+        'postgrespro-std-cert-10': None,
     },
     "ALT Linux  6.0.1": {
         'postgresql--9.6': None,
@@ -23,6 +28,17 @@ FIRST_RELEASE = {
         'postgresql--9.6': None,
         'postgresql--10': None,
         'postgresql--11': None,
+    },
+    "ALT  8": {
+        'postgresql--9.6': None,
+        'postgresql--10': None,
+        'postgresql--11': None,
+        'postgrespro-std-9.6': None,
+        'postgrespro-ent-9.6': None,
+        'postgrespro-std-10': None,
+        'postgrespro-std-11': None,
+        'postgrespro-ent-10': None,
+        'postgrespro-ent-11': None,
     },
     "GosLinux 7.08": {
         'postgresql--9.6': None,

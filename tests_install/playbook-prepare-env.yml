@@ -35,6 +35,16 @@
     tags:
     - skip_ansible_lint
 
+  - name: Fix private temps (ALT 8)
+    shell: /usr/sbin/control pam_mktemp disabled
+    args:
+      warn: no
+    become_method: su
+    become: true
+    when: ansible_distribution == "ALT" and ansible_distribution_major_version == "8"
+    tags:
+    - skip_ansible_lint
+
   - name: Mount DVD(s) (if available)
     shell: if /sbin/blkid /dev/sr0; then
              mkdir /mnt/dvd &&
