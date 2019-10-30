@@ -511,10 +511,6 @@ class PgInstall:
             product_dir = self.__get_product_dir()
             gpg_key_url = "%s/%s/keys/GPG-KEY-POSTGRESPRO" % \
                           (self.get_repo_base(), product_dir)
-            if self.os_name == "SUSE Linux Enterprise Server ":
-                # PGPRO-2209
-                gpg_key_url = "%s/%s/keys/SUSE-GPG-KEY-POSTGRESPRO" % \
-                              (self.get_repo_base(), product_dir)
             distname = self.get_distname_for_pgpro()
             if self.edition in ['std-cert', 'ent-cert']:
                 baseurl = "/".join([
