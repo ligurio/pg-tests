@@ -1056,6 +1056,13 @@ baseurl=%s
         for link in soup.findAll('a'):
             href = link.get('href')
             if re.search(r'\.msi$', href, re.I):
+                # PGPRO-3184
+                # (pg-probackup-std-10-2.1.5.msi,
+                #  pg-probackup-std-10-2.1.5-standalone-en.msi, and
+                #  pg-probackup-std-10-2.1.5-standalone-en.msi conflict)
+                if self.milestone == "alpha" and \
+                   re.search('pg-probackup-', href):
+                    continue
                 msi_files.append(href)
         return msi_files
 
