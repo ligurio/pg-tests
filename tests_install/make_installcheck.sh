@@ -111,8 +111,8 @@ if patch -p1 --dry-run -i ../patches/make-installcheck-10.patch >/dev/null 2>&1;
     makeecpg=false
 fi
 
-# Workaround for pgsql-bugs #15349
-patch -p1 --dry-run -i ../patches/fix-libpq-test-for-ubuntu.patch >/dev/null 2>&1 && patch -p1 -i ../patches/fix-libpq-test-for-ubuntu.patch
+# Backpatch 69ae9dcb to version 11 (pgsql-bugs #15349) (uri-regress.c: undefined reference to PQconninfoParse, PQconndefaults)
+patch -p1 --dry-run -i ../patches/69ae9dcb.patch >/dev/null 2>&1 && patch -p1 -i ../patches/69ae9dcb.patch
 
 set -o pipefail
 sudo -u postgres ./configure --enable-tap-tests --without-readline --prefix=$1 $extraoption || exit $?
