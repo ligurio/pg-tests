@@ -134,7 +134,7 @@ if [ $exitcode -eq 0 ]; then
 port=25432\n
 autovacuum=off\n
 old_snapshot_threshold=0\n
-max_replication_slots=10\n
+max_replication_slots=4\n
 wal_level=logical\n
 max_prepared_transactions=10\n" >> tmpdb/postgresql.conf
     sudo -u postgres $1/bin/pg_ctl -D tmpdb -l tmpdb.log -w start
