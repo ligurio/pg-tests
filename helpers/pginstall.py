@@ -402,7 +402,10 @@ class PgInstall:
                 pkgs = [self.get_base_package_name() + '*']
 
         else:
-            pkgs = self.get_packages_in_repo()
+            # PGPRO-????
+            # Filter out the package that is not supported by Postgres Pro yet
+            pkgs = [pkg for pkg in self.get_packages_in_repo() if
+                    not (pkg.startswith("oracle-fdw-"))]
 
         return pkgs
 
@@ -511,10 +514,6 @@ class PgInstall:
             product_dir = self.__get_product_dir()
             gpg_key_url = "%s/%s/keys/GPG-KEY-POSTGRESPRO" % \
                           (self.get_repo_base(), product_dir)
-            if self.os_name == "SUSE Linux Enterprise Server ":
-                # PGPRO-2209
-                gpg_key_url = "%s/%s/keys/SUSE-GPG-KEY-POSTGRESPRO" % \
-                              (self.get_repo_base(), product_dir)
             distname = self.get_distname_for_pgpro()
             if self.edition in ['std-cert', 'ent-cert']:
                 baseurl = "/".join([
@@ -1056,6 +1055,13 @@ baseurl=%s
         for link in soup.findAll('a'):
             href = link.get('href')
             if re.search(r'\.msi$', href, re.I):
+                # PGPRO-3184
+                # (pg-probackup-std-10-2.1.5.msi,
+                #  pg-probackup-std-10-2.1.5-standalone-en.msi, and
+                #  pg-probackup-std-10-2.1.5-standalone-en.msi conflict)
+                if self.milestone == "alpha" and \
+                   re.search('pg-probackup-', href):
+                    continue
                 msi_files.append(href)
         return msi_files
 

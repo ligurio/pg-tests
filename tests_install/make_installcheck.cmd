@@ -104,8 +104,6 @@ echo "`date -Iseconds`: Making native MinGW libs 2"
 (cd src/backend && make -j4 libpostgres.a 2>&1 | tee /tmp/make_libpostgres.log)
 echo "`date -Iseconds`: Making ecpg"
 make -C src/interfaces/ecpg
-echo "Workaround for inability to merge PGPRO-626-ICU"
-if [ -f src/test/default_collation/icu/t/001_default_collation.pl ] && ! patch -N --dry-run -R -p1 -i /var/src/patches/win-icu-test.patch ; then patch -p1 -i /var/src/patches/win-icu-test.patch; fi
 
 set +e
 echo "`date -Iseconds`: Running $confopts make -e installcheck-world ..."
