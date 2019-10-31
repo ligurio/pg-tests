@@ -84,6 +84,7 @@ class TestExtensions():
         if pginst.edition not in ['std', 'std-cert', 'ent', 'ent-cert']:
             print("The pgbadger test is only performed "
                   "with Standard and Enterprise editions")
+            return
         if pginst.windows:
             print("The pgbadger test is not supported on Windows")
             return
