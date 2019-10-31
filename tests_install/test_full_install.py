@@ -287,7 +287,11 @@ class TestFullInstall():
     @pytest.mark.test_mamonsu
     def test_mamonsu(self, request):
         if self.system == 'Windows':
-            pytest.skip("This test is not implemented on Windows yet.")
+            pytest.skip("This mamonsu test is not implemented on Windows yet.")
+        pginst = request.cls.pginst
+        if pginst.edition not in ['std', 'std-cert', 'ent', 'ent-cert']:
+            pytest.skip("The mamonsu test is only performed "
+                        "for Standard and Enterprise editions")
         assert is_service_installed('mamonsu')
         assert not (is_service_running('mamonsu'))
 
