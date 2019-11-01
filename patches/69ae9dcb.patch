@@ -1,0 +1,268 @@
+commit 69ae9dcb444a667533344562f134444856fb3414
+Author: Tom Lane <tgl@sss.pgh.pa.us>
+Date:   Wed Jan 2 13:57:42 2019 -0500
+
+    Ensure link commands list *.o files before LDFLAGS.
+    
+    It's important for link commands to list *.o input files before -l
+    switches for libraries, as library code may not get pulled into the link
+    unless referenced by an earlier command-line entry.  This is certainly
+    necessary for static libraries (.a style).  Apparently on some platforms
+    it is also necessary for shared libraries, as reported by Donald Dong.
+    
+    We often put -l switches for within-tree libraries into LDFLAGS, meaning
+    that link commands that list *.o files after LDFLAGS are hazardous.
+    Most of our link commands got this right, but a few did not.  In
+    particular, places that relied on gmake's default implicit link rule
+    failed, because that puts LDFLAGS first.  Fix that by overriding the
+    built-in rule with our own.  The implicit link rules in
+    src/makefiles/Makefile.* for single-.o-file shared libraries mostly
+    got this wrong too, so fix them.  I also changed the link rules for the
+    backend and a couple of other places for consistency, even though they
+    are not (currently) at risk because they aren't adding any -l switches
+    to LDFLAGS.
+    
+    Arguably, the real problem here is that we're abusing LDFLAGS by
+    putting -l switches in it and we should stop doing that.  But changing
+    that would be quite invasive, so I'm not eager to do so.
+    
+    Perhaps this is a candidate for back-patching, but so far it seems
+    that problems can only be exhibited in test code we don't normally
+    build, and at least some of the problems are new in HEAD anyway.
+    So I'll refrain for now.
+    
+    Donald Dong and Tom Lane
+    
+    Discussion: https://postgr.es/m/CAKABAquXn-BF-vBeRZxhzvPyfMqgGuc74p8BmQZyCFDpyROBJQ@mail.gmail.com
+
+diff --git a/src/Makefile.global.in b/src/Makefile.global.in
+index 4b6bab37dc..758ea4357a 100644
+--- a/src/Makefile.global.in
++++ b/src/Makefile.global.in
+@@ -742,6 +742,13 @@ endif
+ # tracking (see below) is used.
+ %: %.c
+ 
++# Replace gmake's default rule for linking a single .o file to produce an
++# executable.  The main point here is to put LDFLAGS after the .o file,
++# since we put -l switches into LDFLAGS and those are order-sensitive.
++# In addition, include CFLAGS and LDFLAGS_EX per project conventions.
++%: %.o
++	$(CC) $(CFLAGS) $< $(LDFLAGS) $(LDFLAGS_EX) $(LIBS) -o $@$(X)
++
+ ifndef PGXS
+ 
+ # Remake Makefile.global from Makefile.global.in if the latter
+diff --git a/src/backend/Makefile b/src/backend/Makefile
+index e05f55cad4..478a96db9b 100644
+--- a/src/backend/Makefile
++++ b/src/backend/Makefile
+@@ -60,7 +60,7 @@ ifneq ($(PORTNAME), win32)
+ ifneq ($(PORTNAME), aix)
+ 
+ postgres: $(OBJS)
+-	$(CC) $(CFLAGS) $(LDFLAGS) $(LDFLAGS_EX) $(export_dynamic) $(call expand_subsys,$^) $(LIBS) -o $@
++	$(CC) $(CFLAGS) $(call expand_subsys,$^) $(LDFLAGS) $(LDFLAGS_EX) $(export_dynamic) $(LIBS) -o $@
+ 
+ endif
+ endif
+@@ -69,7 +69,7 @@ endif
+ ifeq ($(PORTNAME), cygwin)
+ 
+ postgres: $(OBJS)
+-	$(CC) $(CFLAGS) $(LDFLAGS) $(LDFLAGS_EX) $(export_dynamic) -Wl,--stack,$(WIN32_STACK_RLIMIT) -Wl,--export-all-symbols -Wl,--out-implib=libpostgres.a $(call expand_subsys,$^) $(LIBS) -o $@
++	$(CC) $(CFLAGS) $(call expand_subsys,$^) $(LDFLAGS) $(LDFLAGS_EX) $(export_dynamic) -Wl,--stack,$(WIN32_STACK_RLIMIT) -Wl,--export-all-symbols -Wl,--out-implib=libpostgres.a $(LIBS) -o $@
+ 
+ # libpostgres.a is actually built in the preceding rule, but we need this to
+ # ensure it's newer than postgres; see notes in src/backend/parser/Makefile
+@@ -82,7 +82,7 @@ ifeq ($(PORTNAME), win32)
+ LIBS += -lsecur32
+ 
+ postgres: $(OBJS) $(WIN32RES)
+-	$(CC) $(CFLAGS) $(LDFLAGS) $(LDFLAGS_EX) -Wl,--stack=$(WIN32_STACK_RLIMIT) -Wl,--export-all-symbols -Wl,--out-implib=libpostgres.a $(call expand_subsys,$(OBJS)) $(WIN32RES) $(LIBS) -o $@$(X)
++	$(CC) $(CFLAGS) $(call expand_subsys,$(OBJS)) $(WIN32RES) $(LDFLAGS) $(LDFLAGS_EX) -Wl,--stack=$(WIN32_STACK_RLIMIT) -Wl,--export-all-symbols -Wl,--out-implib=libpostgres.a $(LIBS) -o $@$(X)
+ 
+ # libpostgres.a is actually built in the preceding rule, but we need this to
+ # ensure it's newer than postgres; see notes in src/backend/parser/Makefile
+@@ -94,7 +94,7 @@ endif # win32
+ ifeq ($(PORTNAME), aix)
+ 
+ postgres: $(POSTGRES_IMP)
+-	$(CC) $(CFLAGS) $(LDFLAGS) $(LDFLAGS_EX) $(call expand_subsys,$(OBJS)) -Wl,-bE:$(top_builddir)/src/backend/$(POSTGRES_IMP) $(LIBS) -Wl,-brtllib -o $@
++	$(CC) $(CFLAGS) $(call expand_subsys,$(OBJS)) $(LDFLAGS) $(LDFLAGS_EX) -Wl,-bE:$(top_builddir)/src/backend/$(POSTGRES_IMP) $(LIBS) -Wl,-brtllib -o $@
+ 
+ $(POSTGRES_IMP): $(OBJS)
+ 	$(LD) $(LDREL) $(LDOUT) SUBSYS.o $(call expand_subsys,$^)
+@@ -117,7 +117,7 @@ $(top_builddir)/src/port/libpgport_srv.a: | submake-libpgport
+ # The postgres.o target is needed by the rule in Makefile.global that
+ # creates the exports file when MAKE_EXPORTS = true.
+ postgres.o: $(OBJS)
+-	$(CC) $(LDREL) $(LDFLAGS) $(LDFLAGS_EX) $(call expand_subsys,$^) $(LIBS) -o $@
++	$(CC) $(LDREL) $(call expand_subsys,$^) $(LDFLAGS) $(LDFLAGS_EX) $(LIBS) -o $@
+ 
+ 
+ # The following targets are specified in make commands that appear in
+@@ -319,4 +319,4 @@ maintainer-clean: distclean
+ # are up to date.  It saves the time of doing all the submakes.
+ .PHONY: quick
+ quick: $(OBJS)
+-	$(CC) $(CFLAGS) $(LDFLAGS) $(LDFLAGS_EX) $(export_dynamic) $(call expand_subsys,$^) $(LIBS) -o postgres
++	$(CC) $(CFLAGS) $(call expand_subsys,$^) $(LDFLAGS) $(LDFLAGS_EX) $(export_dynamic) $(LIBS) -o postgres
+diff --git a/src/interfaces/ecpg/preproc/Makefile b/src/interfaces/ecpg/preproc/Makefile
+index 911d03dbd1..69ddd8e9f7 100644
+--- a/src/interfaces/ecpg/preproc/Makefile
++++ b/src/interfaces/ecpg/preproc/Makefile
+@@ -37,7 +37,7 @@ endif
+ all: ecpg
+ 
+ ecpg: $(OBJS) | submake-libpgport
+-	$(CC) $(CFLAGS) $(LDFLAGS) $(LDFLAGS_EX) $^ $(LIBS) $(PTHREAD_LIBS) -o $@$(X)
++	$(CC) $(CFLAGS) $^ $(LDFLAGS) $(LDFLAGS_EX) $(LIBS) $(PTHREAD_LIBS) -o $@$(X)
+ 
+ # We symlink typename.c from ecpglib and recompile it here
+ typename.c: % : $(top_srcdir)/src/interfaces/ecpg/ecpglib/%
+diff --git a/src/interfaces/ecpg/test/Makefile b/src/interfaces/ecpg/test/Makefile
+index c761a4dcb0..be53b7b94d 100644
+--- a/src/interfaces/ecpg/test/Makefile
++++ b/src/interfaces/ecpg/test/Makefile
+@@ -49,7 +49,7 @@ clean distclean maintainer-clean:
+ all: pg_regress$(X)
+ 
+ pg_regress$(X): pg_regress_ecpg.o $(WIN32RES) $(top_builddir)/src/test/regress/pg_regress.o
+-	$(CC) $(CFLAGS) $(LDFLAGS) $(LDFLAGS_EX) $^ $(LIBS) -o $@
++	$(CC) $(CFLAGS) $^ $(LDFLAGS) $(LDFLAGS_EX) $(LIBS) -o $@
+ 
+ $(top_builddir)/src/test/regress/pg_regress.o:
+ 	$(MAKE) -C $(dir $@) $(notdir $@)
+diff --git a/src/interfaces/ecpg/test/Makefile.regress b/src/interfaces/ecpg/test/Makefile.regress
+index 4da1bb8a03..b0647cd2c5 100644
+--- a/src/interfaces/ecpg/test/Makefile.regress
++++ b/src/interfaces/ecpg/test/Makefile.regress
+@@ -21,9 +21,6 @@ ECPG_TEST_DEPENDENCIES = ../../preproc/ecpg$(X) \
+ 	$(srcdir)/../../include/sqltypes.h \
+ 	$(srcdir)/../../include/sql3types.h
+ 
+-%: %.o
+-	$(CC) $(CFLAGS) $< $(LDFLAGS) $(LDFLAGS_EX) $(LIBS) -o $@
+-
+ # Caution: this build rule is overridden in some child Makefiles
+ # where it's necessary to use nondefault switches to ecpg;
+ # make sure those rules match except for the extra switches.
+diff --git a/src/makefiles/Makefile.aix b/src/makefiles/Makefile.aix
+index e5ad89d147..0f6c028938 100644
+--- a/src/makefiles/Makefile.aix
++++ b/src/makefiles/Makefile.aix
+@@ -40,4 +40,4 @@ MKLDEXPORT=$(top_srcdir)/$(MKLDEXPORT_DIR)/mkldexport.sh
+ 
+ # Rule for building a shared library from a single .o file
+ %$(DLSUFFIX): %.o %.exp
+-	$(CC) $(CFLAGS) $(LDFLAGS) $(LDFLAGS_SL) -o $@ $*.o -Wl,-bE:$*.exp $(BE_DLLLIBS)
++	$(CC) $(CFLAGS) $*.o $(LDFLAGS) $(LDFLAGS_SL) -o $@ -Wl,-bE:$*.exp $(BE_DLLLIBS)
+diff --git a/src/makefiles/Makefile.darwin b/src/makefiles/Makefile.darwin
+index 7a8ba3e527..e2b1d44959 100644
+--- a/src/makefiles/Makefile.darwin
++++ b/src/makefiles/Makefile.darwin
+@@ -10,4 +10,4 @@ endif
+ 
+ # Rule for building a shared library from a single .o file
+ %.so: %.o
+-	$(CC) $(CFLAGS) $(LDFLAGS) $(LDFLAGS_SL) -bundle $(BE_DLLLIBS) -o $@ $<
++	$(CC) $(CFLAGS) $< $(LDFLAGS) $(LDFLAGS_SL) -bundle $(BE_DLLLIBS) -o $@
+diff --git a/src/makefiles/Makefile.freebsd b/src/makefiles/Makefile.freebsd
+index 5a98e5a2b0..ce03c8dcd2 100644
+--- a/src/makefiles/Makefile.freebsd
++++ b/src/makefiles/Makefile.freebsd
+@@ -13,7 +13,7 @@ CFLAGS_SL = -fPIC -DPIC
+ # Rule for building a shared library from a single .o file
+ %.so: %.o
+ ifdef ELF_SYSTEM
+-	$(CC) $(CFLAGS) $(LDFLAGS) $(LDFLAGS_SL) -shared -o $@ $<
++	$(CC) $(CFLAGS) $< $(LDFLAGS) $(LDFLAGS_SL) -shared -o $@
+ else
+ 	$(LD) $(LDREL) $(LDOUT) $<.obj -x $<
+ 	@echo building shared object $@
+diff --git a/src/makefiles/Makefile.hpux b/src/makefiles/Makefile.hpux
+index 97bd0ba6d9..30dd3eb77e 100644
+--- a/src/makefiles/Makefile.hpux
++++ b/src/makefiles/Makefile.hpux
+@@ -40,13 +40,13 @@ endif
+ %$(DLSUFFIX): %.o
+ ifeq ($(GCC), yes)
+   ifeq ($(with_gnu_ld), yes)
+-	$(CC) $(CFLAGS) $(LDFLAGS) $(LDFLAGS_SL) -shared -o $@ $< `$(CC) $(LDFLAGS) -print-libgcc-file-name`
++	$(CC) $(CFLAGS) $< $(LDFLAGS) $(LDFLAGS_SL) -shared -o $@ `$(CC) $(LDFLAGS) -print-libgcc-file-name`
+   else
+ 	$(LD) -b -o $@ $< `$(CC) $(LDFLAGS) -print-libgcc-file-name`
+   endif
+ else
+   ifeq ($(with_gnu_ld), yes)
+-	$(CC) $(CFLAGS) $(LDFLAGS) $(LDFLAGS_SL) -shared -o $@ $<
++	$(CC) $(CFLAGS) $< $(LDFLAGS) $(LDFLAGS_SL) -shared -o $@
+   else
+ 	$(LD) -b -o $@ $<
+   endif
+diff --git a/src/makefiles/Makefile.linux b/src/makefiles/Makefile.linux
+index f4f091caef..ac58fe45de 100644
+--- a/src/makefiles/Makefile.linux
++++ b/src/makefiles/Makefile.linux
+@@ -12,4 +12,4 @@ CFLAGS_SL = -fPIC
+ 
+ # Rule for building a shared library from a single .o file
+ %.so: %.o
+-	$(CC) $(CFLAGS) $(LDFLAGS) $(LDFLAGS_SL) -shared -o $@ $<
++	$(CC) $(CFLAGS) $< $(LDFLAGS) $(LDFLAGS_SL) -shared -o $@
+diff --git a/src/makefiles/Makefile.netbsd b/src/makefiles/Makefile.netbsd
+index 43841c1597..7bb9721fa5 100644
+--- a/src/makefiles/Makefile.netbsd
++++ b/src/makefiles/Makefile.netbsd
+@@ -15,7 +15,7 @@ CFLAGS_SL = -fPIC -DPIC
+ # Rule for building a shared library from a single .o file
+ %.so: %.o
+ ifdef ELF_SYSTEM
+-	$(CC) $(CFLAGS) $(LDFLAGS) $(LDFLAGS_SL) -shared -o $@ $<
++	$(CC) $(CFLAGS) $< $(LDFLAGS) $(LDFLAGS_SL) -shared -o $@
+ else
+ 	$(LD) $(LDREL) $(LDOUT) $<.obj -x $<
+ 	@echo building shared object $@
+diff --git a/src/makefiles/Makefile.openbsd b/src/makefiles/Makefile.openbsd
+index d8fde49d5c..eda311087c 100644
+--- a/src/makefiles/Makefile.openbsd
++++ b/src/makefiles/Makefile.openbsd
+@@ -13,7 +13,7 @@ CFLAGS_SL = -fPIC -DPIC
+ # Rule for building a shared library from a single .o file
+ %.so: %.o
+ ifdef ELF_SYSTEM
+-	$(CC) $(CFLAGS) $(LDFLAGS) $(LDFLAGS_SL) -shared -o $@ $<
++	$(CC) $(CFLAGS) $< $(LDFLAGS) $(LDFLAGS_SL) -shared -o $@
+ else
+ 	$(LD) $(LDREL) $(LDOUT) $<.obj -x $<
+ 	@echo building shared object $@
+diff --git a/src/makefiles/Makefile.solaris b/src/makefiles/Makefile.solaris
+index e459de30cf..a7f5652f0c 100644
+--- a/src/makefiles/Makefile.solaris
++++ b/src/makefiles/Makefile.solaris
+@@ -19,9 +19,9 @@ endif
+ # Rule for building a shared library from a single .o file
+ %.so: %.o
+ ifeq ($(GCC), yes)
+-	$(CC) $(CFLAGS) $(LDFLAGS) $(LDFLAGS_SL) -shared -o $@ $<
++	$(CC) $(CFLAGS) $< $(LDFLAGS) $(LDFLAGS_SL) -shared -o $@
+ else
+-	$(CC) $(CFLAGS) $(LDFLAGS) $(LDFLAGS_SL) -G -o $@ $<
++	$(CC) $(CFLAGS) $< $(LDFLAGS) $(LDFLAGS_SL) -G -o $@
+ endif
+ 
+ sqlmansect = 5sql
+diff --git a/src/test/thread/Makefile b/src/test/thread/Makefile
+index f45bbda9fd..dab1a4803f 100644
+--- a/src/test/thread/Makefile
++++ b/src/test/thread/Makefile
+@@ -18,7 +18,7 @@ all: thread_test
+ 
+ thread_test: thread_test.o
+ # no need for $LIBS, might not be compiled yet
+-	$(CC) $(CFLAGS) $(LDFLAGS) $(LDFLAGS_EX) $^ $(PTHREAD_LIBS) -o $@
++	$(CC) $(CFLAGS) $^ $(LDFLAGS) $(LDFLAGS_EX) $(PTHREAD_LIBS) -o $@$(X)
+ 
+ clean distclean maintainer-clean:
+ 	rm -f thread_test$(X) thread_test.o
