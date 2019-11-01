@@ -120,6 +120,11 @@ PRELOAD_LIBRARIES = {
          'pg_pathman'],
     '1c-10':
         ['auth_delay', 'auto_explain', 'plantuner'],
+    '1c-11':
+        ['auth_delay', 'auto_explain', 'plantuner', 'online_analyze',
+         'pg_pageprep'],
+    '1c-12':
+        ['auth_delay', 'auto_explain', 'plantuner', 'online_analyze'],
 }
 
 
