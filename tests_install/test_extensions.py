@@ -123,7 +123,9 @@ class TestExtensions():
                 raise Exception("No SELECT queries catched by pgbadger.")
             if 'INSERT' not in stats or stats['INSERT'] < 1:
                 raise Exception("No INSERT queries catched by pgbadger.")
-            if 'DDL' not in stats or stats['DDL'] < 1:
+            # PGPRO-3141
+            if ('DDL' not in stats or stats['DDL'] < 1) and \
+               ('OTHERS' not in stats or stats['OTHERS'] < 1):
                 raise Exception("No DDL queries catched by pgbadger.")
             return
         raise Exception('Log files in "%s" are not found.' % logdir)
