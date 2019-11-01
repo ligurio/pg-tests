@@ -47,6 +47,8 @@ class TestCleanInstall():
         request.cls.pginst = pginst
         pginst.setup_repo()
         print("Running on %s." % target)
+        print("Minor product version is: %s\n" %
+              pginst.get_product_minor_version())
         if self.system != 'Windows':
             pginst.install_base()
             pginst.initdb_start()
