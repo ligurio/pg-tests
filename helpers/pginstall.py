@@ -19,6 +19,9 @@ from helpers.utils import refresh_env_win
 
 PGPRO_ARCHIVE_STANDARD = "http://repo.postgrespro.ru/pgpro-archive/"
 PGPRO_ARCHIVE_ENTERPRISE = "http://repoee.l.postgrespro.ru/archive/"
+PGPRO_DEV_SOURCES_BASE = "http://localrepo.l.postgrespro.ru/dev/src"
+PGPRO_ARCHIVE_SOURCES_BASE = "http://localrepo.l.postgrespro.ru/stable/src"
+PGPRO_STABLE_SOURCES_BASE = "http://localrepo.l.postgrespro.ru/stable/src"
 PGPRO_BRANCH_BASE = "http://localrepo.l.postgrespro.ru/branches/"
 PGPRO_BASE = "http://repo.postgrespro.ru/"
 PGPRO_BASE_ENTERPRISE = "http://repoee.l.postgrespro.ru/"
@@ -117,6 +120,11 @@ PRELOAD_LIBRARIES = {
          'pg_pathman'],
     '1c-10':
         ['auth_delay', 'auto_explain', 'plantuner'],
+    '1c-11':
+        ['auth_delay', 'auto_explain', 'plantuner', 'online_analyze',
+         'pg_pageprep'],
+    '1c-12':
+        ['auth_delay', 'auto_explain', 'plantuner', 'online_analyze'],
 }
 
 
@@ -272,6 +280,37 @@ class PgInstall:
                 return '%s-server-dev-%s' % (self.product, self.version)
             return base_package + '-devel'
         return base_package
+
+    def __get_package_version(self, package_name):
+        cmd = ''
+        if self.__is_pm_yum():
+            cmd = "sh -c \"LANG=C yum info %s\"" % package_name
+        elif self.__is_pm_apt():
+            cmd = "sh -c \"LANG=C apt-cache show %s\"" % package_name
+        elif self.__is_pm_zypper():
+            cmd = "sh -c \"LANG=C zypper info %s\"" % package_name
+
+        if cmd:
+            out = command_executor(cmd, self.remote, self.host,
+                                   REMOTE_ROOT, REMOTE_ROOT_PASSWORD,
+                                   stdout=True).split('\n')
+            for line in out:
+                vere = re.search(r'Version\s*:\s+([0-9.]+).*', line)
+                if (vere):
+                    return vere.group(1)
+        return None
+
+    def get_product_minor_version(self):
+        if self.__is_os_windows():
+            if not self.installer_name:
+                raise Exception("Installer name is not defined")
+            vere = re.search(r'_([0-9.]+)_', self.installer_name)
+            if vere:
+                return vere.group(1)
+        else:
+            return self.__get_package_version(
+                self.get_base_package_name() +
+                ('' if self.version == '9.6' else '-libs'))
 
     def get_packages_in_repo(self):
         result = []
@@ -744,29 +783,30 @@ baseurl=%s
                 self.exec_cmd_retry(cmd)
 
     def download_source(self):
+        baseurl = ''
         if self.product == "postgresql":
             pass
         elif self.product == "postgrespro":
-            product_dir = self.__get_product_dir()
             if self.edition in ['ent-cert', 'std-cert']:
+                product_dir = self.__get_product_dir()
                 baseurl = PGPROCERT_BASE + \
                     product_dir.replace('/repo', '/sources')
             else:
-                baseurl = "/".join([self.get_repo_base(), product_dir, 'src'])
-        soup = BeautifulSoup(urllib.urlopen(baseurl))
-        tar_href = None
-        # TODO: Download exactly installed version
-        # (using apt-get source or alike)
-        for link in soup.findAll('a'):
-            href = link.get('href')
-            if re.search(r'^postgres', href, re.I) and \
-               re.search(r'\.tar\b', href, re.I):
-                if re.search(r'-common-', href):  # 9.5, 9.6 (Debian)
-                    continue
-                print("source:", baseurl + '/' + href, "target:", href)
-                tar_href = href
-        if not tar_href:
-            raise Exception("Source tarball is not found at %s." % baseurl)
+                if self.milestone == 'alpha':
+                    baseurl = PGPRO_DEV_SOURCES_BASE
+                elif self.milestone == 'beta':
+                    baseurl = PGPRO_STABLE_SOURCES_BASE
+                else:
+                    baseurl = PGPRO_ARCHIVE_SOURCES_BASE
+        edition = ''
+        product = 'postgresql' if self.edition == '1c' else 'postgrespro'
+        if self.edition in ['std', 'std-cert'] \
+                and self.version not in ['9.6', '9.5']:
+            edition = '-standard'
+        elif self.edition in ['ent', 'ent-cert']:
+            edition = '-enterprise'
+        tar_href = '%s%s-%s.tar.bz2' % \
+                   (product, edition, self.get_product_minor_version())
         sourcetar = urllib.URLopener()
         sourcetar.retrieve(baseurl + '/' + tar_href, tar_href)
 
