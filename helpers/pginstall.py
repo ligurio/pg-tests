@@ -1290,7 +1290,9 @@ baseurl=%s
         else:
             if self.product == 'postgrespro':
                 return 'C:\\Program Files\\%s%s\\%s' % \
-                    ('PostgreSQL' if self.edition == 'sql' else 'PostgresPro',
+                    ('PostgreSQL' if self.edition == 'sql' else
+                     'PostgreSQL 1C' if self.edition == '1c' else
+                     'PostgresPro',
                      'Enterprise'
                      if self.edition in ["ent", "ent-cert"] else
                      '',
