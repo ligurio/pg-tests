@@ -121,10 +121,10 @@ PRELOAD_LIBRARIES = {
     '1c-10':
         ['auth_delay', 'auto_explain', 'plantuner'],
     '1c-11':
-        ['auth_delay', 'auto_explain', 'plantuner', 'online_analyze',
+        ['auth_delay', 'auto_explain', 'plantuner',
          'pg_pageprep'],
     '1c-12':
-        ['auth_delay', 'auto_explain', 'plantuner', 'online_analyze'],
+        ['auth_delay', 'auto_explain', 'plantuner'],
 }
 
 
