@@ -47,6 +47,7 @@
 
   - name: Mount DVD(s) (if available)
     shell: if /sbin/blkid /dev/sr0; then
+             sed -i '/^\/dev\/sr0\s/d' /etc/fstab; umount /dev/sr0;
              mkdir /mnt/dvd &&
              echo "/dev/sr0       /mnt/dvd   auto    ro,user,exec,utf8        0    0" >> /etc/fstab &&
              mount /dev/sr0;
@@ -61,11 +62,7 @@
     become: true
 
   - name: Setup DVDs as apt repositories (Astra Smolensk)
-    shell: if [ -d /media/cdrom/dists ]; then
-             rmdir /mnt/dvd;
-             ln -s /media/cdrom /mnt/dvd;
-           fi;
-           if [ -d /mnt/dvd/dists ]; then
+    shell: if [ -d /mnt/dvd/dists ]; then
              echo "deb file:///mnt/dvd smolensk contrib main non-free" >> /etc/apt/sources.list.d/repo-dvd.list;
            fi;
            if [ -d /mnt/dvd2/dists ]; then
@@ -78,8 +75,8 @@
 
     # Issue with installing libxml2 that requires libicu57, but download.astralinux.ru/astra/current/orel/ contains only libicu63
   - name: Setup DVD as apt repository (Astra Orel)
-    shell: if [ -d /media/cdrom/dists ]; then
-             echo "deb file:///media/cdrom orel main contrib non-free" > /etc/apt/sources.list.d/repo-dvd.list;
+    shell: if [ -d /mnt/dvd/dists ]; then
+             echo "deb file:///mnt/dvd orel main contrib non-free" > /etc/apt/sources.list.d/repo-dvd.list;
              apt-get update;
            fi;
     when: ansible_distribution == 'Astra Linux (Orel)'
