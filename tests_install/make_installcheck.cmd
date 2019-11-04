@@ -99,7 +99,7 @@ ls src/test/recovery/t/*logical_decoding*.pl >/dev/null 2>&1 && rm src/test/reco
 echo "Dirty fix for undefined random()"
 sed -e "s@(long) random()@(long) rand()@" -i src/interfaces/libpq/fe-connect.c
 echo "`date -Iseconds`: Making native MinGW libs 1"
-(cd src/common && make -j4 2>&1 | tee /tmp/make_common.log)
+(cd src/common && make 2>&1 | tee /tmp/make_common.log)
 echo "`date -Iseconds`: Making native MinGW libs 2"
 (cd src/backend && make -j4 libpostgres.a 2>&1 | tee /tmp/make_libpostgres.log)
 echo "`date -Iseconds`: Making ecpg"

@@ -52,10 +52,10 @@ DEBIAN_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux', 'AstraLinuxSE',
 APT_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux', 'AstraLinuxSE',
              'Astra Linux SE', "\"Astra Linux SE\"", "\"AstraLinuxSE\"",
              'AstraLinuxCE',
-             "ALT Linux ", "ALT "]
+             "ALT Linux ", "ALT ", "ALT"]
 ASTRA_BASED = ['AstraLinuxSE', 'Astra Linux SE', "\"Astra Linux SE\"",
                "\"AstraLinuxSE\"", 'AstraLinuxCE']
-ALT_BASED = ['ALT Linux ', 'ALT ']
+ALT_BASED = ['ALT Linux ', 'ALT ', 'ALT']
 SUSE_BASED = ['SUSE Linux Enterprise Server ']
 ZYPPER_BASED = ['SUSE Linux Enterprise Server ']
 WIN_BASED = ['Windows-2012ServerR2', 'Windows-10', 'Windows-8.1', 'Windows-7']
@@ -73,6 +73,7 @@ dist = {"Oracle Linux Server": 'oraclelinux',
         "ROSA SX \"COBALT\" ": 'rosa-sx',
         "SLES": 'sles',
         "ALT ": 'altlinux',
+        "ALT": 'altlinux',
         "GosLinux": 'goslinux',
         "RED OS release MUROM (": 'redos',
         "AlterOS": 'alteros'}
@@ -671,6 +672,11 @@ baseurl=%s
                 elif self.os_name == "ALT ":
                     repo = "rpm %s/8 x86_64 pgpro\n" \
                            "rpm %s/8 noarch pgpro\n" % \
+                           (baseurl, baseurl)
+                elif (self.os_name == "ALT" and
+                      self.os_version.startswith('9.')):
+                    repo = "rpm %s/9 x86_64 pgpro\n" \
+                           "rpm %s/9 noarch pgpro\n" % \
                            (baseurl, baseurl)
 
             if repo:
