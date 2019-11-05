@@ -296,7 +296,9 @@ class PgInstall:
                                    REMOTE_ROOT, REMOTE_ROOT_PASSWORD,
                                    stdout=True).split('\n')
             for line in out:
-                vere = re.search(r'Version\s*:\s+([0-9.]+).*', line)
+                # Find "Version : 9.6.15.2-alt1" or "Version: 2:9.6.15.2-alt1"
+                # or "Version: 10.10.2"
+                vere = re.search(r'Version\s*:.*[:\s]([0-9.]+)', line)
                 if (vere):
                     return vere.group(1)
         return None
