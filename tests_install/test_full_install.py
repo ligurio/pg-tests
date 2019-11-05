@@ -514,8 +514,15 @@ $$ LANGUAGE plpgsql;"""
         pids1 = get_process_pids(
             ['postgres', 'postgres.exe', 'postmaster'])
         assert len(pids1) == 0
-        # TODO: Uncomment (PGPRO-1534)
-        # assert not(os.path.exists(pginst.get_default_bin_path()))
+        if pginst.get_bin_path() != '/usr/bin':
+            print("Checking whether the path '%s' exists..." %
+                  pginst.get_bin_path())
+            assert not(os.path.exists(pginst.get_bin_path()))
+        if pginst.get_pg_prefix() != '/usr' and \
+           not pginst.get_datadir().startswith(pginst.get_pg_prefix()):
+            print("Checking whether the path '%s' exists..." %
+                  pginst.get_pg_prefix())
+            assert not(os.path.exists(pginst.get_pg_prefix()))
         if self.system != 'Windows':
             assert not (is_service_installed('mamonsu'))
             assert not (is_service_running('mamonsu'))
