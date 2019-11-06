@@ -479,6 +479,12 @@
           ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux') or
           ansible_distribution == 'ROSA'
 
+  - name: windows - disable activestate applications updates
+    win_shell: echo 127.0.0.1 update.activestate.com >> %windir%\System32\Drivers\etc\hosts
+    args:
+      executable: cmd
+    when: ansible_os_family == "Windows"
+
   - name: windows - install Visual C++ Compiler for Python
     when: ansible_os_family == "Windows"
     win_package:
