@@ -488,7 +488,7 @@
   - name: windows - install Visual C++ Compiler for Python
     when: ansible_os_family == "Windows"
     win_package:
-      path: http://webdav.l.postgrespro.ru/DIST/windows/resources/VCForPython27.msi
+      path: http://webdav.l.postgrespro.ru/DIST/resources/windows/VCForPython27.msi
       # https://download.microsoft.com/download/7/9/6/796EF2E4-801B-4FC4-AB28-B59FBF6D907B/VCForPython27.msi fails sporadically
       product_id: '{692514A8-5484-45FC-B0AE-BE2DF7A75891}'
       state: present
@@ -497,7 +497,7 @@
     when: ansible_os_family == "Windows" and
           (ansible_architecture == "32-bit" or ansible_architecture == "32-разрядная")
     win_package:
-      path: http://webdav.l.postgrespro.ru/DIST/windows/resources/python-2.7.13.msi
+      path: http://webdav.l.postgrespro.ru/DIST/resources/windows/python-2.7.13.msi
       product_id: '{4A656C6C-D24A-473F-9747-3A8D00907A03}'
       state: present
 
@@ -505,7 +505,7 @@
     when: ansible_os_family == "Windows" and
           (ansible_architecture == "64-bit" or ansible_architecture == "64-разрядная")
     win_package:
-      path: http://webdav.l.postgrespro.ru/DIST/windows/resources/python-2.7.13.amd64.msi
+      path: http://webdav.l.postgrespro.ru/DIST/resources/windows/python-2.7.13.amd64.msi
       product_id: '{4A656C6C-D24A-473F-9747-3A8D00907A04}'
       state: present
 

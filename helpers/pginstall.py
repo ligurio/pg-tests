@@ -999,7 +999,7 @@ baseurl=%s
                 'releases/5.26.1.2601/' + exename
         else:
             exename = 'ActivePerl-5.22.4.2205-MSWin32-x86-64int-403863.exe'
-            url = 'http://webdav.l.postgrespro.ru/DIST/windows/resources/' + \
+            url = 'http://webdav.l.postgrespro.ru/DIST/resources/windows/' + \
                 exename
         if not os.path.exists(WIN_INST_DIR):
             os.mkdir(WIN_INST_DIR)
