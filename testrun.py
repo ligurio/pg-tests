@@ -125,7 +125,7 @@ def create_image(domname, name):
     except IOError:
         print("%s is not available, no *.iso will be downloaded." %
               IMAGE_BASE_URL)
-    isos = re.findall(r'''href=['"]?([^'" >]+)\.iso''', page)
+    isos = re.findall(r'''href=['"]?([^'" >]+)\.iso"''', page)
     for isoname in isos:
         if isoname.startswith(name):
             iso_url = IMAGE_BASE_URL + isoname + '.iso'
