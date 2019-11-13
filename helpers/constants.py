@@ -1,3 +1,7 @@
+"""
+ubuntu-19.10 - "Ubuntu 19.10"
+altlinux-9 - "ALT 9.0"
+"""
 FIRST_RELEASE = {
     "SUSE Linux Enterprise Server  11": {
         'postgresql--9.6': None,
@@ -142,7 +146,7 @@ FIRST_RELEASE = {
         'postgrespro-ent-10': None,
         'postgrespro-ent-11': None,
     },
-    'Red Hat Enterprise Linux 8.0': {
+    'Red Hat Enterprise Linux 8.1': {
         'postgresql--9.6': None,
         'postgrespro-std-9.6': None,
         'postgrespro-std-10': '10.10.1',

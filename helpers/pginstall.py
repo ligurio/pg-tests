@@ -296,7 +296,9 @@ class PgInstall:
                                    REMOTE_ROOT, REMOTE_ROOT_PASSWORD,
                                    stdout=True).split('\n')
             for line in out:
-                vere = re.search(r'Version\s*:\s+([0-9.]+).*', line)
+                # Find "Version : 9.6.15.2-alt1" or "Version: 2:9.6.15.2-alt1"
+                # or "Version: 10.10.2"
+                vere = re.search(r'Version\s*:.*[:\s]([0-9.]+)', line)
                 if (vere):
                     return vere.group(1)
         return None
@@ -797,7 +799,8 @@ baseurl=%s
                       "/linux/python36-libs-3.6.8-1.el7.x86_64.rpm; " \
                       "yum install -y createrepo; createrepo .; " \
                       "printf \"[extraepel]\\nbaseurl=file:///opt/epel+\\n" \
-                      "enabled=1\\n\" > /etc/yum.repos.d/extaepel.repo'"
+                      "enabled=1\\n\" > /etc/yum.repos.d/extaepel.repo; " \
+                      "rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7;'"
                 self.exec_cmd_retry(cmd)
 
     def download_source(self):
