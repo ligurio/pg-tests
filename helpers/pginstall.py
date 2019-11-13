@@ -853,6 +853,26 @@ baseurl=%s
         else:
             raise Exception("Unsupported system: %s" % self.os_name)
 
+    def get_package_deps(self, pkgname):
+        """
+        :param pkgname
+        :return:
+        """
+        if self.__is_os_debian_based():
+            cmd = "sh -c \"LANG=C dpkg -s %s\"" % pkgname
+        else:
+            cmd = "sh -c \"LANG=C rpm -q --requires %s\"" % pkgname
+        result = command_executor(cmd, self.remote, self.host,
+                                  REMOTE_ROOT, REMOTE_ROOT_PASSWORD,
+                                  stdout=True).strip()
+        if self.__is_os_debian_based():
+            for line in result.split('\n'):
+                depprefix = 'Depends: '
+                if line.startswith(depprefix):
+                    return line[len(depprefix):]
+        else:
+            return ', '.join(result.split('\n'))
+
     def update_all_packages(self):
         """
         :return:
