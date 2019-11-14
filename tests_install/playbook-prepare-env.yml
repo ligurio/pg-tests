@@ -45,6 +45,17 @@
     tags:
     - skip_ansible_lint
 
+  - name: Fix problem with sticky bit (ALT 9)
+    shell:  echo -e '#!/bin/sh\nmount -o mode=0777 /tmp' > /etc/rc.d/rc.local;
+            chmod 755 /etc/rc.d/rc.local; /etc/rc.d/rc.local;
+    args:
+      warn: no
+    become_method: su
+    become: true
+    when: ansible_distribution == "ALT" and ansible_distribution_major_version == "9"
+    tags:
+    - skip_ansible_lint
+
   - name: Mount DVD(s) (if available)
     shell: if /sbin/blkid /dev/sr0; then
              sed -i '/^\/dev\/sr0\s/d' /etc/fstab; umount /dev/sr0;
