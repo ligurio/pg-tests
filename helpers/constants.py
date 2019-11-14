@@ -129,6 +129,9 @@ FIRST_RELEASE = {
         'postgrespro-std-9.6': '9.6.13.1',
         'postgrespro-std-10': '10.9.1',
         'postgrespro-std-11': '11.4.1',
+        'postgrespro-ent-9.6': None,
+        'postgrespro-ent-10': None,
+        'postgrespro-ent-11': None,
     },
     "Ubuntu 19.10": {
         'postgresql--9.6': None,
@@ -138,8 +141,8 @@ FIRST_RELEASE = {
         'postgrespro-std-10': '10.11.1',
         'postgrespro-std-11': '11.6.1',
         'postgrespro-ent-9.6': None,
-        'postgrespro-ent-10': '10.11.1',
-        'postgrespro-ent-11': '11.6.1',
+        'postgrespro-ent-10': None,
+        'postgrespro-ent-11': None,
     },
     '"AstraLinuxCE" 2.12.7': {
         'postgresql--9.6': None,
