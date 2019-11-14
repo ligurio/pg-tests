@@ -1,7 +1,3 @@
-"""
-ubuntu-19.10 - "Ubuntu 19.10"
-altlinux-9 - "ALT 9.0"
-"""
 FIRST_RELEASE = {
     "SUSE Linux Enterprise Server  11": {
         'postgresql--9.6': None,
@@ -43,6 +39,17 @@ FIRST_RELEASE = {
         'postgrespro-std-11': None,
         'postgrespro-ent-10': None,
         'postgrespro-ent-11': None,
+    },
+    "ALT 9.0": {
+        'postgresql--9.6': None,
+        'postgresql--10': None,
+        'postgresql--11': None,
+        'postgrespro-std-9.6': None,
+        'postgrespro-ent-9.6': None,
+        'postgrespro-std-10': '10.11.1',
+        'postgrespro-std-11': '11.6.1',
+        'postgrespro-ent-10': '10.11.1',
+        'postgrespro-ent-11': '11.6.1',
     },
     "GosLinux 7.08": {
         'postgresql--9.6': None,
@@ -122,6 +129,17 @@ FIRST_RELEASE = {
         'postgrespro-std-9.6': '9.6.13.1',
         'postgrespro-std-10': '10.9.1',
         'postgrespro-std-11': '11.4.1',
+    },
+    "Ubuntu 19.10": {
+        'postgresql--9.6': None,
+        'postgresql--10': None,
+        'postgresql--11': None,
+        'postgrespro-std-9.6': None,
+        'postgrespro-std-10': '10.11.1',
+        'postgrespro-std-11': '11.6.1',
+        'postgrespro-ent-9.6': None,
+        'postgrespro-ent-10': '10.11.1',
+        'postgrespro-ent-11': '11.6.1',
     },
     '"AstraLinuxCE" 2.12.7': {
         'postgresql--9.6': None,
