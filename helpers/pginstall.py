@@ -759,8 +759,9 @@ baseurl=%s
 
     def setup_extra_repos(self):
         if self.product == 'postgrespro' and self.__is_os_altlinux():
-            cmd = r"perl -i -pe 's/^\s*([^#](.*?)x86_64)(\s+classic\s*)$/"\
-                "$1$3$1 debuginfo\n/' /etc/apt/sources.list.d/alt.list"
+            cmd = r"perl -i -pe 's/^\s*([^#](.*?)x86_64)(\s+classic\s*)$/" \
+                  "$1$3$1 debuginfo\n/' /etc/apt/sources.list.d/%s.list" % \
+                  ('yandex' if self.os_version.startswith('9.') else 'alt')
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             self.exec_cmd_retry('apt-get update')
