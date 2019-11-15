@@ -1,6 +1,11 @@
 set -x
+if  grep -q 'PRETTY_NAME="ALT Server 9' /etc/os-release; then
+    echo 'Test is temporarily skipped.'
+    exit 0
+fi
 if grep -q 'ALT Linux 6\.' /etc/altlinux-release || \
    grep -q 'PRETTY_NAME="ALT Linux 7' /etc/os-release || \
+   grep -q 'PRETTY_NAME="ALT Server 9' /etc/os-release || \
    grep -q 'PRETTY_NAME="Astra Linux (Smolensk 1.5)"' /etc/os-release || \
    grep -q 'PRETTY_NAME="Debian GNU/Linux 7' /etc/os-release || \
    grep -q 'PRETTY_NAME="SUSE Linux Enterprise Server 11' /etc/os-release || \
