@@ -621,7 +621,7 @@ class PgInstall:
 
             if self.product == 'postgresql' and \
                     self.os_name == "Red Hat Enterprise Linux" and \
-                    self.os_version == "8.0":
+                    self.os_version.startswith("8."):
                 cmd = 'yum -qy module disable postgresql'
                 self.exec_cmd_retry(cmd)
 
