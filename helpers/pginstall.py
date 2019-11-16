@@ -418,7 +418,7 @@ class PgInstall:
         if self.__is_os_debian_based():
             cmd = "sh -c \"LANG=C dpkg --listfiles %s\"" % pkgname
         else:
-            cmd = "sh -c \"LANG=C rpm -q --list %s\"" % pkgname
+            cmd = "sh -c \"LANG=C rpm -q --list %s 2>&1\"" % pkgname
         result = command_executor(cmd, self.remote, self.host,
                                   REMOTE_ROOT, REMOTE_ROOT_PASSWORD,
                                   stdout=True).strip().split('\n')
