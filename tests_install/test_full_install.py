@@ -524,5 +524,9 @@ $$ LANGUAGE plpgsql;"""
                   pginst.get_pg_prefix())
             assert not(os.path.exists(pginst.get_pg_prefix()))
         if self.system != 'Windows':
-            assert not (is_service_installed('mamonsu'))
+            # /etc/init./d/mamonsu survives a package removal
+            # as a configuration file on Debian without systemd
+            if not (pginst.os_name == 'AstraLinuxSE' and
+                    pginst.os_version == '1.5'):
+                assert not (is_service_installed('mamonsu'))
             assert not (is_service_running('mamonsu'))
