@@ -299,13 +299,12 @@ class TestUpgradeMinor():
                           branch=branch, windows=windows_os)
         pgnew.setup_repo()
         if not windows_os:
-            pgnew.install_client_only()
-            pgnew.install_package(pgnew.get_dev_package_name())
+            pgnew.install_full()
             subprocess.check_call('cp -a "%s" "%s"' %
                                   (pgnew.get_pg_prefix(),
                                    client_dir),
                                   shell=True)
-            pgnew.remove_full()
+            pgnew.remove_full(True)
         else:
             pgnew.install_postgres_win()
             pgnew.stop_service()

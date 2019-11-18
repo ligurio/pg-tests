@@ -1041,7 +1041,7 @@ baseurl=%s
         :return:
         """
         if self.__is_pm_yum():
-            cmd = "yum remove -y %s" % pkg_name
+            cmd = "yum remove --noautoremove -y %s" % pkg_name
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         elif self.__is_pm_apt():
