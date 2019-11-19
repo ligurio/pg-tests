@@ -120,7 +120,8 @@ PRELOAD_LIBRARIES = {
          'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
          'pg_pathman'],
     '1c-10':
-        ['auth_delay', 'auto_explain', 'plantuner'],
+        ['auth_delay', 'auto_explain', 'plantuner',
+         'pg_pageprep'],
     '1c-11':
         ['auth_delay', 'auto_explain', 'plantuner',
          'pg_pageprep'],
