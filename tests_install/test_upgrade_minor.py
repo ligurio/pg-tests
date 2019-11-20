@@ -304,7 +304,7 @@ class TestUpgradeMinor():
                                   (pgnew.get_pg_prefix(),
                                    client_dir),
                                   shell=True)
-            pgnew.remove_full(True)
+            pgnew.remove_full()
         else:
             pgnew.install_postgres_win()
             pgnew.stop_service()
