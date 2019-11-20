@@ -15,7 +15,7 @@ from BeautifulSoup import BeautifulSoup
 from helpers.utils import diff_dbs, download_dump
 
 tempdir = tempfile.gettempdir()
-client_dir = os.path.join(tempdir, 'client')
+client_dir = 'client'
 
 # 9.6 stable, 10 stable, 11std stable does not contains pg_pageprep
 PRELOAD_LIBRARIES['std-9.6'].remove('pg_pageprep')
