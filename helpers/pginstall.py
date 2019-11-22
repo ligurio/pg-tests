@@ -781,7 +781,7 @@ baseurl=%s
                 self.exec_cmd_retry("sed -i s/https:/http:/ "
                                     "/etc/yum.repos.d/epel.repo", 0)
             elif (self.os_name in ['Oracle Linux Server',
-                                   # 'Red Hat Enterprise Linux Server',
+                                   'Red Hat Enterprise Linux Server',
                                    'AlterOS',
                                    'ROSA Enterprise Linux Cobalt',
                                    'ROSA Enterprise Linux Server'] and
@@ -790,19 +790,6 @@ baseurl=%s
                     "epel/epel-release-latest-7.noarch.rpm"
             if cmd:
                 self.exec_cmd_retry(cmd)
-            # if (self.os_name == 'Red Hat Enterprise Linux Server' and
-            #    self.os_version.startswith('7.')):
-            #     cmd = "sh -c '" \
-            #           "mkdir /opt/epel+; cd $_; wget " \
-            #           "http://webdav.l.postgrespro.ru/DIST/resources" \
-            #           "/linux/python36-3.6.8-1.el7.x86_64.rpm " \
-            #           "http://webdav.l.postgrespro.ru/DIST/resources" \
-            #           "/linux/python36-libs-3.6.8-1.el7.x86_64.rpm; " \
-            #           "yum install -y createrepo; createrepo .; " \
-            #           "printf \"[extraepel]\\nbaseurl=file:///opt/epel+\\n" \
-            #           "enabled=1\\n\" > /etc/yum.repos.d/extaepel.repo; " \
-            #           "rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7;'"
-            #     self.exec_cmd_retry(cmd)
 
     def download_source(self):
         baseurl = ''
