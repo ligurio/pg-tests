@@ -4,6 +4,16 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
     },
+    "ROSA Enterprise Linux Cobalt 7.3": {
+        'postgresql--9.6': None,
+        'postgresql--10': None,
+        'postgresql--11': None,
+    },
+    "ROSA Enterprise Linux Server 7.3": {
+        'postgresql--9.6': None,
+        'postgresql--10': None,
+        'postgresql--11': None,
+    },
     "SUSE Linux Enterprise Server  12": {
         'postgrespro-std-cert-10': None,
     },
@@ -169,6 +179,7 @@ FIRST_RELEASE = {
     },
     'Red Hat Enterprise Linux 8.1': {
         'postgresql--9.6': None,
+        'postgresql--10': None,
         'postgrespro-std-9.6': None,
         'postgrespro-std-10': '10.10.1',
         'postgrespro-std-11': '11.5.1',
