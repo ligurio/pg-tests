@@ -8,7 +8,9 @@ import re
 import pytest
 
 from allure_commons.types import LabelType
-from helpers.pginstall import PgInstall
+from helpers.pginstall import PgInstall, PRELOAD_LIBRARIES
+
+PRELOAD_LIBRARIES['1c-11'].remove('pg_pageprep')
 
 
 def get_pg_prefix(pginst):
