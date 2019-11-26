@@ -1141,8 +1141,7 @@ baseurl=%s
                 # (pg-probackup-std-10-2.1.5.msi,
                 #  pg-probackup-std-10-2.1.5-standalone-en.msi, and
                 #  pg-probackup-std-10-2.1.5-standalone-en.msi conflict)
-                if self.milestone == "alpha" and \
-                   re.search('pg-probackup-', href):
+                if re.search('pg-probackup-.*standalone', href):
                     continue
                 msi_files.append(href)
         return msi_files
