@@ -221,8 +221,6 @@ class PgInstall:
                 product_dir = "1c-%s" % product_version
             elif self.edition == "sql":
                 product_dir = "pgsql-%s" % product_version
-            if self.milestone == "beta":
-                product_dir += "-" + self.milestone
         return product_dir
 
     def get_base_package_name(self):
