@@ -27,6 +27,7 @@ PGPRO_BASE = "http://repo.postgrespro.ru/"
 PGPRO_BASE_ENTERPRISE = "http://repoee.l.postgrespro.ru/"
 PGPRO_BASE_ENTERPRISE_BETA = "http://repo.l.postgrespro.ru/"
 PGPROALPHA_BASE = "http://localrepo.l.postgrespro.ru/dev/"
+PGPROBETA_BASE = "http://localrepo.l.postgrespro.ru/stable/"
 PGPROCERT_BASE = "http://localrepo.l.postgrespro.ru/cert/"
 PSQL_BASE = "https://download.postgresql.org/pub"
 WIN_INST_DIR = "C:\\Users\\test\\pg-tests\\pg_installer"
@@ -88,6 +89,9 @@ PRELOAD_LIBRARIES = {
     'std-11':
         ['auth_delay', 'auto_explain',
          'plantuner', 'shared_ispell', 'pg_pageprep', 'pg_pathman'],
+    'std-12':
+        ['auth_delay', 'auto_explain',
+         'plantuner', 'shared_ispell', 'pg_pathman'],
     'std-cert-11':
         ['auth_delay', 'auto_explain',
          'plantuner', 'shared_ispell', 'pg_pageprep', 'pg_pathman',
@@ -120,7 +124,8 @@ PRELOAD_LIBRARIES = {
          'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
          'pg_pathman'],
     '1c-10':
-        ['auth_delay', 'auto_explain', 'plantuner'],
+        ['auth_delay', 'auto_explain', 'plantuner',
+         'pg_pageprep'],
     '1c-11':
         ['auth_delay', 'auto_explain', 'plantuner',
          'pg_pageprep'],
@@ -177,6 +182,8 @@ class PgInstall:
             return PGPROCERT_BASE
         if self.milestone == "alpha":
             return PGPROALPHA_BASE
+        if self.milestone == "beta":
+            return PGPROBETA_BASE
         if self.milestone == "archive":
             if self.product == "postgrespro":
                 if self.edition == "ent":
@@ -214,8 +221,6 @@ class PgInstall:
                 product_dir = "1c-%s" % product_version
             elif self.edition == "sql":
                 product_dir = "pgsql-%s" % product_version
-            if self.milestone == "beta":
-                product_dir += "-" + self.milestone
         return product_dir
 
     def get_base_package_name(self):
@@ -790,19 +795,6 @@ baseurl=%s
                     "epel/epel-release-latest-7.noarch.rpm"
             if cmd:
                 self.exec_cmd_retry(cmd)
-            if (self.os_name == 'Red Hat Enterprise Linux Server' and
-               self.os_version.startswith('7.')):
-                cmd = "sh -c '" \
-                      "mkdir /opt/epel+; cd $_; wget " \
-                      "http://webdav.l.postgrespro.ru/DIST/resources" \
-                      "/linux/python36-3.6.8-1.el7.x86_64.rpm " \
-                      "http://webdav.l.postgrespro.ru/DIST/resources" \
-                      "/linux/python36-libs-3.6.8-1.el7.x86_64.rpm; " \
-                      "yum install -y createrepo; createrepo .; " \
-                      "printf \"[extraepel]\\nbaseurl=file:///opt/epel+\\n" \
-                      "enabled=1\\n\" > /etc/yum.repos.d/extaepel.repo; " \
-                      "rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7;'"
-                self.exec_cmd_retry(cmd)
 
     def download_source(self):
         baseurl = ''
@@ -1041,7 +1033,10 @@ baseurl=%s
         :return:
         """
         if self.__is_pm_yum():
-            cmd = "yum remove -y %s" % pkg_name
+            # todo fix this
+            cmd = "yum remove -y%s %s" % \
+                  (' --noautoremove' if self.os_version.startswith(
+                       '8.') else '', pkg_name)
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         elif self.__is_pm_apt():

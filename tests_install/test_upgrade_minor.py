@@ -15,7 +15,7 @@ from BeautifulSoup import BeautifulSoup
 from helpers.utils import diff_dbs, download_dump
 
 tempdir = tempfile.gettempdir()
-client_dir = os.path.join(tempdir, 'client')
+client_dir = 'client'
 
 # 9.6 stable, 10 stable, 11std stable does not contains pg_pageprep
 PRELOAD_LIBRARIES['std-9.6'].remove('pg_pageprep')
@@ -299,8 +299,7 @@ class TestUpgradeMinor():
                           branch=branch, windows=windows_os)
         pgnew.setup_repo()
         if not windows_os:
-            pgnew.install_client_only()
-            pgnew.install_package(pgnew.get_dev_package_name())
+            pgnew.install_full()
             subprocess.check_call('cp -a "%s" "%s"' %
                                   (pgnew.get_pg_prefix(),
                                    client_dir),
