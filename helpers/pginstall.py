@@ -89,6 +89,9 @@ PRELOAD_LIBRARIES = {
     'std-11':
         ['auth_delay', 'auto_explain',
          'plantuner', 'shared_ispell', 'pg_pageprep', 'pg_pathman'],
+    'std-12':
+        ['auth_delay', 'auto_explain',
+         'plantuner', 'shared_ispell', 'pg_pathman'],
     'std-cert-11':
         ['auth_delay', 'auto_explain',
          'plantuner', 'shared_ispell', 'pg_pageprep', 'pg_pathman',
@@ -218,8 +221,6 @@ class PgInstall:
                 product_dir = "1c-%s" % product_version
             elif self.edition == "sql":
                 product_dir = "pgsql-%s" % product_version
-            if self.milestone == "beta":
-                product_dir += "-" + self.milestone
         return product_dir
 
     def get_base_package_name(self):
