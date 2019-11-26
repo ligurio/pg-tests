@@ -27,6 +27,7 @@ PGPRO_BASE = "http://repo.postgrespro.ru/"
 PGPRO_BASE_ENTERPRISE = "http://repoee.l.postgrespro.ru/"
 PGPRO_BASE_ENTERPRISE_BETA = "http://repo.l.postgrespro.ru/"
 PGPROALPHA_BASE = "http://localrepo.l.postgrespro.ru/dev/"
+PGPROBETA_BASE = "http://localrepo.l.postgrespro.ru/stable/"
 PGPROCERT_BASE = "http://localrepo.l.postgrespro.ru/cert/"
 PSQL_BASE = "https://download.postgresql.org/pub"
 WIN_INST_DIR = "C:\\Users\\test\\pg-tests\\pg_installer"
@@ -178,6 +179,8 @@ class PgInstall:
             return PGPROCERT_BASE
         if self.milestone == "alpha":
             return PGPROALPHA_BASE
+        if self.milestone == "beta":
+            return PGPROBETA_BASE
         if self.milestone == "archive":
             if self.product == "postgrespro":
                 if self.edition == "ent":
