@@ -132,6 +132,11 @@ FIRST_RELEASE = {
         'postgrespro-ent-10': '10.10.1',
         'postgrespro-ent-11': '11.5.1',
     },
+    "Ubuntu 18.04": {
+        'postgrespro-std-9.6': '9.6.10.2',
+        'postgrespro-std-10': '10.9.1',
+        'postgrespro-ent-9.6': '9.6.11.1'
+    },
     "Ubuntu 19.04": {
         'postgresql--9.6': None,
         'postgresql--10': None,
