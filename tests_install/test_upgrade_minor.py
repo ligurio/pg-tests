@@ -300,6 +300,9 @@ class TestUpgradeMinor():
                                    client_dir),
                                   shell=True)
             pgnew.remove_full()
+            # Some distibutives remove data_dir with packages
+            if (os.path.exists(pgnew.get_default_datadir())):
+                pgnew.remove_data()
         else:
             pgnew.install_postgres_win()
             pgnew.stop_service()
