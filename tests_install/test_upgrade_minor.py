@@ -9,7 +9,7 @@ import pytest
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall, PRELOAD_LIBRARIES,\
     PGPRO_ARCHIVE_STANDARD, PGPRO_ARCHIVE_ENTERPRISE,\
-    DEBIAN_BASED, SUSE_BASED, REDHAT_BASED
+    DEBIAN_BASED, REDHAT_BASED
 from helpers.constants import FIRST_RELEASE
 from BeautifulSoup import BeautifulSoup
 from helpers.utils import diff_dbs, download_dump
@@ -237,6 +237,11 @@ def dumpall(pg, file):
     subprocess.check_call(cmd, shell=True)
 
 
+def remove_alternatives():
+    subprocess.call('update-alternatives --remove-all pgsql-pg_repack',
+                    shell=True)
+
+
 @pytest.mark.upgrade_minor
 class TestUpgradeMinor():
 
@@ -299,10 +304,10 @@ class TestUpgradeMinor():
                                   (pgnew.get_pg_prefix(),
                                    client_dir),
                                   shell=True)
-            pgnew.remove_full()
-            # Some distibutives remove data_dir with packages
-            if (os.path.exists(pgnew.get_default_datadir())):
-                pgnew.remove_data()
+            pgnew.remove_full(True)
+            # PGPRO-3310
+            if pgnew.os_name in DEBIAN_BASED:
+                remove_alternatives()
         else:
             pgnew.install_postgres_win()
             pgnew.stop_service()
@@ -406,6 +411,9 @@ class TestUpgradeMinor():
                     pass
 
             pgnew.remove_full(True)
+            # PGPRO-3310
+            if pgnew.os_name in DEBIAN_BASED:
+                remove_alternatives()
             if pgold.os_name in DEBIAN_BASED and version == '9.6':
                 try:
                     subprocess.check_call("apt-get purge -y 'postgres*'",
