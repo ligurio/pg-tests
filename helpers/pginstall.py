@@ -1098,7 +1098,9 @@ baseurl=%s
         self.client_path_needed = True
         self.server_path_needed = True
 
-    def remove_data(self):
+    def remove_data(self, check_existense=False):
+        if check_existense and not os.path.exists(self.get_datadir()):
+            return
         shutil.rmtree(self.get_datadir())
         if self.get_configdir() != self.get_datadir():
             shutil.rmtree(self.get_configdir())
