@@ -1027,7 +1027,7 @@ baseurl=%s
         command_executor(cmd, windows=True)
         refresh_env_win()
 
-    def remove_package(self, pkg_name):
+    def remove_package(self, pkg_name, purge=False):
         """
         :param pkg_name
         :return:
@@ -1040,7 +1040,9 @@ baseurl=%s
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         elif self.__is_pm_apt():
-            cmd = "apt-get remove -y %s" % pkg_name.replace('*', '.*')
+            cmd = "apt-get %s -y %s" % (
+                    'purge' if purge else 'remove',
+                    pkg_name.replace('*', '.*'))
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         elif self.__is_pm_zypper():
@@ -1057,7 +1059,7 @@ baseurl=%s
         else:
             raise Exception("Unsupported system: %s." % self.os_name)
 
-    def remove_full(self, remove_data=False):
+    def remove_full(self, remove_data=False, purge=False):
         if self.__is_os_windows():
             # TODO: Don't stop the service manually
             if self.pg_isready():
@@ -1086,7 +1088,7 @@ baseurl=%s
                 for pkg in pkgs[:]:
                     if 'icu' in pkg or 'zstd' in pkg:
                         pkgs.remove(pkg)
-            self.remove_package(" ".join(pkgs))
+            self.remove_package(" ".join(pkgs), purge)
         if remove_data:
             self.remove_data()
             if self.__is_os_windows():

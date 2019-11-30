@@ -304,7 +304,7 @@ class TestUpgradeMinor():
                                   (pgnew.get_pg_prefix(),
                                    client_dir),
                                   shell=True)
-            pgnew.remove_full()
+            pgnew.remove_full(False, True)
             pgnew.remove_data(True)
             # PGPRO-3310
             if pgnew.os_name in DEBIAN_BASED:
