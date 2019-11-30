@@ -1041,7 +1041,8 @@ baseurl=%s
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         elif self.__is_pm_apt():
             cmd = "apt-get %s -y %s" % (
-                    'purge' if purge else 'remove',
+                    'purge' if purge and self.__is_os_debian_based() else
+                    'remove',
                     pkg_name.replace('*', '.*'))
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
