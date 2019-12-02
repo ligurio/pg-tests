@@ -95,7 +95,7 @@ ARCHIVE_VERSIONS = {
         'postgrespro-ent-9.6': None,
         'postgrespro-ent-10': None
     },
-    'Red Hat Enterprise Linux Server 7.5': {
+    'Red Hat Enterprise Linux Server 7.7': {
         'postgrespro-ent-9.6': '9.6.8.1',
         'postgrespro-ent-10': '10.3.1'
     },
