@@ -518,7 +518,7 @@ class PgInstall:
                 return "astra-smolensk/1.4"
             elif self.os_version == "1.5":
                 return "astra-smolensk/1.5"
-            elif self.os_version == "1.5.28":
+            elif self.os_version == "1.6":
                 return "astra-smolensk/1.6"
         elif self.os_name == "AstraLinuxCE":
             if self.os_version.startswith("2.12"):
