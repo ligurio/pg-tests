@@ -47,7 +47,7 @@ ARCHIVE_VERSIONS = {
     '"AstraLinuxSE" 1.5': {
         'postgrespro-ent-9.6': None
     },
-    '"AstraLinuxSE" 1.5.28': {
+    '"AstraLinuxSE" 1.6': {
         'postgrespro-std-9.6': '9.6.11.1',
         'postgrespro-std-10': '10.7.1',
         'postgrespro-ent-10': '10.6.2'
