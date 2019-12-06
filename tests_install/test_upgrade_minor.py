@@ -355,14 +355,6 @@ class TestUpgradeMinor():
                 for pkg in pgold.all_packages_in_repo[:]:
                     if 'bouncer' in pkg or 'badger' in pkg:
                         pgold.all_packages_in_repo.remove(pkg)
-                # PGPRO-2874
-                if ((version == '11' and old_ver < '  11.   4.   2') or
-                    (version == '10' and old_ver < '  10.  10.   1') or
-                    (version == '9.6' and old_ver < '   9.   6.  15.   1')) \
-                        and pgnew.os_name in REDHAT_BASED:
-                    for pkg in pgold.all_packages_in_repo[:]:
-                        if 'filedump' in pkg:
-                            pgold.all_packages_in_repo.remove(pkg)
                 if pgnew.os_name == 'ROSA Enterprise Linux Server' \
                         and pgnew.os_version.startswith('7.3') \
                         and edition == 'std' \
