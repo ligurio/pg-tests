@@ -821,8 +821,25 @@ baseurl=%s
             edition = '-enterprise'
         tar_href = '%s%s-%s.tar.bz2' % \
                    (product, edition, self.get_product_minor_version())
+        tar_url = baseurl + '/' + tar_href
         sourcetar = urllib.URLopener()
-        sourcetar.retrieve(baseurl + '/' + tar_href, tar_href)
+        attempt = 1
+        timeout = 0
+        while attempt < 9:
+            try:
+                sourcetar.retrieve(tar_url, tar_href)
+                return
+            except Exception as ex:
+                print('Exception occured while downloading sources "%s":' %
+                      tar_url)
+                print(ex)
+                attempt += 1
+                timeout += 5
+                print('Retrying (attempt %d with delay for %d seconds)...' %
+                      (attempt, timeout))
+                time.sleep(timeout)
+        # Last attempt
+        sourcetar.retrieve(tar_url, tar_href)
 
     def install_package(self, pkg_name):
         """
