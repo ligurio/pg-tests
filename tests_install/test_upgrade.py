@@ -630,6 +630,7 @@ class TestUpgrade():
                           'wb') as out:
                     pg.exec_psql_file(file_name, '-q', stdout=out)
                 dump_and_diff_dbs(old_key, pg, 'dump-restore')
+                stop(pg)
             else:
                 pgold = install_server(
                     product=old_name, edition=old_edition,
@@ -648,6 +649,7 @@ class TestUpgrade():
                           'wb') as out:
                     pg.exec_psql_file(file_name, '-q', stdout=out)
                 dump_and_diff_dbs(old_key, pg, 'upgrade')
+                stop(pg)
                 pgold.remove_full(True)
                 # PGPRO-2459
                 if pgold.os_name in DEBIAN_BASED and \
@@ -656,4 +658,3 @@ class TestUpgrade():
                                           "postgrespro-common "
                                           "postgrespro-client-common",
                                           shell=True)
-            stop(pg)
