@@ -48,12 +48,6 @@ tar fax postgres*.tar*
 
 cd postgres*/
 
-if grep 'SUSE Linux Enterprise Server 15' /etc/SuSE-release >/dev/null 2>&1; then
-  zypper addrepo https://download.opensuse.org/repositories/openSUSE:Leap:15.1:Update/standard/openSUSE:Leap:15.1:Update.repo
-  zypper --gpg-auto-import-keys refresh
-  zypper install -y -l --force-resolution binutils-2.32-lp151.3.3.1.x86_64
-fi
-
 if grep 'SUSE Linux Enterprise Server' /etc/SuSE-release >/dev/null 2>&1; then #PGPRO-1294
     patch -p0 -i ../patches/SUSE-postgresql-regress.patch
 fi
