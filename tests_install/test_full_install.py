@@ -268,7 +268,8 @@ class TestFullInstall():
                 assert ppedition == 'standard'
             print('pgpro_source_id:',
                   pginst.exec_psql_select("SELECT pgpro_build()"))
-        if not (version == "9.6" or version == "10"):
+        # PGPRO-3344 version 12
+        if version not in ["9.6", "10", "12"]:
             pginst.env = {}
             for var in os.environ:
                 pginst.env[var] = str(os.environ[var])
