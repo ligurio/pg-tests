@@ -47,6 +47,8 @@ fi
 tar fax postgres*.tar*
 
 cd postgres*/
+echo 'The source archive buildinfo:'
+cat doc/buildinfo.txt
 
 if grep 'SUSE Linux Enterprise Server' /etc/SuSE-release >/dev/null 2>&1; then #PGPRO-1294
     patch -p0 -i ../patches/SUSE-postgresql-regress.patch

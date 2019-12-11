@@ -71,6 +71,9 @@ tar fax TimeDate*
 echo "`date -Iseconds`: Source archive extracting... "
 tar fax postgres*.tar.bz2
 cd postgres*/
+echo 'The source archive buildinfo:'
+cat doc/buildinfo.txt
+
 set -o pipefail
 echo "`date -Iseconds`: Configuring... "
 CFLAGS=" -D WINVER=0x0600 -D _WIN32_WINNT=0x0600" LIBS="-lktmw32" ./configure --enable-tap-tests --host=$host --without-zlib --prefix="$PGPATH" 2>&1 | tee configure.log
