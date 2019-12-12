@@ -1028,12 +1028,10 @@ baseurl=%s
     def install_perl_win(self):
         if self.os_arch == 'AMD64':
             exename = 'ActivePerl-5.26.1.2601-MSWin32-x64-404865.exe'
-            url = 'http://downloads.activestate.com/ActivePerl/' \
-                'releases/5.26.1.2601/' + exename
         else:
             exename = 'ActivePerl-5.22.4.2205-MSWin32-x86-64int-403863.exe'
-            url = 'http://webdav.l.postgrespro.ru/DIST/resources/windows/' + \
-                exename
+        url = 'http://webdav.l.postgrespro.ru/DIST/resources/windows/' + \
+            exename
         if not os.path.exists(WIN_INST_DIR):
             os.mkdir(WIN_INST_DIR)
         perl_installer = urllib.URLopener()
