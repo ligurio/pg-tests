@@ -93,10 +93,8 @@ class TestMakeCheck(object):
             pginst.install_perl_win()
             pginst.install_postgres_win(port=55432)
 
-        buildinfo = os.path.join(
-            pginst.get_pg_prefix(),
-            'doc' if self.system == 'Windows' else 'share',
-            'buildinfo.txt')
+        buildinfo = os.path.join(pginst.get_pg_prefix(),
+                                 'doc', 'buildinfo.txt')
         with open(buildinfo, 'r') as bi:
             print("The binary package buildinfo:\n%s\n" % bi.read())
 
