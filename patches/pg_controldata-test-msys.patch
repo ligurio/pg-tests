@@ -1,0 +1,14 @@
+diff --git a/src/bin/pg_controldata/t/002_pg_controldata_legacy.pl b/src/bin/pg_controldata/t/002_pg_controldata_legacy.pl
+index 1533801ede1..1f6a9f96171 100644
+--- a/src/bin/pg_controldata/t/002_pg_controldata_legacy.pl
++++ b/src/bin/pg_controldata/t/002_pg_controldata_legacy.pl
+@@ -53,3 +53,3 @@ sub check_one_system_type {
+ 			[
+-				'pg_controldata', '--date-format', $date_format,
++				'cmd', '//c', 'SET', 'TZ=UTC&', 'pg_controldata', '--date-format', $date_format,
+ 				$controlfile_dir
+@@ -80,2 +80,4 @@ sub command_like_custom
+ 	IPC::Run::run $cmd, '>', \$stdout, '2>', \$stderr;
++	$stdout =~ s/\r\n/\n/g;
++	$stderr =~ s/\r\n/\n/g;
+ 
