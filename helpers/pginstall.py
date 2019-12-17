@@ -967,6 +967,10 @@ baseurl=%s
         pkgs = self.all_packages_in_repo
         # pgbadger
         for pkg in pkgs[:]:
+            # PGPRO-3218
+            if self.__is_os_suse() and self.os_version.startswith('15') \
+                    and 'zstd' in pkg:
+                pkgs.remove(pkg)
             if 'pgbadger' in pkg:
                 pkgs.remove(pkg)
         if self.product == 'postgrespro' and \
