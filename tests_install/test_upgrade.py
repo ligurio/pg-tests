@@ -69,6 +69,31 @@ UPGRADE_ROUTES = {
             },
         ]
     },
+    'postgrespro-std-12': {
+        'from': [
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '11'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '10'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '11',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '10',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '9.6',
+                'initdb-params': '--locale=C'
+            },
+        ]
+    },
     'postgrespro-std-cert-11': {
         'from': [
             {
@@ -165,7 +190,31 @@ DUMP_RESTORE_ROUTES = {
             },
         ]
     },
-
+    'postgrespro-std-12': {
+        'from': [
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '11'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '10'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '11',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '10',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '9.6',
+                'initdb-params': '--locale=C'
+            },
+        ]
+    },
     'postgrespro-std-cert-11': {
         'from': [
             {
@@ -308,6 +357,18 @@ def install_server(product, edition, version, milestone, branch, windows):
         pg.load_shared_libraries()
     return pg
 
+def drop_oids(pg):
+    dbs = pg.exec_psql_select("SELECT datname FROM pg_database"). \
+        splitlines()
+    for db in dbs:
+        if db != 'template0':
+            tables = pg.exec_psql_select(
+                "SELECT CONCAT(n.nspname, '.', c.relname) as tab "
+                "FROM   pg_catalog.pg_class c, pg_catalog.pg_namespace n " 
+                "WHERE  c.relnamespace = n.oid AND c.relhasoids "
+                "AND n.nspname NOT IN ('pg_catalog')", db).splitlines()
+            for table in tables:
+                pg.exec_psql('ALTER TABLE "%s" SET WITHOUT OIDS' % table, db)
 
 def generate_db(pg, pgnew, custom_dump=None):
     key = "-".join([pg.product, pg.edition, pg.version])
@@ -316,6 +377,8 @@ def generate_db(pg, pgnew, custom_dump=None):
     with open(os.path.join(tempdir, 'load-%s.log' % key), 'wb') as out:
         pg.exec_psql_file(dump_file_name, '-q',
                           stdout=out)
+    if pgnew.version == "12" and pg.version != "12":
+        drop_oids(pg)
     expected_file_name = os.path.join(tempdir,
                                       "%s-expected.sql" % key)
     dumpall(pgnew, expected_file_name)
