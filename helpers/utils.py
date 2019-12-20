@@ -415,7 +415,8 @@ def read_dump(file):
     numre = re.compile(r"[-+]?[0-9]*\.?[0-9]+([e][-+]?[0-9]+)?")
     exre = re.compile(r"EXECUTE\s+\w+")
     alterrolere = re.compile(r"(ALTER ROLE.*)PASSWORD\s'[^']+'")
-    createdatabasere = re.compile(r"(CREATE DATABASE.*)LC_COLLATE\s*=\s*'([^@]+)@[^']+'(.*)")
+    createdatabasere = re.compile(
+        r"(CREATE DATABASE.*)LC_COLLATE\s*=\s*'([^@]+)@[^']+'(.*)")
 
     def normalize_numbers(line):
         def norma(match):
