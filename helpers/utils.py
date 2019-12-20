@@ -10,6 +10,7 @@ import sys
 import re
 import difflib
 import urllib
+import math
 
 from enum import Enum
 from time import sleep
@@ -411,22 +412,51 @@ def refresh_env_win():
 
 def read_dump(file):
 
+    numre = re.compile(r"[-+]?[0-9]*\.?[0-9]+([e][-+]?[0-9]+)?")
+    exre = re.compile(r"EXECUTE\s+\w+")
+    alterrolere = re.compile(r"(ALTER ROLE.*)PASSWORD\s'[^']+'")
+    createdatabasere = re.compile(
+        r"(CREATE DATABASE.*)LC_COLLATE\s*=\s*'([^@]+)@[^']+'(.*)")
+
+    def normalize_numbers(line):
+        def norma(match):
+            number = match.group()
+            try:
+                f = float(number)
+            except ValueError:
+                return number
+            (m, e) = math.frexp(f)
+            m = round(m, 5)
+            nf = math.ldexp(m, e)
+            if abs(nf) < 0.000001:
+                return '0'
+            return str(nf)
+
+        newstr = numre.sub(norma, line)
+        return newstr
+
     def preprocess(str):
-        replaced = re.sub(
-            r"(ALTER ROLE.*)PASSWORD\s'[^']+'",
+        if str.strip() == 'SET default_table_access_method = heap;':
+            return ''
+        replaced = alterrolere.sub(
             r"\1PASSWORD ''",
             str
         )
-        replaced = re.sub(
-            r"(CREATE DATABASE.*)LC_COLLATE\s*=\s*'([^@]+)@[^']+'(.*)",
+        replaced = createdatabasere.sub(
             r"\1LC_COLLATE = '\2'\3",
             replaced
         )
+        replaced = exre.sub(
+            r"EXECUTE ***",
+            replaced
+        )
+
         replaced = re.sub(
             r"\s?--.*",
             r"",
             replaced
         )
+        replaced = normalize_numbers(replaced)
         return replaced
 
     lines = []
@@ -476,8 +506,13 @@ def read_dump(file):
 
 
 def diff_dbs(file1, file2, diff_file):
+    import time
+    start_time = time.time()
     lines1 = read_dump(file1)
+    print "%s read in %s sec" % (file1, time.time()-start_time)
+    start_time = time.time()
     lines2 = read_dump(file2)
+    print "%s read in %s sec" % (file2, time.time()-start_time)
     difference = difflib.unified_diff(
         lines1,
         lines2,
