@@ -357,6 +357,7 @@ def install_server(product, edition, version, milestone, branch, windows):
         pg.load_shared_libraries()
     return pg
 
+
 def drop_oids(pg):
     dbs = pg.exec_psql_select("SELECT datname FROM pg_database"). \
         splitlines()
@@ -364,11 +365,12 @@ def drop_oids(pg):
         if db != 'template0':
             tables = pg.exec_psql_select(
                 "SELECT CONCAT(n.nspname, '.', c.relname) as tab "
-                "FROM   pg_catalog.pg_class c, pg_catalog.pg_namespace n " 
+                "FROM   pg_catalog.pg_class c, pg_catalog.pg_namespace n "
                 "WHERE  c.relnamespace = n.oid AND c.relhasoids "
                 "AND n.nspname NOT IN ('pg_catalog')", db).splitlines()
             for table in tables:
                 pg.exec_psql('ALTER TABLE "%s" SET WITHOUT OIDS' % table, db)
+
 
 def generate_db(pg, pgnew, custom_dump=None):
     key = "-".join([pg.product, pg.edition, pg.version])
