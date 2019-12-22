@@ -363,14 +363,15 @@ def drop_oids(pg):
         splitlines()
     for db in dbs:
         if db != 'template0':
+            os.environ['PGDATABASE'] = db
             tables = pg.exec_psql_select(
                 "SELECT CONCAT(n.nspname, '.', c.relname) as tab "
                 "FROM   pg_catalog.pg_class c, pg_catalog.pg_namespace n "
                 "WHERE  c.relnamespace = n.oid AND c.relhasoids "
-                "AND n.nspname NOT IN ('pg_catalog')", db).splitlines()
+                "AND n.nspname NOT IN ('pg_catalog')").splitlines()
             for table in tables:
-                pg.exec_psql('ALTER TABLE "%s" SET WITHOUT OIDS' % table, db)
-
+                pg.exec_psql('ALTER TABLE "%s" SET WITHOUT OIDS' % table)
+    os.unsetenv('PGDATABASE')
 
 def generate_db(pg, pgnew, custom_dump=None):
     key = "-".join([pg.product, pg.edition, pg.version])
