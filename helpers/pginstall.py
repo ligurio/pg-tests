@@ -159,7 +159,7 @@ class PgInstall:
         self.port = None
         self.env = None
         self.pg_preexec = ('' if windows else
-                           'sudo -u postgres ')
+                           'sudo -E -u postgres ')
         self.client_installed = False
         self.server_installed = False
         self.client_path_needed = True
