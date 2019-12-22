@@ -373,6 +373,7 @@ def drop_oids(pg):
                 pg.exec_psql('ALTER TABLE "%s" SET WITHOUT OIDS' % table)
     os.unsetenv('PGDATABASE')
 
+
 def generate_db(pg, pgnew, custom_dump=None):
     key = "-".join([pg.product, pg.edition, pg.version])
     dump_file_name = download_dump(pg.product, pg.edition, pg.version,
