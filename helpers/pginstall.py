@@ -158,12 +158,12 @@ class PgInstall:
         self.srvhost = None
         self.port = None
         self.env = None
-        addoption = ''
+        addoption = '-E '
         if self.__is_os_altlinux() and (
                 self.os_version.startswith('6.') or
                 self.os_version.startswith('7.') or
                 self.os_version.startswith('8.')):
-            addoption = '-E '
+            addoption = ''
         self.pg_preexec = '' if windows else \
             ('sudo %s-u postgres ' % addoption)
         self.client_installed = False
