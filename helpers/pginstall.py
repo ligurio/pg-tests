@@ -29,7 +29,7 @@ PGPRO_BASE_ENTERPRISE_BETA = "http://repo.l.postgrespro.ru/"
 PGPROALPHA_BASE = "http://localrepo.l.postgrespro.ru/dev/"
 PGPROBETA_BASE = "http://localrepo.l.postgrespro.ru/stable/"
 PGPROCERT_BASE = "http://localrepo.l.postgrespro.ru/cert/"
-PSQL_BASE = "https://download.postgresql.org/pub"
+PSQL_BASE = "http://download.postgresql.org/pub"
 WIN_INST_DIR = "C:\\Users\\test\\pg-tests\\pg_installer"
 REDHAT_BASED = ['CentOS Linux', 'RHEL', 'CentOS',
                 'Red Hat Enterprise Linux Server', 'Red Hat Enterprise Linux',
@@ -541,13 +541,13 @@ class PgInstall:
         gpg_key_url = None
         if self.product == "postgresql":
             if self.__is_pm_yum():
-                gpg_key_url = "https://download.postgresql.org/" \
+                gpg_key_url = "http://download.postgresql.org/" \
                     "pub/repos/yum/RPM-GPG-KEY-PGDG-%s" % \
                     self.version.replace('.', '')
                 product_dir = "/repos/yum/%s/redhat/" \
                     "rhel-$releasever-$basearch" % self.version
             elif self.__is_pm_apt():
-                gpg_key_url = "https://www.postgresql.org/"\
+                gpg_key_url = "http://www.postgresql.org/"\
                     "media/keys/ACCC4CF8.asc"
                 baseurl = "http://apt.postgresql.org/pub/repos/apt/"
                 return baseurl, gpg_key_url
