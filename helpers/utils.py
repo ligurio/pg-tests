@@ -426,7 +426,7 @@ def read_dump(file):
             except ValueError:
                 return number
             (m, e) = math.frexp(f)
-            m = round(m, 5)
+            m = round(m, 3)
             nf = math.ldexp(m, e)
             if abs(nf) < 0.000001:
                 return '0'
