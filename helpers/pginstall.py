@@ -123,6 +123,11 @@ PRELOAD_LIBRARIES = {
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
          'pg_pathman'],
+    'ent-cert-11':
+        ['auth_delay', 'auto_explain', 'in_memory', 'pg_proaudit',
+         'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
+         'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
+         'pg_pathman', 'pg_pageprep', 'passwordcheck'],
     '1c-10':
         ['auth_delay', 'auto_explain', 'plantuner',
          'pg_pageprep'],
@@ -223,6 +228,8 @@ class PgInstall:
                 product_dir = "pgpro-std-10.4.1/repo"
             elif self.edition == "std-cert" and self.version == "11":
                 product_dir = "pgpro-std-11.5.4/repo"
+            elif self.edition == "ent-cert" and self.version == "11":
+                product_dir = "pgpro-ent-11.6.1/repo"
             elif self.edition == "1c":
                 product_dir = "1c-%s" % product_version
             elif self.edition == "sql":
@@ -776,7 +783,7 @@ baseurl=%s
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             self.exec_cmd_retry('apt-get update')
-        if self.version not in ['9.5', '9.6']:
+        if self.version not in ['9.5', '9.6'] and self.milestone == 'alpha':
             # Install epel for v.10+
             cmd = None
             if (self.os_name == 'CentOS Linux' and

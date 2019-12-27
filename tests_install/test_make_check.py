@@ -11,6 +11,7 @@ from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall, PRELOAD_LIBRARIES
 
 PRELOAD_LIBRARIES['1c-11'].remove('pg_pageprep')
+PRELOAD_LIBRARIES['ent-cert-11'].remove('passwordcheck')
 
 
 def get_pg_prefix(pginst):
