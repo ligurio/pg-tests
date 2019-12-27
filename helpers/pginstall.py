@@ -799,7 +799,6 @@ baseurl=%s
                 self.exec_cmd_retry("sed -i s/https:/http:/ "
                                     "/etc/yum.repos.d/epel.repo", 0)
             elif (self.os_name in ['Oracle Linux Server',
-                                   'Red Hat Enterprise Linux Server',
                                    'AlterOS',
                                    'ROSA Enterprise Linux Cobalt',
                                    'ROSA Enterprise Linux Server'] and
