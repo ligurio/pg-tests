@@ -783,7 +783,7 @@ baseurl=%s
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             self.exec_cmd_retry('apt-get update')
-        if self.version not in ['9.5', '9.6'] and self.milestone == 'alpha':
+        if self.version not in ['9.5', '9.6']:
             # Install epel for v.10+
             cmd = None
             if (self.os_name == 'CentOS Linux' and
@@ -799,6 +799,7 @@ baseurl=%s
                 self.exec_cmd_retry("sed -i s/https:/http:/ "
                                     "/etc/yum.repos.d/epel.repo", 0)
             elif (self.os_name in ['Oracle Linux Server',
+                                   'Red Hat Enterprise Linux Server',
                                    'AlterOS',
                                    'ROSA Enterprise Linux Cobalt',
                                    'ROSA Enterprise Linux Server'] and
