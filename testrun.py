@@ -780,7 +780,7 @@ if __name__ == "__main__":
                 p.terminate()
                 if not keep:
                     try:
-                        close_env(domname, False, False)
+                        close_env(domname, False, True)
                     except Exception:
                         pass
                 raise Exception('Timed out')
