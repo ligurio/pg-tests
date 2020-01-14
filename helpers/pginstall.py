@@ -187,6 +187,7 @@ class PgInstall:
         self.service_name = self.get_default_service_name()
         self.reponame = None
         self.all_packages_in_repo = None
+        self.epel_needed = self.version not in ['9.5', '9.6']
 
     def get_repo_base(self):
         if self.edition in ['std-cert', 'ent-cert']:
@@ -605,37 +606,6 @@ class PgInstall:
         gpg_key_url = repo_info[1]
         reponame = None
         if self.__is_pm_yum():
-            # Example:
-            # http://repo.postgrespro.ru/pgproee-9.6-beta/
-            #  centos/$releasever/os/$basearch/rpms
-            if self.product == "postgrespro":
-                if self.os_name == "ROSA Enterprise Linux Server" and \
-                 self.os_version == "6.8":
-                    baseurl = os.path.join(baseurl,
-                                           "6.8Server/os/$basearch/rpms")
-                elif self.os_name == "ROSA Enterprise Linux Cobalt" and \
-                        self.os_version == "7.3":
-                    baseurl = os.path.join(baseurl,
-                                           "7Server/os/$basearch/rpms")
-                elif self.os_name == "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1" \
-                                     "\xd1\x84\xd0\xb5\xd1\x80\xd0\xb0 ":
-                    baseurl = os.path.join(baseurl,
-                                           "6.3Server/os/$basearch/rpms")
-                elif self.os_name == "GosLinux" and \
-                        self.os_version.startswith("7."):
-                    baseurl = os.path.join(baseurl,
-                                           "7/os/$basearch/rpms")
-                elif self.os_name == "RED OS release MUROM (" and \
-                        self.os_version == "7.1":
-                    baseurl = os.path.join(baseurl,
-                                           "7/os/$basearch/rpms")
-                elif self.os_name == "Red Hat Enterprise Linux" and \
-                        self.os_version.startswith("8."):
-                    baseurl = os.path.join(baseurl,
-                                           "8Server/os/$basearch/rpms")
-                else:
-                    baseurl = os.path.join(baseurl,
-                                           "$releasever/os/$basearch/rpms")
 
             if self.product == 'postgresql' and \
                     self.os_name == "Red Hat Enterprise Linux" and \
@@ -643,24 +613,79 @@ class PgInstall:
                 cmd = 'yum -qy module disable postgresql'
                 self.exec_cmd_retry(cmd)
 
-            reponame = "%s-%s" % (self.product, self.version)
-            repo = """
+            product_dir = self.__get_product_dir()
+
+            reponame = "%s-%s%s" % (
+                self.product,
+                self.edition + '-' if self.product == 'postgrespro' else '',
+                self.version)
+            repo_rpm = "%s/%s/keys/" % \
+                       (self.get_repo_base(), product_dir)
+            dist_name = self.get_distname_for_pgpro()
+            rpm_repo_installed = False
+            try:
+                soup = BeautifulSoup(urllib.urlopen(repo_rpm))
+                for link in soup.findAll('a'):
+                    href = link.get('href')
+                    if href.startswith('%s.%s' % (reponame, dist_name)):
+                        self.exec_cmd_retry('yum install -y %s%s' %
+                                            (repo_rpm, href))
+                        rpm_repo_installed = True
+                        self.epel_needed = False
+                        break
+            except Exception:
+                pass
+
+            if not rpm_repo_installed:
+                # Example:
+                # http://repo.postgrespro.ru/pgproee-9.6-beta/
+                #  centos/$releasever/os/$basearch/rpms
+                if self.product == "postgrespro":
+                    if self.os_name == "ROSA Enterprise Linux Server" and \
+                     self.os_version == "6.8":
+                        baseurl = os.path.join(baseurl,
+                                               "6.8Server/os/$basearch/rpms")
+                    elif self.os_name == "ROSA Enterprise Linux Cobalt" and \
+                            self.os_version == "7.3":
+                        baseurl = os.path.join(baseurl,
+                                               "7Server/os/$basearch/rpms")
+                    elif self.os_name == "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1" \
+                                         "\xd1\x84\xd0\xb5\xd1\x80\xd0\xb0 ":
+                        baseurl = os.path.join(baseurl,
+                                               "6.3Server/os/$basearch/rpms")
+                    elif self.os_name == "GosLinux" and \
+                            self.os_version.startswith("7."):
+                        baseurl = os.path.join(baseurl,
+                                               "7/os/$basearch/rpms")
+                    elif self.os_name == "RED OS release MUROM (" and \
+                            self.os_version == "7.1":
+                        baseurl = os.path.join(baseurl,
+                                               "7/os/$basearch/rpms")
+                    elif self.os_name == "Red Hat Enterprise Linux" and \
+                            self.os_version.startswith("8."):
+                        baseurl = os.path.join(baseurl,
+                                               "8Server/os/$basearch/rpms")
+                    else:
+                        baseurl = os.path.join(baseurl,
+                                               "$releasever/os/$basearch/rpms")
+
+                repo = """
 [%s]
 name=%s
 enabled=1
 baseurl=%s
-            """ % (reponame,
-                   reponame,
-                   baseurl)
-            repofile = "/etc/yum.repos.d/%s-%s.repo" % (
-                self.product, self.version)
-            write_file(repofile, repo, self.remote, self.host)
-            cmd = "rpm --import %s" % gpg_key_url
-            self.exec_cmd_retry(cmd)
-            cmd = "yum --enablerepo=%s-%s clean metadata" % \
-                (self.product, self.version)
-            command_executor(cmd, self.remote, self.host,
-                             REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                """ % (reponame,
+                       reponame,
+                       baseurl)
+                repofile = "/etc/yum.repos.d/%s-%s.repo" % (
+                    self.product, self.version)
+                write_file(repofile, repo, self.remote, self.host)
+                cmd = "rpm --import %s" % gpg_key_url
+                self.exec_cmd_retry(cmd)
+                cmd = "yum --enablerepo=%s-%s clean metadata" % \
+                    (self.product, self.version)
+                command_executor(cmd, self.remote, self.host,
+                                 REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         elif self.__is_pm_apt():
             cmd = "apt-get install -y lsb-release"
             self.exec_cmd_retry(cmd)
@@ -783,7 +808,7 @@ baseurl=%s
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             self.exec_cmd_retry('apt-get update')
-        if self.version not in ['9.5', '9.6']:
+        if self.epel_needed:
             # Install epel for v.10+
             cmd = None
             if (self.os_name == 'CentOS Linux' and
