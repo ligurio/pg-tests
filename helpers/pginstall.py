@@ -339,7 +339,8 @@ class PgInstall:
         if self.__is_os_windows():
             return result
         if self.__is_pm_yum():
-            cmd = "sh -c \"LANG=C yum -q --disablerepo='*' "\
+            cmd = "script -q -c \"stty cols 150; "\
+                  "LANG=C yum -q --disablerepo='*' "\
                   "--enablerepo='%s' list available\"" % self.reponame
             ysout = command_executor(cmd, self.remote, self.host,
                                      REMOTE_ROOT, REMOTE_ROOT_PASSWORD,
