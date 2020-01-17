@@ -14,7 +14,7 @@ from helpers.utils import diff_dbs
 
 class Pgbench(object):
     def __init__(self, pginst, number, host, port, dbuser, db, duration,
-                 scale=1, type='tpc-b'):
+                 scale=1, type='tpc-b', max_tries=0):
         self.pginst = pginst
         self.number = number
         self.host = host
@@ -25,19 +25,21 @@ class Pgbench(object):
         self.scale = scale
         self.type = type
         self.process = None
+        self.max_tries = max_tries
 
     def init(self):
-        return subprocess.check_output('%s -i -h %s -p %i -U %s -s %i %s' % (
-            os.path.join(self.pginst.get_client_bin_path(), 'pgbench'),
-            self.host, self.port, self.dbuser, self.scale, self.db),
-                                       shell=True)
+        return subprocess.check_output(
+            [os.path.join(self.pginst.get_client_bin_path(), 'pgbench'), '-i',
+             '-h', self.host, '-p', str(self.port), '-U', self.dbuser, '-s',
+             str(self.scale), self.db])
 
     def start(self):
         cmd = [os.path.join(
             self.pginst.get_client_bin_path(), 'pgbench'), self.db, '-p',
             str(self.port), '-h', self.host, '-U', self.dbuser, '-T',
-            str(self.duration), '--max-tries', '0', '--latency-limit', '10000']
-        if type == 'select':
+            str(self.duration), '--max-tries', str(self.max_tries),
+            '--latency-limit', '10000']
+        if self.type == 'select':
             cmd.append('-S')
         print(cmd)
         self.process = subprocess.Popen(cmd, stderr=subprocess.STDOUT,
@@ -58,18 +60,19 @@ class Pgbench(object):
 
 class Node(object):
     def __init__(self, pginst, datadir,
-                 host, number, size, port=5432):
+                 host, number, size, port=5432, referee=False):
         self.host = host
         self.port = port
         self.datadir = datadir
         self.pginst = pginst
         self.pg_bin_path = self.pginst.get_client_bin_path()
         self.size = size
-        host_base = '.'.join(self.host.split('.')[0:3])+'.'
+        self.referee = referee
+        host_base = '.'.join(self.host.split('.')[0:3]) + '.'
         listen_ips = {}
-        for i in range(1, self.size+1):
-            listen_ips[i] = host_base+str(i)
-        listen_ips[self.size+1] = self.host
+        for i in range(1, self.size + 1):
+            listen_ips[i] = host_base + str(i)
+        listen_ips[self.size + 1] = self.host
         self.listen_ips = listen_ips
         self.number = number
         self.service_name = 'postgres-node%s' % self.number
@@ -82,14 +85,12 @@ class Node(object):
                 'listen_addresses = \'%s\'\n' % ', '.join(
                     self.listen_ips.values()) +
                 'unix_socket_directories = \'\'\n'
-                   )
+            )
         if self.pginst.windows:
-            subprocess.check_call(
-                '%s register -D "%s" -N %s -U '
-                '"NT Authority\\NetworkService"' % (
-                    os.path.join(self.pginst.get_client_bin_path(),
-                                 'pg_ctl.exe'), self.datadir,
-                    self.service_name))
+            subprocess.check_call([os.path.join(
+                self.pginst.get_client_bin_path(), 'pg_ctl.exe'), 'register',
+                '-D', self.datadir, '-N', self.service_name, '-U',
+                'NT Authority\\NetworkService'])
 
     def start(self):
         if self.pginst.windows:
@@ -117,21 +118,22 @@ class Node(object):
         return self.pginst.exec_psql(query,
                                      options=a_options)
 
-    def pgbench(self, dbuser, db, duration, scale=1, type='tpc-b'):
+    def pgbench(self, dbuser, db, duration, scale=1, type='tpc-b',
+                max_tries=0):
         return Pgbench(self.pginst, self.number, self.host, self.port, dbuser,
-                       db, duration, scale, type)
+                       db, duration, scale, type, max_tries)
 
     def pg_dump(self, dbuser, db, table):
-        while True:
-            filename = '/tmp/pgd_node%i_%s.dmp' % (self.number, table[0])
-            if not os.path.isfile(filename):
-                break
+        print(self.pginst.get_datadir())
+        filename = os.path.join(self.pginst.get_datadir(),
+                                'pgd_node%i_%s.dmp' %
+                                (self.number, table[0]))
         tbl = []
         for t in table:
             tbl.append('--table=%s' % t)
         cmd = [os.path.join(self.pginst.get_client_bin_path(), 'pg_dump'),
                '-h', self.host, '-p', str(self.port), '-U', dbuser, '-d',
-               db, '-f', filename]+tbl
+               db, '-f', filename] + tbl
         print(cmd)
         subprocess.check_output(cmd)
         return filename
@@ -158,44 +160,67 @@ class Multimaster(object):
         self.ip_base = ip_base
         self.password = password
         self.rootdir = rootdir
+        if self.size % 2 == 0:
+            self.size += 1
+            self.has_referee = True
+        else:
+            self.has_referee = False
         if not os.path.isdir(self.rootdir):
             os.mkdir(self.rootdir, 0o755)
-        host_base = '.'.join(ip_base.split('.')[0:2])+'.'
+        host_base = '.'.join(ip_base.split('.')[0:2]) + '.'
         hosts = {}
-        for i in range(1, self.size+1):
+        for i in range(1, self.size + 1):
             hosts[i] = host_base + str(i) + '.100'
         self.hosts = hosts
         nodes = {}
-        for i in range(1, self.size+1):
+        for i in range(1, self.size + 1):
+            is_referee = self.has_referee and i == self.size
             nodes[i] = Node(pginst=self.pginst,
                             datadir=os.path.join(self.rootdir,
                                                  'node%i' % i),
                             host=self.hosts[i], size=self.size,
-                            number=i)
+                            number=i, referee=is_referee)
             nodes[i].clean()
             nodes[i].init()
             nodes[i].start()
-            nodes[i].add_config(
-                "shared_preload_libraries = 'multimaster'",
-                "default_transaction_isolation = 'read committed'",
-                "wal_level = 'logical'",
-                "max_connections = 100",
-                "max_prepared_transactions = 300",
-                "max_wal_senders = 10",
-                "max_replication_slots = 10",
-                "max_worker_processes = 250",
-            )
             nodes[i].psql(
                 "CREATE USER %s WITH SUPERUSER PASSWORD '%s'" % (
                     self.dbuser, self.password))
             nodes[i].psql(
                 "CREATE DATABASE %s OWNER %s" % (
                     self.db, self.dbuser))
+            if nodes[i].referee:
+                nodes[i].psql('CREATE EXTENSION referee',
+                              "-U %s -d %s" % (
+                                  self.dbuser, self.db))
+            else:
+                nodes[i].add_config(
+                    "shared_preload_libraries = 'multimaster'",
+                    "default_transaction_isolation = 'read committed'",
+                    "wal_level = 'logical'",
+                    "max_connections = 100",
+                    "max_prepared_transactions = 300",
+                    "max_wal_senders = 10",
+                    "max_replication_slots = 10",
+                    "max_worker_processes = 250",
+                )
             nodes[i].stop()
+        if self.has_referee:
+            for i in range(1, self.size + 1):
+                if not nodes[i].referee:
+                    with open(
+                            os.path.join(nodes[i].datadir, 'postgresql.conf'),
+                            'a') as config:
+                        config.write("multimaster.referee_connstring = "
+                                     "'host=%s dbname=%s "
+                                     "user=%s password =%s'" % (
+                                         nodes[self.size].listen_ips[i],
+                                         self.db, self.dbuser,
+                                         self.password))
 
         host = '\nhost\treplication\t%s\t127.0.0.0/8\ttrust\n' % (
             self.dbuser)
-        for i in range(1, self.size+1):
+        for i in range(1, self.size + 1):
             with open(os.path.join(nodes[i].datadir, 'pg_hba.conf'), 'a'
                       ) as hba:
                 hba.write(host)
@@ -205,16 +230,21 @@ class Multimaster(object):
         for i, node in self.nodes.items():
             node.start()
         for i, node in self.nodes.items():
-            self.psql('CREATE EXTENSION multimaster', node=i)
-            conn = []
-            for j in range(1, self.size+1):
-                conn.append("(%i, 'dbname=%s user=%s host=%s port=%i', %r)" % (
-                    j, self.db, self.dbuser, self.nodes[j].listen_ips[i],
-                    self.nodes[j].port, (i == j)))
-            self.psql("INSERT INTO mtm.cluster_nodes VALUES %s" %
-                      ', '.join(conn), node=i)
-        for i in range(1, self.size+1):
-            self.wait(i)
+            if not node.referee:
+                self.psql('CREATE EXTENSION multimaster', node=i)
+                conn = []
+                for j in range(1, self.size + 1):
+                    if not self.nodes[j].referee:
+                        conn.append(
+                            "(%i, 'dbname=%s user=%s host=%s port=%i', %r)" % (
+                                j, self.db, self.dbuser,
+                                self.nodes[j].listen_ips[i],
+                                self.nodes[j].port, (i == j)))
+                self.psql("INSERT INTO mtm.cluster_nodes VALUES %s" %
+                          ', '.join(conn), node=i)
+        for i in range(1, self.size + 1):
+            if not self.nodes[i].referee:
+                self.wait(i)
 
     def __link__(self, n1, n2, do_break=True):
         if do_break:
@@ -258,11 +288,11 @@ class Multimaster(object):
             else:
                 mode = '-D'
         ip = self.nodes[n].host
-        net = '.'.join(ip.split('.')[0:3])+'.0/24'
+        net = '.'.join(ip.split('.')[0:3]) + '.0/24'
         if self.pginst.windows:
             os.system('route %s %s mask 255.255.255.0 192.168.0.1 if 1' % (
                 mode, net.split('/')[0]))
-            for i in range(1, self.size+1):
+            for i in range(1, self.size + 1):
                 os.system(
                     'route %s %s mask 255.255.255.255 192.168.0.1 if 1' % (
                         mode, self.nodes[i].listen_ips[n]))
@@ -270,14 +300,14 @@ class Multimaster(object):
             cmd = 'iptables %s INPUT -d %s -j DROP' % (mode, net)
             subprocess.check_call(cmd, shell=True, stderr=subprocess.STDOUT,
                                   stdout=subprocess.PIPE)
-            for i in range(1, self.size+1):
+            for i in range(1, self.size + 1):
                 cmd = 'iptables %s INPUT -d %s/32 -j DROP' % (
                     mode, self.nodes[i].listen_ips[n])
                 subprocess.check_call(cmd, shell=True,
                                       stderr=subprocess.STDOUT,
                                       stdout=subprocess.PIPE)
             cmd = 'iptables %s INPUT -d %s -j ACCEPT' % (
-                    mode, self.nodes[n].host)
+                mode, self.nodes[n].host)
             subprocess.check_call(cmd, shell=True, stderr=subprocess.STDOUT,
                                   stdout=subprocess.PIPE)
 
@@ -290,6 +320,9 @@ class Multimaster(object):
     def psql(self, query, a_options='', node=1):
         return self.nodes[node].psql(
             query, '-d %s -U %s %s' % (self.db, self.dbuser, a_options))
+
+    def get_txid_current(self, node=1):
+        return self.psql('SELECT txid_current()', '-Aqt', node=node)
 
     def check(self, node):
         try:
@@ -311,9 +344,20 @@ class Multimaster(object):
             raise Exception('Timeout %i seconds expired node: %i' % (
                 duration, node))
 
-    def pgbench(self, n, duration=60, scale=1, type='tpc-b'):
+    def wait_for_txid(self, txid, node=1, timeout=600):
+        start_time = time.time()
+        #start_txid = int(self.get_txid_current(node))
+        while time.time() - start_time <= timeout:
+            cur_txid = int(self.get_txid_current(node))
+            if cur_txid >= txid:
+                return cur_txid
+            else:
+                time.sleep(0.5)
+        raise Exception('Timeout')
+
+    def pgbench(self, n, duration=60, scale=1, type='tpc-b', max_tries=0):
         return self.nodes[n].pgbench(self.dbuser, self.db, duration, scale,
-                                     type)
+                                     type, max_tries)
 
     def pg_dump(self, n, table):
         return self.nodes[n].pg_dump(self.dbuser, self.db, table)
@@ -331,8 +375,9 @@ class Multimaster(object):
 
     def get_cluster_state_all(self, allow_fail=False):
         all_states = {}
-        for i in range(1, self.size+1):
-            all_states[i] = self.get_cluster_state(i, allow_fail)
+        for i in range(1, self.size + 1):
+            if not self.nodes[i].referee:
+                all_states[i] = self.get_cluster_state(i, allow_fail)
         return all_states
 
     def get_nodes_state(self, n, allow_fail=False):
@@ -340,7 +385,7 @@ class Multimaster(object):
         try:
             s_states = self.psql(
                 "SELECT id,enabled FROM mtm.nodes()", '-Aqt', n
-                                 ).split('\n')
+            ).split('\n')
         except Exception:
             if allow_fail:
                 return None
@@ -353,15 +398,16 @@ class Multimaster(object):
 
     def get_nodes_state_all(self, allow_fail=False):
         all_nodes_state = {}
-        for i in range(1, self.size+1):
-            all_nodes_state[i] = self.get_nodes_state(i, allow_fail)
+        for i in range(1, self.size + 1):
+            if not self.nodes[i].referee:
+                all_nodes_state[i] = self.get_nodes_state(i, allow_fail)
         return all_nodes_state
 
 
 @pytest.mark.multimaster_install
 class TestMultimasterInstall():
-
     system = platform.system()
+
     def route_print(self):
         if self.system == 'Linux':
             os.system('ip route')
@@ -410,7 +456,7 @@ class TestMultimasterInstall():
         else:
             pginst.install_postgres_win()
             pginst.stop_service()
-        mm = Multimaster(size=3, pginst=pginst,
+        mm = Multimaster(size=2, pginst=pginst,
                          rootdir=os.path.abspath(
                              os.path.join(pginst.get_datadir(), os.pardir)))
         mm.start()
@@ -425,22 +471,25 @@ class TestMultimasterInstall():
         print(mm.get_nodes_state_all())
         for i, ns_all in mm.get_nodes_state_all().items():
             for node_state in ns_all:
-                if node_state[1] != 't':
+                if node_state[1].rstrip() != 't':
                     raise Exception('Node %s is not enabled! (on node %i)' % (
                         node_state[0], i))
 
         pgbench = {}
         for i, node in mm.nodes.items():
-            pgbench[i] = mm.pgbench(i)
-            pgbench[i].init()
-        for i in range(1, mm.size+1):
-            print('Running pgbench on node%i' % i)
-            pgbench[i].start()
+            pgbench[i] = mm.pgbench(i, max_tries=100)
+        pgbench[1].init()
+        for i in range(1, mm.size + 1):
+            if not mm.nodes[i].referee:
+                print('Running pgbench on node%i' % i)
+                pgbench[i].start()
 
-        time.sleep(15)
+        mm.wait_for_txid(600)
         print('Cluster state:')
         print(mm.get_cluster_state_all())
         print(mm.get_nodes_state_all())
+        print('Current TXID (after pgbench): %s' % mm.psql(
+            'SELECT txid_current()', '-Aqt'))
         print('Isolating node 2...')
         mm.isolate(2)
         time.sleep(15)
@@ -449,6 +498,8 @@ class TestMultimasterInstall():
         print(mm.get_nodes_state_all(allow_fail=True))
         print('De-isolating node 2...')
         mm.deisolate(2)
+        print('Current TXID (after isolation): %s' % mm.psql(
+            'SELECT txid_current()', '-Aqt'))
         time.sleep(15)
         if not mm.check(2):
             print('Try to recover node 2')
@@ -456,14 +507,18 @@ class TestMultimasterInstall():
         print('Cluster state:')
         print(mm.get_cluster_state_all(allow_fail=True))
         print(mm.get_nodes_state_all(allow_fail=True))
-        for i in range(1, mm.size+1):
+        for i in range(1, mm.size):
             print('Pgbench %i terminated rc=%i' % (i, pgbench[i].stop()))
-
         pgbench_tables = ('pgbench_branches', 'pgbench_tellers',
                           'pgbench_accounts', 'pgbench_history')
+        print('Current TXID (after pgbench termination): %s' % mm.psql(
+            'SELECT txid_current()', '-Aqt'))
         for table in pgbench_tables:
             result = {}
-            for i in range(1, mm.size+1):
-                result[i] = mm.pg_dump(i, [table])
-            for i in range(2, mm.size+1):
-                diff_dbs(result[1], result[i], '%s_1_%i.diff' % (table, i))
+            for i in range(1, mm.size + 1):
+                if not mm.nodes[i].referee:
+                    result[i] = mm.pg_dump(i, [table])
+            for i in range(2, mm.size + 1):
+                if not mm.nodes[i].referee:
+                    diff_dbs(result[1], result[i], '%s_1_%i.diff' % (table, i))
+        #raise Exception('OK')
