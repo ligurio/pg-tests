@@ -80,6 +80,11 @@ dist = {"Oracle Linux Server": 'oraclelinux',
         "AlterOS": 'alteros'}
 
 PRELOAD_LIBRARIES = {
+    'ent-12':
+        ['auth_delay', 'auto_explain', 'in_memory',
+         'pg_stat_statements', 'plantuner',
+         'shared_ispell',
+         'pg_pathman'],
     'ent-11':
         ['auth_delay', 'auto_explain', 'in_memory',
          'pgpro_scheduler',
