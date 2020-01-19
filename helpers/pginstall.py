@@ -351,6 +351,7 @@ class PgInstall:
                                      REMOTE_ROOT, REMOTE_ROOT_PASSWORD,
                                      stdout=True).split('\n')
             for line in ysout:
+                line = line.strip()
                 if line == 'Available Packages' or line == '':
                     continue
                 pkginfo = line.split()
