@@ -142,12 +142,6 @@ class Node(object):
         if os.path.exists(self.datadir) and os.path.isdir(self.datadir):
             shutil.rmtree(self.datadir)
 
-    def gethost(self):
-        return self.host
-
-    def getdatadir(self):
-        return self.datadir
-
 
 class Multimaster(object):
     def __init__(self, size=3, dbuser='myuser', db='mydb',
@@ -322,38 +316,39 @@ class Multimaster(object):
             query, '-d %s -U %s %s' % (self.db, self.dbuser, a_options))
 
     def get_txid_current(self, node=1):
-        return self.psql('SELECT txid_current()', '-Aqt', node=node)
+        return int(self.psql('SELECT txid_current()', '-Aqt', node=node))
 
     def check(self, node):
         try:
-            self.psql('SELECT version()', node=node)
+            print(self.psql('SELECT version()', node=node))
         except Exception:
             return False
         else:
             return True
 
-    def wait(self, node, duration=60):
+    def wait(self, node, timeout=60):
         fail = True
-        for t in range(1, duration):
+        start_time = time.time()
+        while time.time() - start_time <= timeout:
             if self.check(node):
                 fail = False
                 break
             else:
-                time.sleep(1)
+                time.sleep(0.5)
         if fail:
             raise Exception('Timeout %i seconds expired node: %i' % (
-                duration, node))
+                timeout, node))
 
     def wait_for_txid(self, txid, node=1, timeout=600):
         start_time = time.time()
-        #start_txid = int(self.get_txid_current(node))
+        sys.stderr.write('Wait for %i\n' % txid)
         while time.time() - start_time <= timeout:
-            cur_txid = int(self.get_txid_current(node))
+            cur_txid = self.get_txid_current(node)
             if cur_txid >= txid:
                 return cur_txid
             else:
                 time.sleep(0.5)
-        raise Exception('Timeout')
+        raise Exception('Time is out')
 
     def pgbench(self, n, duration=60, scale=1, type='tpc-b', max_tries=0):
         return self.nodes[n].pgbench(self.dbuser, self.db, duration, scale,
@@ -403,6 +398,26 @@ class Multimaster(object):
                 all_nodes_state[i] = self.get_nodes_state(i, allow_fail)
         return all_nodes_state
 
+    def wait_for_referee(self, node=1, timeout=600):
+        start_time = time.time()
+        while time.time() - start_time <= timeout:
+            cl_state = []
+            while time.time() - start_time <= timeout:
+                cl_state = self.get_cluster_state(node, True)
+                if cl_state is None:
+                    time.sleep(0.5)
+                else:
+                    break
+            if int(cl_state[0]) == node:
+                if cl_state[1] == 'online' and int(cl_state[3]) == int(
+                        self.size / 2):
+                    return True
+            else:
+                print(cl_state)
+                raise Exception('node mismatch')
+            time.sleep(0.5)
+        raise Exception('Time is out')
+
 
 @pytest.mark.multimaster_install
 class TestMultimasterInstall():
@@ -440,9 +455,10 @@ class TestMultimasterInstall():
         request.node.add_marker(tag_mark)
         branch = request.config.getoption('--branch')
 
-        if version.startswith('9.') or version.startswith('10'):
-            print('Version %s is not supported' % version)
-            sys.exit()
+        if version.startswith('9.') or version.startswith(
+                '10.') or not edition.startswith('ent'):
+            print('Version %s %s is not supported' % (edition, version))
+            return
 
         # Step 1
         pginst = PgInstall(product=name, edition=edition,
@@ -492,7 +508,11 @@ class TestMultimasterInstall():
             'SELECT txid_current()', '-Aqt'))
         print('Isolating node 2...')
         mm.isolate(2)
-        time.sleep(15)
+        if mm.has_referee:
+            mm.wait_for_referee(1, 60)
+            pgbench[1].wait()
+            pgbench[1].start()
+        mm.wait_for_txid(2700)
         print('Cluster state:')
         print(mm.get_cluster_state_all(allow_fail=True))
         print(mm.get_nodes_state_all(allow_fail=True))
@@ -500,25 +520,23 @@ class TestMultimasterInstall():
         mm.deisolate(2)
         print('Current TXID (after isolation): %s' % mm.psql(
             'SELECT txid_current()', '-Aqt'))
-        time.sleep(15)
         if not mm.check(2):
             print('Try to recover node 2')
-            mm.wait(2, 30)
+            mm.wait(2, 60)
         print('Cluster state:')
         print(mm.get_cluster_state_all(allow_fail=True))
         print(mm.get_nodes_state_all(allow_fail=True))
+        mm.wait_for_txid(3500)
         for i in range(1, mm.size):
-            print('Pgbench %i terminated rc=%i' % (i, pgbench[i].stop()))
+            if not mm.nodes[i].referee:
+                print('Pgbench %i terminated rc=%i' % (i, pgbench[i].stop()))
         pgbench_tables = ('pgbench_branches', 'pgbench_tellers',
                           'pgbench_accounts', 'pgbench_history')
         print('Current TXID (after pgbench termination): %s' % mm.psql(
             'SELECT txid_current()', '-Aqt'))
         for table in pgbench_tables:
-            result = {}
-            for i in range(1, mm.size + 1):
-                if not mm.nodes[i].referee:
-                    result[i] = mm.pg_dump(i, [table])
+            result1 = mm.pg_dump(1, [table])
             for i in range(2, mm.size + 1):
                 if not mm.nodes[i].referee:
-                    diff_dbs(result[1], result[i], '%s_1_%i.diff' % (table, i))
-        #raise Exception('OK')
+                    result = mm.pg_dump(i, [table])
+                    diff_dbs(result1, result, '%s_1_%i.diff' % (table, i))
