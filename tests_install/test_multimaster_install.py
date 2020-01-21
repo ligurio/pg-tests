@@ -86,6 +86,10 @@ class Node(object):
                     self.listen_ips.values()) +
                 'unix_socket_directories = \'\'\n'
             )
+        with open(os.path.join(self.datadir, 'pg_hba.conf'), 'a') as hba:
+            hba.write(
+                'host\tall\tall\t127.0.0.0/8\ttrust' + os.linesep
+            )
         if self.pginst.windows:
             subprocess.check_call([os.path.join(
                 self.pginst.get_client_bin_path(), 'pg_ctl.exe'), 'register',
@@ -522,7 +526,7 @@ class TestMultimasterInstall():
             'SELECT txid_current()', '-Aqt'))
         if not mm.check(2):
             print('Try to recover node 2')
-            mm.wait(2, 60)
+            mm.wait(2, 600)
         print('Cluster state:')
         print(mm.get_cluster_state_all(allow_fail=True))
         print(mm.get_nodes_state_all(allow_fail=True))
