@@ -158,7 +158,8 @@ def check_executables(pginst, packages):
                     # a newer zstd can be installed from epel (on RH),
                     # but zstd-debuginfo will still be ours
                     continue
-                if '/llvm5.0/bin/' in f:
+                if f.startswith('/llvm5.0/bin/') or \
+                   f.startswith('/usr/bin/python'):
                     continue
                 print("gdb for %s output:" % f, gdbout)
                 raise Exception("No valid backtrace for %s." % f)
