@@ -191,7 +191,7 @@
            wget http://vault.centos.org/6.8/os/x86_64/Packages/libicu-devel-4.2.1-14.el6.x86_64.rpm && \
            createrepo . && cd ~ && \
            rpm --import http://vault.centos.org/6.8/os/x86_64/RPM-GPG-KEY-CentOS-6 && \
-           printf "[localrepo]\nbaseurl=file:///opt/localrepo\nenabled=1\n" > /etc/yum.repos.d/local.repo; \
+           printf "[localrepo]\nname=localrepo\nbaseurl=file:///opt/localrepo\nenabled=1\n" > /etc/yum.repos.d/local.repo; \
            yum update; \
            curl -O http://vault.centos.org/6.8/os/x86_64/Packages/tzdata-2016c-1.el6.noarch.rpm && \
            yum install -y tzdata-*.rpm
