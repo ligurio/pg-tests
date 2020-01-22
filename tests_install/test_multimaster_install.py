@@ -335,7 +335,7 @@ class Multimaster(object):
         else:
             return True
 
-    def wait(self, node, timeout=60):
+    def wait(self, node, timeout=600):
         fail = True
         start_time = time.time()
         while time.time() - start_time <= timeout:
