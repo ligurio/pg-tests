@@ -83,7 +83,7 @@ PRELOAD_LIBRARIES = {
     'ent-12':
         ['auth_delay', 'auto_explain', 'in_memory',
          'pg_stat_statements', 'plantuner',
-         'shared_ispell',
+         'shared_ispell', 'pg_wait_sampling',
          'pg_pathman'],
     'ent-11':
         ['auth_delay', 'auto_explain', 'in_memory',
