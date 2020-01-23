@@ -329,7 +329,7 @@ class Multimaster(object):
 
     def check(self, node):
         try:
-            print(self.psql('SELECT version()', node=node))
+            self.psql('SELECT version()', node=node)
         except Exception:
             return False
         else:
@@ -406,6 +406,19 @@ class Multimaster(object):
             if not self.nodes[i].referee:
                 all_nodes_state[i] = self.get_nodes_state(i, allow_fail)
         return all_nodes_state
+
+    def sure_pgbench_is_dead(self, node, timeout=60):
+        start_time = time.time()
+        while time.time() - start_time < timeout:
+            if self.nodes[node].psql(
+                    "SELECT count(*) FROM pg_stat_activity WHERE "
+                    "application_name='pgbench'",
+                    '-Aqt') == '0' and self.nodes[node].psql(
+                    "SELECT count(*) FROM pg_prepared_xacts", '-Aqt') == '0':
+                return True
+            else:
+                time.sleep(0.5)
+        raise Exception('Time is out')
 
     def wait_for_referee(self, node=1, timeout=600):
         start_time = time.time()
@@ -539,6 +552,7 @@ class TestMultimasterInstall():
         for i in range(1, mm.size):
             if not mm.nodes[i].referee:
                 print('Pgbench %i terminated rc=%i' % (i, pgbench[i].stop()))
+                mm.sure_pgbench_is_dead(i)
         pgbench_tables = ('pgbench_branches', 'pgbench_tellers',
                           'pgbench_accounts', 'pgbench_history')
         print('Current TXID (after pgbench termination): %s' % mm.psql(
