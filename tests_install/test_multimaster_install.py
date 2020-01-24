@@ -35,10 +35,10 @@ class Pgbench(object):
 
     def start(self):
         cmd = [os.path.join(
-            self.pginst.get_client_bin_path(), 'pgbench'), self.db, '-p',
+            self.pginst.get_client_bin_path(), 'pgbench'), '-p',
             str(self.port), '-h', self.host, '-U', self.dbuser, '-T',
             str(self.duration), '--max-tries', str(self.max_tries),
-            '--latency-limit', '10000']
+            '--latency-limit', '10000', self.db]
         if self.type == 'select':
             cmd.append('-S')
         print(cmd)
@@ -516,7 +516,7 @@ class TestMultimasterInstall():
 
         pgbench = {}
         for i, node in mm.nodes.items():
-            pgbench[i] = mm.pgbench(i, max_tries=100)
+            pgbench[i] = mm.pgbench(i, duration=60, max_tries=100)
         pgbench[1].init()
         for i in range(1, mm.size + 1):
             if not mm.nodes[i].referee:
