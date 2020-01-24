@@ -351,13 +351,14 @@ class Multimaster(object):
     def wait_for_txid(self, txid, node=1, timeout=600):
         start_time = time.time()
         sys.stderr.write('Wait for %i\n' % txid)
+        cur_txid = 0
         while time.time() - start_time <= timeout:
             cur_txid = self.get_txid_current(node)
             if cur_txid >= txid:
                 return cur_txid
             else:
                 time.sleep(0.5)
-        raise Exception('Time is out')
+        raise Exception('Time is out (actual txid: %s)' % cur_txid)
 
     def pgbench(self, n, duration=60, scale=1, type='tpc-b', max_tries=0):
         return self.nodes[n].pgbench(self.dbuser, self.db, duration, scale,
