@@ -626,22 +626,24 @@ class PgInstall:
                 self.product,
                 self.edition + '-' if self.product == 'postgrespro' else '',
                 self.version)
-            repo_rpm = "%s/%s/keys/" % \
-                       (self.get_repo_base(), product_dir)
-            dist_name = self.get_distname_for_pgpro()
+
             rpm_repo_installed = False
-            try:
-                soup = BeautifulSoup(urllib.urlopen(repo_rpm))
-                for link in soup.findAll('a'):
-                    href = link.get('href')
-                    if href.startswith('%s.%s' % (reponame, dist_name)):
-                        self.exec_cmd_retry('yum install -y %s%s' %
-                                            (repo_rpm, href))
-                        rpm_repo_installed = True
-                        self.epel_needed = False
-                        break
-            except Exception:
-                pass
+            if self.milestone != 'archive':
+                repo_rpm = "%s/%s/keys/" % \
+                           (self.get_repo_base(), product_dir)
+                dist_name = self.get_distname_for_pgpro()
+                try:
+                    soup = BeautifulSoup(urllib.urlopen(repo_rpm))
+                    for link in soup.findAll('a'):
+                        href = link.get('href')
+                        if href.startswith('%s.%s' % (reponame, dist_name)):
+                            self.exec_cmd_retry('yum install -y %s%s' %
+                                                (repo_rpm, href))
+                            rpm_repo_installed = True
+                            self.epel_needed = False
+                            break
+                except Exception:
+                    pass
 
             if not rpm_repo_installed:
                 # Example:
@@ -684,13 +686,15 @@ baseurl=%s
                 """ % (reponame,
                        reponame,
                        baseurl)
-                repofile = "/etc/yum.repos.d/%s-%s.repo" % (
-                    self.product, self.version)
+                repofile = "/etc/yum.repos.d/%s-%s%s.repo" % (
+                    self.product,
+                    self.edition + '-' if self.product == 'postgrespro'
+                    else '',
+                    self.version)
                 write_file(repofile, repo, self.remote, self.host)
                 cmd = "rpm --import %s" % gpg_key_url
                 self.exec_cmd_retry(cmd)
-                cmd = "yum --enablerepo=%s-%s clean metadata" % \
-                    (self.product, self.version)
+                cmd = "yum --enablerepo=%s clean metadata" % reponame
                 command_executor(cmd, self.remote, self.host,
                                  REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         elif self.__is_pm_apt():
