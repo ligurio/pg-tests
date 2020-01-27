@@ -215,11 +215,6 @@ class Multimaster(object):
                                          nodes[self.size].listen_ips[i],
                                          self.db, self.dbuser,
                                          self.password, os.linesep))
-                        config.write(
-                            'multimaster.heartbeat_recv_timeout = 5000' +
-                            os.linesep +
-                            'multimaster.heartbeat_send_timeout = 1000' +
-                            os.linesep)
 
         host = '\nhost\treplication\t%s\t127.0.0.0/8\ttrust\n' % (
             self.dbuser)
@@ -415,7 +410,7 @@ class Multimaster(object):
                     "SELECT count(*) FROM pg_stat_activity WHERE "
                     "application_name='pgbench'",
                     '-Aqt') == '0' and self.nodes[node].psql(
-                    "SELECT count(*) FROM pg_prepared_xacts", '-Aqt') == '0':
+                "SELECT count(*) FROM pg_prepared_xacts", '-Aqt') == '0':
                 return True
             else:
                 time.sleep(0.5)
@@ -479,7 +474,8 @@ class TestMultimasterInstall():
         branch = request.config.getoption('--branch')
 
         if version.startswith('9.') or version.startswith(
-                '10.') or not edition.startswith('ent'):
+                '10.') or version.startswith('12.') or not edition.startswith(
+            'ent'):
             print('Version %s %s is not supported' % (edition, version))
             return
 
