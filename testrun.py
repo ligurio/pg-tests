@@ -714,6 +714,7 @@ def main(conn):
                 print("Running test %s%s..." % (
                     testname,
                     '' if stage == 0 else ' (stage %d)' % (stage + 1)))
+                sys.stdout.flush()
                 if not linux_os:
                     retcode, stdout, stderr = exec_command_win(
                         cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD,
@@ -736,6 +737,7 @@ def main(conn):
                     print "Link to the html report - %s.html" % reporturl
                     print "Link to the xml report - %s.xml" % reporturl
                     print "Link to the json report - %s.json" % reporturl
+                    sys.stdout.flush()
 
                 if retcode == 222:
                     stage += 1
