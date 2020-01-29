@@ -15,7 +15,10 @@ FIRST_RELEASE = {
         'postgresql--11': None,
     },
     "SUSE Linux Enterprise Server  12": {
+        'postgresql--9.6': None,
+        'postgresql--10': None,
         'postgresql--11': None,
+        'postgresql--12': None,
         'postgrespro-std-cert-10': None,
         'postgrespro-std-9.6': None,
     },
