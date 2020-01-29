@@ -1128,7 +1128,7 @@ baseurl=%s
         else:
             raise Exception("Unsupported system: %s." % self.os_name)
 
-    def remove_full(self, remove_data=False, purge=False):
+    def remove_full(self, remove_data=False, purge=False, do_not_remove=None):
         if self.__is_os_windows():
             # TODO: Don't stop the service manually
             if self.pg_isready():
@@ -1148,15 +1148,11 @@ baseurl=%s
                 time.sleep(1)
         else:
             pkgs = self.all_packages_in_repo
-            if (self.__is_os_suse() and self.os_version in ['11', '12']) or \
-                    (self.__is_os_altlinux() and
-                     self.os_version in ['7.0.4']) or \
-                    (self.__is_os_debian() and
-                     self.os_version.startswith('8.')) or \
-                    self.__is_os_astra():
+            if do_not_remove:
                 for pkg in pkgs[:]:
-                    if 'icu' in pkg or 'zstd' in pkg:
-                        pkgs.remove(pkg)
+                    for template in do_not_remove:
+                        if re.match(template, pkg):
+                            pkgs.remove(pkg)
             self.remove_package(" ".join(pkgs), purge)
         if remove_data:
             self.remove_data()

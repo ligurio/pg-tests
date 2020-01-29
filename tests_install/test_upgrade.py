@@ -623,7 +623,9 @@ class TestUpgrade():
             after_upgrade(pg, pgold)
             dump_and_diff_dbs(old_key, pg, 'upgrade')
             stop(pg)
-            pgold.remove_full()
+            pgold.remove_full(do_not_remove=[
+                    r"^libc.*", r".*icu.*", r".*zstd.*", r"^llvm.*"
+                ])
             # PGPRO-2459
             if pgold.os_name in DEBIAN_BASED and \
                     old_name == "postgrespro" and old_version == "9.6":
@@ -717,7 +719,9 @@ class TestUpgrade():
                     pg.exec_psql_file(file_name, '-q', stdout=out)
                 dump_and_diff_dbs(old_key, pg, 'upgrade')
                 stop(pg)
-                pgold.remove_full(True)
+                pgold.remove_full(True, do_not_remove=[
+                    r"^libc.*", r".*icu.*", r".*zstd.*", r"^llvm.*"
+                ])
                 # PGPRO-2459
                 if pgold.os_name in DEBIAN_BASED and \
                         old_name == "postgrespro" and old_version == "9.6":
