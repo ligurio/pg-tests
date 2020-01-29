@@ -214,7 +214,11 @@ class Multimaster(object):
                                      "user=%s password =%s'%s" % (
                                          nodes[self.size].listen_ips[i],
                                          self.db, self.dbuser,
-                                         self.password, os.linesep))
+                                         self.password, os.linesep) +
+                                     'multimaster.heartbeat_recv_timeout = '
+                                     '7500' + os.linesep +
+                                     'multimaster.heartbeat_send_timeout = '
+                                     '100' + os.linesep)
 
         host = '\nhost\treplication\t%s\t127.0.0.0/8\ttrust\n' % (
             self.dbuser)
