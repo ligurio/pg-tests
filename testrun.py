@@ -26,7 +26,7 @@ from helpers.utils import (copy_file, copy_reports_win,
 reload(sys)
 sys.setdefaultencoding('utf8')
 
-MAX_DURATION = 3 * 60 * 60
+MAX_DURATION = 4 * 60 * 60
 DEBUG = False
 
 IMAGE_BASE_URL = 'http://webdav.l.postgrespro.ru/DIST/vm-images/test/'
