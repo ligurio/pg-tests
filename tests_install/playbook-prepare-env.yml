@@ -493,6 +493,16 @@
     when: ansible_os_family == "Windows"
     win_command: 'powershell -Command "Set-MpPreference -DisableRealtimeMonitoring $true; Set-MpPreference -ScanAvgCPULoadFactor 1"'
 
+  - name: windows - download dskcache.exe # Windows2000-KB811392-x86-ENU.exe
+    when: ansible_os_family == "Windows"
+    win_get_url:
+        url: http://webdav.l.postgrespro.ru/DIST/resources/windows/dskcache.exe
+        dest: C:\Users\test\dskcache.exe
+
+  - name: windows - turn off write-cache buffer flushing
+    when: ansible_os_family == "Windows"
+    win_command: C:\Users\test\dskcache.exe +p
+
   - name: windows - disable activestate applications updates
     win_shell: echo 127.0.0.1 update.activestate.com >> %windir%\System32\Drivers\etc\hosts
     args:
