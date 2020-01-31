@@ -428,6 +428,7 @@ def upgrade(pg, pgOld):
         subprocess.check_call(cmd, shell=True, cwd=upgrade_dir, stdout=out)
     print "upgrade complete in %s sec" % (time.time()-start_time)
 
+
 def dumpall(pg, file):
     cmd = '%s"%spg_dumpall" -h localhost -f "%s"' % \
           (
