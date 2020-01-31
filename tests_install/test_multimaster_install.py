@@ -40,7 +40,9 @@ class Pgbench(object):
             str(self.duration), '--max-tries', str(self.max_tries),
             '--latency-limit', '10000', self.db]
         if self.type == 'select':
-            cmd.append('-S')
+            cmd.insert(1, '-S')
+        elif self.type == 'simple-update':
+            cmd.insert(1, '-N')
         print(cmd)
         self.process = subprocess.Popen(cmd, stderr=subprocess.STDOUT,
                                         stdout=subprocess.PIPE)
@@ -516,7 +518,8 @@ class TestMultimasterInstall():
 
         pgbench = {}
         for i, node in mm.nodes.items():
-            pgbench[i] = mm.pgbench(i, duration=60, max_tries=100)
+            pgbench[i] = mm.pgbench(i, type='simple-update', duration=60,
+                                    max_tries=100)
         pgbench[1].init()
         for i in range(1, mm.size + 1):
             if not mm.nodes[i].referee:
