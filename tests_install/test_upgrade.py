@@ -400,6 +400,7 @@ def dump_and_diff_dbs(oldKey, pgNew, prefix):
 
 def upgrade(pg, pgOld):
     # type: (PgInstall, PgInstall) -> str
+    start_time = time.time()
     stop(pg)
     stop(pgOld)
     if os.path.exists(upgrade_dir):
@@ -425,7 +426,7 @@ def upgrade(pg, pgOld):
                                      pgOld.version])),
               'wb') as out:
         subprocess.check_call(cmd, shell=True, cwd=upgrade_dir, stdout=out)
-
+    print "upgrade complete in %s sec" % (time.time()-start_time)
 
 def dumpall(pg, file):
     cmd = '%s"%spg_dumpall" -h localhost -f "%s"' % \
@@ -438,6 +439,7 @@ def dumpall(pg, file):
 
 
 def after_upgrade(pg, pgOld):
+    start_time = time.time()
     if not system == "Windows":
         subprocess.check_call('sudo -u postgres ./analyze_new_cluster.sh',
                               shell=True, cwd=upgrade_dir)
@@ -458,6 +460,7 @@ def after_upgrade(pg, pgOld):
                                              pgOld.version])),
                       'wb') as out:
                 pg.exec_psql_file(file_name, stdout=out)
+    print "after_upgrade complete in %s sec" % (time.time()-start_time)
 
 
 def init_cluster(pg, force_remove=True, initdb_params='',
