@@ -276,12 +276,23 @@ def create_env(name, domname, domimage=None):
         network_driver = "e1000"
         ram_size = 2048
         cpus = 4
-        clock = "localtime"
+        features = """
+        <hyperv>
+          <relaxed state='on'/>
+          <vapic state='on'/>
+          <spinlocks state='on' retries='8191'/>
+        </hyperv>"""
+        clock = """
+        <clock offset='localtime'>
+          <timer name='hypervclock' present='yes'/>
+          <timer name='hpet' present='no'/>
+        </clock>"""
     else:
         network_driver = "virtio"
         ram_size = 2048
         cpus = 2
-        clock = "utc"
+        features = ""
+        clock = "<clock offset='utc'/>"
     domisos = glob.glob(TEMPLATE_DIR + name + '*.iso')
     cdroms = ""
     cdromletter = "c"
@@ -305,8 +316,12 @@ def create_env(name, domname, domimage=None):
                   </os>
                   <features>
                     <acpi/>
+                    %s
                   </features>
-                  <clock offset='%s'/>
+                  <cpu mode='host-passthrough' check='none'>
+                    <topology sockets='1' cores='%d' threads='1'/>
+                  </cpu>
+                  %s
                   <on_poweroff>destroy</on_poweroff>
                   <on_reboot>restart</on_reboot>
                   <on_crash>destroy</on_crash>
@@ -337,8 +352,8 @@ def create_env(name, domname, domimage=None):
                     </rng>
                   </devices>
                 </domain>
-                """ % (domname, ram_size, cpus, clock, qemu_path, domimage,
-                       cdroms, dommac, network_driver)
+                """ % (domname, ram_size, cpus, features, cpus, clock,
+                       qemu_path, domimage, cdroms, dommac, network_driver)
 
     dom = conn.createLinux(xmldesc, 0)
     if dom is None:
