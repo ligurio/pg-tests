@@ -100,6 +100,16 @@ class TestMakeCheck(object):
             print("The binary package buildinfo:\n%s\n" % bi.read())
 
         pginst.exec_psql("ALTER SYSTEM SET max_worker_processes = 16")
+        pginst.exec_psql("ALTER SYSTEM SET lc_messages = 'C'")
+        # Prepare pg_hba.conf for src/interfaces/ecpg/test/connect/test5
+        with open(os.path.join(pginst.get_configdir(), 'pg_hba.conf'),
+                  'r+') as conf:
+            hba = re.sub(r'^(local\s+all\s+all\s+peer)$',
+                         "local all regress_ecpg_user1  md5\n"
+                         "local all regress_ecpg_user2  md5\n"
+                         r'\1', conf.read(), flags=re.MULTILINE)
+            conf.seek(0)
+            conf.write(hba)
         pginst.load_shared_libraries()
 
         if self.system != 'Windows':

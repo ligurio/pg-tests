@@ -52,19 +52,6 @@ if grep 'SUSE Linux Enterprise Server' /etc/SuSE-release >/dev/null 2>&1; then #
     patch -p0 -i ../patches/SUSE-postgresql-regress.patch
 fi
 
-# vvv test5 Fails
-if [ -d src/interfaces/ecpg/test/connect ]; then
-    rm src/interfaces/ecpg/test/connect/test5*
-    sed -e 's/\(\s*test5\s\+test5\)/#\1/' \
-     -i src/interfaces/ecpg/test/connect/Makefile
-    [ -f src/interfaces/ecpg/test/ecpg_schedule_tcp ] && \
-    sed -e 's/test:\s\+connect\/test5//' \
-     -i src/interfaces/ecpg/test/ecpg_schedule_tcp
-    sed -e 's/test:\s\+connect\/test5//' \
-     -i src/interfaces/ecpg/test/ecpg_schedule
-fi
-# ^^^ test5 Fails
-
 sudo chown -R postgres:postgres .
 if ./configure --help | grep '  --enable-svt5'; then
     chown -R postgres:postgres $1
