@@ -140,7 +140,7 @@
            wget http://ftp1.scientificlinux.org/linux/scientific/6.7/x86_64/os/Packages/libicu-devel-4.2.1-12.el6.x86_64.rpm && \
            createrepo . && cd ~ && \
            rpm --import http://ftp1.scientificlinux.org/linux/scientific/6x/x86_64/os/RPM-GPG-KEY-sl && \
-           printf "[localrepo]\nbaseurl=file:///opt/localrepo\nenabled=1\n" > /etc/yum.repos.d/local.repo; \
+           printf "[localrepo]\nname=localrepo\nbaseurl=file:///opt/localrepo\nenabled=1\n" > /etc/yum.repos.d/local.repo; \
            yum update
     args:
       warn: no
