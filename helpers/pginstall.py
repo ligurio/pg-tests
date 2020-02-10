@@ -159,6 +159,7 @@ class PgInstall:
         self.branch = branch
         self.windows = windows
         self.installer_name = None
+        self.repo_package = None
         self.remote = remote
         self.host = host
         self.dist_info = get_distro(remote, host)
@@ -627,7 +628,6 @@ class PgInstall:
                 self.edition + '-' if self.product == 'postgrespro' else '',
                 self.version)
 
-            rpm_repo_installed = False
             if self.milestone != 'archive':
                 repo_rpm = "%s/%s/keys/" % \
                            (self.get_repo_base(), product_dir)
@@ -639,13 +639,15 @@ class PgInstall:
                         if href.startswith('%s.%s' % (reponame, dist_name)):
                             self.exec_cmd_retry('yum install -y %s%s' %
                                                 (repo_rpm, href))
-                            rpm_repo_installed = True
+                            self.repo_package = self.exec_cmd_retry(
+                                'rpm -qp --qf "%%{NAME}" "%s%s"' %
+                                (repo_rpm, href))
                             self.epel_needed = False
                             break
                 except Exception:
                     pass
 
-            if not rpm_repo_installed:
+            if not self.repo_package:
                 # Example:
                 # http://repo.postgrespro.ru/pgproee-9.6-beta/
                 #  centos/$releasever/os/$basearch/rpms
@@ -1154,6 +1156,8 @@ baseurl=%s
                         if re.match(template, pkg):
                             pkgs.remove(pkg)
             self.remove_package(" ".join(pkgs), purge)
+            if self.repo_package:
+                self.remove_package(self.repo_package)
         if remove_data:
             self.remove_data()
             if self.__is_os_windows():
