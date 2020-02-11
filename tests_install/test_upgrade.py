@@ -394,7 +394,8 @@ def drop_oids(pg):
                 "SELECT CONCAT(n.nspname, '.', c.relname) as tab "
                 "FROM   pg_catalog.pg_class c, pg_catalog.pg_namespace n "
                 "WHERE  c.relnamespace = n.oid AND c.relhasoids "
-                "AND n.nspname NOT IN ('pg_catalog')").splitlines()
+                "AND n.nspname NOT IN ('pg_catalog') "
+                "order by c.oid").splitlines()
             for table in tables:
                 pg.exec_psql('ALTER TABLE "%s" SET WITHOUT OIDS' % table)
     os.unsetenv('PGDATABASE')
