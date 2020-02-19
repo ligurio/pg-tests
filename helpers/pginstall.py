@@ -640,7 +640,8 @@ class PgInstall:
                             self.exec_cmd_retry('yum install -y %s%s' %
                                                 (repo_rpm, href))
                             self.repo_package = self.exec_cmd_retry(
-                                'rpm -qp "%s%s"' % (repo_rpm, href))
+                                'rpm -qp "%s%s"' % (repo_rpm, href),
+                                stdout=True)
                             self.epel_needed = False
                             break
                 except Exception:
@@ -1630,13 +1631,14 @@ baseurl=%s
             if restart_service:
                 self.restart_service()
 
-    def exec_cmd_retry(self, cmd, retry_cnt=10):
+    def exec_cmd_retry(self, cmd, retry_cnt=10, stdout=False):
         timeout = 0
         attempt = 1
         while attempt < retry_cnt:
             try:
                 return command_executor(cmd, self.remote, self.host,
-                                        REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                                        REMOTE_ROOT, REMOTE_ROOT_PASSWORD,
+                                        stdout)
             except Exception as ex:
                 print('Exception occured while running command "%s":' % cmd)
                 print(ex)
@@ -1649,7 +1651,8 @@ baseurl=%s
         if retry_cnt > 1:
             print('Last attempt to execute the command...\n')
         return command_executor(cmd, self.remote, self.host,
-                                REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+                                REMOTE_ROOT, REMOTE_ROOT_PASSWORD,
+                                stdout)
 
     def get_product_dir(self):
         return self.__get_product_dir()
