@@ -238,7 +238,7 @@ class PgInstall:
             elif self.edition == "ent-cert" and self.version == "11":
                 product_dir = "pgpro-ent-11.6.1/repo"
             elif self.edition == "1c":
-                product_dir = "1c-%s" % product_version
+                product_dir = "pg1c-%s" % product_version
             elif self.edition == "sql":
                 product_dir = "pgsql-%s" % product_version
         return product_dir
