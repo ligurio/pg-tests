@@ -94,10 +94,12 @@ class TestMakeCheck(object):
             pginst.install_perl_win()
             pginst.install_postgres_win(port=55432)
 
-        buildinfo = os.path.join(pginst.get_pg_prefix(),
-                                 'doc', 'buildinfo.txt')
-        with open(buildinfo, 'r') as bi:
-            print("The binary package buildinfo:\n%s\n" % bi.read())
+        # PGPRO-3591
+        if version != "9.6":
+            buildinfo = os.path.join(pginst.get_pg_prefix(),
+                                     'doc', 'buildinfo.txt')
+            with open(buildinfo, 'r') as bi:
+                print("The binary package buildinfo:\n%s\n" % bi.read())
 
         pginst.exec_psql("ALTER SYSTEM SET max_worker_processes = 16")
         pginst.exec_psql("ALTER SYSTEM SET lc_messages = 'C'")
