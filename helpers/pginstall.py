@@ -640,8 +640,7 @@ class PgInstall:
                             self.exec_cmd_retry('yum install -y %s%s' %
                                                 (repo_rpm, href))
                             self.repo_package = self.exec_cmd_retry(
-                                'rpm -qp --qf "%%{NAME}" "%s%s"' %
-                                (repo_rpm, href))
+                                'rpm -qp "%s%s"' % (repo_rpm, href))
                             self.epel_needed = False
                             break
                 except Exception:
