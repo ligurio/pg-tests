@@ -481,7 +481,7 @@
           ansible_distribution == 'ROSA'
 
   - name: windows - restrict Windows Defender
-    when: ansible_os_family == "Windows"
+    when: ansible_os_family == "Windows" and not ansible_distribution.startswith("Microsoft Windows Server 2012")
     win_command: 'powershell -Command "Set-MpPreference -DisableRealtimeMonitoring $true; Set-MpPreference -ScanAvgCPULoadFactor 1"'
 
   - name: windows - download dskcache.exe # Windows2000-KB811392-x86-ENU.exe
