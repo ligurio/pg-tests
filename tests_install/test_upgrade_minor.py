@@ -376,6 +376,7 @@ class TestUpgradeMinor():
             expected_file_name = os.path.join(tempdir,
                                               "%s-expected.sql" % key)
             dumpall(pgold, expected_file_name)
+            pgold.delete_repo()
             pgnew = PgInstall(product=name, edition=edition,
                               version=version, milestone=milestone,
                               branch=None, windows=windows_os)
