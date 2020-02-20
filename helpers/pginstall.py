@@ -159,6 +159,7 @@ class PgInstall:
         self.branch = branch
         self.windows = windows
         self.installer_name = None
+        self.repo_file = None
         self.repo_package = None
         self.remote = remote
         self.host = host
@@ -688,12 +689,12 @@ baseurl=%s
                 """ % (reponame,
                        reponame,
                        baseurl)
-                repofile = "/etc/yum.repos.d/%s-%s%s.repo" % (
+                self.repo_file = "/etc/yum.repos.d/%s-%s%s.repo" % (
                     self.product,
                     self.edition + '-' if self.product == 'postgrespro'
                     else '',
                     self.version)
-                write_file(repofile, repo, self.remote, self.host)
+                write_file(self.repo_file, repo, self.remote, self.host)
                 cmd = "rpm --import %s" % gpg_key_url
                 self.exec_cmd_retry(cmd)
                 cmd = "yum --enablerepo=%s clean metadata" % reponame
@@ -710,8 +711,8 @@ baseurl=%s
             else:
                 codename = command_executor(
                     cmd, self.remote, stdout=True).rstrip()
-            repofile = "/etc/apt/sources.list.d/%s-%s.list" % (self.product,
-                                                               self.version)
+            self.repo_file = "/etc/apt/sources.list.d/%s-%s.list" % (
+                self.product, self.version)
             repo = None
             if self.product == "postgresql":
                 if not self.__is_os_altlinux():
@@ -738,7 +739,7 @@ baseurl=%s
                            (baseurl, baseurl)
 
             if repo:
-                write_file(repofile, repo, self.remote, self.host)
+                write_file(self.repo_file, repo, self.remote, self.host)
                 reponame = re.sub(r"^http(s)?://", "", baseurl).\
                     replace('/', '_')
 
@@ -1156,8 +1157,7 @@ baseurl=%s
                         if re.match(template, pkg):
                             pkgs.remove(pkg)
             self.remove_package(" ".join(pkgs), purge)
-            if self.repo_package:
-                self.remove_package(self.repo_package)
+            self.delete_repo()
         if remove_data:
             self.remove_data()
             if self.__is_os_windows():
@@ -1218,23 +1218,19 @@ baseurl=%s
         """ Delete repo file
         """
         if self.__is_pm_yum():
-            repofile = "/etc/yum.repos.d/%s-%s.repo" % (
-                self.product, self.version)
-            cmd = "rm -f %s" % repofile
-            command_executor(cmd, self.remote, self.host,
-                             REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-            cmd = "yum update -y && yum clean cache"
+            cmd = "yum clean all"
             self.exec_cmd_retry(cmd)
-        elif self.__is_pm_apt():
-            repofile = "/etc/apt/sources.list.d/%s-%s.list" % (self.product,
-                                                               self.version)
-            cmd = "rm -f %s" % repofile
-            command_executor(cmd, self.remote, self.host,
-                             REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-            cmd = "apt-get update -y && apt-get clean cache"
+        if self.repo_package:
+            self.remove_package(self.repo_package)
+            return
+        if not self.repo_file:
+            return
+        cmd = 'rm -f "%s"' % self.repo_file
+        command_executor(cmd, self.remote, self.host,
+                         REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
+        if self.__is_pm_apt():
+            cmd = "apt-get clean cache && apt-get update -y"
             self.exec_cmd_retry(cmd)
-        else:
-            raise Exception("Unsupported distro %s." % self.os_name)
 
     def exec_psql(self, query, options=''):
         cmd = '%s"%spsql" %s %s %s -c "%s"' % \
