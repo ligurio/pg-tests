@@ -153,6 +153,10 @@ def check_executables(pginst, packages):
                 if re.match(r'#0\s+([a-z0-9_:]*main|'
                             r'get_progname|pg_logging_init)\s+\(', line):
                     good_lines += 1
+                if re.match(r'warning:.*\(CRC mismatch\).', line):
+                    print ("gdb for %s output:" % f, gdbout)
+                    raise Exception("CRC mismatch in debuginfo for %s"
+                                    " (or dependencies)." % f)
             if good_lines != 2:
                 if f in ['/usr/bin/pzstd', '/usr/bin/zstd']:
                     # a newer zstd can be installed from epel (on RH),
