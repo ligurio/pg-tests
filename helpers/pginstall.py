@@ -134,11 +134,9 @@ PRELOAD_LIBRARIES = {
          'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
          'pg_pathman', 'pg_pageprep', 'passwordcheck'],
     '1c-10':
-        ['auth_delay', 'auto_explain', 'plantuner',
-         'pg_pageprep'],
+        ['auth_delay', 'auto_explain', 'plantuner'],
     '1c-11':
-        ['auth_delay', 'auto_explain', 'plantuner',
-         'pg_pageprep'],
+        ['auth_delay', 'auto_explain', 'plantuner'],
     '1c-12':
         ['auth_delay', 'auto_explain', 'plantuner'],
 }
@@ -1073,10 +1071,12 @@ baseurl=%s
         command_executor(cmd, windows=True)
         msis = glob.glob(os.path.join(WIN_INST_DIR, '*.msi'))
         for msi in sorted(msis):
-            msilog = "%s.log" % msi
-            cmd = 'msiexec /i %s /quiet /qn /norestart /log %s' % \
-                (msi, msilog)
-            command_executor(cmd, windows=True)
+            # pageprep will be removed
+            if not (self.edition == '1c' and 'pageprep' in msi):
+                msilog = "%s.log" % msi
+                cmd = 'msiexec /i %s /quiet /qn /norestart /log %s' % \
+                    (msi, msilog)
+                command_executor(cmd, windows=True)
         refresh_env_win()
         self.client_path_needed = False
         self.server_path_needed = False
