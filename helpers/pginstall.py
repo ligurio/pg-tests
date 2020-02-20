@@ -89,36 +89,36 @@ PRELOAD_LIBRARIES = {
         ['auth_delay', 'auto_explain', 'in_memory',
          'pgpro_scheduler',
          'pg_stat_statements', 'plantuner',
-         'shared_ispell', 'pg_wait_sampling', 'pg_pageprep', 'pg_shardman',
+         'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
          'pg_pathman'],
     'std-11':
         ['auth_delay', 'auto_explain',
-         'plantuner', 'shared_ispell', 'pg_pageprep', 'pg_pathman'],
+         'plantuner', 'shared_ispell', 'pg_pathman'],
     'std-12':
         ['auth_delay', 'auto_explain',
          'plantuner', 'shared_ispell', 'pg_pathman'],
     'std-cert-11':
         ['auth_delay', 'auto_explain',
-         'plantuner', 'shared_ispell', 'pg_pageprep', 'pg_pathman',
+         'plantuner', 'shared_ispell', 'pg_pathman',
          'pg_proaudit'],
     'std-10':
         ['auth_delay', 'auto_explain',
-         'plantuner', 'shared_ispell', 'pg_pageprep', 'pg_pathman'],
+         'plantuner', 'shared_ispell', 'pg_pathman'],
     'ent-10':
         ['auth_delay', 'auto_explain', 'in_memory',
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
-         'shared_ispell', 'pg_wait_sampling', 'pg_pageprep', 'pg_shardman',
+         'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
          'pg_pathman'],
     'std-cert-10':
         ['auth_delay', 'auto_explain', 'pgaudit',
          'plantuner', 'shared_ispell', 'pg_pathman'],
     'std-9.6':
         ['auth_delay', 'auto_explain',
-         'plantuner', 'shared_ispell', 'pg_pageprep', 'pg_pathman'],
+         'plantuner', 'shared_ispell', 'pg_pathman'],
     'ent-9.6':
         ['auth_delay', 'auto_explain',
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
-         'shared_ispell', 'pg_wait_sampling', 'pg_pageprep',  'pg_pathman'],
+         'shared_ispell', 'pg_wait_sampling', 'pg_pathman'],
     'ent-cert-9.6':
         ['auth_delay', 'auto_explain',
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
@@ -132,7 +132,7 @@ PRELOAD_LIBRARIES = {
         ['auth_delay', 'auto_explain', 'in_memory', 'pg_proaudit',
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
-         'pg_pathman', 'pg_pageprep', 'passwordcheck'],
+         'pg_pathman', 'passwordcheck'],
     '1c-10':
         ['auth_delay', 'auto_explain', 'plantuner'],
     '1c-11':
@@ -473,7 +473,8 @@ class PgInstall:
             # PGPRO-????
             # Filter out the package that is not supported by Postgres Pro yet
             pkgs = [pkg for pkg in self.get_packages_in_repo() if
-                    not (pkg.startswith("oracle-fdw-"))]
+                    (not pkg.startswith("oracle-fdw-")
+                    and 'pageprep' not in pkg)]
 
         return pkgs
 
