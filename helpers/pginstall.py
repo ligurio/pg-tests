@@ -1073,7 +1073,7 @@ baseurl=%s
         msis = glob.glob(os.path.join(WIN_INST_DIR, '*.msi'))
         for msi in sorted(msis):
             # pageprep will be removed
-            if not (self.edition == '1c' and 'pageprep' in msi):
+            if 'pageprep' not in msi:
                 msilog = "%s.log" % msi
                 cmd = 'msiexec /i %s /quiet /qn /norestart /log %s' % \
                     (msi, msilog)
