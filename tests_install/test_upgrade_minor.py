@@ -7,22 +7,14 @@ import tempfile
 import time
 import pytest
 from allure_commons.types import LabelType
-from helpers.pginstall import PgInstall, PRELOAD_LIBRARIES,\
-    PGPRO_ARCHIVE_STANDARD, PGPRO_ARCHIVE_ENTERPRISE,\
-    DEBIAN_BASED, REDHAT_BASED
+from helpers.pginstall import PgInstall, PGPRO_ARCHIVE_STANDARD,\
+    PGPRO_ARCHIVE_ENTERPRISE, DEBIAN_BASED
 from helpers.constants import FIRST_RELEASE
 from BeautifulSoup import BeautifulSoup
 from helpers.utils import diff_dbs, download_dump
 
 tempdir = tempfile.gettempdir()
 client_dir = 'client'
-
-# 9.6 stable, 10 stable, 11std stable does not contains pg_pageprep
-PRELOAD_LIBRARIES['std-9.6'].remove('pg_pageprep')
-PRELOAD_LIBRARIES['ent-9.6'].remove('pg_pageprep')
-PRELOAD_LIBRARIES['std-10'].remove('pg_pageprep')
-PRELOAD_LIBRARIES['ent-10'].remove('pg_pageprep')
-PRELOAD_LIBRARIES['std-11'].remove('pg_pageprep')
 
 ARCHIVE_VERSIONS = {
     'ALT Linux  7.0.5': {
