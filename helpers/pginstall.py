@@ -306,7 +306,7 @@ class PgInstall:
             return base_package + '-devel'
         return base_package
 
-    def __get_package_version(self, package_name):
+    def get_package_version(self, package_name):
         cmd = ''
         if self.__is_pm_yum():
             cmd = "sh -c \"LANG=C yum info %s\"" % package_name
@@ -335,7 +335,7 @@ class PgInstall:
             if vere:
                 return vere.group(1)
         else:
-            return self.__get_package_version(
+            return self.get_package_version(
                 self.get_base_package_name() +
                 ('' if self.version == '9.6' else '-libs'))
 
@@ -847,7 +847,7 @@ baseurl=%s
             if cmd:
                 self.exec_cmd_retry(cmd)
 
-    def download_source(self):
+    def download_source(self, package=None, version=None, ext='tar.bz2'):
         baseurl = ''
         if self.product == "postgresql":
             pass
@@ -864,14 +864,17 @@ baseurl=%s
                 else:
                     baseurl = PGPRO_ARCHIVE_SOURCES_BASE
         edition = ''
-        product = 'postgresql' if self.edition == '1c' else 'postgrespro'
-        if self.edition in ['std', 'std-cert'] \
-                and self.version not in ['9.6', '9.5']:
-            edition = '-standard'
-        elif self.edition in ['ent', 'ent-cert']:
-            edition = '-enterprise'
-        tar_href = '%s%s-%s.tar.bz2' % \
-                   (product, edition, self.get_product_minor_version())
+        if package is None:
+            product = 'postgresql' if self.edition == '1c' else 'postgrespro'
+            if self.edition in ['std', 'std-cert'] \
+                    and self.version not in ['9.6', '9.5']:
+                edition = '-standard'
+            elif self.edition in ['ent', 'ent-cert']:
+                edition = '-enterprise'
+            package = product + edition
+        if version is None:
+            version = self.get_product_minor_version()
+        tar_href = '%s-%s.%s' % (package, version, ext)
         tar_url = baseurl + '/' + tar_href
         sourcetar = urllib.URLopener()
         attempt = 1
