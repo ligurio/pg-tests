@@ -89,6 +89,11 @@ class TestMakeCheck(object):
         if self.system != 'Windows':
             pginst.install_full()
             pginst.initdb_start()
+
+            plv8_pkg = 'plv8-%s-%s' % (edition, version)
+            if plv8_pkg in pginst.all_packages_in_repo:
+                pginst.download_source(
+                    'plv8', pginst.get_package_version(plv8_pkg), 'tar.gz')
         else:
             pginst.install_perl_win()
             pginst.install_postgres_win(port=55432)
