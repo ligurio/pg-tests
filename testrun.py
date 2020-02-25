@@ -730,14 +730,22 @@ def main(conn):
                     testname,
                     '' if stage == 0 else ' (stage %d)' % (stage + 1)))
                 sys.stdout.flush()
-                if not linux_os:
-                    retcode, stdout, stderr = exec_command_win(
-                        cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD,
-                        skip_ret_code_check=True)
-                else:
-                    retcode, stdout, stderr = exec_command(
-                        cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD,
-                        skip_ret_code_check=True)
+                try:
+                    if not linux_os:
+                        retcode, stdout, stderr = exec_command_win(
+                            cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD,
+                            skip_ret_code_check=True)
+                    else:
+                        retcode, stdout, stderr = exec_command(
+                            cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD,
+                            skip_ret_code_check=True)
+                except Exception as ex:
+                    if not args.keep:
+                        try:
+                            close_env(domname, False, True)
+                        except Exception:
+                            pass
+                    raise ex
 
                 if args.export:
                     export_results(
