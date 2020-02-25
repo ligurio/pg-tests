@@ -126,7 +126,7 @@ def check_executables(pginst, packages):
             if not fout.startswith(f + ': ELF '):
                 continue
             print "\tELF executable found:", f
-            if pginst.os_name == 'AstraLinuxSE' and 'oracle_fdw' not in f:
+            if pginst.os_name == 'AstraLinuxSE':
                 bsignout = subprocess.check_output(
                     'LANG=C bsign -w "%s"; echo' % f, shell=True).strip()
                 if 'bsign: good hash found' not in bsignout:
