@@ -126,6 +126,12 @@ def check_executables(pginst, packages):
             if not fout.startswith(f + ': ELF '):
                 continue
             print "\tELF executable found:", f
+            if pginst.os_name == 'AstraLinuxSE' and 'oracle_fdw' not in f:
+                bsignout = subprocess.check_output(
+                    'LANG=C bsign -w "%s"; echo' % f, shell=True).strip()
+                if 'bsign: good hash found' not in bsignout:
+                    print bsignout
+                    raise Exception("Unsigned binary %s" % f)
             lddout = subprocess.check_output(
                 'LANG=C ldd "%s"' % f, shell=True).split("\n")
             error = False
@@ -154,7 +160,7 @@ def check_executables(pginst, packages):
                             r'get_progname|pg_logging_init)\s+\(', line):
                     good_lines += 1
                 if re.match(r'warning:.*\(CRC mismatch\).', line):
-                    print ("gdb for %s output:" % f, gdbout)
+                    print("gdb for %s output:" % f, gdbout)
                     raise Exception("CRC mismatch in debuginfo for %s"
                                     " (or dependencies)." % f)
             if good_lines != 2:
