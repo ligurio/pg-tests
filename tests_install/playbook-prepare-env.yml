@@ -249,6 +249,14 @@
     become_method: su
     become: true
 
+  - name: install required packages (Astra)
+    apt: name={{ item }} state=present update_cache=yes
+    with_items:
+        - bsign
+    when: ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux')
+    become_method: su
+    become: true
+
   - name: install required packages (ALT 8)
     shell: apt-get install -y gcc5
     args:
