@@ -49,6 +49,11 @@ SERVER_APPLICATIONS = {
          'pg_resetwal', 'pg_rewind', 'pg-setup', 'pg_test_fsync',
          'pg_test_timing', 'pg_upgrade', 'pg_verify_checksums',
          'pg_waldump', 'postgres', 'postmaster'],
+    'ent-12':
+        ['initdb', 'pg_archivecleanup', 'pg_controldata', 'pg_ctl',
+         'pg_resetwal', 'pg_rewind', 'pg-setup', 'pg_test_fsync',
+         'pg_test_timing', 'pg_upgrade', 'pg_verify_checksums',
+         'pg_waldump', 'postgres', 'postmaster'],
 }
 
 CLIENT_APPLICATIONS = {
@@ -87,6 +92,11 @@ CLIENT_APPLICATIONS = {
          'pg_basebackup', 'pgbench', 'pg_dump', 'pg_dumpall',
          'pg_isready', 'pg_receivewal', 'pg_recvlogical', 'pg_restore',
          'psql', 'reindexdb', 'vacuumdb'],
+    'ent-12':
+        ['clusterdb', 'createdb', 'createuser', 'dropdb', 'dropuser',
+         'pg_basebackup', 'pgbench', 'pg_dump', 'pg_dumpall',
+         'pg_isready', 'pg_receivewal', 'pg_recvlogical', 'pg_restore',
+         'psql', 'reindexdb', 'vacuumdb'],
 }
 
 DEV_APPLICATIONS = {
@@ -103,6 +113,8 @@ DEV_APPLICATIONS = {
     'std-12':
         ['ecpg', 'pg_config'],
     'ent-11':
+        ['ecpg', 'pg_config'],
+    'ent-12':
         ['ecpg', 'pg_config'],
 }
 
