@@ -164,22 +164,23 @@ def check_executables(pginst, packages):
                 'LANG=C gdb --batch -ex "b main" -ex run -ex next -ex bt'
                 '  -ex cont --args  "%s" --version' % f,
                 stderr=subprocess.STDOUT, shell=True).split("\n")
-            good_lines = 0
+            lines_to_find_left = 2
             for line in gdbout:
                 if re.match(r'Breakpoint 1, [a-z0-9_:]*main ', line):
-                    good_lines += 1
+                    lines_to_find_left -= 1
                 if re.match(r'#0\s+([a-z0-9_:]*main|'
                             r'get_progname|pg_logging_init)\s+\(', line):
-                    good_lines += 1
+                    lines_to_find_left -= 1
                 if re.match(r'warning:.*\(CRC mismatch\).', line):
+                    if f in ['/usr/bin/pzstd', '/usr/bin/zstd']:
+                        # a newer zstd can be installed from epel (on RH),
+                        # but zstd-debuginfo will still be ours
+                        lines_to_find_left = 0
+                        break
                     print("gdb for %s output:" % f, gdbout)
                     raise Exception("CRC mismatch in debuginfo for %s"
                                     " (or dependencies)." % f)
-            if good_lines != 2:
-                if f in ['/usr/bin/pzstd', '/usr/bin/zstd']:
-                    # a newer zstd can be installed from epel (on RH),
-                    # but zstd-debuginfo will still be ours
-                    continue
+            if lines_to_find_left != 0:
                 if f.startswith('/llvm5.0/bin/') or \
                    f.startswith('/usr/bin/python'):
                     continue
