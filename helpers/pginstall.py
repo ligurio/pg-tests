@@ -642,11 +642,7 @@ class PgInstall:
                             self.repo_package = self.exec_cmd_retry(
                                 'rpm -qp "%s%s"' % (repo_rpm, href),
                                 stdout=True)
-                            if not(self.os_name == 'CentOS' and
-                                   self.os_version.startswith('6.')):
-                                # We still need EPEL for CentOS 6
-                                # (see PGPRO-3609)
-                                self.epel_needed = False
+                            self.epel_needed = False
                             break
                 except Exception:
                     pass
