@@ -1,0 +1,21 @@
+diff --git a/src/bin/pg_waldump/t/001_timestamps.pl b/src/bin/pg_waldump/t/001_timestamps.pl
+index 53151423b6a..31ea9fa541f 100644
+--- a/src/bin/pg_waldump/t/001_timestamps.pl
++++ b/src/bin/pg_waldump/t/001_timestamps.pl
+@@ -99,14 +99,12 @@ unlink "$pgdata/pg_wal/$xlogfilenameM";
+ # run pg_waldump to check it's output
+ my $xld_output = command_output(
+ 	[ 'pg_waldump', '-S', '-E', "$pgdata/pg_wal/$xlogfilename1", "$pgdata/pg_wal/$xlogfilenameN" ]);
+-# ok($xld_output =~ qr/pg_waldump: start timestamp: ([^,]+), lsn: (.*)/, "start timestamp and lsn found");
+-ok($xld_output =~ qr/pg_waldump: start timestamp: (.{10} [0-9:\.]+)[^,]+, lsn: (.*)/, "start timestamp and lsn found");
++ok($xld_output =~ qr/pg_waldump: start timestamp: (.{10} [0-9:\.]+)[^,]+, lsn: ([0-9A-F]+\/[0-9A-F]+)/, "start timestamp and lsn found");
+ 
+ 
+ 
+ my ($startts, $startlsn) = ($1, $2);
+-# ok($xld_output =~ qr/pg_waldump: end timestamp: ([^,]+), lsn: (.*)/, "end timestamp and lsn found");
+-ok($xld_output =~ qr/pg_waldump: end timestamp: (.{10} [0-9:\.]+)[^,]+, lsn: (.*)/, "end timestamp and lsn found");
++ok($xld_output =~ qr/pg_waldump: end timestamp: (.{10} [0-9:\.]+)[^,]+, lsn: ([0-9A-F]+\/[0-9A-F]+)/, "end timestamp and lsn found");
+ 
+ # check commit timestamps for first and last commits
+ my ($endts, $endlsn) = ($1, $2);
