@@ -945,7 +945,7 @@ baseurl=%s
         :return:
         """
         if self.__is_pm_yum():
-            cmd = "yum update -y --disablerepo='*'   --enablerepo='%s'" % \
+            cmd = "yum update -y --disablerepo='*'   --enablerepo='%s*'" % \
                   self.reponame
             self.exec_cmd_retry(cmd)
         elif self.__is_pm_apt():

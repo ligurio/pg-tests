@@ -332,6 +332,19 @@ class TestUpgradeMinor():
 
         dump_file_name = download_dump(name, edition, version, tempdir)
 
+        # Archive versions (e.g. 11.6.1) were built using llvm7,
+        # but current AppStream repo contains llvm8 only
+        if dist.startswith("CentOS Linux 8."):
+            cmd = "sh -c 'mkdir /opt/{0}; cd $_; " \
+                  "wget -r -nd --no-parent -A \"*.rpm\" " \
+                  "http://webdav.l.postgrespro.ru/DIST/resources/linux/; " \
+                  "yum install -y createrepo; createrepo .; " \
+                  "printf \"[{0}]\\nname={0}\\nbaseurl=file:///opt/{0}" \
+                  "\\nenabled=1\\nmodule_hotfixes=True\\n\" " \
+                  "> /etc/yum.repos.d/{0}.repo'".\
+                format(pgnew.reponame + '-plus')
+            subprocess.check_call(cmd, shell=True)
+
         for oldversion in test_versions:
             print("Installing", oldversion)
             key = "-".join([name, edition, oldversion])
