@@ -84,6 +84,11 @@ FIRST_RELEASE = {
         'postgresql--9.6': None,
         'postgresql--10': None,
         'postgresql--11': None,
+        'postgrespro-std-9.6': '9.6.11.1',
+        'postgrespro-ent-9.6': None,
+        'postgrespro-std-10': '10.6.1',
+        'postgrespro-ent-10': None,
+        'postgrespro-ent-11': '11.6.2',
     },
     '"AstraLinuxSE" 1.5': {
         'postgresql--9.6': None,
