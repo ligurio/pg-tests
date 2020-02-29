@@ -334,15 +334,20 @@ class TestUpgradeMinor():
 
         # Archive versions (e.g. 11.6.1) were built using llvm7,
         # but current AppStream repo contains llvm8 only
+        extra_yum_repo = None
         if dist.startswith("CentOS Linux 8."):
+            extra_yum_repo = "centos-8"
+        elif dist.startswith("Red Hat Enterprise Linux 8."):
+            extra_yum_repo = "rhel-8"
+        if extra_yum_repo:
             cmd = "sh -c 'mkdir /opt/{0}; cd $_; " \
-                  "wget -r -nd --no-parent -A \"*.rpm\" " \
-                  "http://webdav.l.postgrespro.ru/DIST/resources/linux/; " \
+                  "wget -q -r -nd --no-parent -A \"*.rpm\" " \
+                  "http://webdav.l.postgrespro.ru/DIST/resources/linux/{1}/;" \
                   "yum install -y createrepo; createrepo .; " \
                   "printf \"[{0}]\\nname={0}\\nbaseurl=file:///opt/{0}" \
                   "\\nenabled=1\\nmodule_hotfixes=True\\n\" " \
                   "> /etc/yum.repos.d/{0}.repo'".\
-                format(pgnew.reponame + '-plus')
+                format(pgnew.reponame + '-plus', extra_yum_repo)
             subprocess.check_call(cmd, shell=True)
 
         for oldversion in test_versions:
