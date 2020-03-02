@@ -412,7 +412,7 @@ def refresh_env_win():
 
 def read_dump(file):
 
-    numre = re.compile(r"[-+]?[0-9]*\.?[0-9]+([e][-+]?[0-9]+)?")
+    numre = re.compile(r"\b[-+]?[0-9]*\.?[0-9]+([e][-+]?[0-9]+)?")
     exre = re.compile(r"EXECUTE\s+\w+")
     alterrolere = re.compile(r"(ALTER ROLE.*)PASSWORD\s'[^']+'")
     createdatabasere = re.compile(
