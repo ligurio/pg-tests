@@ -189,7 +189,7 @@ class Multimaster(object):
             nodes[i].psql(
                 "CREATE DATABASE %s OWNER %s" % (
                     self.db, self.dbuser))
-            if pginst.system == 'Windows':
+            if platform.system == 'Windows':
                 nodes[i].add_config("log_destination = 'stderr'",
                                     "logging_collector = 'on'",
                                     "log_directory = 'log'")
