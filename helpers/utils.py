@@ -502,7 +502,7 @@ def read_dump(file):
                     lines_to_sort.append(line)
     sort_items.sort()
     lines.extend(sort_items)
-    return lines
+    return [line + '\n' for line in lines]
 
 
 def diff_dbs(file1, file2, diff_file):
