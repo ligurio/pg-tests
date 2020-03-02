@@ -189,6 +189,11 @@ class Multimaster(object):
             nodes[i].psql(
                 "CREATE DATABASE %s OWNER %s" % (
                     self.db, self.dbuser))
+            if platform.system() == 'Windows':
+                print('Adding log settings for Windows')
+                nodes[i].add_config("log_destination = 'stderr'",
+                                    "logging_collector = 'on'",
+                                    "log_directory = 'log'")
             if nodes[i].referee:
                 nodes[i].psql('CREATE EXTENSION referee',
                               "-U %s -d %s" % (
