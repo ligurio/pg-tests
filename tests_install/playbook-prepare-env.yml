@@ -122,12 +122,6 @@
     become_method: su
     become: true
 
-  - name: Setup local repository for RED OS
-    shell: sed 's#baseurl=.*#baseurl=http://webdav.l.postgrespro.ru/DIST/pool/redos-MUROM-7.1-x86_64-DVD1/#' -i /etc/yum.repos.d/RedOS-Base.repo
-    when: ansible_distribution == "RED" and ansible_distribution_major_version == "7"
-    become_method: su
-    become: true
-
   - name: Downgrade packages to original 6.7 version and setup local repo (RHEL 6) # Needed for libselinux-python
     shell: yum downgrade -y glibc-2.12-1.166.el6 glibc-headers-2.12-1.166.el6 glibc-common-2.12-1.166.el6 glibc-devel-2.12-1.166.el6 &&
            yum downgrade -y libselinux-2.0.94-5.8.el6 libselinux-utils-2.0.94-5.8.el6 libselinux-devel-2.0.94-5.8.el6.x86_64 &&
