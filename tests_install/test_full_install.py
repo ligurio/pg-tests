@@ -52,7 +52,7 @@ SERVER_APPLICATIONS = {
     'ent-12':
         ['initdb', 'pg_archivecleanup', 'pg_controldata', 'pg_ctl',
          'pg_resetwal', 'pg_rewind', 'pg-setup', 'pg_test_fsync',
-         'pg_test_timing', 'pg_upgrade', 'pg_verify_checksums',
+         'pg_test_timing', 'pg_upgrade', 'pg_checksums',
          'pg_waldump', 'postgres', 'postmaster'],
 }
 
