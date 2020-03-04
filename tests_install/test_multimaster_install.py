@@ -485,7 +485,7 @@ class TestMultimasterInstall():
         branch = request.config.getoption('--branch')
 
         if version.startswith('9.') or version == '10' \
-           or version == '12' or not edition.startswith('ent'):
+           or not edition.startswith('ent'):
             print('Version %s %s is not supported' % (edition, version))
             return
 
