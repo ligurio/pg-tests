@@ -52,7 +52,7 @@ if grep 'SUSE Linux Enterprise Server' /etc/SuSE-release >/dev/null 2>&1; then #
     patch -p0 -i ../patches/SUSE-postgresql-regress.patch
 fi
 
-sudo chown -R postgres:postgres .
+chown -R postgres:postgres .
 if ./configure --help | grep '  --enable-svt5'; then
     chown -R postgres:postgres $1
     extraoption="--enable-svt5"
@@ -119,7 +119,7 @@ if [ $exitcode -eq 0 ]; then
         (
         cd .. &&
         tar fax plv8*.tar* &&
-        cd plv8*/ && sudo chown -R postgres . &&
+        cd plv8*/ && chown -R postgres . &&
         sudo -u postgres make installcheck; exitcode=$?
         )
     fi
