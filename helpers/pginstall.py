@@ -473,8 +473,7 @@ class PgInstall:
             # PGPRO-????
             # Filter out the package that is not supported by Postgres Pro yet
             pkgs = [pkg for pkg in self.get_packages_in_repo() if
-                    (not pkg.startswith("oracle-fdw-")
-                    and 'pageprep' not in pkg)]
+                    (not pkg.startswith("oracle-fdw-"))]
 
         return pkgs
 
@@ -1075,12 +1074,10 @@ baseurl=%s
         command_executor(cmd, windows=True)
         msis = glob.glob(os.path.join(WIN_INST_DIR, '*.msi'))
         for msi in sorted(msis):
-            # pageprep will be removed
-            if 'pageprep' not in msi:
-                msilog = "%s.log" % msi
-                cmd = 'msiexec /i %s /quiet /qn /norestart /log %s' % \
-                    (msi, msilog)
-                command_executor(cmd, windows=True)
+            msilog = "%s.log" % msi
+            cmd = 'msiexec /i %s /quiet /qn /norestart /log %s' % \
+                (msi, msilog)
+            command_executor(cmd, windows=True)
         refresh_env_win()
         self.client_path_needed = False
         self.server_path_needed = False
