@@ -177,7 +177,7 @@ class PgInstall:
             addoption = ''
         self.pg_sudo_cmd = '' if windows else \
             ('sudo %s-u postgres ' % addoption)
-        self.use_sudo_psql = True
+        self.use_sudo_cmd = True
         self.client_installed = False
         self.server_installed = False
         self.client_path_needed = True
@@ -1238,7 +1238,7 @@ baseurl=%s
     def exec_psql(self, query, options=''):
         cmd = '%s"%spsql" %s %s %s -c "%s"' % \
             (
-                self.pg_sudo_cmd if self.use_sudo_psql else '',
+                self.pg_sudo_cmd if self.use_sudo_cmd else '',
                 self.get_client_bin_path(),
                 '' if not(self.srvhost) else '-h ' + self.srvhost,
                 '' if not(self.port) else '-p ' + str(self.port),
@@ -1263,7 +1263,7 @@ baseurl=%s
     def exec_psql_file(self, sql_file, options='', stdout=None):
         cmd = '%s"%spsql" %s %s %s -f "%s"' % \
             (
-                self.pg_sudo_cmd,
+                self.pg_sudo_cmd if self.use_sudo_cmd else '',
                 self.get_client_bin_path(),
                 '' if not(self.srvhost) else '-h ' + self.srvhost,
                 '' if not(self.port) else '-p ' + str(self.port),
@@ -1572,7 +1572,7 @@ baseurl=%s
     def exec_client_bin(self, bin, options=''):
         cmd = '%s"%s%s" %s' % \
             (
-                self.pg_sudo_cmd,
+                self.pg_sudo_cmd if self.use_sudo_cmd else '',
                 self.get_client_bin_path(),
                 bin,
                 options
@@ -1594,7 +1594,7 @@ baseurl=%s
     def pg_isready(self):
         cmd = '%s"%spg_isready" %s %s' % \
             (
-                self.pg_sudo_cmd,
+                self.pg_sudo_cmd if self.use_sudo_cmd else '',
                 self.get_server_bin_path(),
                 '' if not(self.srvhost) else '-h ' + self.srvhost,
                 '' if not(self.port) else '-p ' + str(self.port)

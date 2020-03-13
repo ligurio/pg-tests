@@ -120,7 +120,7 @@ class Node(object):
 
     def psql(self, query, a_options=''):
         self.pginst.port = self.port
-        self.pginst.use_sudo_psql = False
+        self.pginst.use_sudo_cmd = False
         if a_options == '':
             a_options = '-U postgres'
         self.pginst.srvhost = self.host
