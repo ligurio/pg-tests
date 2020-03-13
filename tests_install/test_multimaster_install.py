@@ -425,7 +425,7 @@ class Multimaster(object):
                     '-Aqt -U postgres') == '0' and self.nodes[
                 node].psql(
                 "SELECT count(*) FROM pg_prepared_xacts",
-                '-Aqt -U postgres') == '0':
+                    '-Aqt -U postgres') == '0':
                 return True
             else:
                 time.sleep(0.5)
