@@ -176,6 +176,7 @@ class PgInstall:
             addoption = ''
         self.pg_sudo_cmd = '' if windows else \
             ('sudo %s-u postgres ' % addoption)
+        self.use_sudo_psql = True
         self.client_installed = False
         self.server_installed = False
         self.client_path_needed = True
@@ -1237,8 +1238,9 @@ baseurl=%s
             self.exec_cmd_retry(cmd)
 
     def exec_psql(self, query, options=''):
-        cmd = '"%spsql" %s %s %s -c "%s"' % \
+        cmd = '%s"%spsql" %s %s %s -c "%s"' % \
             (
+                self.pg_sudo_cmd if self.use_sudo_psql else '',
                 self.get_client_bin_path(),
                 '' if not(self.srvhost) else '-h ' + self.srvhost,
                 '' if not(self.port) else '-p ' + str(self.port),
