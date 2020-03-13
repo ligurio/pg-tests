@@ -175,8 +175,9 @@ class PgInstall:
                 self.os_version.startswith('7.') or
                 self.os_version.startswith('8.')):
             addoption = ''
-        self.pg_preexec = '' if windows else \
+        self.pg_sudo_cmd = '' if windows else \
             ('sudo %s-u postgres ' % addoption)
+        self.use_sudo_cmd = True
         self.client_installed = False
         self.server_installed = False
         self.client_path_needed = True
@@ -1237,7 +1238,7 @@ baseurl=%s
     def exec_psql(self, query, options=''):
         cmd = '%s"%spsql" %s %s %s -c "%s"' % \
             (
-                self.pg_preexec,
+                self.pg_sudo_cmd if self.use_sudo_cmd else '',
                 self.get_client_bin_path(),
                 '' if not(self.srvhost) else '-h ' + self.srvhost,
                 '' if not(self.port) else '-p ' + str(self.port),
@@ -1262,7 +1263,7 @@ baseurl=%s
     def exec_psql_file(self, sql_file, options='', stdout=None):
         cmd = '%s"%spsql" %s %s %s -f "%s"' % \
             (
-                self.pg_preexec,
+                self.pg_sudo_cmd if self.use_sudo_cmd else '',
                 self.get_client_bin_path(),
                 '' if not(self.srvhost) else '-h ' + self.srvhost,
                 '' if not(self.port) else '-p ' + str(self.port),
@@ -1285,7 +1286,7 @@ baseurl=%s
         """
         cmd = '%s"%sinitdb" -s -D .' % \
             (
-                self.pg_preexec,
+                self.pg_sudo_cmd,
                 self.get_server_bin_path()
             )
         props = {}
@@ -1527,7 +1528,7 @@ baseurl=%s
 
         cmd = '%s"%sinitdb" %s -D "%s"' % \
               (
-                  self.pg_preexec,
+                  self.pg_sudo_cmd,
                   self.get_server_bin_path(),
                   params,
                   self.get_datadir()
@@ -1571,7 +1572,7 @@ baseurl=%s
     def exec_client_bin(self, bin, options=''):
         cmd = '%s"%s%s" %s' % \
             (
-                self.pg_preexec,
+                self.pg_sudo_cmd if self.use_sudo_cmd else '',
                 self.get_client_bin_path(),
                 bin,
                 options
@@ -1582,7 +1583,7 @@ baseurl=%s
     def exec_server_bin(self, bin, options=''):
         cmd = '%s"%s%s" %s' % \
             (
-                self.pg_preexec,
+                self.pg_sudo_cmd,
                 self.get_server_bin_path(),
                 bin,
                 options
@@ -1593,7 +1594,7 @@ baseurl=%s
     def pg_isready(self):
         cmd = '%s"%spg_isready" %s %s' % \
             (
-                self.pg_preexec,
+                self.pg_sudo_cmd if self.use_sudo_cmd else '',
                 self.get_server_bin_path(),
                 '' if not(self.srvhost) else '-h ' + self.srvhost,
                 '' if not(self.port) else '-p ' + str(self.port)
@@ -1608,7 +1609,7 @@ baseurl=%s
         """
         cmd = '%s%s"%spg_ctl" -w -D "%s" %s >"%s" 2>&1' % \
             (
-                self.pg_preexec,
+                self.pg_sudo_cmd,
                 preaction,
                 self.get_server_bin_path(), data_dir,
                 action, os.path.join(data_dir, 'pg_ctl.log')
