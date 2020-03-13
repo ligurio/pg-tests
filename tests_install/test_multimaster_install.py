@@ -120,6 +120,9 @@ class Node(object):
 
     def psql(self, query, a_options=''):
         self.pginst.port = self.port
+        self.pginst.use_sudo_psql = False
+        if a_options == '':
+            a_options = '-U postgres'
         self.pginst.srvhost = self.host
         return self.pginst.exec_psql(query,
                                      options=a_options)
@@ -420,8 +423,10 @@ class Multimaster(object):
             if self.nodes[node].psql(
                     "SELECT count(*) FROM pg_stat_activity WHERE "
                     "application_name='pgbench'",
-                    '-Aqt') == '0' and self.nodes[node].psql(
-                    "SELECT count(*) FROM pg_prepared_xacts", '-Aqt') == '0':
+                    '-Aqt -U postgres') == '0' and self.nodes[
+                node].psql(
+                "SELECT count(*) FROM pg_prepared_xacts",
+                    '-Aqt -U postgres') == '0':
                 return True
             else:
                 time.sleep(0.5)
@@ -485,7 +490,7 @@ class TestMultimasterInstall():
         branch = request.config.getoption('--branch')
 
         if version.startswith('9.') or version == '10' \
-           or not edition.startswith('ent'):
+                or not edition.startswith('ent'):
             print('Version %s %s is not supported' % (edition, version))
             return
 

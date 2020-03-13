@@ -222,7 +222,7 @@ def get_test_versions(edition, version, specified_version, current_version):
 def dumpall(pg, file):
     cmd = '%s"%s" -f "%s"' % \
           (
-              pg.pg_preexec,
+              pg.pg_sudo_cmd,
               os.path.join(client_dir, 'bin', 'pg_dumpall'),
               file
           )

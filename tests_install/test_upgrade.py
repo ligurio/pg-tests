@@ -439,7 +439,7 @@ def upgrade(pg, pgOld):
 
     cmd = '%s"%spg_upgrade" -d "%s" -b "%s" -D "%s" -B "%s"' % \
           (
-              pg.pg_preexec,
+              pg.pg_sudo_cmd,
               pg.get_server_bin_path(),
               pgOld.get_datadir(),
               pgOld.get_default_bin_path(),
@@ -459,7 +459,7 @@ def upgrade(pg, pgOld):
 def dumpall(pg, file):
     cmd = '%s"%spg_dumpall" -h localhost -f "%s"' % \
           (
-              pg.pg_preexec,
+              pg.pg_sudo_cmd,
               pg.get_server_bin_path(),
               file
           )
