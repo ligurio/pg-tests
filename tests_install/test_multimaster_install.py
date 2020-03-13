@@ -120,7 +120,6 @@ class Node(object):
 
     def psql(self, query, a_options=''):
         self.pginst.port = self.port
-        self.pginst.pg_preexec = ''
         self.pginst.srvhost = self.host
         return self.pginst.exec_psql(query,
                                      options=a_options)
