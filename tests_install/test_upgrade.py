@@ -1,7 +1,5 @@
 import platform
-
 import pytest
-
 import os
 
 from allure_commons.types import LabelType
@@ -325,6 +323,32 @@ DUMP_RESTORE_ROUTES = {
 
 
 upgrade_dir = os.path.join(tempfile.gettempdir(), 'upgrade')
+amcheck_sql = """
+create extension if not exists amcheck;
+create extension if not exists pageinspect;
+select count(*) from (
+    select
+        i.indexrelid::regclass,
+        i.indexrelid,
+        am.amname,
+        case when (bt_metap(indexrelid::regclass::varchar)).version = 4 then
+            bt_index_parent_check(i.indexrelid, true, true)
+        else
+            bt_index_parent_check(i.indexrelid, true)
+        end
+    from
+        pg_index i
+        join pg_opclass op ON i.indclass[0] = op.oid
+        join pg_am am ON op.opcmethod = am.oid
+        join pg_class c ON i.indexrelid = c.oid
+        join pg_namespace n ON c.relnamespace = n.oid
+    where
+        am.amname='btree' and n.nspname != 'pg_catalog'
+        and c.relpersistence != 't'
+        and c.relkind = 'i'
+        and i.indisready and i.indisvalid
+) t;
+"""
 
 
 def start(pg):
@@ -423,6 +447,9 @@ def dump_and_diff_dbs(oldKey, pgNew, prefix):
     file2 = os.path.join(tempdir, '%s-expected.sql' % oldKey)
     diff_file = os.path.join(tempdir, "%s-%s.sql.diff" % (prefix, oldKey))
     diff_dbs(file1, file2, diff_file)
+    # PGPRO-3679
+    if not (pgNew.edition == 'ent' and pgNew.version == '11'):
+        amcheck(pgNew)
 
 
 def upgrade(pg, pgOld):
@@ -489,6 +516,16 @@ def after_upgrade(pg, pgOld):
                       'wb') as out:
                 pg.exec_psql_file(file_name, stdout=out)
     print "after_upgrade complete in %s sec" % (time.time()-start_time)
+
+
+def amcheck(pg):
+    dbs = pg.exec_psql_select("SELECT datname FROM pg_database"). \
+        splitlines()
+    for db in dbs:
+        if db != 'template0' and db != 'template1':
+            os.environ['PGDATABASE'] = db
+            pg.exec_psql_script(amcheck_sql)
+    os.unsetenv('PGDATABASE')
 
 
 def init_cluster(pg, force_remove=True, initdb_params='',
