@@ -171,11 +171,11 @@
     tags:
     - skip_ansible_lint
 
-  - name: Disable RedHat subscription (RedHat 7)
+  - name: Disable RedHat subscription (RedHat 7, 8)
     shell: subscription-manager remove --all;
            subscription-manager unregister;
            subscription-manager clean
-    when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "7"
+    when: ansible_distribution == "RedHat" and (ansible_distribution_major_version == "7" or ansible_distribution_major_version == "8")
     become_method: su
     become: true
 
