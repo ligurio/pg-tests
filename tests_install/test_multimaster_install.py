@@ -419,17 +419,26 @@ class Multimaster(object):
 
     def sure_pgbench_is_dead(self, node, timeout=60):
         start_time = time.time()
+        no_pgbench = False
+        no_prepared_xacts = False
         while time.time() - start_time < timeout:
-            if self.nodes[node].psql(
+            no_pgbench = self.nodes[node].psql(
                     "SELECT count(*) FROM pg_stat_activity WHERE "
-                    "application_name='pgbench'",
-                    '-Aqt -U postgres') == '0' and self.nodes[
-                node].psql(
+                    "application_name='pgbench'", '-Aqt -U postgres') == '0'
+            no_prepared_xacts = self.nodes[node].psql(
                 "SELECT count(*) FROM pg_prepared_xacts",
-                    '-Aqt -U postgres') == '0':
+                '-Aqt -U postgres') == '0'
+            if no_pgbench and no_prepared_xacts:
                 return True
             else:
                 time.sleep(0.5)
+        if not no_pgbench:
+            print(self.nodes[node].psql("SELECT * FROM pg_stat_activity "
+                                        " WHERE application_name='pgbench'",
+                                        '-U postgres'))
+        if not no_prepared_xacts:
+            print(self.nodes[node].psql("SELECT * FROM pg_prepared_xacts",
+                                        '-U postgres'))
         raise Exception('Time is out')
 
     def wait_for_referee(self, node=1, timeout=600):
