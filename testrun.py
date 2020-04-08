@@ -606,6 +606,10 @@ def close_env(domname, saveimg=False, destroys0=False):
     conn.close()
 
 
+def log(s):
+    print time.strftime("%H:%M:%S:"), s
+
+
 def main(conn):
     start = time.time()
     names = list_images()
@@ -726,7 +730,7 @@ def main(conn):
                     args.branch)
                 if DEBUG:
                     print("Test command:\n%s" % cmd)
-                print("Running test %s%s..." % (
+                log("Test %s%s started..." % (
                     testname,
                     '' if stage == 0 else ' (stage %d)' % (stage + 1)))
                 sys.stdout.flush()
@@ -740,12 +744,14 @@ def main(conn):
                             cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD,
                             skip_ret_code_check=True)
                 except Exception as ex:
+                    log("Test execution failed.")
                     if not args.keep:
                         try:
                             close_env(domname, False, True)
                         except Exception:
                             pass
                     raise ex
+                log("Test ended.")
 
                 if args.export:
                     export_results(
