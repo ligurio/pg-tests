@@ -1,4 +1,3 @@
-import ConfigParser
 import os
 import platform
 import random
@@ -14,6 +13,11 @@ import math
 
 from enum import Enum
 from time import sleep
+
+try:
+    import configparser
+except ImportError:  # py2compat
+    import ConfigParser as configparser
 
 REMOTE_LOGIN = 'test'
 REMOTE_ROOT = 'root'
@@ -361,7 +365,7 @@ def create_env_info_from_config(env_name, config):
     """
     env_info = {env_name: {}}
     env_info[env_name]['nodes'] = []
-    config_file = ConfigParser.ConfigParser()
+    config_file = configparser.ConfigParser()
     config_file.read(config)
     for node in config_file.sections():
         for value in config_file.items(node):
