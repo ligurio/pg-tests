@@ -20,28 +20,13 @@
             distribution {{ ansible_distribution }} {{ ansible_distribution_major_version }} \
             ({{ ansible_architecture }})."
 
-  - name: Update repos and install acpid-events-power, gdb (ALT)
-    shell: apt-get update &&
-           apt-get install -y gdb acpid-events-power && /sbin/service acpid restart || exit 1;
-           apt-get install -y glibc-core;
-           sed s/#ZONE=/ZONE=/ -i /etc/sysconfig/clock; /sbin/service clock tzset;
-           echo "Enable coredump on altlinux-spt-7 ( https://www.altlinux.org/Features/Core )";
-           sed "s/^\(ulimit -Sc 0\)/# \1/" -i /etc/profile;
-    args:
-      warn: no
-    when: ansible_distribution == 'ALT'
-    become_method: su
-    become: true
-    tags:
-    - skip_ansible_lint
-
   - name: Fix private temps (ALT 8,9)
     shell: /usr/sbin/control pam_mktemp disabled
     args:
       warn: no
     become_method: su
     become: true
-    when: ansible_distribution == "ALT" and (ansible_distribution_major_version == "8" or ansible_distribution_major_version == "9")
+    when: (ansible_distribution == "ALT" or ansible_distribution == "Altlinux") and (ansible_distribution_major_version == "8" or ansible_distribution_major_version == "9")
     tags:
     - skip_ansible_lint
 
@@ -70,6 +55,21 @@
     when: ansible_os_family != "Windows"
     become_method: su
     become: true
+
+  - name: Update repos and install acpid-events-power, gdb (ALT)
+    shell: apt-get update &&
+           apt-get install -y gdb acpid-events-power && /sbin/service acpid restart || exit 1;
+           apt-get install -y glibc-core;
+           sed s/#ZONE=/ZONE=/ -i /etc/sysconfig/clock; /sbin/service clock tzset;
+           echo "Enable coredump on altlinux-spt-7 ( https://www.altlinux.org/Features/Core )";
+           sed "s/^\(ulimit -Sc 0\)/# \1/" -i /etc/profile;
+    args:
+      warn: no
+    when: ansible_distribution == 'ALT' or ansible_distribution == 'Altlinux'
+    become_method: su
+    become: true
+    tags:
+    - skip_ansible_lint
 
   - name: Setup DVDs as apt repositories (Astra Smolensk)
     shell: if [ -d /mnt/dvd/dists ]; then

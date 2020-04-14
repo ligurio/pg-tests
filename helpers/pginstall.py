@@ -525,7 +525,7 @@ class PgInstall:
         elif self.os_name == "ALT Linux " and self.os_version == "7.0.5":
             return "altlinux"
         elif self.os_name == "ALT " and self.os_version == "8":
-            return "alt-sp"
+            return "altlinux-spt"
         elif self.os_name == "ROSA Enterprise Linux Server":
             if self.os_version == "6.8":
                 return "rosa-chrome"
@@ -816,9 +816,14 @@ baseurl=%s
 
     def setup_extra_repos(self):
         if self.product == 'postgrespro' and self.__is_os_altlinux():
+            list_file = 'yandex'
+            if not self.os_version.startswith('9.'):
+                list_file = 'alt'
+                if self.os_version == '8' and self.os_name == 'ALT ':
+                    list_file = 'altsp'
             cmd = r"perl -i -pe 's/^\s*([^#](.*?)x86_64)(\s+classic\s*)$/" \
                   "$1$3$1 debuginfo\n/' /etc/apt/sources.list.d/%s.list" % \
-                  ('yandex' if self.os_version.startswith('9.') else 'alt')
+                  list_file
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             self.exec_cmd_retry('apt-get update')
