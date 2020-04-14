@@ -373,9 +373,9 @@ def create_env_info_from_config(env_name, config):
 
 def refresh_env_win():
     if sys.hexversion > 0x03000000:
-        import winreg
+        import winreg  # pylint: disable=import-error
     else:
-        import _winreg as winreg
+        import _winreg as winreg  # pylint: disable=import-error
 
     regkey = winreg.OpenKey(
         winreg.HKEY_LOCAL_MACHINE,
