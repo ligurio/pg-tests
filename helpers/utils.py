@@ -107,13 +107,13 @@ def copy_file(remote_path, local_path, hostname, dir=False,
     if dir:
         print(sftp.listdir(remote_path))
         for file in sftp.listdir(remote_path):
-            print "Copying file '%s', remote host is '%s'" % (
-                file, hostname)
+            print("Copying file '%s', remote host is '%s'" % (
+                file, hostname))
             sftp.get(os.path.join(remote_path, file),
                      os.path.join(local_path, file))
     else:
-        print "Copying file '%s', remote host is '%s'" % (
-            remote_path, hostname)
+        print("Copying file '%s', remote host is '%s'" % (
+            remote_path, hostname))
         sftp.get(remote_path, local_path)
     sftp.close()
     transport.close()
@@ -180,7 +180,7 @@ def exec_command(cmd, hostname, login, password,
         client.close()
         return
 
-    print "Executing '%s' on %s..." % (cmd, hostname)
+    print("Executing '%s' on %s..." % (cmd, hostname))
     chan.exec_command(cmd)
     retcode = chan.recv_exit_status()
     while chan.recv_ready():
@@ -242,7 +242,7 @@ def exec_command_win(cmd, hostname,
         p.close_shell(shell_id)
         return
 
-    print "Executing '%s' on %s..." % (cmd, hostname)
+    print("Executing '%s' on %s..." % (cmd, hostname))
     command_id = p.run_command(shell_id, cmd)
     stdout, stderr, retcode = p.get_command_output(shell_id, command_id)
 
@@ -509,10 +509,10 @@ def diff_dbs(file1, file2, diff_file):
     import time
     start_time = time.time()
     lines1 = read_dump(file1)
-    print "%s read in %s sec" % (file1, time.time()-start_time)
+    print("%s read in %s sec" % (file1, time.time()-start_time))
     start_time = time.time()
     lines2 = read_dump(file2)
-    print "%s read in %s sec" % (file2, time.time()-start_time)
+    print("%s read in %s sec" % (file2, time.time()-start_time))
     difference = difflib.unified_diff(
         lines1,
         lines2,
@@ -527,9 +527,9 @@ def diff_dbs(file1, file2, diff_file):
             lines = file.readlines()
             i = 1
             for line in lines:
-                print line
+                print(line)
                 if i > 20:
-                    print "..."
+                    print("...")
                     break
                 i = i + 1
         raise Exception("Difference found. See file " + diff_file)
