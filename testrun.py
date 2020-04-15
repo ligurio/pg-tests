@@ -23,8 +23,11 @@ from helpers.utils import (copy_file, copy_reports_win,
                            REMOTE_LOGIN, REMOTE_PASSWORD,
                            REMOTE_ROOT_PASSWORD)
 
-reload(sys)
-sys.setdefaultencoding('utf8')
+try:  # py2compat
+    reload(sys)
+    sys.setdefaultencoding('utf8')
+except Exception:
+    pass
 
 MAX_DURATION = 4 * 60 * 60
 DEBUG = False
