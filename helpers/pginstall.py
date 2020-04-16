@@ -1033,14 +1033,13 @@ baseurl=%s
                 pkgs.remove(pkg)
             if 'pgbadger' in pkg:
                 pkgs.remove(pkg)
-        if self.product == 'postgrespro' and \
-                self.version not in ['9.5', '9.6'] and \
-                self.get_base_package_name():
-            pkgs.remove(self.get_base_package_name())
-            if self.__is_os_altlinux():
-                for pkg in pkgs[:]:
-                    if re.match('.*-deb.*', pkg):
-                        pkgs.remove(pkg)
+        if self.product == 'postgrespro' and self.get_base_package_name():
+            if self.version not in ['9.5', '9.6']:
+                pkgs.remove(self.get_base_package_name())
+                if self.__is_os_altlinux():
+                    # Exclude {base_package}-debuginfo as
+                    # it requires {base_package}
+                    pkgs.remove(self.get_base_package_name() + '-debuginfo')
         self.install_package(" ".join(pkgs))
         self.client_installed = True
         self.server_installed = True
