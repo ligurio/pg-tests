@@ -610,7 +610,7 @@ def close_env(domname, saveimg=False, destroys0=False):
 
 
 def log(s):
-    print(time.strftime("%H:%M:%S:"), s)
+    print(time.strftime("%H:%M:%S: " + str(s)))
 
 
 def main(conn):
