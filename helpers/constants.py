@@ -223,6 +223,16 @@ FIRST_RELEASE = {
         'postgresql--11': None,
         'postgresql--12': None,
     },
+    'Oracle Linux Server 8.0': {
+        'postgrespro-std-9.6': None,
+        'postgrespro-std-10': '10.13.1',
+        'postgrespro-std-11': '11.8.1',
+        'postgrespro-std-12': '12.3.1',
+        'postgrespro-ent-9.6': None,
+        'postgrespro-ent-10': '10.13.1',
+        'postgrespro-ent-11': '11.8.1',
+        'postgrespro-ent-12': '12.3.1',
+    },
     '10 10.0.14393': {
         'postgresql--9.6': None,
         'postgresql--10': None,
