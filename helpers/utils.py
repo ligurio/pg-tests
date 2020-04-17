@@ -10,6 +10,7 @@ import re
 import difflib
 import urllib
 import math
+import gc
 
 from enum import Enum
 from time import sleep
@@ -531,6 +532,7 @@ def diff_dbs(file1, file2, diff_file):
                     break
                 i = i + 1
         raise Exception("Difference found. See file " + diff_file)
+    gc.collect()
 
 
 def download_dump(product, edition, version, dir, custom_dump=None):
