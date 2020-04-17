@@ -445,7 +445,7 @@ def read_dump(file):
     def preprocess(str):
         if str.strip() == 'SET default_table_access_method = heap;':
             return ''
-        ustr = str.upper();
+        ustr = str.upper()
         result = str
         if 'ALTER ROLE' in ustr:
             result = alterrolere.sub(r"\1PASSWORD ''", result)
