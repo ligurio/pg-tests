@@ -3,16 +3,19 @@ FIRST_RELEASE = {
         'postgresql--9.6': None,
         'postgresql--10': None,
         'postgresql--11': None,
+        'postgresql--12': None,
     },
     "ROSA Enterprise Linux Cobalt 7.3": {
         'postgresql--9.6': None,
         'postgresql--10': None,
         'postgresql--11': None,
+        'postgresql--12': None,
     },
     "ROSA Enterprise Linux Server 7.3": {
         'postgresql--9.6': None,
         'postgresql--10': None,
         'postgresql--11': None,
+        'postgresql--12': None,
     },
     "SUSE Linux Enterprise Server  12": {
         'postgresql--9.6': None,
