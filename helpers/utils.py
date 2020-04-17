@@ -10,6 +10,7 @@ import re
 import difflib
 import urllib
 import math
+import gc
 
 from enum import Enum
 from time import sleep
@@ -425,6 +426,8 @@ def read_dump(file):
     def normalize_numbers(line):
         def norma(match):
             number = match.group()
+            if not ('.' in number or 'e' in number):
+                return number
             try:
                 f = float(number)
             except ValueError:
@@ -442,26 +445,18 @@ def read_dump(file):
     def preprocess(str):
         if str.strip() == 'SET default_table_access_method = heap;':
             return ''
-        replaced = alterrolere.sub(
-            r"\1PASSWORD ''",
-            str
-        )
-        replaced = createdatabasere.sub(
-            r"\1LC_COLLATE = '\2'\3",
-            replaced
-        )
-        replaced = exre.sub(
-            r"EXECUTE ***",
-            replaced
-        )
-
-        replaced = re.sub(
-            r"\s?--.*",
-            r"",
-            replaced
-        )
-        replaced = normalize_numbers(replaced)
-        return replaced
+        ustr = str.upper();
+        result = str
+        if 'ALTER ROLE' in ustr:
+            result = alterrolere.sub(r"\1PASSWORD ''", result)
+        elif 'CREATE DATABASE' in ustr:
+            result = createdatabasere.sub(r"\1LC_COLLATE = '\2'\3", result)
+        elif 'EXECUTE' in ustr:
+            result = exre.sub(r"EXECUTE ***", result)
+        if '--' in result:
+            result = re.sub(r"\s?--.*", "", result)
+        result = normalize_numbers(result)
+        return result
 
     lines = []
     lines_to_sort = []
@@ -537,6 +532,7 @@ def diff_dbs(file1, file2, diff_file):
                     break
                 i = i + 1
         raise Exception("Difference found. See file " + diff_file)
+    gc.collect()
 
 
 def download_dump(product, edition, version, dir, custom_dump=None):
