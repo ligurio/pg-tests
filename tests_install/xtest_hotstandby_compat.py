@@ -96,17 +96,24 @@ def setup_sender(pginst, waldir, backup_targetdir):
     time.sleep(5)
 
 
-def start_receiver(pginst, waldir):
+def start_receiver(pginst, waldir, pre12):
     # Remove custom configuration
     os.unlink(os.path.join(pginst.get_datadir(),
                            'postgresql.auto.conf'))
+    recovery_params_conf = 'recovery.conf' if pre12 else 'postgresql.conf'
     with open(os.path.join(pginst.get_datadir(),
-                           'recovery.conf'), "a") as conf:
+                           recovery_params_conf), "a") as conf:
         conf.write(
             "\nrestore_command = " +
-            ("'copy \"" + waldir + "\\%f\" \"%p\"'\n"
+            ("'copy \"" + waldir.replace("\\", "\\\\") + "\\\\%f\" \"%p\"'\n"
              if windows_os else
              "'cp \"" + waldir + "/%f\" \"%p\"'\n"))
+
+    if not pre12:
+        with open(os.path.join(pginst.get_datadir(),
+                               'standby.signal'), "a") as signal:
+            signal.write("")
+
     with open(os.path.join(pginst.get_datadir(),
                            'postgresql.conf'), "a") as conf:
         conf.write("\n"
@@ -185,7 +192,15 @@ def run_hs_test(primary, standby, pgsrcdir):
         (primary.get_port(),
          os.path.join(pgsrcdir, 'src', 'test', 'regress',
                       'sql', 'hs_primary_setup.sql')))
-    time.sleep(3)
+    for i in range(30, 0, -1):
+        try:
+            standby.exec_psql("SELECT 1", "-d regression")
+            break
+        except Exception as ex:
+            if i == 1:
+                raise Exception(
+                    "standby failed to replicate the regression database.")
+            time.sleep(1)
     print("Performing pg_regress test...")
     comcmd = (r'''set -o pipefail &&
 export PGPORT=%d && PATH=\"%s:$PATH\" &&
@@ -278,6 +293,7 @@ class TestHotStandbyCompatibility():
         if edition == 'ent' and version == '10':
             if arcversions[0] < '  10.   4.   1':
                 fix_extra_libpq_options = True
+        pre12version = version in ['9.6', '10', '11']
 
         if windows_os:
             waldir = r'C:\tmp\pgwal'
@@ -371,7 +387,7 @@ class TestHotStandbyCompatibility():
 
             # Test replication from old to new
             setup_sender(pgold, waldir, pgnew.get_datadir())
-            start_receiver(pgnew, waldir)
+            start_receiver(pgnew, waldir, pre12version)
 
             run_hs_test(pgold, pgnew, pgsrcdir)
 
@@ -384,7 +400,7 @@ class TestHotStandbyCompatibility():
             setup_sender(pgnew, waldir, pgold.get_datadir())
             if fix_extra_libpq_options:
                 workaround_for_extra_libpq_options(pgold)
-            start_receiver(pgold, waldir)
+            start_receiver(pgold, waldir, pre12version)
 
             run_hs_test(pgnew, pgold, pgsrcdir)
 
