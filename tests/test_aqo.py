@@ -1,7 +1,7 @@
 import glob
 import json
-import matplotlib.pyplot as plot
-import numpy
+import matplotlib.pyplot as plot  # pylint: disable=import-error
+import numpy  # pylint: disable=import-error
 import os
 import platform
 import psycopg2

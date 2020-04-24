@@ -140,6 +140,9 @@ UPGRADE_ROUTES = {
     'postgrespro-ent-12': {
         'from': [
             {
+                'name': 'postgrespro', 'edition': 'std', 'version': '12'
+            },
+            {
                 'name': 'postgrespro', 'edition': 'std', 'version': '11'
             },
             {
@@ -147,6 +150,19 @@ UPGRADE_ROUTES = {
             },
             {
                 'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'ent', 'version': '11'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'ent', 'version': '10'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'ent', 'version': '9.6'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '12',
+                'initdb-params': '--locale=C'
             },
             {
                 'name': 'postgresql', 'edition': '', 'version': '11',
@@ -317,6 +333,48 @@ DUMP_RESTORE_ROUTES = {
                 'initdb-params': '--locale=C'
             }
         ]
+    },
+
+    'postgrespro-ent-12': {
+        'from': [
+            {
+                'name': 'postgrespro', 'edition': 'ent', 'version': '9.6'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'ent', 'version': '10'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'ent', 'version': '11'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '10'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '11'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '12'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '10',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '11',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '12',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '9.6',
+                'initdb-params': '--locale=C'
+            }
+        ]
     }
 
 }
@@ -348,6 +406,40 @@ select count(*) from (
         and c.relkind = 'i'
         and i.indisready and i.indisvalid
 ) t;
+"""
+remove_xid_type_columns_sql = """
+DO $$
+DECLARE
+    alter_command TEXT;
+BEGIN
+    FOR alter_command IN
+        SELECT 'ALTER TABLE "' || table_schema || '"."' ||
+            table_name || '" DROP COLUMN "' || column_name || '" CASCADE;'
+            AS alter_command
+        FROM information_schema.columns
+        WHERE data_type = 'xid' and table_schema != 'pg_catalog'
+    LOOP
+        EXECUTE alter_command;
+    END LOOP;
+END;
+$$;
+"""
+drop_oids_sql = """
+DO $$
+DECLARE
+    table_name TEXT;
+BEGIN
+    FOR table_name IN
+        SELECT '"' || n.nspname || '"."' || c.relname || '"' AS tab
+        FROM pg_catalog.pg_class c, pg_catalog.pg_namespace n
+        WHERE
+            c.relnamespace = n.oid AND c.relhasoids AND n.nspname
+            NOT IN ('pg_catalog') order by c.oid
+    LOOP
+        EXECUTE 'ALTER TABLE ' || table_name || ' SET WITHOUT OIDS';
+    END LOOP;
+END;
+$$;
 """
 
 
@@ -408,20 +500,13 @@ def install_server(product, edition, version, milestone, branch, windows):
     return pg
 
 
-def drop_oids(pg):
+def do_in_all_dbs(pg, script):
     dbs = pg.exec_psql_select("SELECT datname FROM pg_database"). \
         splitlines()
     for db in dbs:
         if db != 'template0':
             os.environ['PGDATABASE'] = db
-            tables = pg.exec_psql_select(
-                "SELECT CONCAT(n.nspname, '.', c.relname) as tab "
-                "FROM   pg_catalog.pg_class c, pg_catalog.pg_namespace n "
-                "WHERE  c.relnamespace = n.oid AND c.relhasoids "
-                "AND n.nspname NOT IN ('pg_catalog') "
-                "order by c.oid").splitlines()
-            for table in tables:
-                pg.exec_psql('ALTER TABLE "%s" SET WITHOUT OIDS' % table)
+            pg.exec_psql_script(script)
     os.unsetenv('PGDATABASE')
 
 
@@ -432,8 +517,12 @@ def generate_db(pg, pgnew, custom_dump=None):
     with open(os.path.join(tempdir, 'load-%s.log' % key), 'wb') as out:
         pg.exec_psql_file(dump_file_name, '-q',
                           stdout=out)
-    if pgnew.version == "12" and pg.version != "12":
-        drop_oids(pg)
+    if pgnew.version not in ["9.6", "10", "11"] and \
+            pg.version in ["9.6", "10", "11"]:
+        do_in_all_dbs(pg, drop_oids_sql)
+    if pgnew.edition in ['ent', 'ent-cert'] and \
+            pg.edition not in ['ent', 'ent-cert']:
+        do_in_all_dbs(pg, remove_xid_type_columns_sql)
     expected_file_name = os.path.join(tempdir,
                                       "%s-expected.sql" % key)
     dumpall(pgnew, expected_file_name)
@@ -449,7 +538,7 @@ def dump_and_diff_dbs(oldKey, pgNew, prefix):
     diff_dbs(file1, file2, diff_file)
     # PGPRO-3679
     if not (pgNew.edition == 'ent' and pgNew.version == '11'):
-        amcheck(pgNew)
+        do_in_all_dbs(pgNew, amcheck_sql)
 
 
 def upgrade(pg, pgOld):
@@ -516,16 +605,6 @@ def after_upgrade(pg, pgOld):
                       'wb') as out:
                 pg.exec_psql_file(file_name, stdout=out)
     print "after_upgrade complete in %s sec" % (time.time()-start_time)
-
-
-def amcheck(pg):
-    dbs = pg.exec_psql_select("SELECT datname FROM pg_database"). \
-        splitlines()
-    for db in dbs:
-        if db != 'template0' and db != 'template1':
-            os.environ['PGDATABASE'] = db
-            pg.exec_psql_script(amcheck_sql)
-    os.unsetenv('PGDATABASE')
 
 
 def init_cluster(pg, force_remove=True, initdb_params='',

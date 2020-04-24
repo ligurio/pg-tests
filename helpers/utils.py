@@ -1,4 +1,3 @@
-import ConfigParser
 import os
 import platform
 import random
@@ -11,9 +10,15 @@ import re
 import difflib
 import urllib
 import math
+import gc
 
 from enum import Enum
 from time import sleep
+
+try:
+    import configparser
+except ImportError:  # py2compat
+    import ConfigParser as configparser
 
 REMOTE_LOGIN = 'test'
 REMOTE_ROOT = 'root'
@@ -107,13 +112,13 @@ def copy_file(remote_path, local_path, hostname, dir=False,
     if dir:
         print(sftp.listdir(remote_path))
         for file in sftp.listdir(remote_path):
-            print "Copying file '%s', remote host is '%s'" % (
-                file, hostname)
+            print("Copying file '%s', remote host is '%s'" % (
+                file, hostname))
             sftp.get(os.path.join(remote_path, file),
                      os.path.join(local_path, file))
     else:
-        print "Copying file '%s', remote host is '%s'" % (
-            remote_path, hostname)
+        print("Copying file '%s', remote host is '%s'" % (
+            remote_path, hostname))
         sftp.get(remote_path, local_path)
     sftp.close()
     transport.close()
@@ -180,7 +185,7 @@ def exec_command(cmd, hostname, login, password,
         client.close()
         return
 
-    print "Executing '%s' on %s..." % (cmd, hostname)
+    print("Executing '%s' on %s..." % (cmd, hostname))
     chan.exec_command(cmd)
     retcode = chan.recv_exit_status()
     while chan.recv_ready():
@@ -242,7 +247,7 @@ def exec_command_win(cmd, hostname,
         p.close_shell(shell_id)
         return
 
-    print "Executing '%s' on %s..." % (cmd, hostname)
+    print("Executing '%s' on %s..." % (cmd, hostname))
     command_id = p.run_command(shell_id, cmd)
     stdout, stderr, retcode = p.get_command_output(shell_id, command_id)
 
@@ -361,7 +366,7 @@ def create_env_info_from_config(env_name, config):
     """
     env_info = {env_name: {}}
     env_info[env_name]['nodes'] = []
-    config_file = ConfigParser.ConfigParser()
+    config_file = configparser.ConfigParser()
     config_file.read(config)
     for node in config_file.sections():
         for value in config_file.items(node):
@@ -373,9 +378,9 @@ def create_env_info_from_config(env_name, config):
 
 def refresh_env_win():
     if sys.hexversion > 0x03000000:
-        import winreg
+        import winreg  # pylint: disable=import-error
     else:
-        import _winreg as winreg
+        import _winreg as winreg  # pylint: disable=import-error
 
     regkey = winreg.OpenKey(
         winreg.HKEY_LOCAL_MACHINE,
@@ -421,6 +426,8 @@ def read_dump(file):
     def normalize_numbers(line):
         def norma(match):
             number = match.group()
+            if not ('.' in number or 'e' in number):
+                return number
             try:
                 f = float(number)
             except ValueError:
@@ -438,26 +445,18 @@ def read_dump(file):
     def preprocess(str):
         if str.strip() == 'SET default_table_access_method = heap;':
             return ''
-        replaced = alterrolere.sub(
-            r"\1PASSWORD ''",
-            str
-        )
-        replaced = createdatabasere.sub(
-            r"\1LC_COLLATE = '\2'\3",
-            replaced
-        )
-        replaced = exre.sub(
-            r"EXECUTE ***",
-            replaced
-        )
-
-        replaced = re.sub(
-            r"\s?--.*",
-            r"",
-            replaced
-        )
-        replaced = normalize_numbers(replaced)
-        return replaced
+        ustr = str.upper()
+        result = str
+        if 'ALTER ROLE' in ustr:
+            result = alterrolere.sub(r"\1PASSWORD ''", result)
+        elif 'CREATE DATABASE' in ustr:
+            result = createdatabasere.sub(r"\1LC_COLLATE = '\2'\3", result)
+        elif 'EXECUTE' in ustr:
+            result = exre.sub(r"EXECUTE ***", result)
+        if '--' in result:
+            result = re.sub(r"\s?--.*", "", result)
+        result = normalize_numbers(result)
+        return result
 
     lines = []
     lines_to_sort = []
@@ -509,10 +508,10 @@ def diff_dbs(file1, file2, diff_file):
     import time
     start_time = time.time()
     lines1 = read_dump(file1)
-    print "%s read in %s sec" % (file1, time.time()-start_time)
+    print("%s read in %s sec" % (file1, time.time()-start_time))
     start_time = time.time()
     lines2 = read_dump(file2)
-    print "%s read in %s sec" % (file2, time.time()-start_time)
+    print("%s read in %s sec" % (file2, time.time()-start_time))
     difference = difflib.unified_diff(
         lines1,
         lines2,
@@ -527,12 +526,13 @@ def diff_dbs(file1, file2, diff_file):
             lines = file.readlines()
             i = 1
             for line in lines:
-                print line
+                print(line)
                 if i > 20:
-                    print "..."
+                    print("...")
                     break
                 i = i + 1
         raise Exception("Difference found. See file " + diff_file)
+    gc.collect()
 
 
 def download_dump(product, edition, version, dir, custom_dump=None):

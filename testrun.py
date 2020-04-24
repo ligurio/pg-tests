@@ -23,8 +23,11 @@ from helpers.utils import (copy_file, copy_reports_win,
                            REMOTE_LOGIN, REMOTE_PASSWORD,
                            REMOTE_ROOT_PASSWORD)
 
-reload(sys)
-sys.setdefaultencoding('utf8')
+try:  # py2compat
+    reload(sys)
+    sys.setdefaultencoding('utf8')
+except Exception:
+    pass
 
 MAX_DURATION = 4 * 60 * 60
 DEBUG = False
@@ -357,7 +360,7 @@ def create_env(name, domname, domimage=None):
 
     dom = conn.createLinux(xmldesc, 0)
     if dom is None:
-        print "Failed to create a test domain"
+        print("Failed to create a test domain")
 
     domipaddress = None
     timeout = 0
@@ -370,12 +373,12 @@ def create_env(name, domname, domimage=None):
             raise Exception(
                 "Failed to obtain IP address (for MAC %s) in domain %s." %
                 (dommac, domname))
-        print "Waiting for IP address...%d" % timeout
+        print("Waiting for IP address...%d" % timeout)
         time.sleep(timeout)
 
-    print "Domain name: %s\nIP address: %s, MAC address: %s" % (dom.name(),
+    print("Domain name: %s\nIP address: %s, MAC address: %s" % (dom.name(),
                                                                 domipaddress,
-                                                                dommac)
+                                                                dommac))
     conn.close()
     if name[0:3] != 'win':
         # We don't use SSH on Windows
@@ -423,7 +426,7 @@ def setup_env(domipaddress, domname, linux_os, tests_dir):
 
     if DEBUG:
         ansible_cmd += " -vvv"
-    print ansible_cmd
+    print(ansible_cmd)
     retcode = call(ansible_cmd.split(' '))
     if retcode != 0:
         raise Exception("Setup of the test environment %s failed." % domname)
@@ -536,12 +539,12 @@ def save_env(domname):
     while True:
         timeout += 5
         try:
-            print "Waiting for domain shutdown...%d" % timeout
+            print("Waiting for domain shutdown...%d" % timeout)
             time.sleep(timeout)
             if not dom.isActive():
                 break
             dom.shutdownFlags(sdFlags)
-        except libvirt.libvirtError, e:
+        except libvirt.libvirtError:
             break
         if timeout == 60:
             raise Exception('Could not shutdown domain %s.' % domname)
@@ -556,7 +559,7 @@ def restore_env(domname):
     try:
         dom = conn.lookupByName(domname)
         dom.destroy()
-    except libvirt.libvirtError, e:
+    except libvirt.libvirtError:
         pass
     conn.close()
 
@@ -586,7 +589,7 @@ def close_env(domname, saveimg=False, destroys0=False):
             try:
                 if dom.destroy() == 0:
                     break
-            except libvirt.libvirtError, e:
+            except libvirt.libvirtError:
                 pass
             timeout += 5
             if timeout == 60:
@@ -594,7 +597,7 @@ def close_env(domname, saveimg=False, destroys0=False):
             time.sleep(timeout)
             try:
                 dom = conn.lookupByName(domname)
-            except libvirt.libvirtError, e:
+            except libvirt.libvirtError:
                 break
 
         diskfile = get_dom_disk(domname)
@@ -604,6 +607,10 @@ def close_env(domname, saveimg=False, destroys0=False):
                 os.remove(diskfile + '.s0')
 
     conn.close()
+
+
+def log(s):
+    print(time.strftime("%H:%M:%S: " + str(s)))
 
 
 def main(conn):
@@ -646,11 +653,11 @@ def main(conn):
         sys.exit(0)
 
     if args.target is None:
-        print "No target name"
+        print("No target name")
         sys.exit(1)
 
     if not (os.path.exists(args.run_tests)):
-        print "Test(s) '%s' is not found." % args.run_tests
+        print("Test(s) '%s' is not found." % args.run_tests)
         sys.exit(1)
     tests = []
     for test in args.run_tests.split(','):
@@ -661,7 +668,7 @@ def main(conn):
         else:
             tests.append(test)
     if not tests:
-        print "No tests scripts found in %s." % args.run_tests
+        print("No tests scripts found in %s." % args.run_tests)
         sys.exit(1)
 
     tests_dir = args.run_tests if os.path.isdir(args.run_tests) else \
@@ -726,7 +733,7 @@ def main(conn):
                     args.branch)
                 if DEBUG:
                     print("Test command:\n%s" % cmd)
-                print("Running test %s%s..." % (
+                log("Test %s%s started..." % (
                     testname,
                     '' if stage == 0 else ' (stage %d)' % (stage + 1)))
                 sys.stdout.flush()
@@ -740,12 +747,14 @@ def main(conn):
                             cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD,
                             skip_ret_code_check=True)
                 except Exception as ex:
+                    log("Test execution failed.")
                     if not args.keep:
                         try:
                             close_env(domname, False, True)
                         except Exception:
                             pass
                     raise ex
+                log("Test ended.")
 
                 if args.export:
                     export_results(
@@ -757,9 +766,9 @@ def main(conn):
                         tests=testname)
                     reporturl = os.path.join(REPORT_SERVER_URL,
                                              reportname.replace('#', '%23'))
-                    print "Link to the html report - %s.html" % reporturl
-                    print "Link to the xml report - %s.xml" % reporturl
-                    print "Link to the json report - %s.json" % reporturl
+                    print("Link to the html report - %s.html" % reporturl)
+                    print("Link to the xml report - %s.xml" % reporturl)
+                    print("Link to the json report - %s.json" % reporturl)
                     sys.stdout.flush()
 
                 if retcode == 222:
@@ -773,8 +782,8 @@ def main(conn):
                     print("Test (for target: %s, domain: %s,"
                           " IP address: %s) returned error: %d.\n" %
                           (target, domname, domipaddress, retcode))
-                    print stdout
-                    print stderr
+                    print(stdout)
+                    print(stderr)
                     sys.exit(1)
                 break
 

@@ -525,7 +525,7 @@ class PgInstall:
         elif self.os_name == "ALT Linux " and self.os_version == "7.0.5":
             return "altlinux"
         elif self.os_name == "ALT " and self.os_version == "8":
-            return "alt-sp"
+            return "altlinux-spt"
         elif self.os_name == "ROSA Enterprise Linux Server":
             if self.os_version == "6.8":
                 return "rosa-chrome"
@@ -617,8 +617,11 @@ class PgInstall:
         if self.__is_pm_yum():
 
             if self.product == 'postgresql' and \
-                    self.os_name == "Red Hat Enterprise Linux" and \
-                    self.os_version.startswith("8."):
+               self.os_name in [
+                   "Red Hat Enterprise Linux",
+                   "CentOS Linux",
+                   "Oracle Linux Server"] and \
+               self.os_version.startswith("8."):
                 cmd = 'yum -qy module disable postgresql'
                 self.exec_cmd_retry(cmd)
 
@@ -816,9 +819,14 @@ baseurl=%s
 
     def setup_extra_repos(self):
         if self.product == 'postgrespro' and self.__is_os_altlinux():
+            list_file = 'yandex'
+            if not self.os_version.startswith('9.'):
+                list_file = 'alt'
+                if self.os_version == '8' and self.os_name == 'ALT ':
+                    list_file = 'altsp'
             cmd = r"perl -i -pe 's/^\s*([^#](.*?)x86_64)(\s+classic\s*)$/" \
                   "$1$3$1 debuginfo\n/' /etc/apt/sources.list.d/%s.list" % \
-                  ('yandex' if self.os_version.startswith('9.') else 'alt')
+                  list_file
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             self.exec_cmd_retry('apt-get update')
@@ -1028,14 +1036,13 @@ baseurl=%s
                 pkgs.remove(pkg)
             if 'pgbadger' in pkg:
                 pkgs.remove(pkg)
-        if self.product == 'postgrespro' and \
-                self.version not in ['9.5', '9.6'] and \
-                self.get_base_package_name():
-            pkgs.remove(self.get_base_package_name())
-            if self.__is_os_altlinux():
-                for pkg in pkgs[:]:
-                    if re.match('.*-deb.*', pkg):
-                        pkgs.remove(pkg)
+        if self.product == 'postgrespro' and self.get_base_package_name():
+            if self.version not in ['9.5', '9.6']:
+                pkgs.remove(self.get_base_package_name())
+                if self.__is_os_altlinux():
+                    # Exclude {base_package}-debuginfo as
+                    # it requires {base_package}
+                    pkgs.remove(self.get_base_package_name() + '-debuginfo')
         self.install_package(" ".join(pkgs))
         self.client_installed = True
         self.server_installed = True
