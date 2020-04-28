@@ -126,11 +126,6 @@ ARCHIVE_VERSIONS = {
         'postgrespro-ent-9.6': None,
         'postgrespro-ent-10': None
     },
-    'Ubuntu 19.04': {
-        'postgrespro-std-9.6': '9.6.15.1',
-        'postgrespro-std-10': '10.8.1',
-        'postgrespro-std-11': '11.5.4'
-    },
     'AlterOS 7.5': {
         'postgrespro-std-9.6': None,
         'postgrespro-std-10': '10.8.1',
