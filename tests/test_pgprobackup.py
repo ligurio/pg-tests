@@ -2,6 +2,7 @@ import datetime
 import grp
 import os
 import platform
+import distro
 import psycopg2
 import pytest
 import pwd
@@ -19,7 +20,7 @@ from tests.settings import TMP_DIR
 class TestPgprobackup():
     dist = ""
     if platform.system() == 'Linux':
-        dist = " ".join(platform.linux_distribution()[0:2])
+        dist = " ".join(distro.linux_distribution()[0:2])
     elif platform.system() == 'Windows':
         dist = 'Windows'
     else:
@@ -27,7 +28,7 @@ class TestPgprobackup():
 
     # TODO add restore from backup for all test cases
 
-    DISTRO = platform.linux_distribution()[0]
+    DISTRO = distro.linux_distribution()[0]
 
     PG_HBA_CONFIG = """
 local   replication     all                                     trust

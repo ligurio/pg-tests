@@ -1,5 +1,6 @@
 import os
 import platform
+import distro
 import glob
 import time
 import subprocess
@@ -121,8 +122,9 @@ DEV_APPLICATIONS = {
 
 def check_executables(pginst, packages):
     # PGPRO-2761
-    if pginst.os_name == '\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1'\
-                         '\xd1\x84\xd0\xb5\xd1\x80\xd0\xb0 ':
+    if pginst.os_name == \
+            "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0\xb5\xd1\x80\xd0" \
+            "\xb0 \xd0\xa1\xd0\xb5\xd1\x80\xd0\xb2\xd0\xb5\xd1\x80":
         return
     for package in packages:
         print('Analyzing package %s.' % package)
@@ -138,7 +140,7 @@ def check_executables(pginst, packages):
             if not fout.startswith(f + ': ELF '):
                 continue
             print "\tELF executable found:", f
-            if pginst.os_name == 'AstraLinuxSE':
+            if pginst.os_name == 'Astra Linux (Orel)':
                 bsignout = subprocess.check_output(
                     'LANG=C bsign -w "%s"; echo' % f, shell=True).strip()
                 if 'bsign: good hash found' not in bsignout:
@@ -172,7 +174,8 @@ def check_executables(pginst, packages):
                             r'get_progname|pg_logging_init)\s+\(', line):
                     good_lines += 1
                 # PGPRO-3733 (system libraries CRC failed in altlinux-spt-8)
-                if not (pginst.os_name == 'ALT ' and pginst.os_version == '8'
+                if not (pginst.os_name == 'ALT SPServer'
+                        and pginst.os_version == '8.0'
                         and re.match(r'warning:.*/usr/lib', line)) \
                         and re.match(r'warning:.*\(CRC mismatch\).', line):
                     print("gdb for %s output:" % f, gdbout)
@@ -256,7 +259,7 @@ class TestFullInstall():
         """
         dist = ""
         if self.system == 'Linux':
-            dist = " ".join(platform.linux_distribution()[0:2])
+            dist = " ".join(distro.linux_distribution()[0:2])
         elif self.system == 'Windows':
             dist = 'Windows'
         else:
@@ -569,7 +572,7 @@ $$ LANGUAGE plpgsql;"""
         if self.system != 'Windows':
             # /etc/init./d/mamonsu survives a package removal
             # as a configuration file on Debian without systemd
-            if not (pginst.os_name == 'AstraLinuxSE' and
+            if not (pginst.os_name == 'Astra Linux (Smolensk)' and
                     pginst.os_version == '1.5'):
                 assert not (is_service_installed('mamonsu'))
             assert not (is_service_running('mamonsu'))

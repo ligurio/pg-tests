@@ -1,12 +1,13 @@
 import glob
 import platform
+import distro
 import pytest
 import os
 import shutil
 import subprocess
 
 if platform.system() == 'Linux':
-    dist = platform.linux_distribution()
+    dist = distro.linux_distribution()
 elif platform.system() == 'Windows':
     dist = 'Windows'
 else:

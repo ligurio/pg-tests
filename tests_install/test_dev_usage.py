@@ -2,6 +2,7 @@
 
 import os
 import platform
+import distro
 import subprocess
 import time
 
@@ -31,7 +32,7 @@ class TestDevUsage(object):
         """
         dist = ""
         if self.system == 'Linux':
-            dist = " ".join(platform.linux_distribution()[0:2])
+            dist = " ".join(distro.linux_distribution()[0:2])
         elif self.system == 'Windows':
             dist = 'Windows'
         else:
