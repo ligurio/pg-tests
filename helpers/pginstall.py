@@ -767,7 +767,7 @@ baseurl=%s
                 except Exception:
                     pass
             if self.product == "postgrespro":
-                dir = self.os_version
+                dir = self.os_version.split('.')[0]
                 if self.os_name == 'SLES' and \
                    self.os_version.startswith('12') and \
                    self.milestone == 'archive':
