@@ -51,7 +51,7 @@ YUM_BASED = ['CentOS Linux', 'CentOS',
 DEBIAN_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux',
                 'Astra Linux (Smolensk)', 'Astra Linux (Orel)']
 APT_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux',
-             'Astra Linux (Smolensk)', 'Astra Linux (Orel)'
+             'Astra Linux (Smolensk)', 'Astra Linux (Orel)',
              'ALT Linux', 'ALT Server', 'ALT SPServer']
 ASTRA_BASED = ['Astra Linux (Smolensk)', 'Astra Linux (Orel)']
 ALT_BASED = ['ALT Linux', 'ALT Server', 'ALT SPServer']
