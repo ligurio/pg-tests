@@ -31,34 +31,32 @@ PGPROBETA_BASE = "http://localrepo.l.postgrespro.ru/stable/"
 PGPROCERT_BASE = "http://localrepo.l.postgrespro.ru/cert/"
 PSQL_BASE = "http://download.postgresql.org/pub"
 WIN_INST_DIR = "C:\\Users\\test\\pg-tests\\pg_installer"
-REDHAT_BASED = ['CentOS Linux', 'RHEL', 'CentOS',
+REDHAT_BASED = ['CentOS Linux', 'CentOS',
                 'Red Hat Enterprise Linux Server', 'Red Hat Enterprise Linux',
                 'Oracle Linux Server',
-                'ROSA Enterprise Linux Server', 'ROSA SX \"COBALT\" ',
+                'ROSA Enterprise Linux Server',
                 'ROSA Enterprise Linux Cobalt', 'GosLinux',
-                '\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1'
-                '\xd1\x84\xd0\xb5\xd1\x80\xd0\xb0 ',
-                'RED OS release MUROM (', 'AlterOS']
-YUM_BASED = ['CentOS Linux', 'RHEL', 'CentOS',
+                "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0\xb5"
+                "\xd1\x80\xd0\xb0 \xd0\xa1\xd0\xb5\xd1\x80\xd0\xb2"
+                "\xd0\xb5\xd1\x80",
+                'RED OS', 'AlterOS']
+YUM_BASED = ['CentOS Linux', 'CentOS',
              'Red Hat Enterprise Linux Server', 'Red Hat Enterprise Linux',
              'Oracle Linux Server',
-             'ROSA Enterprise Linux Server', 'ROSA SX \"COBALT\" ',
+             'ROSA Enterprise Linux Server',
              'ROSA Enterprise Linux Cobalt', 'GosLinux',
-             '\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1'
-             '\xd1\x84\xd0\xb5\xd1\x80\xd0\xb0 ',
-             'RED OS release MUROM (', 'AlterOS']
-DEBIAN_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux', 'AstraLinuxSE',
-                'Astra Linux SE', "\"Astra Linux SE\"", "\"AstraLinuxSE\"",
-                'AstraLinuxCE']
-APT_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux', 'AstraLinuxSE',
-             'Astra Linux SE', "\"Astra Linux SE\"", "\"AstraLinuxSE\"",
-             'AstraLinuxCE',
-             "ALT Linux ", "ALT ", "ALT"]
-ASTRA_BASED = ['AstraLinuxSE', 'Astra Linux SE', "\"Astra Linux SE\"",
-               "\"AstraLinuxSE\"", 'AstraLinuxCE']
-ALT_BASED = ['ALT Linux ', 'ALT ', 'ALT']
-SUSE_BASED = ['SUSE Linux Enterprise Server ']
-ZYPPER_BASED = ['SUSE Linux Enterprise Server ']
+             "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0\xb5\xd1\x80\xd0\xb0"
+             " \xd0\xa1\xd0\xb5\xd1\x80\xd0\xb2\xd0\xb5\xd1\x80",
+             'RED OS', 'AlterOS']
+DEBIAN_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux',
+                'Astra Linux (Smolensk)', 'Astra Linux (Orel)']
+APT_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux',
+             'Astra Linux (Smolensk)', 'Astra Linux (Orel)'
+             'ALT Linux', 'ALT Server', 'ALT SPServer']
+ASTRA_BASED = ['Astra Linux (Smolensk)', 'Astra Linux (Orel)']
+ALT_BASED = ['ALT Linux', 'ALT Server', 'ALT SPServer']
+SUSE_BASED = ['SLES']
+ZYPPER_BASED = ['SLES']
 WIN_BASED = ['Windows-2012ServerR2', 'Windows-10', 'Windows-8.1', 'Windows-7']
 
 dist = {"Oracle Linux Server": 'oraclelinux',
@@ -71,12 +69,12 @@ dist = {"Oracle Linux Server": 'oraclelinux',
         "Debian GNU/Linux": 'debian',
         "Ubuntu": 'ubuntu',
         "ROSA Enterprise Linux Server": 'rosa-el',
-        "ROSA SX \"COBALT\" ": 'rosa-sx',
+        "ROSA Enterprise Linux Cobalt": 'rosa-sx',
         "SLES": 'sles',
-        "ALT ": 'altlinux',
-        "ALT": 'altlinux',
+        "ALT Linux": 'altlinux',
+        "ALT Server": 'altlinux',
         "GosLinux": 'goslinux',
-        "RED OS release MUROM (": 'redos',
+        "RED OS": 'redos',
         "AlterOS": 'alteros'}
 
 PRELOAD_LIBRARIES = {
@@ -237,7 +235,7 @@ class PgInstall:
             elif self.edition == "std-cert" and self.version == "11":
                 product_dir = "pgpro-std-11.5.4/repo"
             elif self.edition == "ent-cert" and self.version == "11":
-                product_dir = "pgpro-ent-11.6.1/repo"
+                product_dir = "pgpro-ent-11.7.2/repo"
             elif self.edition == "1c":
                 product_dir = "pg1c-%s" % product_version
             elif self.edition == "sql":
@@ -495,7 +493,7 @@ class PgInstall:
         return self.os_name in SUSE_BASED
 
     def __is_os_debian(self):
-        return self.os_name == 'debian'
+        return self.os_name == 'Debian GNU/Linux'
 
     def __is_os_windows(self):
         return self.os_name in WIN_BASED
@@ -514,40 +512,38 @@ class PgInstall:
             return ['10']
         elif self.__is_os_redhat_based() or self.__is_os_debian_based():
             return ['9.6', '10', '11']
-        elif self.__is_os_suse() and self.os_version != "11":
+        elif self.__is_os_suse() and self.os_version != "11.4":
             return ['9.6', '10', '11']
         return []
 
     def get_distname_for_pgpro(self):
-        if self.os_name == "ALT Linux " and \
+        if self.os_name == "ALT Linux" and \
            self.os_version in ["7.0.4", "6.0.1"]:
             return "altlinux-spt"
-        elif self.os_name == "ALT Linux " and self.os_version == "7.0.5":
+        elif self.os_name == "ALT Linux" and self.os_version == "7.0.5":
             return "altlinux"
-        elif self.os_name == "ALT " and self.os_version == "8":
+        elif self.os_name == "ALT SPServer" and self.os_version == "8.0":
             return "altlinux-spt"
         elif self.os_name == "ROSA Enterprise Linux Server":
             if self.os_version == "6.8":
                 return "rosa-chrome"
             else:
                 return "rosa-el"
-        elif self.os_name == "ROSA SX \"COBALT\" " or \
-                self.os_name == "ROSA Enterprise Linux Cobalt":
+        elif self.os_name == "ROSA Enterprise Linux Cobalt":
             return "rosa-sx"
-        elif self.os_name == "SUSE Linux Enterprise Server ":
+        elif self.os_name == "SLES":
             return "sles"
-        elif self.os_name in ["AstraLinuxSE", "Astra Linux SE"]:
-            if self.os_version == "1.4":
-                return "astra-smolensk/1.4"
-            elif self.os_version == "1.5":
+        elif self.os_name == "Astra Linux (Smolensk)":
+            if self.os_version == "1.5":
                 return "astra-smolensk/1.5"
             elif self.os_version == "1.6":
                 return "astra-smolensk/1.6"
-        elif self.os_name == "AstraLinuxCE":
+        elif self.os_name == "Astra Linux (Orel)":
             if self.os_version.startswith("2.12"):
                 return "astra-orel/2.12"
-        elif self.os_name == "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1" \
-                "\xd1\x84\xd0\xb5\xd1\x80\xd0\xb0 ":
+        elif self.os_name == \
+                "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0\xb5\xd1\x80" \
+                "\xd0\xb0 \xd0\xa1\xd0\xb5\xd1\x80\xd0\xb2\xd0\xb5\xd1\x80":
             return "msvsphere"
         elif self.__is_os_windows():
             return "Windows"
@@ -577,7 +573,8 @@ class PgInstall:
             elif self.__is_pm_zypper():
                 product_dir = "/repos/zypp/%s/suse/sles-%s-$basearch" % \
                     (self.version,
-                     "$releasever" if self.os_version != "12" else "12")
+                     "$releasever" if not self.os_version.startswith("12")
+                     else "12")
             baseurl = PSQL_BASE + product_dir
             return baseurl, gpg_key_url
         elif self.product == "postgrespro":
@@ -621,7 +618,7 @@ class PgInstall:
                    "Red Hat Enterprise Linux",
                    "CentOS Linux",
                    "Oracle Linux Server"] and \
-               self.os_version.startswith("8."):
+               self.os_version.split('.')[0] == "8":
                 cmd = 'yum -qy module disable postgresql'
                 self.exec_cmd_retry(cmd)
 
@@ -664,15 +661,17 @@ class PgInstall:
                             self.os_version == "7.3":
                         baseurl = os.path.join(baseurl,
                                                "7Server/os/$basearch/rpms")
-                    elif self.os_name == "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1" \
-                                         "\xd1\x84\xd0\xb5\xd1\x80\xd0\xb0 ":
+                    elif self.os_name == \
+                            "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0" \
+                            "\xb5\xd1\x80\xd0\xb0 \xd0\xa1\xd0\xb5\xd1\x80" \
+                            "\xd0\xb2\xd0\xb5\xd1\x80":
                         baseurl = os.path.join(baseurl,
                                                "6.3Server/os/$basearch/rpms")
                     elif self.os_name == "GosLinux" and \
-                            self.os_version.startswith("7."):
+                            self.os_version.startswith("7"):
                         baseurl = os.path.join(baseurl,
                                                "7/os/$basearch/rpms")
-                    elif self.os_name == "RED OS release MUROM (" and \
+                    elif self.os_name == "RED OS" and \
                             self.os_version == "7.1":
                         baseurl = os.path.join(baseurl,
                                                "7/os/$basearch/rpms")
@@ -722,7 +721,7 @@ baseurl=%s
                     repo = "deb %s %s-pgdg main" % (baseurl, codename)
             elif self.product == "postgrespro":
                 repo = "deb %s %s main" % (baseurl, codename)
-                if self.os_name == "ALT Linux ":
+                if self.os_name == "ALT Linux":
                     if self.os_version in ["7.0.4", "7.0.5"]:
                         repo = "rpm %s/7 x86_64 pgpro\n" \
                                "rpm %s/7 noarch pgpro\n" % \
@@ -731,11 +730,11 @@ baseurl=%s
                         repo = "rpm %s/6 x86_64 pgpro\n" \
                                "rpm %s/6 noarch pgpro\n" % \
                                (baseurl, baseurl)
-                elif self.os_name == "ALT ":
+                elif self.os_name == "ALT SPServer":
                     repo = "rpm %s/8 x86_64 pgpro\n" \
                            "rpm %s/8 noarch pgpro\n" % \
                            (baseurl, baseurl)
-                elif (self.os_name == "ALT" and
+                elif (self.os_name == "ALT Server" and
                       self.os_version.startswith('9.')):
                     repo = "rpm %s/9 x86_64 pgpro\n" \
                            "rpm %s/9 noarch pgpro\n" % \
@@ -769,7 +768,7 @@ baseurl=%s
                     pass
             if self.product == "postgrespro":
                 dir = self.os_version
-                if self.os_name == 'SUSE Linux Enterprise Server ' and \
+                if self.os_name == 'SLES' and \
                    self.os_version.startswith('12') and \
                    self.milestone == 'archive':
                     last12_1 = ''
@@ -822,7 +821,7 @@ baseurl=%s
             list_file = 'yandex'
             if not self.os_version.startswith('9.'):
                 list_file = 'alt'
-                if self.os_version == '8' and self.os_name == 'ALT ':
+                if self.os_version == '8.0' and self.os_name == 'ALT SPServer':
                     list_file = 'altsp'
             cmd = r"perl -i -pe 's/^\s*([^#](.*?)x86_64)(\s+classic\s*)$/" \
                   "$1$3$1 debuginfo\n/' /etc/apt/sources.list.d/%s.list" % \
@@ -834,7 +833,7 @@ baseurl=%s
             # Install epel for v.10+
             cmd = None
             if (self.os_name == 'CentOS Linux' and
-               self.os_version.startswith('7.')):
+               self.os_version.startswith('7')):
                 cmd = "yum install -y epel-release"
             elif (self.os_name in ['Oracle Linux Server', 'CentOS',
                                    'Red Hat Enterprise Linux Server'] and
@@ -850,7 +849,7 @@ baseurl=%s
                                    'AlterOS',
                                    'ROSA Enterprise Linux Cobalt',
                                    'ROSA Enterprise Linux Server'] and
-                  self.os_version.startswith('7.')):
+                  self.os_version.startswith('7')):
                 cmd = "yum localinstall -y https://dl.fedoraproject.org/pub/" \
                     "epel/epel-release-latest-7.noarch.rpm"
             if cmd:
@@ -1117,7 +1116,7 @@ baseurl=%s
             # todo fix this
             cmd = "yum remove -y%s %s" % \
                   (' --noautoremove' if self.os_version.startswith(
-                       '8.') else '', pkg_name)
+                       '8') else '', pkg_name)
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
         elif self.__is_pm_apt():

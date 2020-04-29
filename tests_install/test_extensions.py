@@ -1,6 +1,7 @@
 import os
 import platform
 import subprocess
+import distro
 import time
 import re
 
@@ -24,7 +25,7 @@ class TestExtensions():
         :return:
         """
         if self.system == 'Linux':
-            dist = " ".join(platform.linux_distribution()[0:2])
+            dist = " ".join(distro.linux_distribution()[0:2])
         elif self.system == 'Windows':
             dist = 'Windows'
         else:

@@ -1,4 +1,5 @@
 import platform
+import distro
 import pytest
 
 from allure_commons.types import LabelType
@@ -7,7 +8,7 @@ from helpers.utils import create_env_info_from_config
 from helpers.environment_manager import Environment
 
 if platform.system() == 'Linux':
-    dist = " ".join(platform.linux_distribution()[0:2])
+    dist = " ".join(distro.linux_distribution()[0:2])
 elif platform.system() == 'Windows':
     dist = 'Windows'
 else:

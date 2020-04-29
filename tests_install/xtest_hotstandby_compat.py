@@ -1,5 +1,6 @@
 import os
 import platform
+import distro
 import subprocess
 import urllib
 import re
@@ -235,7 +236,7 @@ class TestHotStandbyCompatibility():
         """
         global windows_os
         if self.system == 'Linux':
-            dist = " ".join(platform.linux_distribution()[0:2])
+            dist = " ".join(distro.linux_distribution()[0:2])
         elif self.system == 'Windows':
             dist = 'Windows'
             windows_os = True

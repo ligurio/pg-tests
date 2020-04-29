@@ -1,4 +1,5 @@
 import platform
+import distro
 import pytest
 import os
 
@@ -683,7 +684,7 @@ class TestUpgrade():
         """
         dist = ""
         if self.system == 'Linux':
-            dist = " ".join(platform.linux_distribution()[0:2])
+            dist = " ".join(distro.linux_distribution()[0:2])
         elif self.system == 'Windows':
             dist = " ".join(platform.win32_ver()[0:2])
         else:

@@ -1,5 +1,6 @@
 import os
 import platform
+import distro
 import subprocess
 import urllib
 import re
@@ -17,12 +18,13 @@ tempdir = tempfile.gettempdir()
 client_dir = 'client'
 
 ARCHIVE_VERSIONS = {
-    'ALT Linux  7.0.5': {
+    'ALT Linux 7.0.5': {
         'postgrespro-std-9.6': '9.6.9.1',
         'postgrespro-ent-9.6': None,
         'postgrespro-ent-10': None
     },
-    'ALT Linux  6.0.1': {
+    # maybe remove?
+    'ALT Linux 6.0.1': {
         'postgrespro-ent-9.6': None,
         'postgrespro-ent-10': None
     },
@@ -32,14 +34,10 @@ ARCHIVE_VERSIONS = {
         'postgrespro-std-10': '10.6.1',
         'postgrespro-ent-10': '10.6.1'
     },
-    'ALT Linux  7.0.4': {
-        'postgrespro-ent-9.6': None,
-        'postgrespro-ent-10': '10.6.1'
-    },
-    '"AstraLinuxSE" 1.5': {
+    'Astra Linux (Smolensk) 1.5': {
         'postgrespro-ent-9.6': None
     },
-    '"AstraLinuxSE" 1.6': {
+    'Astra Linux (Smolensk) 1.6': {
         'postgrespro-std-9.6': '9.6.11.1',
         'postgrespro-std-10': '10.7.1',
         'postgrespro-ent-10': '10.6.2'
@@ -48,22 +46,23 @@ ARCHIVE_VERSIONS = {
         'postgrespro-ent-9.6': '9.6.8.1',
         'postgrespro-ent-10': '10.2.1'
     },
-    'CentOS Linux 7.2.1511': {
+    'CentOS Linux 7': {
         'postgrespro-ent-9.6': '9.6.9.1'
     },
-    'debian 9.0': {
+    'Debian GNU/Linux 9': {
         'postgrespro-std-9.6': '9.6.10.2',
         'postgrespro-ent-9.6': '9.6.12.1'
     },
-    'debian 8.4': {
+    'Debian GNU/Linux 8': {
         'postgrespro-ent-9.6': '9.6.7.1'
     },
+    # maybe remove?
     'GosLinux 6.4': {
         'postgrespro-std-9.6': None,
         'postgrespro-ent-9.6': None,
         'postgrespro-ent-10': None
     },
-    'GosLinux 7.08': {
+    'GosLinux 7': {
         'postgrespro-std-9.6': None,
         'postgrespro-std-10': '10.6.1',
         'postgrespro-ent-9.6': None,
@@ -77,7 +76,7 @@ ARCHIVE_VERSIONS = {
         'postgrespro-ent-9.6': '9.6.8.1',
         'postgrespro-ent-10': '10.2.1'
     },
-    'RED OS release MUROM ( 7.1': {
+    'RED OS 7.1': {
         'postgrespro-std-9.6': '9.6.11.1',
         'postgrespro-std-10': '10.6.1',
         'postgrespro-ent-9.6': None,
@@ -91,6 +90,7 @@ ARCHIVE_VERSIONS = {
         'postgrespro-ent-9.6': '9.6.8.1',
         'postgrespro-ent-10': '10.3.1'
     },
+    # check
     'ROSA Enterprise Linux Server 6.6': {
         'postgrespro-ent-10': '10.2.1'
     },
@@ -107,11 +107,11 @@ ARCHIVE_VERSIONS = {
         'postgrespro-ent-9.6': '9.6.9.1',
         'postgrespro-ent-10': '10.6.1'
     },
-    'SUSE Linux Enterprise Server  11': {
+    'SLES 11.4': {
         'postgrespro-ent-9.6': '9.6.10.1',
         'postgrespro-ent-10': None
     },
-    'SUSE Linux Enterprise Server  12': {
+    'SLES 12.3': {
         'postgrespro-std-9.6': '9.6.13.1',
         'postgrespro-ent-9.6': '9.6.13.1',
         'postgrespro-ent-10': None
@@ -126,7 +126,7 @@ ARCHIVE_VERSIONS = {
         'postgrespro-ent-9.6': None,
         'postgrespro-ent-10': None
     },
-    'AlterOS 7.5': {
+    'AlterOS 7': {
         'postgrespro-std-9.6': None,
         'postgrespro-std-10': '10.8.1',
         'postgrespro-std-11': '11.3.1',
@@ -134,7 +134,7 @@ ARCHIVE_VERSIONS = {
         'postgrespro-ent-10': '10.8.1',
         'postgrespro-ent-11': '11.3.1'
     },
-    'SUSE Linux Enterprise Server  15': {
+    'SLES 15': {
         'postgrespro-std-9.6': None,
         'postgrespro-std-10': '10.8.1',
         'postgrespro-std-11': '11.3.1',
@@ -245,7 +245,7 @@ class TestUpgradeMinor():
         """
         global windows_os
         if self.system == 'Linux':
-            dist = " ".join(platform.linux_distribution()[0:2])
+            dist = " ".join(distro.linux_distribution()[0:2])
             windows_os = False
         elif self.system == 'Windows':
             dist = 'Windows'

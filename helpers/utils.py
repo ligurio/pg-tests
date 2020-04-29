@@ -1,5 +1,6 @@
 import os
 import platform
+import distro
 import random
 import shlex
 import shutil
@@ -320,8 +321,8 @@ def get_distro(remote=False, ip=None):
     else:
         os = platform.platform()
         if "Linux" in os:
-            return platform.linux_distribution()[0].strip('"'), \
-                platform.linux_distribution()[1], \
+            return distro.linux_distribution()[0].strip('"'), \
+                distro.linux_distribution()[1], \
                 platform.machine()
         elif "Windows" in os:
             return 'Windows-' + platform.win32_ver()[0], \

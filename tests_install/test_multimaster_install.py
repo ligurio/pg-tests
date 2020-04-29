@@ -1,4 +1,5 @@
 import platform
+import distro
 import os
 import subprocess
 import shutil
@@ -482,7 +483,7 @@ class TestMultimasterInstall():
         :return:
         """
         if self.system == 'Linux':
-            dist = " ".join(platform.linux_distribution()[0:2])
+            dist = " ".join(distro.linux_distribution()[0:2])
         elif self.system == 'Windows':
             dist = 'Windows'
         else:

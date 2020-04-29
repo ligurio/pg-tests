@@ -7,6 +7,7 @@ import argparse
 import base64
 import json
 import platform
+import distro
 import subprocess
 import sys
 import urllib2
@@ -17,7 +18,7 @@ def getDistribution():
     if sys.platform == "win32":
         return platform.win32_ver()
     elif sys.platform == "linux" or sys.platform == "linux2":
-        distname, version, id = platform.linux_distribution()
+        distname, version, id = distro.linux_distribution()
         return "%s %s" % (distname, version)
     elif sys.platform == "darwin":
         release, versioninfo, machine = platform.mac_ver()

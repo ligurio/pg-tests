@@ -1,5 +1,6 @@
 import hashlib
 import platform
+import distro
 import pytest
 import psycopg2
 import random
@@ -14,7 +15,7 @@ class TestScram():
     """
     dist = ""
     if platform.system() == 'Linux':
-        dist = " ".join(platform.linux_distribution()[0:2])
+        dist = " ".join(distro.linux_distribution()[0:2])
     elif platform.system() == 'Windows':
         dist = 'Windows'
     else:
