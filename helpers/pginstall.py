@@ -734,11 +734,12 @@ baseurl=%s
                     repo = "rpm %s/8 x86_64 pgpro\n" \
                            "rpm %s/8 noarch pgpro\n" % \
                            (baseurl, baseurl)
-                elif (self.os_name == "ALT Server" and
-                      self.os_version.startswith('9.')):
-                    repo = "rpm %s/9 x86_64 pgpro\n" \
-                           "rpm %s/9 noarch pgpro\n" % \
-                           (baseurl, baseurl)
+                elif (self.os_name == "ALT Server"):
+                    os_major_version = self.os_version.split('.')[0]
+                    repo = "rpm %s/%s x86_64 pgpro\n" \
+                           "rpm %s/%s noarch pgpro\n" % \
+                           (baseurl, os_major_version,
+                            baseurl, os_major_version)
 
             if repo:
                 write_file(self.repo_file, repo, self.remote, self.host)
