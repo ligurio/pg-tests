@@ -298,7 +298,9 @@ class TestFullInstall():
               (server_version, client_version))
         if name == 'postgrespro' and not (edition in ['1c', 'sql']):
             ppversion = pginst.exec_psql_select("SELECT pgpro_version()")
-            assert ppversion.startswith('PostgresPro ' + version)
+            # PGPRO-3760
+            assert ppversion.startswith('PostgresPro ')
+            # assert ppversion.startswith('PostgresPro ' + version)
             ppedition = pginst.exec_psql_select("SELECT pgpro_edition()")
             if edition == 'ent':
                 assert ppedition == 'enterprise'
