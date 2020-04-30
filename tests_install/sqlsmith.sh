@@ -69,7 +69,7 @@ curl --tlsv1.2 -sS -L https://github.com/jtv/libpqxx/archive/6.1.0.tar.gz \
 wget https://github.com/jtv/libpqxx/archive/6.1.0.tar.gz -O libpqxx.tar.gz
 tar fax libpqxx.tar.gz
 cd libpqxx*/
-./configure --disable-documentation && make && make install
+CXXFLAGS="-std=c++11" ./configure --disable-documentation && make && make install
 
 cd ~test/pg-tests
 curl --tlsv1.2 -sS -L https://github.com/anse1/sqlsmith/archive/master.tar.gz \
