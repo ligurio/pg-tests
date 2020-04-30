@@ -121,7 +121,7 @@ def is_service_installed(service, windows=False):
                 ' --no-legend --no-pager "%s.service"' % service
         result = subprocess.check_output(cmd, shell=True).strip()
         if result:
-            if result.endswith(' masked'):
+            if ' masked' in result:
                 return False
             return True
         return False
