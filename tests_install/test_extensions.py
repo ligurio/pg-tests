@@ -6,6 +6,7 @@ import time
 import re
 
 import pytest
+import allure
 
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall
@@ -36,8 +37,7 @@ class TestExtensions():
         milestone = request.config.getoption('--product_milestone')
         target = request.config.getoption('--target')
         product_info = " ".join([dist, name, edition, version])
-        # pylint: disable=no-member
-        tag_mark = pytest.allure.label(LabelType.TAG, product_info)
+        tag_mark = allure.label(LabelType.TAG, product_info)
         request.node.add_marker(tag_mark)
         branch = request.config.getoption('--branch')
 
@@ -91,7 +91,8 @@ class TestExtensions():
             return
         pginst.install_package('pgpro-pgbadger')
         cmd = "pgbadger -V"
-        pgbadger_version = subprocess.check_output(cmd, shell=True).strip()
+        pgbadger_version = subprocess.check_output(cmd, shell=True).\
+            decode().strip()
         print(pgbadger_version)
         pginst.exec_psql(
             "CREATE TABLE test (data text)")
@@ -102,7 +103,7 @@ class TestExtensions():
             pgbres = subprocess.check_output(
                 'pgbadger --outfile - --extension text --format stderr "%s"' %
                 os.path.join(logdir, lf),
-                shell=True)
+                shell=True).decode()
             state = 0
             stats = {}
             for line in pgbres.split('\n'):
@@ -119,7 +120,7 @@ class TestExtensions():
                     tcre = re.search(r'^([^:]+):\s+(\d+)\s', line)
                     if tcre:
                         stats[tcre.group(1)] = int(tcre.group(2))
-            print "Query statistics:", stats
+            print("Query statistics:", stats)
             if 'SELECT' not in stats or stats['SELECT'] < 1:
                 raise Exception("No SELECT queries catched by pgbadger.")
             if 'INSERT' not in stats or stats['INSERT'] < 1:

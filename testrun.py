@@ -1,10 +1,9 @@
 #!/usr/bin/env python
-#    Copyright 2015 - 2017 Postgres Professional
+""" Copyright 2015 - 2017 Postgres Professional """
 
 import argparse
 import os
 import os.path
-import platform
 import distro
 import random
 import re
@@ -12,7 +11,6 @@ import shutil
 import subprocess
 import sys
 import time
-import urllib
 import tempfile
 import glob
 from multiprocessing import Pipe, Process
@@ -22,13 +20,14 @@ from helpers.utils import (copy_file, copy_reports_win,
                            exec_command, gen_name,
                            exec_command_win, wait_for_boot,
                            REMOTE_LOGIN, REMOTE_PASSWORD,
-                           REMOTE_ROOT_PASSWORD)
+                           REMOTE_ROOT_PASSWORD, urlcontent, urlretrieve)
 
-try:  # py2compat
+# py2compat
+if not sys.version_info > (3, 0):
+    # pylint: disable = undefined-variable
     reload(sys)
+    # pylint: disable = no-member
     sys.setdefaultencoding('utf8')
-except Exception:
-    pass
 
 MAX_DURATION = 4 * 60 * 60
 DEBUG = False
@@ -63,7 +62,7 @@ def list_images():
     names = []
     page = ''
     try:
-        page = urllib.urlopen(IMAGE_BASE_URL).read()
+        page = urlcontent(IMAGE_BASE_URL)
     except IOError:
         for f in os.listdir(TEMPLATE_DIR):
             fp = os.path.splitext(f)
@@ -116,16 +115,15 @@ def create_image(domname, name):
         if not os.path.exists(TEMPLATE_DIR):
             os.makedirs(TEMPLATE_DIR)
         print("Downloading %s.qcow2..." % name)
-        image = urllib.URLopener()
         try:
-            image.retrieve(image_url, image_original)
+            urlretrieve(image_url, image_original)
         except Exception as e:
             print("Could not retrieve %s." % image_url)
             raise e
 
     page = ''
     try:
-        page = urllib.urlopen(IMAGE_BASE_URL).read()
+        page = urlcontent(IMAGE_BASE_URL)
     except IOError:
         print("%s is not available, no *.iso will be downloaded." %
               IMAGE_BASE_URL)
@@ -136,8 +134,7 @@ def create_image(domname, name):
             target_iso = TEMPLATE_DIR + isoname + '.iso'
             if not os.path.isfile(target_iso):
                 print("Downloading %s.iso..." % isoname)
-                iso = urllib.URLopener()
-                iso.retrieve(iso_url, target_iso)
+                urlretrieve(iso_url, target_iso)
 
     if not os.path.exists(WORK_DIR):
         os.makedirs(WORK_DIR)
@@ -160,8 +157,8 @@ def prepare_payload(tests_dir, clean):
     while True:
         if os.path.isdir(rsrcdir):
             timeout = 0
-            while not(os.path.exists(tar_path)) or \
-                    not(os.path.exists(zip_path)):
+            while not os.path.exists(tar_path) or \
+                    not os.path.exists(zip_path):
                 timeout += 5
                 if timeout == 60:
                     raise Exception('Could not find tar and zip in "%s".' %
@@ -173,7 +170,7 @@ def prepare_payload(tests_dir, clean):
         try:
             os.makedirs(rsrcdir)
         except OSError as exc:
-            if exc.errno == os.errno.EEXIST:
+            if os.path.exists(rsrcdir):
                 continue
             raise exc
         break
@@ -214,18 +211,18 @@ def prepare_payload(tests_dir, clean):
     if retcode != 0:
         raise Exception("Preparing zip payload failed.")
 
-    # Preparing pip packages for linux
+    # Preparing pip packages for linux with 2 python
     pgtdpp = os.path.join(pgtd, 'pip-packages')
     os.makedirs(pgtdpp)
     retcode = call(
-        "pip download -q -r %s" %
-        os.path.abspath(os.path.join(tests_dir, "requirements.txt")),
+        "pip2 download -q -r %s" %
+        os.path.abspath(os.path.join(tests_dir, "requirements2.txt")),
         cwd=pgtdpp, shell=True)
     if retcode != 0:
         raise Exception("Downloading pip-requirements failed.")
 
     retcode = call(
-        "pip download -q --no-deps --only-binary=:all:"
+        "pip2 download -q --no-deps --only-binary=:all:"
         " --platform manylinux1_x86_64 --python-version 27"
         " --implementation cp --abi cp27m  -r %s" %
         os.path.abspath(os.path.join(tests_dir, "requirements-bin.txt")),
@@ -234,7 +231,7 @@ def prepare_payload(tests_dir, clean):
         raise Exception("Downloading pip-requirements(27m) failed.")
 
     retcode = call(
-        "pip download -q --no-deps --only-binary=:all:"
+        "pip2 download -q --no-deps --only-binary=:all:"
         " --platform manylinux1_x86_64 --python-version 27"
         " --implementation cp --abi cp27mu  -r %s" %
         os.path.abspath(os.path.join(tests_dir, "requirements-bin.txt")),
@@ -363,7 +360,6 @@ def create_env(name, domname, domimage=None):
     if dom is None:
         print("Failed to create a test domain")
 
-    domipaddress = None
     timeout = 0
     while True:
         domipaddress = lookupIPbyMac(conn, dommac)
@@ -657,7 +653,7 @@ def main(conn):
         print("No target name")
         sys.exit(1)
 
-    if not (os.path.exists(args.run_tests)):
+    if not os.path.exists(args.run_tests):
         print("Test(s) '%s' is not found." % args.run_tests)
         sys.exit(1)
     tests = []
@@ -798,7 +794,7 @@ def main(conn):
 
     print("Test execution for targets %s finished without errors in %s." %
           (targets, time.strftime("%H:%M:%S",
-           time.gmtime(time.time() - start))))
+                                  time.gmtime(time.time() - start))))
 
 
 if __name__ == "__main__":

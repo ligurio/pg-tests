@@ -28,11 +28,11 @@ class Environment(object):
         self.image_name = image_name
         self.env_info = {}
         self.nodes = []
+        import libvirt
         try:
-            import libvirt
             self.conn = libvirt.open(None)
-        except libvirt.libvirtError, e:
-            print 'LibVirt connect error: ', e
+        except libvirt.libvirtError as e:
+            print('LibVirt connect error: ', e)
             sys.exit(1)
 
     def create_environment(self):
