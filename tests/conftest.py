@@ -1,5 +1,6 @@
 import glob
 import platform
+import distro
 import pytest
 import os
 import shutil
@@ -11,7 +12,7 @@ from helpers.os_helpers import download_file
 from tests.settings import TMP_DIR
 
 if platform.system() == 'Linux':
-    dist = platform.linux_distribution()
+    dist = distro.linux_distribution()
 elif platform.system() == 'Windows':
     dist = 'Windows'
 else:
@@ -175,7 +176,7 @@ def populate_imdb(request):
         data = open(csv_file).read().split('\n')
         for i in range(len(data)):
             data[i] = data[i].replace(r'\\', '').replace(r'\"', '')
-            print data[i]
+            print(data[i])
         with open(csv_file, 'w') as f:
             f.write('\n'.join(data))
 

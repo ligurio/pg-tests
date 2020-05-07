@@ -2,10 +2,12 @@
 
 import os
 import platform
+import distro
 import subprocess
 import time
 
 import pytest
+import allure
 
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall
@@ -31,7 +33,7 @@ class TestDevUsage(object):
         """
         dist = ""
         if self.system == 'Linux':
-            dist = " ".join(platform.linux_distribution()[0:2])
+            dist = " ".join(distro.linux_distribution()[0:2])
         elif self.system == 'Windows':
             dist = 'Windows'
         else:
@@ -42,8 +44,7 @@ class TestDevUsage(object):
         milestone = request.config.getoption('--product_milestone')
         target = request.config.getoption('--target')
         product_info = " ".join([dist, name, edition, version])
-        # pylint: disable=no-member
-        tag_mark = pytest.allure.label(LabelType.TAG, product_info)
+        tag_mark = allure.label(LabelType.TAG, product_info)
         request.node.add_marker(tag_mark)
         branch = request.config.getoption('--branch')
 
@@ -64,7 +65,7 @@ if which apt-get; then
     apt-get install -y gcc || true
     apt-get install -y make
     grep -E '(Debian GNU/Linux 9|Debian GNU/Linux 10|'\
-'"Ubuntu [0-9]+\.[0-9]+"|'\
+'"Ubuntu [0-9]+\.[0-9]+|'\
 '"Astra Linux \(Smolensk 1.6\)"|"Astra Linux \(Orel\)")'\
       /etc/os-release >/dev/null 2>/dev/null && \
     apt install -y libdpkg-perl

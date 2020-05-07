@@ -1,6 +1,7 @@
 import grp
 import os
 import platform
+import distro
 import psutil
 import pwd
 import random
@@ -23,7 +24,7 @@ from tests.settings import TMP_DIR
 class TestCompression():
     dist = ""
     if platform.system() == 'Linux':
-        dist = " ".join(platform.linux_distribution()[0:2])
+        dist = " ".join(distro.linux_distribution()[0:2])
     elif platform.system() == 'Windows':
         dist = 'Windows'
     else:
@@ -182,7 +183,7 @@ class TestCompression():
         # Step 1
         compression_files_directory = self.create_tablespace(
             'compression_unlogged_tables', compression=True)
-        print compression_files_directory
+        print(compression_files_directory)
         # Step 2
         install_postgres.set_option(
             'default_tablespace', 'compression_unlogged_tables')

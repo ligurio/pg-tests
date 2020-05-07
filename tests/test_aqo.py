@@ -128,18 +128,18 @@ def parse_explain_analyze_stat(explain_output):
             REGEX_TIME, explain_output[-2][0]).group(1)
         dict['execution_time'] = float(dict['execution_time']) / 1000
     except AttributeError:
-        print 'Failed to extract numbers in %s' % dict['execution_time']
+        print('Failed to extract numbers in %s' % dict['execution_time'])
     except IndexError:
-        print explain_output[-2][0]
+        print(explain_output[-2][0])
 
     try:
         dict['planning_time'] = re.search(
             REGEX_TIME, explain_output[-1][0]).group(1)
         dict['planning_time'] = float(dict['planning_time']) / 1000
     except AttributeError:
-        print 'Failed to extract numbers in %s' % dict['planning_time']
+        print('Failed to extract numbers in %s' % dict['planning_time'])
     except IndexError:
-        print explain_output[-2][0]
+        print(explain_output[-2][0])
 
     log_rows_predicted = []
     log_rows_actual = []
@@ -669,7 +669,7 @@ CREATE INDEX ib ON b (id, v);
 
     install_postgres.set_option('aqo.mode', 'intelligent')
     for q in queries:
-        print q
+        print(q)
         stats = learn_aqo(q, 100)
         plot_stats(stats, connstring)
         evaluate_aqo(stats)
@@ -894,7 +894,7 @@ def test_tpcds_benchmark(install_postgres):
                           "-dir", TMP_DIR, "-scale", TPCDS_SCALE, "-filter"],
                          stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
-    print stdout, stderr
+    print(stdout, stderr)
     assert p.wait() == 0
     # FIXME: assert -11 == 0
 

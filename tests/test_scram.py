@@ -1,9 +1,10 @@
 import hashlib
 import platform
+import distro
 import pytest
 import psycopg2
 import random
-import string
+from string import ascii_lowercase
 
 
 @pytest.mark.core_functional
@@ -14,7 +15,7 @@ class TestScram():
     """
     dist = ""
     if platform.system() == 'Linux':
-        dist = " ".join(platform.linux_distribution()[0:2])
+        dist = " ".join(distro.linux_distribution()[0:2])
     elif platform.system() == 'Windows':
         dist = 'Windows'
     else:
@@ -22,7 +23,7 @@ class TestScram():
 
     @staticmethod
     def random_password():
-        return ''.join(random.choice(string.lowercase) for i in range(16))
+        return ''.join(random.choice(ascii_lowercase) for i in range(16))
 
     @staticmethod
     def create_hash_password(hash_type, password):

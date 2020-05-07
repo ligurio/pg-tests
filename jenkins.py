@@ -8,7 +8,7 @@ import smtplib
 import sys
 import subprocess
 import time
-import urllib2
+from helpers.utils import urlopen
 
 MAIL_HOST = "postfix.l.postgrespro.ru"
 MAIL_TO = ["m.samoylov@postgrespro.ru"]
@@ -27,7 +27,7 @@ DEBUG = False
 if len(sys.argv) > 1:
     branch = sys.argv[1]
 else:
-    print "Usage: specify branch, like pgproee-9.6"
+    print("Usage: specify branch, like pgproee-9.6")
     sys.exit(1)
 
 hubUrl = JENKINS_URL % (branch, branch)
@@ -58,21 +58,22 @@ def get_build_images(build_status):
 
 
 def get_build_info(branch):
-    request = urllib2.Request(hubUrl)
+    request = urlopen(hubUrl)
     base64string = base64.b64encode(JENKINS_LOGIN + ':' + JENKINS_PWORD)
     request.add_header("Authorization", "Basic %s" % base64string)
 
     try:
-        result = urllib2.urlopen(request)
-    except urllib2.HTTPError, e:
-        print "URL Error: " + str(e.code)
-        print "(branch name [" + branch + "] is probably wrong)"
+        result = request.read().decode()
+    except Exception as e:
+        # pylint: disable=no-member
+        print("URL Error: " + str(e.code))
+        print("(branch name [" + branch + "] is probably wrong)")
         return e
 
     try:
         buildStatusJson = json.load(result)
-    except ValueError, e:
-        print "Failed to parse JSON"
+    except ValueError as e:
+        print("Failed to parse JSON")
         return e
 
     return buildStatusJson
@@ -81,18 +82,21 @@ def get_build_info(branch):
 def check_commits(last_commit):
     url = 'https://git.postgrespro.ru/api/v3/projects/193' \
         '/repository/commits?since=' + last_commit
+    # pylint: disable=undefined-variable
     request = urllib2.Request(url, headers={"PRIVATE-TOKEN": GITLAB_TOKEN})
 
     try:
+        # pylint: disable=undefined-variable
         result = urllib2.urlopen(request)
-    except urllib2.HTTPError, e:
-        print "URL Error: " + str(e.code)
+    # pylint: disable=undefined-variable
+    except urllib2.HTTPError as e:
+        print("URL Error: " + str(e.code))
         return False
 
     try:
         commits = json.load(result)
     except ValueError:
-        print "Failed to parse JSON"
+        print("Failed to parse JSON")
         return False
 
     if len(commits) > 0:
@@ -108,12 +112,12 @@ elif product_info[0] == "pgpro":
     product_edition = "std"
 product_version = product_info[1]
 
-print "Product version %s and edition %s" % (product_version, product_edition)
+print("Product version %s and edition %s" % (product_version, product_edition))
 
 last_status = ""
 last_timestamp = ""
 last_commit = datetime.datetime.now().isoformat()
-print "[" + branch + "] " + hubUrl
+print("[" + branch + "] " + hubUrl)
 while True:
     runtest = False
     build_status = get_build_info(branch)
@@ -122,35 +126,35 @@ while True:
     last_status = build_status["result"]
     if last_status == "SUCCESS" and last_timestamp > build_status["timestamp"]:
         last_timestamp = build_status["timestamp"]
-        print "[" + branch + "] New build - %s" % build_status["number"]
+        print("[" + branch + "] New build - %s" % build_status["number"])
         runtest = True
     if check_commits(last_commit):
         last_commit = datetime.datetime.now().isoformat()
-        print "[" + branch + "] New commit"
+        print("[" + branch + "] New commit")
         runtest = True
 
     if runtest:
         for t in targets:
-            print "[" + branch + "] Exec tests on %s" % t
+            print("[" + branch + "] Exec tests on %s" % t)
             cmd = TESTRUN_CMD % (t, product_version, product_edition)
-            print cmd
+            print(cmd)
             p = subprocess.Popen(
                 cmd.split(' '), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             out, err = p.communicate()
             if p.returncode != 0:
                 subject = "[FAIL]"
                 if out != "":
-                    print " =================== stdout ======================"
-                    print out
+                    print(" =================== stdout ======================")
+                    print(out)
                 if err != "":
-                    print " =================== stderr ======================"
-                    print err
+                    print(" =================== stderr ======================")
+                    print(err)
             else:
                 subject = "[PASS]"
             output = "\n\nstdout\n\n%s\n\nstderr\n%s" % (out, err)
             subject += " %s build %s -- %s" % (branch,
                                                build_status["number"], t)
             send_mail(output, subject)
-            print "[" + branch + "] Done %s" % t
+            print("[" + branch + "] Done %s" % t)
 
     time.sleep(CHECK_TIMEOUT)

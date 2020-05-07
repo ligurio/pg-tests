@@ -2,6 +2,7 @@ import argparse
 import os
 import os.path
 import platform
+import distro
 import pytest
 import random
 import re
@@ -9,7 +10,6 @@ import shutil
 import subprocess
 import sys
 import time
-import urllib
 import winrm
 from subprocess import call
 
@@ -17,6 +17,7 @@ from helpers.utils import copy_file, copy_reports_win, exec_command_win
 from helpers.utils import REMOTE_LOGIN, REMOTE_PASSWORD, REMOTE_ROOT_PASSWORD
 from helpers.utils import exec_command
 from helpers.utils import gen_name
+from helpers.utils import urlcontent, urlretrieve
 
 DEBUG = False
 
@@ -41,7 +42,7 @@ REPORT_SERVER_URL = 'http://testrep.l.postgrespro.ru/'
 
 def list_images():
     names = []
-    page = urllib.urlopen(IMAGE_BASE_URL).read()
+    page = urlcontent(IMAGE_BASE_URL)
     images = re.findall(r'href=[\'"]?([^\'" >]+)\.qcow2', page)
     for i in images:
         names.append(i)
@@ -83,35 +84,34 @@ def create_image(domname, name):
     if not os.path.isfile(image_original):
         if not os.path.exists(TEMPLATE_DIR):
             os.makedirs(TEMPLATE_DIR)
-        image = urllib.URLopener()
-        image.retrieve(image_url, image_original)
+        urlretrieve(image_url, image_original)
 
     if not os.path.exists(WORK_DIR):
         os.makedirs(WORK_DIR)
-    print "Copy an original image to %s" % domimage
+    print("Copy an original image to %s" % domimage)
     try:
         shutil.copy(image_original, domimage)
     except IOError as e:
-        print "I/O error({0}): {1}".format(e.errno, e.strerror)
+        print("I/O error({0}): {1}".format(e.errno, e.strerror))
 
     return domimage
 
 
 def create_vm(name, domname):
+    import libvirt
     try:
-        import libvirt
         conn = libvirt.open(None)
-    except libvirt.libvirtError, e:
-        print 'LibVirt connect error: ', e
+    except libvirt.libvirtError as e:
+        print('LibVirt connect error: ', e)
         sys.exit(1)
 
     domimage = create_image(domname, name)
     dommac = mac_address_generator()
     qemu_path = ""
-    if platform.linux_distribution()[0] == 'Ubuntu' or \
-       platform.linux_distribution()[0] == 'debian':
+    if distro.linux_distribution()[0] == 'Ubuntu' or \
+       distro.linux_distribution(False)[0] == 'debian':
         qemu_path = "/usr/bin/qemu-system-x86_64"
-    elif platform.linux_distribution()[0] == 'CentOS Linux':
+    elif distro.linux_distribution()[0] == 'CentOS Linux':
         qemu_path = "/usr/libexec/qemu-kvm"
     if domname[0:3] == 'win':
         network_driver = "e1000"
@@ -153,20 +153,20 @@ def create_vm(name, domname):
 
     dom = conn.createLinux(xmldesc, 0)
     if dom is None:
-        print "Failed to create a test domain"
+        print("Failed to create a test domain")
 
     domipaddress = None
     timeout = 0
     while not domipaddress:
         timeout += 5
-        print "Waiting for IP address...%d" % timeout
+        print("Waiting for IP address...%d" % timeout)
         time.sleep(timeout)
         domipaddress = lookupIPbyMac(conn, dommac)
         if timeout == 60:
-            print "Failed to obtain an IP address inside domain"
+            print("Failed to obtain an IP address inside domain")
             sys.exit(1)
 
-    print "Domain name: %s\nIP address: %s" % (dom.name(), domipaddress)
+    print("Domain name: %s\nIP address: %s" % (dom.name(), domipaddress))
     conn.close()
 
     return domipaddress, domimage, xmldesc
@@ -207,11 +207,11 @@ def setup_env(domipaddress, domname):
 
     if DEBUG:
         ansible_cmd += " -vvv"
-    print ansible_cmd
+    print(ansible_cmd)
     time.sleep(5)    # GosLinux starts a bit slowly than other distros
     retcode = call(ansible_cmd.split(' '))
     if retcode != 0:
-        print "Setup of the test environment %s is failed." % domname
+        print("Setup of the test environment %s is failed." % domname)
         return 1
     return 0
 
@@ -298,17 +298,18 @@ def export_results(domname, domipaddress, reportname, operating_system=None,
 
 
 def keep_env(domname, keep):
+    import libvirt
+    dom = None
     try:
-        import libvirt
         conn = libvirt.open(None)
-    except libvirt.libvirtError, e:
-        print 'LibVirt connect error: ', e
+    except libvirt.libvirtError as e:
+        print('LibVirt connect error: ', e)
         sys.exit(1)
 
     try:
         dom = conn.lookupByName(domname)
-    except libvirt.libvirtError, e:
-        print 'Failed to find the domain %s' % domname
+    except libvirt.libvirtError as e:
+        print('Failed to find the domain %s' % domname)
 
     if keep:
         save_image = os.path.join(WORK_DIR, domname + ".img")
@@ -439,7 +440,7 @@ def main():
                         [EnvironmentVariableTarget]::Machine)
                         """
                 s.run_ps(ps_script)
-                print "Added path for python and python scripts. \n"
+                print("Added path for python and python scripts. \n")
                 retcode, stdout, stderr = exec_command_win(
                     cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD)
                 # export_results(domname, domipaddress, reportname)
@@ -454,8 +455,8 @@ def main():
                                product_version=args.product_version,
                                product_edition=args.product_edition)
                 reporturl = os.path.join(REPORT_SERVER_URL, reportname)
-                print "Link to the html report - %s.html" % reporturl
-                print "Link to the xml report - %s.xml" % reporturl
+                print("Link to the html report - %s.html" % reporturl)
+                print("Link to the xml report - %s.xml" % reporturl)
 
             if args.keep:
                 print('Domain %s (IP address %s)' % (domname, domipaddress))
@@ -469,7 +470,7 @@ def main():
                 reporturl = os.path.join(REPORT_SERVER_URL, reportname)
                 print("Test return code is not zero - %s. "
                       "Please check report: %s" % (retcode, reporturl))
-                print retcode, stdout, stderr
+                print(retcode, stdout, stderr)
                 sys.exit(1)
             else:
                 print("Test execution finished without errors")

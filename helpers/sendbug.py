@@ -7,9 +7,9 @@ import argparse
 import base64
 import json
 import platform
+import distro
 import subprocess
 import sys
-import urllib2
 
 
 def getDistribution():
@@ -17,7 +17,7 @@ def getDistribution():
     if sys.platform == "win32":
         return platform.win32_ver()
     elif sys.platform == "linux" or sys.platform == "linux2":
-        distname, version, id = platform.linux_distribution()
+        distname, version, id = distro.linux_distribution()
         return "%s %s" % (distname, version)
     elif sys.platform == "darwin":
         release, versioninfo, machine = platform.mac_ver()
@@ -81,17 +81,19 @@ def createTask(server_base_url, user, password,
         server_base_url = 'https://jira.postgrespro.ru'
         complete_url = "%s/rest/api/2/issue" % server_base_url
         base64string = base64.encodestring('%s:%s' % (user, password))[:-1]
+        # pylint: disable=undefined-variable
         request = urllib2.Request(complete_url, json.dumps(data),
                                   {'Content-Type': 'application/json'})
         request.add_header("Authorization", "Basic %s" % base64string)
+        # pylint: disable=undefined-variable
         response = urllib2.urlopen(request)
-
-    except urllib2.HTTPError, ex:
-        print "EXCEPTION: %s " % ex.msg
+    # pylint: disable=undefined-variable
+    except urllib2.HTTPError as ex:
+        print("EXCEPTION: %s " % ex.msg)
         return None
 
-    if response.code / 100 != 2:
-        print "ERROR: status %s" % response.code
+    if int(response.code / 100) != 2:
+        print("ERROR: status %s" % response.code)
         return None
     issue = json.loads(response.read())
     return issue
@@ -135,7 +137,7 @@ if __name__ == '__main__':
         sys.exit(0)
 
     if args.dry_run:
-        print createDescription()
+        print(createDescription())
         sys.exit(0)
 
     issue = createTask(server_url, username, password,
@@ -144,6 +146,6 @@ if __name__ == '__main__':
     issue_url = "%s/browse/%s" % (server_url, issue_code)
 
     if (issue is not None):
-        print issue_url
+        print(issue_url)
     else:
         sys.exit(2)

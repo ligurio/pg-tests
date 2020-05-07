@@ -1,4 +1,5 @@
 import platform
+import distro
 import os
 import subprocess
 
@@ -6,6 +7,7 @@ import pytest
 
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall
+import allure
 
 
 @pytest.mark.clean_install
@@ -23,7 +25,7 @@ class TestCleanInstall():
         :return:
         """
         if self.system == 'Linux':
-            dist = " ".join(platform.linux_distribution()[0:2])
+            dist = " ".join(distro.linux_distribution()[0:2])
         elif self.system == 'Windows':
             dist = 'Windows'
         else:
@@ -34,8 +36,7 @@ class TestCleanInstall():
         milestone = request.config.getoption('--product_milestone')
         target = request.config.getoption('--target')
         product_info = " ".join([dist, name, edition, version])
-        # pylint: disable=no-member
-        tag_mark = pytest.allure.label(LabelType.TAG, product_info)
+        tag_mark = allure.label(LabelType.TAG, product_info)
         request.node.add_marker(tag_mark)
         branch = request.config.getoption('--branch')
 

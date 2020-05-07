@@ -1,14 +1,13 @@
 import os
 import platform
+import distro
 import random
 import shlex
-import shutil
 import socket
 import subprocess
 import sys
 import re
 import difflib
-import urllib
 import math
 import gc
 
@@ -19,6 +18,10 @@ try:
     import configparser
 except ImportError:  # py2compat
     import ConfigParser as configparser
+try:
+    import urllib.request as urlrequest
+except ImportError:  # py2compat
+    import urllib as urlrequest
 
 REMOTE_LOGIN = 'test'
 REMOTE_ROOT = 'root'
@@ -34,6 +37,18 @@ class MySuites(Enum):
 
     PARENT_SUITE = 'parentSuite'
     EPIC = 'epic'
+
+
+def urlopen(url):
+    return urlrequest.urlopen(url)
+
+
+def urlcontent(url):
+    return urlopen(url).read().decode()
+
+
+def urlretrieve(url, target):
+    return urlrequest.urlretrieve(url, target)
 
 
 def command_executor(cmd, remote=False, host=None,
@@ -68,7 +83,7 @@ def command_executor(cmd, remote=False, host=None,
                 out = subprocess.Popen(
                     shlex.split(cmd, posix=not(windows)),
                     stdout=subprocess.PIPE)
-                return out.stdout.read()
+                return out.stdout.read().decode()
             else:
                 if windows:
                     return subprocess.check_call(
@@ -84,7 +99,8 @@ def get_virt_ip():
     :return: string ip address
     """
     return subprocess.check_output(
-        'ip addr show virbr0', shell=True).split("inet ")[1].split("/")[0]
+        'ip addr show virbr0', shell=True).decode().\
+        split("inet ")[1].split("/")[0]
 
 
 def copy_file(remote_path, local_path, hostname, dir=False,
@@ -189,10 +205,10 @@ def exec_command(cmd, hostname, login, password,
     chan.exec_command(cmd)
     retcode = chan.recv_exit_status()
     while chan.recv_ready():
-        stdout += chan.recv(buff_size)
+        stdout += chan.recv(buff_size).decode()
 
     while chan.recv_stderr_ready():
-        stderr += chan.recv_stderr(buff_size)
+        stderr += chan.recv_stderr(buff_size).decode()
 
     chan.close()
     client.close()
@@ -278,10 +294,10 @@ def wait_for_boot(host, time=300, linux=True):
     print("Waiting for control protocol availability.")
     if linux:
         exec_command(None, host, REMOTE_LOGIN, REMOTE_PASSWORD,
-                     connect_retry_count=(time / CONNECT_RETRY_DELAY))
+                     connect_retry_count=(int)(time / CONNECT_RETRY_DELAY))
     else:
         exec_command_win(None, host, REMOTE_LOGIN, REMOTE_PASSWORD,
-                         connect_retry_count=(time / CONNECT_RETRY_DELAY))
+                         connect_retry_count=(int)(time / CONNECT_RETRY_DELAY))
 
 
 def gen_name(name, prefix="pgt"):
@@ -320,8 +336,8 @@ def get_distro(remote=False, ip=None):
     else:
         os = platform.platform()
         if "Linux" in os:
-            return platform.linux_distribution()[0].strip('"'), \
-                platform.linux_distribution()[1], \
+            return distro.linux_distribution()[0].strip('"'), \
+                distro.linux_distribution()[1], \
                 platform.machine()
         elif "Windows" in os:
             return 'Windows-' + platform.win32_ver()[0], \
@@ -469,7 +485,7 @@ def read_dump(file):
     sort_items = []
     with open(file, 'rb') as f:
         for line in f:
-            line = preprocess(line).strip()
+            line = preprocess(line.decode()).strip()
             if line:
                 for pattern in sort_patterns:
                     if re.match(pattern, line):
@@ -542,7 +558,6 @@ def download_dump(product, edition, version, dir, custom_dump=None):
         dump_file_name = "dump-%s.sql" % "-".join([product, edition, version])
     dump_url = "http://webdav.l.postgrespro.ru/pgdatas/xregress/%s" % \
                dump_file_name
-    dump_file = urllib.URLopener()
     dump_file_name = os.path.join(dir, dump_file_name)
-    dump_file.retrieve(dump_url, dump_file_name)
+    urlretrieve(dump_url, dump_file_name)
     return dump_file_name
