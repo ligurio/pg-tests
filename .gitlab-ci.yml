@@ -43,3 +43,9 @@ pylint-check:
   script:
     - PYTHONPATH=${PYTHONPATH}:$(dirname %d) pylint --ignore=datafiller.py -E pg-tests
   when: always
+
+pylint3-check:
+  stage: test
+  script:
+    - PYTHONPATH=${PYTHONPATH}:$(dirname %d) pylint3 --ignore=datafiller.py -E pg-tests
+  when: always
