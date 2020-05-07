@@ -28,6 +28,7 @@ before_script:
   - pip3 install psycopg2-binary
   - pip3 install libvirt-python
   - pip3 install paramiko psutil
+  - pip3 install allure-pytest
 
 #ansible-lint:
 #  stage: test
