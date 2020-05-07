@@ -24,6 +24,11 @@ before_script:
   - pip install psycopg2
   - pip install allure-pytest
   - pip install psutil
+  - pip3 install pytest
+  - pip3 install psycopg2-binary
+  - pip3 install libvirt-python
+  - pip3 install paramiko psutil
+  - pip3 install allure-pytest
 
 #ansible-lint:
 #  stage: test
@@ -42,4 +47,10 @@ pylint-check:
   stage: test
   script:
     - PYTHONPATH=${PYTHONPATH}:$(dirname %d) pylint --ignore=datafiller.py -E pg-tests
+  when: always
+
+pylint3-check:
+  stage: test
+  script:
+    - PYTHONPATH=${PYTHONPATH}:$(dirname %d) pylint3 --ignore=datafiller.py -E pg-tests
   when: always
