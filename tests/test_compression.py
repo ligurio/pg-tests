@@ -183,7 +183,7 @@ class TestCompression():
         # Step 1
         compression_files_directory = self.create_tablespace(
             'compression_unlogged_tables', compression=True)
-        print compression_files_directory
+        print(compression_files_directory)
         # Step 2
         install_postgres.set_option(
             'default_tablespace', 'compression_unlogged_tables')

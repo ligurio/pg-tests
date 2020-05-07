@@ -2,20 +2,18 @@ import logging
 import os
 import subprocess
 import tempfile
-import urllib
 import re
 import time
 import shutil
 import glob
 
-from BeautifulSoup import BeautifulSoup
+try:
+    from bs4 import BeautifulSoup
+except ImportError:  # py2compat
+    from BeautifulSoup import BeautifulSoup
 
-from helpers.utils import command_executor
-from helpers.utils import get_distro
-from helpers.utils import REMOTE_ROOT
-from helpers.utils import REMOTE_ROOT_PASSWORD
-from helpers.utils import write_file
-from helpers.utils import refresh_env_win
+from helpers.utils import command_executor, get_distro, REMOTE_ROOT, \
+    REMOTE_ROOT_PASSWORD, write_file, refresh_env_win, urlretrieve, urlopen
 
 PGPRO_ARCHIVE_STANDARD = "http://repo.postgrespro.ru/pgpro-archive/"
 PGPRO_ARCHIVE_ENTERPRISE = "http://repoee.l.postgrespro.ru/archive/"
@@ -634,7 +632,7 @@ class PgInstall:
                            (self.get_repo_base(), product_dir)
                 dist_name = self.get_distname_for_pgpro()
                 try:
-                    soup = BeautifulSoup(urllib.urlopen(repo_rpm))
+                    soup = BeautifulSoup(urlopen(repo_rpm))
                     for link in soup.findAll('a'):
                         href = link.get('href')
                         if href.startswith('%s.%s' % (reponame, dist_name)):
@@ -785,18 +783,16 @@ baseurl=%s
             installer_name = self.__get_last_winstaller_file(
                 baseurl, self.os_arch)
             windows_installer_url = baseurl + installer_name
-            windows_installer = urllib.URLopener()
             if not os.path.exists(WIN_INST_DIR):
                 os.mkdir(WIN_INST_DIR)
             print(baseurl + installer_name)
             self.installer_name = os.path.join(WIN_INST_DIR,
                                                installer_name)
-            windows_installer.retrieve(windows_installer_url,
-                                       self.installer_name)
+            urlretrieve(windows_installer_url,
+                        self.installer_name)
             msi_files = self.__get_msi_files(baseurl)
             for msi in msi_files:
-                windows_installer = urllib.URLopener()
-                windows_installer.retrieve(
+                urlretrieve(
                     baseurl + msi,
                     os.path.join(WIN_INST_DIR, msi))
         else:
@@ -872,12 +868,11 @@ baseurl=%s
             version = self.get_product_minor_version()
         tar_href = '%s-%s.%s' % (package, version, ext)
         tar_url = baseurl + '/' + tar_href
-        sourcetar = urllib.URLopener()
         attempt = 1
         timeout = 0
         while attempt < 9:
             try:
-                sourcetar.retrieve(tar_url, tar_href)
+                urlretrieve(tar_url, tar_href)
                 return
             except Exception as ex:
                 print('Exception occured while downloading sources "%s":' %
@@ -889,7 +884,7 @@ baseurl=%s
                       (attempt, timeout))
                 time.sleep(timeout)
         # Last attempt
-        sourcetar.retrieve(tar_url, tar_href)
+        urlretrieve(tar_url, tar_href)
 
     def install_package(self, pkg_name):
         """
@@ -1087,9 +1082,8 @@ baseurl=%s
             exename
         if not os.path.exists(WIN_INST_DIR):
             os.mkdir(WIN_INST_DIR)
-        perl_installer = urllib.URLopener()
         target_path = os.path.join(WIN_INST_DIR, exename)
-        perl_installer.retrieve(url, target_path)
+        urlretrieve(url, target_path)
 
         cmd = target_path + " /quiet PERL_PATH=Yes PERL_EXT=Yes ADDLOCAL=PERL"
         command_executor(cmd, windows=True)
@@ -1117,7 +1111,7 @@ baseurl=%s
         elif self.__is_pm_zypper():
             cmd = "rpm -qa %s" % pkg_name
             installed_pkgs = subprocess.check_output(cmd, shell=True).\
-                splitlines()
+                decode().splitlines()
             if (len(installed_pkgs)):
                 pkg_name = ' '.join(installed_pkgs)
                 cmd = "zypper remove -y %s" % pkg_name
@@ -1179,7 +1173,7 @@ baseurl=%s
         :param url: str:
         :return: str: last postgrespro exe file
         """
-        soup = BeautifulSoup(urllib.urlopen(url))
+        soup = BeautifulSoup(urlopen(url))
         exe_arch = r'_[X]?64bit_' if arch == 'AMD64' else r'_32bit_'
         setup_files = []
         for link in soup.findAll('a'):
@@ -1198,7 +1192,7 @@ baseurl=%s
         """
 
         msi_files = []
-        soup = BeautifulSoup(urllib.urlopen(url))
+        soup = BeautifulSoup(urlopen(url))
         for link in soup.findAll('a'):
             href = link.get('href')
             if re.search(r'\.msi$', href, re.I):
@@ -1239,7 +1233,7 @@ baseurl=%s
                 options, query
             )
         return subprocess.check_output(cmd, shell=True,
-                                       cwd="/", env=self.env).strip()
+                                       cwd="/", env=self.env).decode().strip()
 
     def exec_psql_select(self, query, options=''):
         return self.exec_psql(query, '%s -t -P format=unaligned' % options)
@@ -1250,7 +1244,7 @@ baseurl=%s
                              dir=('/tmp' if os.path.exists('/tmp') else None))
         with os.fdopen(handle, 'w') as script_file:
             script_file.write(script)
-        os.chmod(script_path, 0644)
+        os.chmod(script_path, 0o0644)
         self.exec_psql_file(script_path, options)
         os.unlink(script_path)
 
@@ -1273,7 +1267,8 @@ baseurl=%s
         """ Get client version
         """
         cmd = '"%spsql" --version' % self.get_client_bin_path()
-        return subprocess.check_output(cmd, shell=True, env=self.env).strip()
+        return subprocess.check_output(cmd, shell=True, env=self.env).\
+            decode().strip()
 
     def get_initdb_props(self):
         """ Get properties returned by initdb
@@ -1286,7 +1281,8 @@ baseurl=%s
         props = {}
         for line in subprocess.check_output(cmd, shell=True,
                                             stderr=subprocess.STDOUT,
-                                            cwd="/", env=self.env).split('\n'):
+                                            cwd="/", env=self.env).\
+                decode().split('\n'):
             if '=' in line:
                 (name, val) = line.split('=', 1)
                 props[name] = val.strip()
@@ -1572,7 +1568,7 @@ baseurl=%s
                 options
             )
         return subprocess.check_output(cmd, shell=True,
-                                       cwd="/", env=self.env)
+                                       cwd="/", env=self.env).decode()
 
     def exec_server_bin(self, bin, options=''):
         cmd = '%s"%s%s" %s' % \
@@ -1583,7 +1579,7 @@ baseurl=%s
                 options
             )
         return subprocess.check_output(cmd, shell=True,
-                                       cwd="/", env=self.env)
+                                       cwd="/", env=self.env).decode()
 
     def pg_isready(self):
         cmd = '%s"%spg_isready" %s %s' % \

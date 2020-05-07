@@ -85,7 +85,7 @@ def execute(conn, sql_query):
     try:
         cursor.execute(sql_query)
     except psycopg2.Error as e:
-        print e.pgerror
+        print(e.pgerror)
         raise Exception("SQL execution failed")
     conn.commit()
 
@@ -195,12 +195,12 @@ def pg_set_option(connstring, option, value):
 
 def pg_manage_psql(action, data_dir, version="9.6", start_script=None,
                    remote=False, host=None):
-        """ Manage Postgres instance
-        :param action: start, restart, stop etc
-        :param init: Initialization before a first start
-        :return:
-        """
-        raise NotImplementedError()
+    """ Manage Postgres instance
+    :param action: start, restart, stop etc
+    :param init: Initialization before a first start
+    :return:
+    """
+    raise NotImplementedError()
 
 
 def pg_start_script_name(name, edition, version, distro):

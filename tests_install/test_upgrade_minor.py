@@ -2,17 +2,20 @@ import os
 import platform
 import distro
 import subprocess
-import urllib
 import re
 import tempfile
 import time
 import pytest
+import allure
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall, PGPRO_ARCHIVE_STANDARD,\
     PGPRO_ARCHIVE_ENTERPRISE, DEBIAN_BASED
 from helpers.constants import FIRST_RELEASE
-from BeautifulSoup import BeautifulSoup
-from helpers.utils import diff_dbs, download_dump
+try:
+    from bs4 import BeautifulSoup
+except ImportError:  # py2compat
+    from BeautifulSoup import BeautifulSoup
+from helpers.utils import diff_dbs, download_dump, urlopen
 
 tempdir = tempfile.gettempdir()
 client_dir = 'client'
@@ -169,7 +172,7 @@ def get_test_versions(edition, version, specified_version, current_version):
         raise Exception("Unsupported postgrespro edition (%s)." % edition)
 
     # Choose two versions -- newest and oldest supported
-    soup = BeautifulSoup(urllib.urlopen(archive_url))
+    soup = BeautifulSoup(urlopen(archive_url))
     arcversions = []
     specified_version_found = False
     for link in soup.findAll('a'):
@@ -198,7 +201,7 @@ def get_test_versions(edition, version, specified_version, current_version):
 
     # Choose first and last versions
     if specified_version and not specified_version_found:
-        print "Specified first version is not present in archive yet."
+        print("Specified first version is not present in archive yet.")
         return None
     n = len(arcversions) - 1
     while n >= 0 and current_version <= arcversions[n]:
@@ -259,12 +262,11 @@ class TestUpgradeMinor():
         milestone = request.config.getoption('--product_milestone')
         target = request.config.getoption('--target')
         product_info = " ".join([dist, name, edition, version])
-        # pylint: disable=no-member
-        tag_mark = pytest.allure.label(LabelType.TAG, product_info)
+        tag_mark = allure.label(LabelType.TAG, product_info)
         request.node.add_marker(tag_mark)
         branch = request.config.getoption('--branch')
         if edition not in ['std', 'ent']:
-            print "Minor upgrade only for std and ent"
+            print("Minor upgrade only for std and ent")
             return
         if name != 'postgrespro':
             print("Minor upgrade test is only for postgrespro.")
@@ -307,7 +309,7 @@ class TestUpgradeMinor():
         pgconfig = subprocess.check_output('"%s"' %
                                            os.path.join(client_dir, 'bin',
                                                         'pg_config'),
-                                           shell=True)
+                                           shell=True).decode()
         vere = re.search(r'PGPRO\_VERSION\s=\s([0-9.]+)', pgconfig)
         if (vere):
             current_ver = vere.group(1)
@@ -323,7 +325,7 @@ class TestUpgradeMinor():
             print("No archive versions found.")
             return
 
-        print test_versions
+        print(test_versions)
 
         dump_file_name = download_dump(name, edition, version, tempdir)
 
@@ -402,7 +404,7 @@ class TestUpgradeMinor():
 
             repo_diff = list(set(pgold.all_packages_in_repo)
                              - set(pgnew.all_packages_in_repo))
-            print "repo diff is %s" % repo_diff
+            print("repo diff is %s" % repo_diff)
             for package in repo_diff:
                 try:
                     pgold.remove_package(package)

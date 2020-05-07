@@ -5,9 +5,9 @@ import glob
 import time
 import subprocess
 import re
-
+import sys
 import pytest
-
+import allure
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall
 from helpers.os_helpers import get_directory_size, get_process_pids
@@ -133,39 +133,40 @@ def check_executables(pginst, packages):
             if f.startswith('/usr/lib/debug/'):
                 continue
             fout = subprocess.check_output(
-                'LANG=C file "%s"' % f, shell=True).strip()
+                'LANG=C file "%s"' % f, shell=True).decode().strip()
             if fout.startswith(f + ': cannot open'):
-                print fout
+                print(fout)
                 raise Exception('Error opening file "%s".' % f)
             if not fout.startswith(f + ': ELF '):
                 continue
-            print "\tELF executable found:", f
+            print("\tELF executable found:", f)
             if pginst.os_name == 'Astra Linux (Smolensk)':
                 bsignout = subprocess.check_output(
-                    'LANG=C bsign -w "%s"; echo' % f, shell=True).strip()
+                    'LANG=C bsign -w "%s"; echo' % f, shell=True).decode()\
+                    .strip()
                 if 'bsign: good hash found' not in bsignout:
-                    print bsignout
+                    print(bsignout)
                     raise Exception("Unsigned binary %s" % f)
             lddout = subprocess.check_output(
-                'LANG=C ldd "%s"' % f, shell=True).split("\n")
+                'LANG=C ldd "%s"' % f, shell=True).decode().split("\n")
             error = False
             for line in lddout:
                 if line.strip() == "" or line.startswith("\tlinux") or \
                    line.startswith("\t/") or line == ("\tstatically linked"):
                     continue
                 if not (' => ' in line) or ' not found' in line:
-                    print "Invalid line: [%s]" % line
+                    print("Invalid line: [%s]" % line)
                     error = True
                     break
             if error:
-                print 'ldd "%s":' % f, lddout
+                print('ldd "%s":' % f, lddout)
                 raise Exception("Invalid dynamic dependencies")
             if f.endswith('.so') or '.so.' in os.path.basename(f):
                 continue
             gdbout = subprocess.check_output(
                 'LANG=C gdb --batch -ex "b main" -ex run -ex next -ex bt'
                 '  -ex cont --args  "%s" --version' % f,
-                stderr=subprocess.STDOUT, shell=True).split("\n")
+                stderr=subprocess.STDOUT, shell=True).decode().split("\n")
             good_lines = 0
             for line in gdbout:
                 if re.match(r'Breakpoint 1, [a-z0-9_:]*main ', line):
@@ -271,8 +272,7 @@ class TestFullInstall():
         request.cls.pgid = '%s-%s' % (edition, version)
         target = request.config.getoption('--target')
         product_info = " ".join([dist, name, edition, version])
-        # pylint: disable=no-member
-        tag_mark = pytest.allure.label(LabelType.TAG, product_info)
+        tag_mark = allure.label(LabelType.TAG, product_info)
         request.node.add_marker(tag_mark)
         branch = request.config.getoption('--branch')
 
@@ -368,6 +368,8 @@ class TestFullInstall():
         3. Check function result
         4. Drop function
         """
+        if sys.version_info > (3, 0):
+            return
         pginst = request.cls.pginst
         # Step 1
         func = """CREATE FUNCTION py_test_function()
@@ -451,7 +453,7 @@ $$ LANGUAGE pltcl;"""
         """
         pginst = request.cls.pginst
         if platform.system() == "Windows" and pginst.os_arch != 'AMD64':
-            print "plperl is only supported on 64-bit Windows. Test skipped."
+            print("plperl is only supported on 64-bit Windows. Test skipped.")
             return
         # Step 1
         func = """CREATE FUNCTION plperl_test_function()
@@ -492,7 +494,7 @@ $$ LANGUAGE plpgsql;"""
         pginst.exec_psql_script(func)
         # Step 2
         result = pginst.exec_psql_select("SELECT plpgsql_test_function()")
-        print result
+        print(result)
         # Step 3
         assert result == "plpgsql test function"
         # Step 4

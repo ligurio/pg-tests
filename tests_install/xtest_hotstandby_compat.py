@@ -2,7 +2,6 @@ import os
 import platform
 import distro
 import subprocess
-import urllib
 import re
 import time
 import shutil
@@ -10,12 +9,16 @@ import tempfile
 import glob
 
 import pytest
+import allure
 
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall
 from helpers.pginstall import PGPRO_ARCHIVE_STANDARD, PGPRO_ARCHIVE_ENTERPRISE
-from BeautifulSoup import BeautifulSoup
-
+from helpers.utils import urlopen
+try:
+    from bs4 import BeautifulSoup
+except ImportError:  # py2compat
+    from BeautifulSoup import BeautifulSoup
 
 windows_os = False
 
@@ -55,7 +58,7 @@ def setup_sender(pginst, waldir, backup_targetdir):
     if os.path.exists(waldir):
         shutil.rmtree(waldir)
     os.makedirs(waldir)
-    os.chmod(waldir, 0777)
+    os.chmod(waldir, 0o0777)
     pginst.exec_psql("ALTER SYSTEM SET logging_collector TO 'on'")
     pginst.exec_psql("ALTER SYSTEM SET wal_level TO 'hot_standby'")
     pginst.exec_psql("ALTER SYSTEM SET archive_mode TO 'on'")
@@ -248,8 +251,7 @@ class TestHotStandbyCompatibility():
         milestone = request.config.getoption('--product_milestone')
         target = request.config.getoption('--target')
         product_info = " ".join([dist, name, edition, version])
-        # pylint: disable=no-member
-        tag_mark = pytest.allure.label(LabelType.TAG, product_info)
+        tag_mark = allure.label(LabelType.TAG, product_info)
         request.node.add_marker(tag_mark)
         branch = request.config.getoption('--branch')
 
@@ -265,7 +267,7 @@ class TestHotStandbyCompatibility():
         print("Running on %s." % target)
 
         # Choose two versions -- newest and oldest supported
-        soup = BeautifulSoup(urllib.urlopen(archive_url))
+        soup = BeautifulSoup(urlopen(archive_url))
         arcversions = []
         for link in soup.findAll('a'):
             href = link.get('href')

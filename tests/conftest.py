@@ -176,7 +176,7 @@ def populate_imdb(request):
         data = open(csv_file).read().split('\n')
         for i in range(len(data)):
             data[i] = data[i].replace(r'\\', '').replace(r'\"', '')
-            print data[i]
+            print(data[i])
         with open(csv_file, 'w') as f:
             f.write('\n'.join(data))
 

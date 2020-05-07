@@ -4,7 +4,7 @@ import distro
 import pytest
 import psycopg2
 import random
-import string
+from string import ascii_lowercase
 
 
 @pytest.mark.core_functional
@@ -23,7 +23,7 @@ class TestScram():
 
     @staticmethod
     def random_password():
-        return ''.join(random.choice(string.lowercase) for i in range(16))
+        return ''.join(random.choice(ascii_lowercase) for i in range(16))
 
     @staticmethod
     def create_hash_password(hash_type, password):
