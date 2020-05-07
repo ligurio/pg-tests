@@ -7,6 +7,7 @@ import os
 import re
 
 import pytest
+import allure
 
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall, PRELOAD_LIBRARIES
@@ -17,7 +18,7 @@ PRELOAD_LIBRARIES['ent-cert-11'].remove('passwordcheck')
 def get_pg_prefix(pginst):
     cmd = '"%s" --bindir' % os.path.join(pginst.get_default_bin_path(),
                                          'pg_config')
-    binpath = subprocess.check_output(cmd, shell=True).strip()
+    binpath = subprocess.check_output(cmd, shell=True).decode().strip()
     pg_prefix = re.sub('bin$', '', binpath)
     return pg_prefix
 
@@ -59,8 +60,7 @@ class TestMakeCheck(object):
         target = request.config.getoption('--target')
         product_info = " ".join([dist, name, edition, version])
         pgid = '%s-%s' % (edition, version)
-        # pylint: disable=no-member
-        tag_mark = pytest.allure.label(LabelType.TAG, product_info)
+        tag_mark = allure.label(LabelType.TAG, product_info)
         request.node.add_marker(tag_mark)
         branch = request.config.getoption('--branch')
         # Step 1

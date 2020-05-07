@@ -2,18 +2,21 @@ import platform
 import distro
 import pytest
 import os
-
+import pytest
+import allure
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall, PGPRO_ARCHIVE_ENTERPRISE,\
     PGPRO_ARCHIVE_STANDARD, ALT_BASED, DEBIAN_BASED
 from helpers.constants import FIRST_RELEASE
-from helpers.utils import diff_dbs, download_dump
+from helpers.utils import diff_dbs, download_dump, urlopen
 import time
 import tempfile
 import subprocess
 import shutil
-from BeautifulSoup import BeautifulSoup
-import urllib
+try:
+    from bs4 import BeautifulSoup
+except ImportError:  # py2compat
+    from BeautifulSoup import BeautifulSoup
 import re
 
 system = platform.system()
@@ -502,13 +505,13 @@ def install_server(product, edition, version, milestone, branch, windows):
 
 
 def do_in_all_dbs(pg, script):
-    dbs = pg.exec_psql_select("SELECT datname FROM pg_database"). \
-        splitlines()
+    dbs = pg.exec_psql_select("SELECT datname FROM pg_database").\
+        split(os.linesep)
     for db in dbs:
         if db != 'template0':
             os.environ['PGDATABASE'] = db
             pg.exec_psql_script(script)
-    os.unsetenv('PGDATABASE')
+    del os.environ['PGDATABASE']
 
 
 def generate_db(pg, pgnew, custom_dump=None):
@@ -570,7 +573,7 @@ def upgrade(pg, pgOld):
                                      pgOld.version])),
               'wb') as out:
         subprocess.check_call(cmd, shell=True, cwd=upgrade_dir, stdout=out)
-    print "upgrade complete in %s sec" % (time.time()-start_time)
+    print("upgrade complete in %s sec" % (time.time()-start_time))
 
 
 def dumpall(pg, file):
@@ -605,7 +608,7 @@ def after_upgrade(pg, pgOld):
                                              pgOld.version])),
                       'wb') as out:
                 pg.exec_psql_file(file_name, stdout=out)
-    print "after_upgrade complete in %s sec" % (time.time()-start_time)
+    print("after_upgrade complete in %s sec" % (time.time()-start_time))
 
 
 def init_cluster(pg, force_remove=True, initdb_params='',
@@ -645,7 +648,7 @@ def get_last_version(edition, version):
         raise Exception("Unsupported postgrespro edition (%s)." % edition)
 
     # Choose two versions -- newest and oldest supported
-    soup = BeautifulSoup(urllib.urlopen(archive_url))
+    soup = BeautifulSoup(urlopen(archive_url))
     arcversions = []
     for link in soup.findAll('a'):
         href = link.get('href')
@@ -704,17 +707,16 @@ class TestUpgrade():
 
         if dist in FIRST_RELEASE and key in FIRST_RELEASE[dist] and \
                 FIRST_RELEASE[dist][key] is None:
-            print "Platform not supported"
+            print("Platform not supported")
             return
 
         if key not in UPGRADE_ROUTES:
-            print 'No routes for upgrade'
+            print('No routes for upgrade')
             return
 
         upgrade_route = UPGRADE_ROUTES[key]
 
-        # pylint: disable=no-member
-        tag_mark = pytest.allure.label(LabelType.TAG, product_info)
+        tag_mark = allure.label(LabelType.TAG, product_info)
         request.node.add_marker(tag_mark)
         # Install the tested version
         branch = request.config.getoption('--branch')
@@ -725,8 +727,8 @@ class TestUpgrade():
         stop(pg)
 
         if pg.os_name in DEBIAN_BASED and pg.version == '9.6':
-            print "Two products 9.6 cannot be " \
-                  "installed simultaneously on debian-based OS"
+            print("Two products 9.6 cannot be "
+                  "installed simultaneously on debian-based OS")
             return
 
         if self.system == 'Windows':
@@ -743,16 +745,16 @@ class TestUpgrade():
             old_key = "-".join([old_name, old_edition, old_version])
             if dist in FIRST_RELEASE and old_key in FIRST_RELEASE[dist]:
                 if FIRST_RELEASE[dist][old_key] is None:
-                    print "Distributive is not supported"
+                    print("Distributive is not supported")
                     continue
                 first_release = '.'.join(
                     [d.rjust(4) for d in FIRST_RELEASE[dist][old_key].
                         split('.')])
                 if first_release > get_last_version(old_edition, old_version):
-                    print "Wait for %s" % FIRST_RELEASE[dist][old_key]
+                    print("Wait for %s" % FIRST_RELEASE[dist][old_key])
                     continue
 
-            print "=====Check upgrade from %s" % old_key
+            print("=====Check upgrade from %s" % old_key)
 
             pgold = install_server(
                 product=old_name, edition=old_edition,
@@ -789,22 +791,21 @@ class TestUpgrade():
         :return:
         """
         product_info = request.cls.product_info
-        # pylint: disable=no-member
-        tag_mark = pytest.allure.label(LabelType.TAG, product_info)
+        tag_mark = allure.label(LabelType.TAG, product_info)
         request.node.add_marker(tag_mark)
 
         key = request.cls.key
         dist = request.cls.dist
 
-        print "Test dump-restore %s" % product_info
+        print("Test dump-restore %s" % product_info)
 
         if dist in FIRST_RELEASE and key in FIRST_RELEASE[dist] and \
                 FIRST_RELEASE[dist][key] is None:
-            print "Platform not supported"
+            print("Platform not supported")
             return
 
         if key not in DUMP_RESTORE_ROUTES:
-            print 'No routes for dump-restore'
+            print('No routes for dump-restore')
             return
 
         dump_restore_route = DUMP_RESTORE_ROUTES[key]
@@ -812,8 +813,8 @@ class TestUpgrade():
         pg = request.cls.pg
 
         if pg.os_name in DEBIAN_BASED and pg.version == '9.6':
-            print "Two products 9.6 cannot be " \
-                  "installed simultaneously on debian-based"
+            print("Two products 9.6 cannot be "
+                  "installed simultaneously on debian-based")
             return
 
         for route in dump_restore_route['from']:
@@ -828,16 +829,16 @@ class TestUpgrade():
             old_key = "-".join([old_name, old_edition, old_version])
             if dist in FIRST_RELEASE and old_key in FIRST_RELEASE[dist]:
                 if FIRST_RELEASE[dist][old_key] is None:
-                    print "Distributive is not supported"
+                    print("Distributive is not supported")
                     continue
                 first_release = '.'.join(
                     [d.rjust(4) for d in FIRST_RELEASE[dist][old_key].
                         split('.')])
                 if first_release > get_last_version(old_edition, old_version):
-                    print "Wait for %s" % FIRST_RELEASE[dist][old_key]
+                    print("Wait for %s" % FIRST_RELEASE[dist][old_key])
                     continue
 
-            print "=====Check dump-restore from %s" % old_key
+            print("=====Check dump-restore from %s" % old_key)
 
             file_name = os.path.join(tempfile.gettempdir(), "%s.sql" % old_key)
 

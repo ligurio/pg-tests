@@ -1,11 +1,9 @@
 import os
-import platform
 import psutil
 import random
 import re
-import shutil
 import subprocess
-import urllib2
+from helpers.utils import urlretrieve
 
 
 def download_file(url, path):
@@ -17,12 +15,9 @@ def download_file(url, path):
     """
 
     try:
-        blob = urllib2.urlopen(url)
-    except urllib2.URLError:
-        print "Failed to download %s" % url
-
-    with open(path, 'wb') as output:
-        output.write(blob.read())
+        urlretrieve(url, path)
+    except Exception:
+        print("Failed to download %s" % url)
 
 
 def parse_connstring(connstring):
@@ -100,7 +95,7 @@ def get_systemd_version():
     scout, scerr = sysctl.communicate()
     if sysctl.returncode != 0:
         return None
-    firstline = scout.splitlines()[0]
+    firstline = scout.decode().splitlines()[0]
     m = re.match(r'systemd\s+(\d+)', firstline)
     if not m:
         return None
@@ -119,7 +114,7 @@ def is_service_installed(service, windows=False):
     if systemd_version > 210:
         cmd = 'LANG=C systemctl list-unit-files' \
                 ' --no-legend --no-pager "%s.service"' % service
-        result = subprocess.check_output(cmd, shell=True).strip()
+        result = subprocess.check_output(cmd, shell=True).decode().strip()
         if result:
             if ' masked' in result:
                 return False
@@ -134,9 +129,10 @@ def is_service_installed(service, windows=False):
     if srv.returncode == 0:
         return True
     elif srv.returncode == 1 or srv.returncode == 4:
-        if srverr.strip().lower().endswith(': unrecognized service') or \
-           srverr.strip().endswith(' could not be found.') or \
-           srverr.startswith('service: no such service'):
+        if srverr.decode().strip().\
+                lower().endswith(': unrecognized service') or \
+           srverr.decode().strip().endswith(' could not be found.') or \
+           srverr.decode().startswith('service: no such service'):
             return False
     return True
 

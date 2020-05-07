@@ -1,17 +1,28 @@
-import glob
-import platform
 import distro
+import platform
 import pytest
 import os
-import shutil
+import sys
 import subprocess
 
+dist = []
 if platform.system() == 'Linux':
     dist = distro.linux_distribution()
 elif platform.system() == 'Windows':
     dist = 'Windows'
 else:
     print("Unknown Distro")
+
+# sysctl.conf ubuntu bug
+if dist[0] == 'Ubuntu' and dist[1] == '20.04':
+    subprocess.check_call('sysctl fs.protected_regular=0', shell=True)
+
+# py2compat
+if not sys.version_info > (3, 0):
+    # pylint: disable = undefined-variable
+    reload(sys)
+    # pylint: disable = no-member
+    sys.setdefaultencoding('utf8')
 
 
 def pytest_addoption(parser):
@@ -102,7 +113,7 @@ fi
             script_file = '/tmp/check-coredumps.sh'
             with open(script_file, 'w') as scrf:
                 scrf.write(script)
-            os.chmod(script_file, 0755)
+            os.chmod(script_file, 0o0755)
             subprocess.check_call(script_file, shell=True)
         else:
             pass

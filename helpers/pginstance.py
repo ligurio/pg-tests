@@ -20,6 +20,7 @@ from helpers.utils import get_distro
 from helpers.utils import REMOTE_ROOT
 from helpers.utils import REMOTE_ROOT_PASSWORD
 from helpers.utils import write_file
+from helpers.utils import urlcontent
 
 
 class PgInstance:
@@ -164,7 +165,7 @@ class PgInstance:
                                         REMOTE_ROOT,
                                         REMOTE_ROOT_PASSWORD,
                                         stdout=True).strip()
-        print "Path to hba_file is", hba_file
+        print("Path to hba_file is", hba_file)
         write_file(hba_file, pg_hba_config, remote, host)
         cmd = "chown postgres:postgres %s" % hba_file
         return command_executor(cmd, remote, host,
@@ -253,7 +254,7 @@ class PgInstance:
         try:
             cursor.execute(sql_query)
         except psycopg2.Error as e:
-            print e.pgerror
+            print(e.pgerror)
             raise Exception("SQL execution failed")
         conn.commit()
 
@@ -412,10 +413,11 @@ class PgInstance:
         # TODO add dependencie from distribution because
         #  not for all dists we have all updates
         minor_versions = []
+        page = ''
         if edition == 'std':
-            page = urllib.urlopen(PGPRO_ARCHIVE_STANDARD).read()
+            page = urlcontent(PGPRO_ARCHIVE_STANDARD)
         elif edition == 'ent':
-            page = urllib.urlopen(PGPRO_ARCHIVE_ENTERPRISE).read()
+            page = urlcontent(PGPRO_ARCHIVE_ENTERPRISE)
         versions = re.findall('href=[\'"]?([^\'" >]+)/', page)
         for version in versions:
             if major_version in version and "9.6.4.1" not in version:
