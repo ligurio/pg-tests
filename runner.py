@@ -21,7 +21,7 @@ from helpers.utils import urlcontent, urlretrieve
 
 DEBUG = False
 
-IMAGE_BASE_URL = 'http://webdav.l.postgrespro.ru/DIST/vm-images/test/'
+IMAGE_BASE_URL = 'http://dist.l.postgrespro.ru/DIST/vm-images/test/'
 TEMPLATE_DIR = '/pgpro/templates/'
 WORK_DIR = '/pgpro/test-envs/'
 ANSIBLE_CMD = "ansible-playbook %s -i static/inventory -c %s --limit %s"

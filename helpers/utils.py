@@ -556,7 +556,7 @@ def download_dump(product, edition, version, dir, custom_dump=None):
         dump_file_name = custom_dump
     else:
         dump_file_name = "dump-%s.sql" % "-".join([product, edition, version])
-    dump_url = "http://webdav.l.postgrespro.ru/pgdatas/xregress/%s" % \
+    dump_url = "http://dist.l.postgrespro.ru/pgdatas/xregress/%s" % \
                dump_file_name
     dump_file_name = os.path.join(dir, dump_file_name)
     urlretrieve(dump_url, dump_file_name)
