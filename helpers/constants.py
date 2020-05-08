@@ -193,6 +193,17 @@ FIRST_RELEASE = {
         'postgrespro-ent-10': None,
         'postgrespro-ent-11': None,
     },
+    # ubuntu-20.04
+    "Ubuntu 20.04": {
+        'postgrespro-std-9.6': None,
+        'postgrespro-std-10': '10.13.1',
+        'postgrespro-std-11': '11.8.1',
+        'postgrespro-std-12': '12.3.1',
+        'postgrespro-ent-9.6': None,
+        'postgrespro-ent-10': '10.13.1',
+        'postgrespro-ent-11': '11.8.1',
+        'postgrespro-ent-12': '12.3.1',
+    },
     # astra-orel-2.12
     'Astra Linux (Orel) 2.12.7': {
         'postgresql--9.6': None,
