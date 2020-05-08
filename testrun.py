@@ -32,7 +32,7 @@ if not sys.version_info > (3, 0):
 MAX_DURATION = 4 * 60 * 60
 DEBUG = False
 
-IMAGE_BASE_URL = 'http://dist.l.postgrespro.ru/DIST/vm-images/test/'
+IMAGE_BASE_URL = 'http://dist.l.postgrespro.ru/vm-images/test/'
 TEMPLATE_DIR = '/pgpro/templates/'
 WORK_DIR = '/pgpro/test-envs/'
 ANSIBLE_CMD = "ansible-playbook %s -i static/inventory -c %s --limit %s"

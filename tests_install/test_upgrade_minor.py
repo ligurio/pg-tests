@@ -339,7 +339,7 @@ class TestUpgradeMinor():
         if extra_yum_repo:
             cmd = "sh -c 'mkdir /opt/{0}; cd $_; " \
                   "wget -q -r -nd --no-parent -A \"*.rpm\" " \
-                  "http://dist.l.postgrespro.ru/DIST/resources/linux/{1}/;" \
+                  "http://dist.l.postgrespro.ru/resources/linux/{1}/;" \
                   "yum install -y createrepo; createrepo .; " \
                   "printf \"[{0}]\\nname={0}\\nbaseurl=file:///opt/{0}" \
                   "\\nenabled=1\\nmodule_hotfixes=True\\n\" " \
