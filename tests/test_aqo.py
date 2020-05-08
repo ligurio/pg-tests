@@ -712,7 +712,7 @@ COALESCE(_AccRgAT31043._Value3_RRRef,'\\377'::bytea)) AND
      (_AccRgAT31043._Fld995 = 271602);
 """
 
-    DUMP_URL = "http://dist.l.postgrespro.ru/DIST/vm-images/" \
+    DUMP_URL = "http://dist.l.postgrespro.ru/vm-images/" \
         "test/blobs/pg.sql.bz"
 
     archive_path = os.path.join(TMP_DIR, "pg.sql.gz")
