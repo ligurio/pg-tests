@@ -1,5 +1,5 @@
-#!/usr/bin/env python
-""" Copyright 2015 - 2017 Postgres Professional """
+#!/usr/bin/env python3
+""" Copyright 2015 - 2020 Postgres Professional """
 
 import argparse
 import os
