@@ -42,7 +42,7 @@
 
   # TODO: move this to Packer post-install script
   - name: add Astra Linux 1.4 remote repository
-    apt_repository: repo="deb http://dist.l.postgrespro.ru/DIST/pool/astra-1.4-smolensk-{{ item }} smolensk main non-free contrib" state=present
+    apt_repository: repo="deb http://dist.l.postgrespro.ru/pool/astra-1.4-smolensk-{{ item }} smolensk main non-free contrib" state=present
     with_items:
         - install
         - developer
@@ -52,7 +52,7 @@
 
   # TODO: move this to Packer post-install script
   - name: add Astra Linux 1.5 remote repository
-    apt_repository: repo="deb http://dist.l.postgrespro.ru/DIST/pool/astra-1.5-smolensk-{{ item }} smolensk main non-free contrib" state=present
+    apt_repository: repo="deb http://dist.l.postgrespro.ru/pool/astra-1.5-smolensk-{{ item }} smolensk main non-free contrib" state=present
     with_items:
         - install
         - developer

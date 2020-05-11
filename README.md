@@ -151,7 +151,7 @@ python get-pip.py
 - установить Ansible и модули для него: ```sudo pip install ansible pywinrm paramiko```
 - если для запуска ВМ скрипт не найдет шаблон ВМ, то он его загрузит, но можно
 заранее загрузить все шаблоны виртуальных машин. Например так: ```wget -np -nd
--A qcow2 -r -l 1 http://dist.l.postgrespro.ru/DIST/vm-images/test/```
+-A qcow2 -r -l 1 http://dist.l.postgrespro.ru/vm-images/test/```
 - для доступа по SSH ключам в гостевые ОС нужно скопировать ключи из репозитория:
 ```
 	cp static/id_rsa ~/.ssh/id_rsa.pg-tests
