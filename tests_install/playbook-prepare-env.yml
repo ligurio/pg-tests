@@ -38,7 +38,7 @@
       state=present
     become_method: su
     become: true
-    when: (ansible_distribution == "ALT" and ansible_distribution_major_version == "9")
+    when: (ansible_distribution == "ALT" or ansible_distribution == "Altlinux") and ansible_distribution_major_version == "9"
 
   - name: Mount DVD(s) (if available)
     shell: if /sbin/blkid /dev/sr0; then
