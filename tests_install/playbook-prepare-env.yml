@@ -179,6 +179,14 @@
     become_method: su
     become: true
 
+  - name: Enable rels repository Rosa SX 7
+    shell: sed s/enabled=0/enabled=1/ -i /etc/yum.repos.d/rels.repo;
+    args:
+      warn: no
+    when: ansible_distribution == "ROSA" and ansible_distribution_major_version == "7"
+    become_method: su
+    become: true
+
   - name: Fix repositories and prepare local repository; update tzdata (МСВСфера)
     shell: if [ -d /mnt/dvd/repodata ]; then
              ln -s /mnt/dvd /media/MSVSphere_6.3_Server &&
