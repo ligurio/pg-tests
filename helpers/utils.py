@@ -174,8 +174,8 @@ def exec_command(cmd, hostname, login, password,
     import paramiko
 
     buff_size = 1024
-    stdout = ""
-    stderr = ""
+    stdout = b''
+    stderr = b''
     for trc in range(connect_retry_count):
         try:
             client = paramiko.SSHClient()
@@ -205,24 +205,24 @@ def exec_command(cmd, hostname, login, password,
     chan.exec_command(cmd)
     retcode = chan.recv_exit_status()
     while chan.recv_ready():
-        stdout += chan.recv(buff_size).decode()
+        stdout += chan.recv(buff_size)
 
     while chan.recv_stderr_ready():
-        stderr += chan.recv_stderr(buff_size).decode()
+        stderr += chan.recv_stderr(buff_size)
 
     chan.close()
     client.close()
 
     if skip_ret_code_check:
-        return retcode, stdout, stderr
+        return retcode, stdout.decode(), stderr.decode()
     else:
         if retcode != 0:
             print("Return code for command  \'%s\' is %d.\n" % (cmd, retcode))
-            print("The command stdout:\n%s" % stdout)
-            print("The command stderr:\n%s" % stderr)
+            print("The command stdout:\n%s" % stdout.decode())
+            print("The command stderr:\n%s" % stderr.decode())
             raise Exception('Command "%s" failed.' % cmd)
         else:
-            return retcode, stdout, stderr
+            return retcode, stdout.decode(), stderr.decode()
 
 
 def exec_command_win(cmd, hostname,

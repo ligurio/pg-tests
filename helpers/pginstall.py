@@ -813,6 +813,25 @@ baseurl=%s
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             self.exec_cmd_retry('apt-get update')
+        # Archive versions (e.g. 11.6.1) were built using llvm7,
+        # but current AppStream repo contains only one latest version
+        extra_yum_repo = None
+        if self.os_name.startswith("CentOS") and \
+                self.os_version.startswith('8'):
+            extra_yum_repo = "centos-8"
+        elif self.os_name.startswith("Red Hat") and \
+                self.os_version.startswith('8'):
+            extra_yum_repo = "rhel-8"
+        if extra_yum_repo:
+            cmd = "sh -c 'mkdir /opt/{0}; cd $_; " \
+                  "wget -q -r -nd --no-parent -A \"*.rpm\" " \
+                  "http://dist.l.postgrespro.ru/resources/linux/{1}/;" \
+                  "yum install -y createrepo; createrepo .; " \
+                  "printf \"[{0}]\\nname={0}\\nbaseurl=file:///opt/{0}" \
+                  "\\nenabled=1\\nmodule_hotfixes=True\\n\" " \
+                  "> /etc/yum.repos.d/{0}.repo'".\
+                format(self.reponame + '-plus', extra_yum_repo)
+            subprocess.check_call(cmd, shell=True)
         if self.epel_needed:
             # Install epel for v.10+
             cmd = None

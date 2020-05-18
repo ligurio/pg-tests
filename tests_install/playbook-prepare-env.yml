@@ -38,7 +38,7 @@
       state=present
     become_method: su
     become: true
-    when: (ansible_distribution == "ALT" and ansible_distribution_major_version == "9")
+    when: (ansible_distribution == "ALT" or ansible_distribution == "Altlinux") and ansible_distribution_major_version == "9"
 
   - name: Mount DVD(s) (if available)
     shell: if /sbin/blkid /dev/sr0; then
@@ -176,6 +176,14 @@
            subscription-manager unregister;
            subscription-manager clean
     when: ansible_distribution == "RedHat" and (ansible_distribution_major_version == "7" or ansible_distribution_major_version == "8")
+    become_method: su
+    become: true
+
+  - name: Enable rels repository Rosa SX 7
+    shell: sed s/enabled=0/enabled=1/ -i /etc/yum.repos.d/rels.repo;
+    args:
+      warn: no
+    when: ansible_distribution == "ROSA" and ansible_distribution_major_version == "7"
     become_method: su
     become: true
 
