@@ -879,7 +879,7 @@ baseurl=%s
         if package is None:
             product = 'postgresql' if self.edition == '1c' else 'postgrespro'
             if self.edition in ['std', 'std-cert'] \
-                    and self.version not in ['9.6', '9.5']:
+                    and self.version != '9.5':
                 edition = '-standard'
             elif self.edition in ['ent', 'ent-cert']:
                 edition = '-enterprise'
