@@ -15,7 +15,7 @@ try:
     from bs4 import BeautifulSoup
 except ImportError:  # py2compat
     from BeautifulSoup import BeautifulSoup
-from helpers.utils import diff_dbs, download_dump, urlopen
+from helpers.utils import diff_dbs, download_dump, urlopen, ConsoleEncoding
 
 tempdir = tempfile.gettempdir()
 client_dir = 'client'
@@ -309,7 +309,7 @@ class TestUpgradeMinor():
         pgconfig = subprocess.check_output('"%s"' %
                                            os.path.join(client_dir, 'bin',
                                                         'pg_config'),
-                                           shell=True).decode()
+                                           shell=True).decode(ConsoleEncoding)
         vere = re.search(r'PGPRO\_VERSION\s=\s([0-9.]+)', pgconfig)
         if (vere):
             current_ver = vere.group(1)

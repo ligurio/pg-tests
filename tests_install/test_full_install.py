@@ -12,6 +12,7 @@ from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall
 from helpers.os_helpers import get_directory_size, get_process_pids
 from helpers.os_helpers import is_service_running, is_service_installed
+from helpers.utils import ConsoleEncoding
 
 
 SERVER_APPLICATIONS = {
@@ -133,7 +134,8 @@ def check_executables(pginst, packages):
             if f.startswith('/usr/lib/debug/'):
                 continue
             fout = subprocess.check_output(
-                'LANG=C file "%s"' % f, shell=True).decode().strip()
+                'LANG=C file "%s"' % f, shell=True). \
+                decode(ConsoleEncoding).strip()
             if fout.startswith(f + ': cannot open'):
                 print(fout)
                 raise Exception('Error opening file "%s".' % f)
@@ -142,13 +144,14 @@ def check_executables(pginst, packages):
             print("\tELF executable found:", f)
             if pginst.os_name == 'Astra Linux (Smolensk)':
                 bsignout = subprocess.check_output(
-                    'LANG=C bsign -w "%s"; echo' % f, shell=True).decode()\
-                    .strip()
+                    'LANG=C bsign -w "%s"; echo' % f, shell=True).\
+                    decode(ConsoleEncoding).strip()
                 if 'bsign: good hash found' not in bsignout:
                     print(bsignout)
                     raise Exception("Unsigned binary %s" % f)
             lddout = subprocess.check_output(
-                'LANG=C ldd "%s"' % f, shell=True).decode().split("\n")
+                'LANG=C ldd "%s"' % f, shell=True). \
+                decode(ConsoleEncoding).split("\n")
             error = False
             for line in lddout:
                 if line.strip() == "" or line.startswith("\tlinux") or \
@@ -166,7 +169,8 @@ def check_executables(pginst, packages):
             gdbout = subprocess.check_output(
                 'LANG=C gdb --batch -ex "b main" -ex run -ex next -ex bt'
                 '  -ex cont --args  "%s" --version' % f,
-                stderr=subprocess.STDOUT, shell=True).decode().split("\n")
+                stderr=subprocess.STDOUT, shell=True). \
+                decode(ConsoleEncoding).split("\n")
             good_lines = 0
             for line in gdbout:
                 if re.match(r'Breakpoint 1, [a-z0-9_:]*main ', line):

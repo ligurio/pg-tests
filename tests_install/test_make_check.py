@@ -11,6 +11,7 @@ import allure
 
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall, PRELOAD_LIBRARIES
+from helpers.utils import ConsoleEncoding
 
 PRELOAD_LIBRARIES['ent-cert-11'].remove('passwordcheck')
 
@@ -18,7 +19,8 @@ PRELOAD_LIBRARIES['ent-cert-11'].remove('passwordcheck')
 def get_pg_prefix(pginst):
     cmd = '"%s" --bindir' % os.path.join(pginst.get_default_bin_path(),
                                          'pg_config')
-    binpath = subprocess.check_output(cmd, shell=True).decode().strip()
+    binpath = subprocess.check_output(cmd, shell=True). \
+        decode(ConsoleEncoding).strip()
     pg_prefix = re.sub('bin$', '', binpath)
     return pg_prefix
 

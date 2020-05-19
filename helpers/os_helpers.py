@@ -3,7 +3,7 @@ import psutil
 import random
 import re
 import subprocess
-from helpers.utils import urlretrieve
+from helpers.utils import urlretrieve, ConsoleEncoding
 
 
 def download_file(url, path):
@@ -95,7 +95,7 @@ def get_systemd_version():
     scout, scerr = sysctl.communicate()
     if sysctl.returncode != 0:
         return None
-    firstline = scout.decode().splitlines()[0]
+    firstline = scout.decode(ConsoleEncoding).splitlines()[0]
     m = re.match(r'systemd\s+(\d+)', firstline)
     if not m:
         return None
@@ -114,7 +114,8 @@ def is_service_installed(service, windows=False):
     if systemd_version > 210:
         cmd = 'LANG=C systemctl list-unit-files' \
                 ' --no-legend --no-pager "%s.service"' % service
-        result = subprocess.check_output(cmd, shell=True).decode().strip()
+        result = subprocess.check_output(cmd, shell=True). \
+            decode(ConsoleEncoding).strip()
         if result:
             if ' masked' in result:
                 return False
@@ -126,13 +127,13 @@ def is_service_installed(service, windows=False):
                            stdout=subprocess.PIPE,
                            stderr=subprocess.PIPE)
     srvout, srverr = srv.communicate()
+    srverr = srverr.decode(ConsoleEncoding)
     if srv.returncode == 0:
         return True
     elif srv.returncode == 1 or srv.returncode == 4:
-        if srverr.decode().strip().\
-                lower().endswith(': unrecognized service') or \
-           srverr.decode().strip().endswith(' could not be found.') or \
-           srverr.decode().startswith('service: no such service'):
+        if srverr.strip().lower().endswith(': unrecognized service') or \
+           srverr.strip().endswith(' could not be found.') or \
+           srverr.startswith('service: no such service'):
             return False
     return True
 

@@ -10,6 +10,7 @@ import re
 import difflib
 import math
 import gc
+import locale
 
 from enum import Enum
 from time import sleep
@@ -29,6 +30,7 @@ REMOTE_PASSWORD = 'TestPass1'
 REMOTE_ROOT_PASSWORD = 'TestRoot1'
 SSH_PORT = 22
 CONNECT_RETRY_DELAY = 10
+ConsoleEncoding = locale.getdefaultlocale()[1]
 
 
 class MySuites(Enum):
@@ -83,7 +85,7 @@ def command_executor(cmd, remote=False, host=None,
                 out = subprocess.Popen(
                     shlex.split(cmd, posix=not(windows)),
                     stdout=subprocess.PIPE)
-                return out.stdout.read().decode()
+                return out.stdout.read().decode(ConsoleEncoding)
             else:
                 if windows:
                     return subprocess.check_call(
@@ -99,7 +101,7 @@ def get_virt_ip():
     :return: string ip address
     """
     return subprocess.check_output(
-        'ip addr show virbr0', shell=True).decode().\
+        'ip addr show virbr0', shell=True).decode(ConsoleEncoding).\
         split("inet ")[1].split("/")[0]
 
 
@@ -212,17 +214,18 @@ def exec_command(cmd, hostname, login, password,
 
     chan.close()
     client.close()
-
+    stdout = stdout.decode(ConsoleEncoding)
+    stderr = stderr.decode(ConsoleEncoding)
     if skip_ret_code_check:
-        return retcode, stdout.decode(), stderr.decode()
+        return retcode, stdout, stderr
     else:
         if retcode != 0:
             print("Return code for command  \'%s\' is %d.\n" % (cmd, retcode))
-            print("The command stdout:\n%s" % stdout.decode())
-            print("The command stderr:\n%s" % stderr.decode())
+            print("The command stdout:\n%s" % stdout)
+            print("The command stderr:\n%s" % stderr)
             raise Exception('Command "%s" failed.' % cmd)
         else:
-            return retcode, stdout.decode(), stderr.decode()
+            return retcode, stdout, stderr
 
 
 def exec_command_win(cmd, hostname,
@@ -266,6 +269,8 @@ def exec_command_win(cmd, hostname,
     print("Executing '%s' on %s..." % (cmd, hostname))
     command_id = p.run_command(shell_id, cmd)
     stdout, stderr, retcode = p.get_command_output(shell_id, command_id)
+    stdout = stdout.decode(ConsoleEncoding)
+    stderr = stderr.decode(ConsoleEncoding)
 
     # These operations fail when the current user excluded from
     # the Administrators group, so just ignore the error.
