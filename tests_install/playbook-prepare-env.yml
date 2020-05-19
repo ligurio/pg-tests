@@ -122,32 +122,6 @@
     become_method: su
     become: true
 
-  - name: Downgrade packages to original 6.7 version and setup local repo (RHEL 6) # Needed for libselinux-python
-    shell: yum downgrade -y glibc-2.12-1.166.el6 glibc-headers-2.12-1.166.el6 glibc-common-2.12-1.166.el6 glibc-devel-2.12-1.166.el6 &&
-           yum downgrade -y libselinux-2.0.94-5.8.el6 libselinux-utils-2.0.94-5.8.el6 libselinux-devel-2.0.94-5.8.el6.x86_64 &&
-           yum remove -y libkadm5 &&
-           yum downgrade -y libcom_err-1.41.12-22.el6 libss-1.41.12-22.el6 openssl-1.0.1e-42.el6 \
-           libcom_err-devel-1.41.12-22.el6 e2fsprogs-1.41.12-22.el6 e2fsprogs-libs-1.41.12-22.el6 \
-           krb5-libs-1.10.3-42.el6 &&
-           yum downgrade -y perl-4:5.10.1-141.el6.x86_64 perl-libs-5.10.1-141.el6.x86_64 perl-version-0.77-141.el6.x86_64 \
-           perl-Module-Pluggable-3.90-141.el6.x86_64 perl-Compress-Zlib-2.021-141.el6.x86_64 \
-           perl-IO-Compress-Base-2.021-141.el6.x86_64 perl-Pod-Escapes-1.04-141.el6.x86_64 \
-           perl-IO-Compress-Zlib-2.021-141.el6.x86_64 perl-Compress-Raw-Zlib-2.021-141.el6.x86_64 \
-           perl-Pod-Simple-3.13-141.el6.x86_64; \
-           echo "Workaround for PGPRO-1259"; \
-           yum install -y createrepo && \
-           mkdir /opt/localrepo && cd /opt/localrepo && \
-           wget http://ftp1.scientificlinux.org/linux/scientific/6.7/x86_64/os/Packages/libicu-devel-4.2.1-12.el6.x86_64.rpm && \
-           createrepo . && cd ~ && \
-           rpm --import http://ftp1.scientificlinux.org/linux/scientific/6x/x86_64/os/RPM-GPG-KEY-sl && \
-           printf "[localrepo]\nname=localrepo\nbaseurl=file:///opt/localrepo\nenabled=1\n" > /etc/yum.repos.d/local.repo; \
-           yum update
-    args:
-      warn: no
-    when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "6"
-    become_method: su
-    become: true
-
   - name: Disable automatic updates (Debian-based)
     shell: for aptconf in `grep -E '^\s*APT::Periodic::(Update-Package-Lists|Unattended-Upgrade)' -l -r /etc/apt/apt.conf.d/`;
              do sed -e 's#^\(\s*APT::Periodic::\(Update-Package-Lists\|Unattended-Upgrade\)\)#// \1#' -i $aptconf; done; \
