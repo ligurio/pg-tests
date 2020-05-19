@@ -266,6 +266,8 @@ def exec_command_win(cmd, hostname,
     print("Executing '%s' on %s..." % (cmd, hostname))
     command_id = p.run_command(shell_id, cmd)
     stdout, stderr, retcode = p.get_command_output(shell_id, command_id)
+    stdout = stdout.decode()
+    stderr = stderr.decode()
 
     # These operations fail when the current user excluded from
     # the Administrators group, so just ignore the error.
