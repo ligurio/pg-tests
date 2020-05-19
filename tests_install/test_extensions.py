@@ -10,6 +10,7 @@ import allure
 
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall
+from helpers.utils import ConsoleEncoding
 
 
 @pytest.mark.test_extensions
@@ -92,7 +93,7 @@ class TestExtensions():
         pginst.install_package('pgpro-pgbadger')
         cmd = "pgbadger -V"
         pgbadger_version = subprocess.check_output(cmd, shell=True).\
-            decode().strip()
+            decode(ConsoleEncoding).strip()
         print(pgbadger_version)
         pginst.exec_psql(
             "CREATE TABLE test (data text)")
@@ -103,7 +104,7 @@ class TestExtensions():
             pgbres = subprocess.check_output(
                 'pgbadger --outfile - --extension text --format stderr "%s"' %
                 os.path.join(logdir, lf),
-                shell=True).decode()
+                shell=True).decode(ConsoleEncoding)
             state = 0
             stats = {}
             for line in pgbres.split('\n'):

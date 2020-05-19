@@ -13,7 +13,8 @@ except ImportError:  # py2compat
     from BeautifulSoup import BeautifulSoup
 
 from helpers.utils import command_executor, get_distro, REMOTE_ROOT, \
-    REMOTE_ROOT_PASSWORD, write_file, refresh_env_win, urlretrieve, urlopen
+    REMOTE_ROOT_PASSWORD, write_file, refresh_env_win,\
+    urlretrieve, urlopen, ConsoleEncoding
 
 PGPRO_ARCHIVE_STANDARD = "http://repo.postgrespro.ru/pgpro-archive/"
 PGPRO_ARCHIVE_ENTERPRISE = "http://repoee.l.postgrespro.ru/archive/"
@@ -1130,7 +1131,7 @@ baseurl=%s
         elif self.__is_pm_zypper():
             cmd = "rpm -qa %s" % pkg_name
             installed_pkgs = subprocess.check_output(cmd, shell=True).\
-                decode().splitlines()
+                decode(ConsoleEncoding).splitlines()
             if (len(installed_pkgs)):
                 pkg_name = ' '.join(installed_pkgs)
                 cmd = "zypper remove -y %s" % pkg_name
@@ -1252,7 +1253,8 @@ baseurl=%s
                 options, query
             )
         return subprocess.check_output(cmd, shell=True,
-                                       cwd="/", env=self.env).decode().strip()
+                                       cwd="/", env=self.env). \
+            decode(ConsoleEncoding).strip()
 
     def exec_psql_select(self, query, options=''):
         return self.exec_psql(query, '%s -t -P format=unaligned' % options)
@@ -1287,7 +1289,7 @@ baseurl=%s
         """
         cmd = '"%spsql" --version' % self.get_client_bin_path()
         return subprocess.check_output(cmd, shell=True, env=self.env).\
-            decode().strip()
+            decode(ConsoleEncoding).strip()
 
     def get_initdb_props(self):
         """ Get properties returned by initdb
@@ -1301,7 +1303,7 @@ baseurl=%s
         for line in subprocess.check_output(cmd, shell=True,
                                             stderr=subprocess.STDOUT,
                                             cwd="/", env=self.env).\
-                decode().split('\n'):
+                decode(ConsoleEncoding).split('\n'):
             if '=' in line:
                 (name, val) = line.split('=', 1)
                 props[name] = val.strip()
@@ -1587,7 +1589,8 @@ baseurl=%s
                 options
             )
         return subprocess.check_output(cmd, shell=True,
-                                       cwd="/", env=self.env).decode()
+                                       cwd="/", env=self.env). \
+            decode(ConsoleEncoding)
 
     def exec_server_bin(self, bin, options=''):
         cmd = '%s"%s%s" %s' % \
@@ -1598,7 +1601,8 @@ baseurl=%s
                 options
             )
         return subprocess.check_output(cmd, shell=True,
-                                       cwd="/", env=self.env).decode()
+                                       cwd="/", env=self.env). \
+            decode(ConsoleEncoding)
 
     def pg_isready(self):
         cmd = '%s"%spg_isready" %s %s' % \
