@@ -31,6 +31,8 @@ REMOTE_ROOT_PASSWORD = 'TestRoot1'
 SSH_PORT = 22
 CONNECT_RETRY_DELAY = 10
 ConsoleEncoding = locale.getdefaultlocale()[1]
+if not ConsoleEncoding:
+    ConsoleEncoding = 'UTF-8'
 
 
 class MySuites(Enum):
