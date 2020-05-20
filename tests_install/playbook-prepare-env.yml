@@ -570,13 +570,6 @@
       product_id: '{4A656C6C-D24A-473F-9747-3A8D00907A04}'
       state: present
 
-  - name: windows - setup Python 3.8 PATH
-    win_path:
-        elements:
-        - 'C:\Python38'
-        - 'C:\Python38\Scripts'
-    when: ansible_os_family == "Windows"
-
   - name: windows - setup Python 2.7 PATH
     win_path:
         elements:
@@ -584,11 +577,18 @@
         - 'C:\Python27\Scripts'
     when: ansible_os_family == "Windows"
 
+  - name: windows - setup Python 3.8 PATH
+    win_path:
+        elements:
+        - 'C:\Python38'
+        - 'C:\Python38\Scripts'
+    when: ansible_os_family == "Windows"
+
   - name: windows - setup Python home
     win_environment:
         state: present
         name: PYTHONHOME
-        value: C:\Python38
+        value: C:\Python27
         level: machine
     when: ansible_os_family == "Windows"
 
