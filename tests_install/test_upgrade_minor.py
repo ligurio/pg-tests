@@ -31,7 +31,7 @@ ARCHIVE_VERSIONS = {
         'postgrespro-ent-9.6': None,
         'postgrespro-ent-10': None
     },
-    'ALT  8.0': {
+    'ALT Server 8.0': {
         'postgrespro-std-9.6': '9.6.13.1',
         'postgrespro-ent-9.6': '9.6.13.1',
         'postgrespro-std-10': '10.6.1',
