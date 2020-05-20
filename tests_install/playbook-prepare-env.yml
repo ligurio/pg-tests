@@ -607,7 +607,7 @@
 
   - name: windows - install python requirements
     when: ansible_os_family == "Windows"
-    win_shell: 'pip install -r C:\Users\test\pg-tests\tests_install\requirements.txt'
+    win_shell: 'pip install -r C:\Users\test\pg-tests\tests_install\requirements2.txt'
 
   - name: windows - stop w32time service
     when: ansible_os_family == "Windows"
