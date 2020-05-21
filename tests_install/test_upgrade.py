@@ -513,11 +513,14 @@ def install_server(product, edition, version, milestone, branch, windows):
 def do_in_all_dbs(pg, script):
     dbs = pg.exec_psql_select("SELECT datname FROM pg_database").\
         split(os.linesep)
+    preoptions = os.environ['PGOPTIONS'] if 'PGOPTIONS' in os.environ else ''
+    os.environ['PGOPTIONS'] = preoptions + ' --client-min-messages=warning'
     for db in dbs:
         if db != 'template0':
             os.environ['PGDATABASE'] = db
             pg.exec_psql_script(script, '-v ON_ERROR_STOP=1')
     del os.environ['PGDATABASE']
+    os.environ['PGOPTIONS'] = preoptions
 
 
 def generate_db(pg, pgnew, custom_dump=None):
