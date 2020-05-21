@@ -387,17 +387,23 @@ DUMP_RESTORE_ROUTES = {
 upgrade_dir = os.path.join(tempfile.gettempdir(), 'upgrade')
 amcheck_sql = """
 create extension if not exists amcheck;
+alter extension amcheck update;
 create extension if not exists pageinspect;
+create or replace function bt_index_full_check(indexrelid oid, version int)
+returns void
+as $$ begin
+  if version = 4 then perform bt_index_parent_check(indexrelid, true, true);
+  else perform bt_index_parent_check(indexrelid, true);
+  end if;
+end; $$ language plpgsql;
+
 select count(*) from (
     select
         i.indexrelid::regclass,
         i.indexrelid,
         am.amname,
-        case when (bt_metap(indexrelid::regclass::varchar)).version = 4 then
-            bt_index_parent_check(i.indexrelid, true, true)
-        else
-            bt_index_parent_check(i.indexrelid, true)
-        end
+        bt_index_full_check(i.indexrelid,
+                            (bt_metap(indexrelid::regclass::varchar)).version)
     from
         pg_index i
         join pg_opclass op ON i.indclass[0] = op.oid
@@ -510,7 +516,7 @@ def do_in_all_dbs(pg, script):
     for db in dbs:
         if db != 'template0':
             os.environ['PGDATABASE'] = db
-            pg.exec_psql_script(script)
+            pg.exec_psql_script(script, '-v ON_ERROR_STOP=1')
     del os.environ['PGDATABASE']
 
 
