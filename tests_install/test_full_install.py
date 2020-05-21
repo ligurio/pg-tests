@@ -5,6 +5,7 @@ import glob
 import time
 import subprocess
 import re
+import io
 import sys
 import pytest
 import allure
@@ -344,6 +345,13 @@ class TestFullInstall():
                         "for Standard and Enterprise editions")
         assert is_service_installed('mamonsu')
         assert not (is_service_running('mamonsu'))
+        output = subprocess.Popen(["mamonsu", "--help"],
+                                  stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE)
+        response = output.communicate()
+        assert output.returncode == 2
+        assert len(response[0]) != 0
+        assert len(response[1]) == 0
 
     @pytest.mark.test_all_extensions
     def test_all_extensions(self, request):
