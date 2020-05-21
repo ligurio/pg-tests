@@ -344,6 +344,10 @@ class TestFullInstall():
                         "for Standard and Enterprise editions")
         assert is_service_installed('mamonsu')
         assert not (is_service_running('mamonsu'))
+        mamosu_run = subprocess.run('mamonsu --help', shell=True)
+        assert mamosu_run.returncode == 2
+        assert len(mamosu_run.stdout) == 0
+        assert len(mamosu_run.stderr) != 0
 
     @pytest.mark.test_all_extensions
     def test_all_extensions(self, request):
