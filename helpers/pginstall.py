@@ -827,11 +827,12 @@ baseurl=%s
             cmd = "sh -c 'mkdir /opt/{0}; cd $_; " \
                   "wget -q -r -nd --no-parent -A \"*.rpm\" " \
                   "http://dist.l.postgrespro.ru/resources/linux/{1}/;" \
-                  "yum install -y createrepo; createrepo .; " \
+                  "yum install -y createrepo; {2} createrepo .; " \
                   "printf \"[{0}]\\nname={0}\\nbaseurl=file:///opt/{0}" \
                   "\\nenabled=1\\nmodule_hotfixes=True\\n\" " \
                   "> /etc/yum.repos.d/{0}.repo'".\
-                format(self.reponame + '-plus', extra_yum_repo)
+                format(self.reponame + '-plus', extra_yum_repo,
+                       "rm -f llvm-libs-9*;" if self.version == '11' else '')
             subprocess.check_call(cmd, shell=True)
         if self.epel_needed:
             # Install epel for v.10+
