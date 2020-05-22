@@ -859,6 +859,12 @@ baseurl=%s
                     "epel/epel-release-latest-7.noarch.rpm"
             if cmd:
                 self.exec_cmd_retry(cmd)
+        if self.product == 'postgresql':
+            cmd = None
+            if self.os_name == 'CentOS Linux' and self.os_version == '7':
+                cmd = "yum install -y centos-release-scl-rh"
+            if cmd:
+                self.exec_cmd_retry(cmd)
 
     def download_source(self, package=None, version=None, ext='tar.bz2'):
         baseurl = ''
