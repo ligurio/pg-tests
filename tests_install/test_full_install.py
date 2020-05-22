@@ -345,12 +345,6 @@ class TestFullInstall():
                         "for Standard and Enterprise editions")
         assert is_service_installed('mamonsu')
         assert not (is_service_running('mamonsu'))
-        # Workaround for SLES 11 where default python
-        # is /opt/python2.7/bin/python2.7
-        if pginst.os_name == 'SLES' and pginst.os_version == '11':
-            cmd = "sed -i '1s;^;#!/usr/bin/python2.6\n;' `which mamonsu`"
-            subprocess.check_call(cmd, shell=True)
-
         output = subprocess.Popen(["mamonsu", "--help"],
                                   stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE)
