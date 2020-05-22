@@ -814,26 +814,6 @@ baseurl=%s
             command_executor(cmd, self.remote, self.host,
                              REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             self.exec_cmd_retry('apt-get update')
-        # Archive versions (e.g. 11.6.1) were built using llvm7,
-        # but current AppStream repo contains only one latest version
-        extra_yum_repo = None
-        if self.os_name.startswith("CentOS") and \
-                self.os_version.startswith('8'):
-            extra_yum_repo = "centos-8"
-        elif self.os_name.startswith("Red Hat") and \
-                self.os_version.startswith('8'):
-            extra_yum_repo = "rhel-8"
-        if extra_yum_repo:
-            cmd = "sh -c 'mkdir /opt/{0}; cd $_; " \
-                  "wget -q -r -nd --no-parent -A \"*.rpm\" " \
-                  "http://dist.l.postgrespro.ru/resources/linux/{1}/;" \
-                  "yum install -y createrepo; {2} createrepo .; " \
-                  "printf \"[{0}]\\nname={0}\\nbaseurl=file:///opt/{0}" \
-                  "\\nenabled=1\\nmodule_hotfixes=True\\n\" " \
-                  "> /etc/yum.repos.d/{0}.repo'".\
-                format(self.reponame + '-plus', extra_yum_repo,
-                       "rm -f llvm-libs-9*;" if self.version == '11' else '')
-            subprocess.check_call(cmd, shell=True)
         if self.epel_needed:
             # Install epel for v.10+
             cmd = None
@@ -859,12 +839,41 @@ baseurl=%s
                     "epel/epel-release-latest-7.noarch.rpm"
             if cmd:
                 self.exec_cmd_retry(cmd)
+        # Archive versions (e.g. 11.6.1) were built using llvm7,
+        # but current AppStream repo contains only one latest version
+        extra_yum_repo = None
+        if self.os_name.startswith("CentOS") and \
+                self.os_version.startswith('8'):
+            extra_yum_repo = "centos-8"
+        elif self.os_name.startswith("Red Hat") and \
+                self.os_version.startswith('8'):
+            extra_yum_repo = "rhel-8"
+
+        print("~~~~~", self.product, self.os_name, self.os_version)
         if self.product == 'postgresql':
             cmd = None
             if self.os_name == 'CentOS Linux' and self.os_version == '7':
                 cmd = "yum install -y centos-release-scl-rh"
             if cmd:
                 self.exec_cmd_retry(cmd)
+            if self.os_name.startswith("Red Hat") and \
+                self.os_version.startswith('7'):
+                self.exec_cmd_retry('yum install -y wget')
+                extra_yum_repo = "rhel-7"
+
+        if extra_yum_repo:
+            cmd = "sh -c 'mkdir /opt/{0}; cd $_; " \
+                  "wget -q -r -nd --no-parent -A \"*.rpm\" " \
+                  "http://dist.l.postgrespro.ru/resources/linux/{1}/;" \
+                  "yum install -y createrepo; {2} createrepo .; " \
+                  "printf \"[{0}]\\nname={0}\\nbaseurl=file:///opt/{0}" \
+                  "\\nenabled=1\\\\ngpgcheck=0\\nmodule_hotfixes=True\\n\" " \
+                  "> /etc/yum.repos.d/{0}.repo'".\
+                format(self.reponame + '-plus', extra_yum_repo,
+                       "rm -f llvm-libs-9*;" if self.version == '11' else '')
+            print("~~~~EXTRA")
+            print(cmd)
+            subprocess.check_call(cmd, shell=True)
 
     def download_source(self, package=None, version=None, ext='tar.bz2'):
         baseurl = ''
