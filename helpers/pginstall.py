@@ -849,7 +849,6 @@ baseurl=%s
                 self.os_version.startswith('8'):
             extra_yum_repo = "rhel-8"
 
-        print("~~~~~", self.product, self.os_name, self.os_version)
         if self.product == 'postgresql':
             cmd = None
             if self.os_name == 'CentOS Linux' and self.os_version == '7':
@@ -857,7 +856,7 @@ baseurl=%s
             if cmd:
                 self.exec_cmd_retry(cmd)
             if self.os_name.startswith("Red Hat") and \
-                self.os_version.startswith('7'):
+                    self.os_version.startswith('7'):
                 self.exec_cmd_retry('yum install -y wget')
                 extra_yum_repo = "rhel-7"
 
@@ -871,8 +870,6 @@ baseurl=%s
                   "> /etc/yum.repos.d/{0}.repo'".\
                 format(self.reponame + '-plus', extra_yum_repo,
                        "rm -f llvm-libs-9*;" if self.version == '11' else '')
-            print("~~~~EXTRA")
-            print(cmd)
             subprocess.check_call(cmd, shell=True)
 
     def download_source(self, package=None, version=None, ext='tar.bz2'):
