@@ -1650,7 +1650,7 @@ baseurl=%s
             if restart_service:
                 self.restart_service()
 
-    def exec_cmd_retry(self, cmd, retry_cnt=10, stdout=False):
+    def exec_cmd_retry(self, cmd, retry_cnt=5, stdout=False):
         timeout = 0
         attempt = 1
         while attempt < retry_cnt:
