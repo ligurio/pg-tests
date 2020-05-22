@@ -842,9 +842,12 @@ baseurl=%s
         # Archive versions (e.g. 11.6.1) were built using llvm7,
         # but current AppStream repo contains only one latest version
         extra_yum_repo = None
+        extra_yum_cmd = ''
         if self.os_name.startswith("CentOS") and \
                 self.os_version.startswith('8'):
             extra_yum_repo = "centos-8"
+            if self.version == '11':
+                extra_yum_cmd = "rm -f llvm-libs-9.*;"
         elif self.os_name.startswith("Red Hat") and \
                 self.os_version.startswith('8'):
             extra_yum_repo = "rhel-8"
@@ -868,8 +871,7 @@ baseurl=%s
                   "printf \"[{0}]\\nname={0}\\nbaseurl=file:///opt/{0}" \
                   "\\nenabled=1\\\\ngpgcheck=0\\nmodule_hotfixes=True\\n\" " \
                   "> /etc/yum.repos.d/{0}.repo'".\
-                format(self.reponame + '-plus', extra_yum_repo,
-                       "rm -f llvm-libs-9*;" if self.version == '11' else '')
+                format(self.reponame + '-plus', extra_yum_repo, extra_yum_cmd)
             subprocess.check_call(cmd, shell=True)
 
     def download_source(self, package=None, version=None, ext='tar.bz2'):
