@@ -491,6 +491,13 @@ def install_server(product, edition, version, milestone, branch, windows):
                    branch=branch, windows=windows)
     pg.setup_repo()
     if not windows:
+        # PGPRO-3889
+        if (pg.os_name.startswith('Centos') or
+            pg.os_name.startswith('Red Hat')) and \
+                pg.os_version.startswith('8'):
+            for pkg in pg.all_packages_in_repo[:]:
+                if ('jit' in pkg):
+                    pg.all_packages_in_repo.remove(pkg)
         pg.install_full_topless()
         # PGPRO-2136
         if pg.os_name in ALT_BASED:
