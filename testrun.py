@@ -498,25 +498,27 @@ def export_results(domname, linux_os, domipaddress, reportname,
         print(e)
         pass
     finally:
-        subprocess.call(
-            ['curl', '-s', '-S', '-o', '/dev/null',
-             '-T', 'reports/%s.html' % reportname,
-             REPORT_SERVER_URL])
-        subprocess.call(
-            ['curl', '-s', '-S', '-o', '/dev/null',
-             '-T', 'reports/%s.xml' % reportname,
-             REPORT_SERVER_URL])
-        subprocess.call(
-            ['curl', '-s', '-S', '-o', '/dev/null',
-             '-T', 'reports/%s.json' % reportname,
-             REPORT_SERVER_URL])
-        for file in os.listdir('reports'):
-            if '.json' in file:
-                subprocess.call(['curl', '-s', '-S', '-o', '/dev/null',
-                                 '-T', os.path.join('reports', file),
-                                 REPORT_SERVER_URL])
-            else:
-                continue
+        reporturl = os.path.join(REPORT_SERVER_URL,
+                                 reportname.replace('#', '%23'))
+        if (os.path.exists('reports/%s.html' % reportname)):
+            subprocess.call(
+                ['curl', '-s', '-S', '-o', '/dev/null',
+                 '-T', 'reports/%s.html' % reportname,
+                 REPORT_SERVER_URL])
+            print("Link to the html report: %s.html" % reporturl)
+        if (os.path.exists('reports/%s.xml' % reportname)):
+            subprocess.call(
+                ['curl', '-s', '-S', '-o', '/dev/null',
+                 '-T', 'reports/%s.xml' % reportname,
+                 REPORT_SERVER_URL])
+            print("Link to the xml report: %s.xml" % reporturl)
+        if (os.path.exists('reports/%s.json' % reportname)):
+            subprocess.call(
+                ['curl', '-s', '-S', '-o', '/dev/null',
+                 '-T', 'reports/%s.json' % reportname,
+                 REPORT_SERVER_URL])
+            print("Link to the json report: %s.json" % reporturl)
+        sys.stdout.flush()
 
 
 def save_env(domname):
@@ -761,12 +763,6 @@ def main(conn):
                         product_version=args.product_version,
                         product_edition=args.product_edition,
                         tests=testname)
-                    reporturl = os.path.join(REPORT_SERVER_URL,
-                                             reportname.replace('#', '%23'))
-                    print("Link to the html report - %s.html" % reporturl)
-                    print("Link to the xml report - %s.xml" % reporturl)
-                    print("Link to the json report - %s.json" % reporturl)
-                    sys.stdout.flush()
 
                 if retcode == 222:
                     stage += 1
