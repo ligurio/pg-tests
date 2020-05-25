@@ -66,10 +66,12 @@ FIRST_RELEASE = {
         'postgresql--12': None,
         'postgrespro-std-9.6': None,
         'postgrespro-ent-9.6': None,
-        'postgrespro-std-10': None,
-        'postgrespro-std-11': None,
-        'postgrespro-ent-10': None,
-        'postgrespro-ent-11': None,
+        'postgrespro-std-10': '10.13.1',
+        'postgrespro-std-11': '11.8.1',
+        'postgrespro-std-12': '12.3.1',
+        'postgrespro-ent-10': '10.13.1',
+        'postgrespro-ent-11': '11.8.1',
+        'postgrespro-ent-12': '12.3.1',
     },
     # altlinux-9
     "ALT Server 9.0": {
