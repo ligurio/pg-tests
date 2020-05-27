@@ -149,6 +149,9 @@ ARCHIVE_VERSIONS = {
         'postgrespro-ent-10': '10.8.1',
         'postgrespro-ent-11': '11.3.1'
     },
+    'Windows': {
+       'postgrespro-ent-9.6': '9.6.10.1'
+    },
 }
 
 for distr in FIRST_RELEASE:
