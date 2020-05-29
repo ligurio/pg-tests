@@ -28,6 +28,7 @@ FIRST_RELEASE = {
         'postgresql--12': None,
         'postgrespro-std-cert-10': None,
         'postgrespro-std-9.6': None,
+        'postgrespro-ent-9.6': None,
     },
     # altlinux-spt-7
     "ALT Linux 7.0.4": {
