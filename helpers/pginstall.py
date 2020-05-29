@@ -79,7 +79,7 @@ dist = {"Oracle Linux Server": 'oraclelinux',
 PRELOAD_LIBRARIES = {
     'ent-12':
         ['auth_delay', 'auto_explain', 'in_memory',
-         'pgpro_scheduler',
+         'pgpro_scheduler', 'ptrack',
          'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling',
          'pg_pathman'],
