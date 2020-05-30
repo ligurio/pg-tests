@@ -282,9 +282,12 @@ class TestHotStandbyCompatibility():
                             # we don't support lower 9.6 versions
                             if arcversion < '   9.   6.   4.   1':
                                 arcversion = None
+                        # PGPRO-3227, PGPRO-3834
                         if windows_os and version == '10':
-                            # PGPRO-3227, PGPRO-3834
                             if arcversion < '  10.  11.   1':
+                                arcversion = None
+                        if windows_os and version == '11':
+                            if arcversion < '  11.   6.   1':
                                 arcversion = None
                         if arcversion:
                             arcversions.append(arcversion)
