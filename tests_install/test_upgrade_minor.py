@@ -29,6 +29,7 @@ ARCHIVE_VERSIONS = {
     # altlinux-spt-7
     "ALT Linux 7.0.4": {
         'postgrespro-ent-9.6': '9.6.12.1',
+        'postgrespro-ent-10': '10.6.1',
     },
     # maybe remove?
     'ALT Linux 6.0.1': {
