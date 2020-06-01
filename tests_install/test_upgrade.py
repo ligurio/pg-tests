@@ -493,7 +493,8 @@ def install_server(product, edition, version, milestone, branch, windows):
     if not windows:
         # PGPRO-3889
         if (pg.os_name.startswith('Centos') or
-            pg.os_name.startswith('Red Hat')) and \
+            pg.os_name.startswith('Red Hat') or
+            pg.os_name.startswith('Oracle Linux')) and \
                 pg.os_version.startswith('8'):
             for pkg in pg.all_packages_in_repo[:]:
                 if ('jit' in pkg):
