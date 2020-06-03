@@ -485,12 +485,17 @@ def stop(pg, stopped=False):
             time.sleep(1)
 
 
-def install_server(product, edition, version, milestone, branch, windows):
+def install_server(product, edition, version, milestone, branch, windows,
+                   old=False):
     pg = PgInstall(product=product, edition=edition,
                    version=version, milestone=milestone,
                    branch=branch, windows=windows)
     pg.setup_repo()
     if not windows:
+        if old and pg.os_name == 'SLES' and pg.os_version.startswith('12.'):
+            for pkg in pg.all_packages_in_repo[:]:
+                if ('libzstd' in pkg):
+                    pg.all_packages_in_repo.remove(pkg)
         # PGPRO-3889
         if (pg.os_name.startswith('Centos') or
             pg.os_name.startswith('Red Hat') or
@@ -776,7 +781,7 @@ class TestUpgrade():
             pgold = install_server(
                 product=old_name, edition=old_edition,
                 version=old_version, milestone=None,
-                branch=None, windows=(self.system == 'Windows')
+                branch=None, windows=(self.system == 'Windows'), old=True
             )
             if self.system != 'Windows':
                 init_cluster(pgold, True, initdb_params, None, True)
@@ -870,7 +875,7 @@ class TestUpgrade():
                 pgold = install_server(
                     product=old_name, edition=old_edition,
                     version=old_version, milestone=None,
-                    branch=None, windows=(self.system == 'Windows')
+                    branch=None, windows=(self.system == 'Windows'), old=True
                 )
                 if self.system != 'Windows':
                     init_cluster(pgold, True, initdb_params, None, True)
