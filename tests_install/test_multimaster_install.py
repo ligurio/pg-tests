@@ -503,6 +503,9 @@ class TestMultimasterInstall():
                 or not edition.startswith('ent'):
             print('Version %s %s is not supported' % (edition, version))
             return
+        elif version == '11' and dist == 'Windows':
+            print('Windows is not supported under version %s' % version)
+            return
 
         # Step 1
         pginst = PgInstall(product=name, edition=edition,
