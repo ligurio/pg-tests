@@ -62,7 +62,7 @@ echo PGPORT=$PGPORT
 unset PGDATA PGLOCALEDIR
 export PGUSER=postgres
 cd /var/src
-curl -s -O http://cpan.metacpan.org/authors/id/T/TO/TODDR/IPC-Run-0.96.tar.gz
+curl -s -O http://cpan.metacpan.org/authors/id/T/TO/TODDR/IPC-Run-20200505.0.tar.gz
 tar fax IPC-Run*
 (cd IPC-Run*/ && perl Makefile.PL && make && make install)
 echo "`date -Iseconds`: Source archive extracting... "
