@@ -26,7 +26,7 @@ elif which yum >/dev/null 2>&1; then
 fi
 if ! perl -e "use IPC::Run"  >/dev/null 2>&1; then
     curl -O http://cpan.metacpan.org/authors/id/T/TO/TODDR/\
-IPC-Run-0.96.tar.gz && \
+IPC-Run-20200505.0.tar.gz && \
     tar fax IPC-Run* && \
     (cd IPC-Run*/ && perl Makefile.PL && make && make install)
 fi
