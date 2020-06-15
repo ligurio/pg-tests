@@ -56,7 +56,7 @@ dist = {"Oracle Linux Server": 'oraclelinux',
 
 
 class OsHelper:
-    def __init__(self, remote, host):
+    def __init__(self, remote=False, host=None):
         self.remote = remote
         self.host = host
         self.dist_info = get_distro(remote, host)
@@ -329,6 +329,62 @@ class OsHelper:
         return command_executor(cmd, self.remote, self.host,
                                 REMOTE_ROOT, REMOTE_ROOT_PASSWORD,
                                 stdout)
+
+    def get_all_installed_packages(self):
+        result = []
+        if self.is_windows():
+            return result
+        if self.is_pm_yum():
+            cmd = "script -q -c \"stty cols 150; " \
+                  "LANG=C yum -q list installed\""
+            ysout = command_executor(cmd, self.remote, self.host,
+                                     REMOTE_ROOT, REMOTE_ROOT_PASSWORD,
+                                     stdout=True).split('\n')
+            for line in ysout:
+                line = line.strip()
+                if line == 'Available Packages' or line == '' or \
+                        line == 'Installed Packages':
+                    continue
+                pkginfo = line.split()
+                if len(pkginfo) != 3:
+                    print("Invalid line in yum list output:", line)
+                    raise Exception('Invalid line in yum list output')
+                pkgname = re.sub(r'\.(x86_64|noarch)$', '', pkginfo[0])
+                result.append(pkgname)
+        elif self.is_altlinux():
+            cmd = "rpm -qa --qf '%{name}\\n'"
+            acout = command_executor(cmd, self.remote, self.host,
+                                     REMOTE_ROOT, REMOTE_ROOT_PASSWORD,
+                                     stdout=True).split('\n')
+            result = acout[:]
+        elif self.is_pm_apt():
+            result = []
+            cmd = "apt list --installed"
+            gsout = command_executor(cmd, self.remote, self.host,
+                                     REMOTE_ROOT, REMOTE_ROOT_PASSWORD,
+                                     stdout=True).split('\n')
+            passthrough = True
+            for line in gsout:
+                if line == '':
+                    continue
+                if passthrough:
+                    passthrough = line != 'Listing...'
+                    continue
+                result.append(line.split('/')[0])
+        elif self.is_pm_zypper():
+            cmd = "sh -c \"LANG=C zypper packages --installed-only\""
+            zsout = command_executor(cmd, self.remote, self.host,
+                                     REMOTE_ROOT, REMOTE_ROOT_PASSWORD,
+                                     stdout=True).split('\n')
+            for line in zsout:
+                pkginfo = line.split('|')
+                if len(pkginfo) != 5:
+                    continue
+                pkgname = pkginfo[2].strip()
+                if (pkgname == 'Name'):
+                    continue
+                result.append(pkgname)
+        return result
 
 
 def download_file(url, path):
