@@ -523,19 +523,6 @@ def install_server(product, edition, version, milestone, branch, windows,
     return pg
 
 
-def do_in_all_dbs(pg, script):
-    dbs = pg.exec_psql_select("SELECT datname FROM pg_database").\
-        split(os.linesep)
-    preoptions = os.environ['PGOPTIONS'] if 'PGOPTIONS' in os.environ else ''
-    os.environ['PGOPTIONS'] = preoptions + ' --client-min-messages=warning'
-    for db in dbs:
-        if db != 'template0':
-            os.environ['PGDATABASE'] = db
-            pg.exec_psql_script(script, '-v ON_ERROR_STOP=1')
-    del os.environ['PGDATABASE']
-    os.environ['PGOPTIONS'] = preoptions
-
-
 def generate_db(pg, pgnew, custom_dump=None):
     key = "-".join([pg.product, pg.edition, pg.version])
     dump_file_name = download_dump(pg.product, pg.edition, pg.version,
@@ -545,10 +532,10 @@ def generate_db(pg, pgnew, custom_dump=None):
                           stdout=out)
     if pgnew.version not in ["9.6", "10", "11"] and \
             pg.version in ["9.6", "10", "11"]:
-        do_in_all_dbs(pg, drop_oids_sql)
+        pg.do_in_all_dbs(drop_oids_sql)
     if pgnew.edition in ['ent', 'ent-cert'] and \
             pg.edition not in ['ent', 'ent-cert']:
-        do_in_all_dbs(pg, remove_xid_type_columns_sql)
+        pg.do_in_all_dbs(remove_xid_type_columns_sql)
     expected_file_name = os.path.join(tempdir,
                                       "%s-expected.sql" % key)
     dumpall(pgnew, expected_file_name)
@@ -562,9 +549,7 @@ def dump_and_diff_dbs(oldKey, pgNew, prefix):
     file2 = os.path.join(tempdir, '%s-expected.sql' % oldKey)
     diff_file = os.path.join(tempdir, "%s-%s.sql.diff" % (prefix, oldKey))
     diff_dbs(file1, file2, diff_file)
-    # PGPRO-3679
-    if not (pgNew.edition == 'ent' and pgNew.version == '11'):
-        do_in_all_dbs(pgNew, amcheck_sql)
+    pgNew.do_in_all_dbs(amcheck_sql)
 
 
 def upgrade(pg, pgOld):
