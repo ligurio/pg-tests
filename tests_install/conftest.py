@@ -4,6 +4,7 @@ import pytest
 import os
 import sys
 import subprocess
+from helpers.os_helpers import OsHelper
 
 dist = []
 if platform.system() == 'Linux':
@@ -118,6 +119,23 @@ fi
         else:
             pass
     request.addfinalizer(finalize)
+    target_ssh = "@ssh" in request.config.getoption('--target')
+    if target_ssh:
+        print('Starting up prepare')
+        oh = OsHelper()
+        packages = sorted(oh.get_all_installed_packages())
+        orig_pack_list = '/etc/pgt-initial-packages.list'
+        if os.path.isfile(orig_pack_list):
+            with open(orig_pack_list, 'r') as pack_list:
+                orig_packages = [line.rstrip() for line in pack_list]
+            to_remove = list(set(packages) - set(orig_packages))
+            if len(to_remove) > 0:
+                oh.remove_package(' '.join(to_remove), True)
+        else:
+            if len(packages) <= 0:
+                raise Exception('Zero packages was returned')
+            with open(orig_pack_list, 'w') as pack_list:
+                pack_list.write('\n'.join(packages))
 
 
 @pytest.hookimpl(trylast=True)

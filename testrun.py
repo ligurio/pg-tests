@@ -394,7 +394,7 @@ def create_env(name, domname, domimage=None):
     return domipaddress, domimage, xmldesc
 
 
-def setup_env(domipaddress, domname, linux_os, tests_dir):
+def setup_env(domipaddress, domname, linux_os, tests_dir, target_ssh=False):
     """Create ansible cmd and run ansible on virtual machine
 
     :param domipaddress str: ip address of virtual machine
@@ -409,6 +409,8 @@ def setup_env(domipaddress, domname, linux_os, tests_dir):
                                    REMOTE_LOGIN)
         ansible_cmd = ANSIBLE_CMD % (
             os.path.join(tests_dir, ANSIBLE_PLAYBOOK), "paramiko", domname)
+        if target_ssh:
+            ansible_cmd += ' "USE_SSH=1"'
     else:
         inv = ANSIBLE_INVENTORY_WIN % (domname, domipaddress,
                                        REMOTE_LOGIN,
@@ -676,29 +678,40 @@ def main(conn):
 
     targets = args.target.split(',')
     for target in targets:
-        print("Starting target %s..." % target)
-        linux_os = target[0:3] != 'win'
-        target_start = time.time()
-        domname = gen_name(target, args.vm_prefix)
-        conn.send([domname, args.keep])
-        try:
-            domipaddress = create_env(target, domname)[0]
+        target_ssh = "@" in target
+        if target_ssh:
+            print("Assuming target %s as ssh..." % target)
+            domname, domipaddress = target.split('@')
+            if domname == '':
+                domname = 'remote-test'
+            domname += '@ssh'
+            linux_os = True
+            target_start = time.time()
             setup_env(domipaddress, domname, linux_os, tests_dir)
-        except Exception as e:
-            # Don't leave a domain that is failed to setup running
+        else:
+            print("Starting target %s..." % target)
+            linux_os = target[0:3] != 'win'
+            target_start = time.time()
+            domname = gen_name(target, args.vm_prefix)
+            conn.send([domname, args.keep])
             try:
-                close_env(domname, saveimg=False, destroys0=True)
-            except Exception:
-                pass
-            raise e
-        print("Environment deployed without errors. Ready to run tests")
-        if len(tests) > 1:
-            save_env(domname)
+                domipaddress = create_env(target, domname)[0]
+                setup_env(domipaddress, domname, linux_os, tests_dir)
+            except Exception as e:
+                # Don't leave a domain that is failed to setup running
+                try:
+                    close_env(domname, saveimg=False, destroys0=True)
+                except Exception:
+                    pass
+                raise e
+            print("Environment deployed without errors. Ready to run tests")
+            if len(tests) > 1:
+                save_env(domname)
 
         for test in sorted(tests):
             print("Performing test %s..." % test)
             testname = test.split('/')[1].split('.')[0]
-            if len(tests) > 1:
+            if len(tests) > 1 and not target_ssh:
                 print("Restoring environment (%s)..." % domname)
                 restore_env(domname)
                 try:
