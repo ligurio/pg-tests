@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# TODO: Enable test5 (PGPRO-1289)
 if which apt-get >/dev/null 2>&1; then
     apt-get install -y gcc || true
     apt-get install -y make flex bison perl
