@@ -315,7 +315,7 @@ class PgInstall:
         if self.os.is_windows():
             if not self.installer_name:
                 raise Exception("Installer name is not defined")
-            vere = re.search(r'_([0-9.]+)_', self.installer_name)
+            vere = re.search(r'_([0-9.a-z]+)_', self.installer_name)
             if vere:
                 return vere.group(1)
         else:
