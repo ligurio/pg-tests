@@ -119,7 +119,8 @@ class TestMakeCheck(object):
                          r'\1', conf.read(), flags=re.MULTILINE)
             conf.seek(0)
             conf.write(hba)
-        pginst.load_shared_libraries()
+        pginst.load_shared_libraries(restart_service=False)
+        pginst.restart_service()
 
         if self.system != 'Windows':
             subprocess.check_call(
