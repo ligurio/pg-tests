@@ -315,7 +315,7 @@ class PgInstall:
         if self.os.is_windows():
             if not self.installer_name:
                 raise Exception("Installer name is not defined")
-            vere = re.search(r'_([0-9.]+)_', self.installer_name)
+            vere = re.search(r'_([0-9.a-z]+)_', self.installer_name)
             if vere:
                 return vere.group(1)
         else:
@@ -1176,6 +1176,20 @@ baseurl=%s
             )
         subprocess.check_call(cmd, shell=True,
                               cwd="/", env=self.env, stdout=stdout)
+
+    def do_in_all_dbs(self, script):
+        dbs = self.exec_psql_select("SELECT datname FROM pg_database"). \
+            split(os.linesep)
+        preoptions = os.environ['PGOPTIONS'] \
+            if 'PGOPTIONS' in os.environ else ''
+        os.environ['PGOPTIONS'] = \
+            preoptions + ' --client-min-messages=warning'
+        for db in dbs:
+            if db != 'template0':
+                os.environ['PGDATABASE'] = db
+                self.exec_psql_script(script, '-v ON_ERROR_STOP=1')
+        del os.environ['PGDATABASE']
+        os.environ['PGOPTIONS'] = preoptions
 
     def get_server_version(self):
         return self.exec_psql_select("SELECT version()")

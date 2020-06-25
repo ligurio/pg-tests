@@ -80,7 +80,8 @@ class OsHelper:
             for line in out:
                 # Find "Version : 9.6.15.2-alt1" or "Version: 2:9.6.15.2-alt1"
                 # or "Version: 10.10.2"
-                vere = re.search(r'Version\s*:.*[:\s]([0-9.]+)', line)
+                # or "Version: 13beta1"
+                vere = re.search(r'Version\s*:.*[:\s]([0-9.a-z]+)', line)
                 if (vere):
                     return vere.group(1)
         return None
