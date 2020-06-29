@@ -456,7 +456,8 @@ def make_test_cmd(domname, linux_os, reportname, tests=None,
                      tests, reportname, pcmd, domname)
     if not linux_os:
         cmd = r'cd C:\Users\test\pg-tests && ' + \
-            'set PYTHONIOENCODING=UTF-8 && ' + pytest_cmd
+              r'set PYTHONHOME=C:\Python38&&' + \
+              'set PYTHONIOENCODING=UTF-8 && ' + pytest_cmd
     else:
         cmd = "cd /home/test/pg-tests && " + \
             "sudo sh -c 'PYTHONIOENCODING=UTF-8 " + pytest_cmd + "'"
