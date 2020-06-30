@@ -184,7 +184,7 @@ class TestPgprobackup():
         tar.close()
         dir = '.'.join(tar_file.split('.')[:-2])
         self.fix_permissions(dir)
-        subprocess.check_call('pip install testgres==1.8.2')
+        subprocess.check_call('pip install testgres==1.8.2', shell=True)
         cmd = "%s sh -c 'PG_CONFIG=pg_config LANG=C" \
               " PG_PROBACKUP_TEST_BASIC=ON python -m unittest -v tests'" \
               % self.pginst.pg_sudo_cmd
