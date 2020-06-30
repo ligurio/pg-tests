@@ -99,9 +99,9 @@ class TestPgprobackup():
             baseurl = PGPRO_ARCHIVE_SOURCES_BASE
 
         tar_href = 'pg_probackup-%s.tar.gz' % self.version
-        tar_file = os.path.join(tempdir, tar_href)
-        urlretrieve(baseurl + '/' + tar_href, tar_file)
-        return tar_file
+        # tar_file = os.path.join(tempdir, tar_href)
+        urlretrieve(baseurl + '/' + tar_href, tar_href)
+        return tar_href
 
     @pytest.mark.test_install
     def test_install(self, request):
@@ -180,14 +180,15 @@ class TestPgprobackup():
         tar_file = self.download_source()
         print(tar_file)
         tar = tarfile.open(tar_file, "r:gz")
-        tar.extractall(tempdir)
+        tar.extractall()
         tar.close()
         dir = '.'.join(tar_file.split('.')[:-2])
+        print(dir)
         self.fix_permissions(dir)
         subprocess.check_call('pip install testgres==1.8.2', shell=True)
-        cmd = "%s sh -c 'PG_CONFIG=pg_config LANG=C" \
+        cmd = "%s sh -c 'PG_CONFIG=\"%s/pg_config\" LANG=C" \
               " PG_PROBACKUP_TEST_BASIC=ON python -m unittest -v tests'" \
-              % self.pginst.pg_sudo_cmd
+              % (self.pginst.pg_sudo_cmd, self.pginst.get_bin_path())
         print(subprocess.check_output(cmd, cwd=dir, shell=True).decode())
         print("OK")
 
