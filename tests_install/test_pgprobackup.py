@@ -134,9 +134,9 @@ class TestPgprobackup():
             return
 
         # Step 1
-        self.pginst = PgInstall(product=name, edition=edition,
-                           version=version, milestone=milestone,
-                           branch=branch, windows=(self.system == 'Windows'))
+        self.pginst = PgInstall(product=name, edition=edition, version=version,
+                                milestone=milestone, branch=branch,
+                                windows=(self.system == 'Windows'))
 
         self.pginst.setup_repo()
         if self.system != 'Windows':
@@ -219,17 +219,19 @@ class TestPgprobackup():
         # Step 3
         self.execute_pg_probackup("init", "-B", '"%s"' % backup_dir)
         self.execute_pg_probackup("add-instance", "-B", '"%s"' % backup_dir,
-                                  "-D", '"%s"' % self.pginst.get_default_datadir(),
+                                  "-D", '"%s"' %
+                                  self.pginst.get_default_datadir(),
                                   "--instance", "main")
         # Step 5
         if self.pginst.edition == 'ent':
             self.pginst.exec_psql("ALTER SYSTEM SET cfs_gc_workers TO '0'")
         self.pginst.exec_psql("ALTER SYSTEM SET wal_level TO 'replica'")
-        dump_file_name = download_dump(self.pginst.product, self.pginst.edition,
+        dump_file_name = download_dump(self.pginst.product,
+                                       self.pginst.edition,
                                        self.pginst.version, tempdir)
         with open(os.path.join(tempdir, 'load-dump.log'), 'wb') as out:
             self.pginst.exec_psql_file(dump_file_name, '-q',
-                                  stdout=out)
+                                       stdout=out)
         # Step 6
         tablespace_path = os.path.join(tempdir, 'pgprobackup')
         os.mkdir(tablespace_path)
@@ -249,7 +251,8 @@ class TestPgprobackup():
 
         before_backup_file = os.path.join(tempdir, 'before.sql')
         self.pginst.do_in_all_dbs(truncate_unlogged_sql)
-        self.pginst.exec_client_bin('pg_dumpall', '-f "%s"' % before_backup_file)
+        self.pginst.exec_client_bin('pg_dumpall', '-f "%s"' %
+                                    before_backup_file)
 
         # Step 8
         self.execute_pg_probackup("backup", "-b", "full", "-B",
@@ -283,6 +286,7 @@ class TestPgprobackup():
             self.fix_permissions(tablespace_path)
         self.pginst.start_service()
         after_backup_file = os.path.join(tempdir, 'after.sql')
-        self.pginst.exec_client_bin('pg_dumpall', '-f "%s"' % after_backup_file)
+        self.pginst.exec_client_bin('pg_dumpall', '-f "%s"' %
+                                    after_backup_file)
         diff_dbs(before_backup_file, after_backup_file,
                  os.path.join(tempdir, 'diff.sql'))
