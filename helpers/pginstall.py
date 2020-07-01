@@ -18,8 +18,8 @@ from helpers.utils import command_executor, get_distro, REMOTE_ROOT, \
 
 from helpers.os_helpers import OsHelper
 
-PGPRO_ARCHIVE_STANDARD = "http://repo.postgrespro.ru/pgpro-archive/"
-PGPRO_ARCHIVE_ENTERPRISE = "http://repoee.l.postgrespro.ru/archive/"
+PGPRO_ARCHIVE_STANDARD = "http://localrepo.l.postgrespro.ru/stable/archive/"
+PGPRO_ARCHIVE_ENTERPRISE = "http://localrepo.l.postgrespro.ru/stable/archive/"
 PGPRO_DEV_SOURCES_BASE = "http://localrepo.l.postgrespro.ru/dev/src"
 PGPRO_ARCHIVE_SOURCES_BASE = "http://localrepo.l.postgrespro.ru/stable/src"
 PGPRO_STABLE_SOURCES_BASE = "http://localrepo.l.postgrespro.ru/stable/src"
