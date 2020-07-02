@@ -11,6 +11,8 @@ import difflib
 import math
 import gc
 import locale
+import random
+import time
 
 from enum import Enum
 from time import sleep
@@ -95,6 +97,29 @@ def command_executor(cmd, remote=False, host=None,
                 else:
                     print(cmd)
                     return subprocess.check_call(shlex.split(cmd))
+
+
+def exec_retry(cmd, cwd='.', description='', retry_cnt=10):
+    attempt = 1
+    timeout = 0
+    if not description:
+        description = cmd
+    print(description + '...')
+    while attempt < retry_cnt:
+        try:
+            return subprocess.check_output(cmd, cwd=cwd, shell=True)
+        except Exception as ex:
+            print('Exception occured while running "%s":' % cmd)
+            print(ex)
+            print('========')
+            attempt += 1
+            timeout += random.randint(1, 8)
+            print('Retrying (attempt %d with delay for %d seconds)...' %
+                  (attempt, timeout))
+            time.sleep(timeout)
+    if retry_cnt > 1:
+        print('Last attempt to execute the command...\n')
+    return subprocess.check_output(cmd, cwd=cwd, shell=True)
 
 
 def get_virt_ip():

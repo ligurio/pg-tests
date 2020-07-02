@@ -17,7 +17,7 @@ from multiprocessing import Pipe, Process
 from subprocess import call
 
 from helpers.utils import (copy_file, copy_reports_win,
-                           exec_command, gen_name,
+                           exec_command, gen_name, exec_retry,
                            exec_command_win, wait_for_boot,
                            REMOTE_LOGIN, REMOTE_PASSWORD,
                            REMOTE_ROOT_PASSWORD, urlcontent, urlretrieve)
@@ -180,31 +180,18 @@ def prepare_payload(tests_dir, clean):
     pgtd = os.path.join(tempdir, 'pg-tests')
     shutil.copytree('.', pgtd,
                     ignore=shutil.ignore_patterns('.git', 'reports'))
-    attempt = 1
-    timeout = 0
-    while True:
-        print('Downloading get-pip...')
-        retcode = call("wget -q https://bootstrap.pypa.io/get-pip.py",
-                       cwd=pgtd, shell=True)
-        if retcode == 0:
-            break
-        print('Retrying (attempt %d with delay for %d seconds)...' %
-              (attempt, timeout))
-        timeout += 5
-        time.sleep(timeout)
-        attempt += 1
-        if attempt > 10:
-            raise Exception("Downloading get-pip failed.")
+    exec_retry("wget -q https://bootstrap.pypa.io/get-pip.py", pgtd,
+               'Downloading get-pip')
 
-    subprocess.check_call(
+    exec_retry(
         "wget -T 60 -q https://codeload.github.com/postgrespro/"
         "pg_wait_sampling/tar.gz/master -O extras/pg_wait_sampling.tar.gz",
-        cwd=pgtd, shell=True)
+        pgtd, 'Downloading pg_wait_sampling')
 
-    subprocess.check_call(
+    exec_retry(
         "wget -T 60 -q https://codeload.github.com/Test-More/"
         "test-more/tar.gz/v0.90 -O extras/test-more.tar.gz",
-        cwd=pgtd, shell=True)
+        pgtd, 'Downloading test-more')
 
     retcode = call("zip -q -x '*.pyc' -r _%s pg-tests" %
                    TESTS_PAYLOAD_ZIP, cwd=tempdir, shell=True)
@@ -214,30 +201,23 @@ def prepare_payload(tests_dir, clean):
     # Preparing pip packages for linux with 2 python
     pgtdpp = os.path.join(pgtd, 'pip-packages')
     os.makedirs(pgtdpp)
-    retcode = call(
+    exec_retry(
         "pip2 download -q -r %s" %
         os.path.abspath(os.path.join(tests_dir, "requirements2.txt")),
-        cwd=pgtdpp, shell=True)
-    if retcode != 0:
-        raise Exception("Downloading pip-requirements failed.")
-
-    retcode = call(
+        pgtdpp, 'Download python2 requiremets'
+    )
+    exec_retry(
         "pip2 download -q --no-deps --only-binary=:all:"
         " --platform manylinux1_x86_64 --python-version 27"
         " --implementation cp --abi cp27m  -r %s" %
         os.path.abspath(os.path.join(tests_dir, "requirements-bin.txt")),
-        cwd=pgtdpp, shell=True)
-    if retcode != 0:
-        raise Exception("Downloading pip-requirements(27m) failed.")
-
-    retcode = call(
+        pgtdpp, "Downloading pip-requirements(27m)")
+    exec_retry(
         "pip2 download -q --no-deps --only-binary=:all:"
         " --platform manylinux1_x86_64 --python-version 27"
         " --implementation cp --abi cp27mu  -r %s" %
         os.path.abspath(os.path.join(tests_dir, "requirements-bin.txt")),
-        cwd=pgtdpp, shell=True)
-    if retcode != 0:
-        raise Exception("Downloading pip-requirements(27mu) failed.")
+        pgtdpp, "Downloading pip-requirements(27mu)")
 
     retcode = call("tar -czf _%s --exclude='*.pyc' pg-tests" %
                    TESTS_PAYLOAD_TAR, cwd=tempdir, shell=True)
