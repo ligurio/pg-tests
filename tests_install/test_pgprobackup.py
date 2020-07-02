@@ -18,7 +18,7 @@ import tarfile
 
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall, PGPRO_DEV_SOURCES_BASE,\
-    PGPRO_ARCHIVE_SOURCES_BASE, PGPRO_STABLE_SOURCES_BASE
+    PGPRO_ARCHIVE_SOURCES_BASE, PGPRO_STABLE_SOURCES_BASE, REDHAT_BASED
 from helpers.utils import download_dump, diff_dbs
 
 tempdir = tempfile.gettempdir()
@@ -187,8 +187,10 @@ class TestPgprobackup():
         self.fix_permissions(dir)
         subprocess.check_call('pip install testgres==1.8.2', shell=True)
         cmd = "%s sh -c 'PG_CONFIG=\"%s/pg_config\" LANG=C" \
-              " PG_PROBACKUP_TEST_BASIC=ON python -m unittest -v tests'" \
-              % (self.pginst.pg_sudo_cmd, self.pginst.get_bin_path())
+              " PG_PROBACKUP_TEST_BASIC=ON python%s -m unittest -v tests'" \
+              % (self.pginst.pg_sudo_cmd, self.pginst.get_bin_path(),
+                 '2.7' if self.pginst.os_name in REDHAT_BASED and
+                 self.pginst.os_version.startswith('6') else '')
         print(subprocess.check_output(cmd, cwd=dir, shell=True).decode())
         print("OK")
 
