@@ -129,8 +129,10 @@ class TestPgprobackup():
         request.node.add_marker(tag_mark)
         branch = request.config.getoption('--branch')
 
+        request.cls.skip = False
         if name != 'postgrespro' or edition == '1c':
             print("PgProBackup test is only for postgrespro std and ent.")
+            request.cls.skip = True
             return
 
         # Step 1
@@ -163,10 +165,10 @@ class TestPgprobackup():
 
     @pytest.mark.test_pgprobackup_internal
     def test_pgprobackup_internal(self, request):
-        self.pginst = request.cls.pginst
-        if self.pginst.product != 'postgrespro' or self.pginst.edition == '1c':
+        if request.cls.skip:
             print("PgProBackup test is only for postgrespro std and ent.")
             return
+        self.pginst = request.cls.pginst
         # PBCKP-103
         if sys.version_info > (3, 0):
             print("Only 2 python temporary supported")
@@ -210,10 +212,10 @@ class TestPgprobackup():
         10. Check that backup status is OK
         11. Check that backup validation is OK
         """
-        self.pginst = request.cls.pginst
-        if self.pginst.product != 'postgrespro' or self.pginst.edition == '1c':
+        if request.cls.skip:
             print("PgProBackup test is only for postgrespro std and ent.")
             return
+        self.pginst = request.cls.pginst
         self.bindir = self.pginst.get_bin_path() + os.sep
         # Step 1
         backup_dir = os.path.join(tempdir, 'backup')
