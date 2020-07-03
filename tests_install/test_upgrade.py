@@ -507,9 +507,6 @@ def install_server(product, edition, version, milestone, branch, windows,
         pg.install_full_topless()
         # PGPRO-2136
         if pg.os_name in ALT_BASED:
-            subprocess.check_call(r"sudo sed -e 's/#\(Defaults:WHEEL_USERS"
-                                  r"\s\+!env_reset\)/\1/' -i /etc/sudoers",
-                                  shell=True)
             with open('/etc/sysconfig/i18n', 'r') as file:
                 for line in file:
                     kv = line.split('=')
