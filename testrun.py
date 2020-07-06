@@ -240,13 +240,13 @@ def prepare_payload(tests_dir, clean):
         pass
 
 
-def create_env(name, domname, domimage=None):
+def create_env(name, domname, domimage=None, mac=None):
     import libvirt
     conn = libvirt.open(None)
 
     if not domimage:
         domimage = create_image(domname, name)
-    dommac = mac_address_generator()
+    dommac = mac if mac else mac_address_generator()
     qemu_path = ""
     if distro.linux_distribution()[0] == 'Ubuntu' or \
        distro.linux_distribution(False)[0] == 'debian':
@@ -371,7 +371,7 @@ def create_env(name, domname, domimage=None):
             raise Exception("Could not remove old ssh key for %s." %
                             domipaddress)
 
-    return domipaddress, domimage, xmldesc
+    return domipaddress, domimage, xmldesc, dommac
 
 
 def setup_env(domipaddress, domname, linux_os, tests_dir, target_ssh=False):
@@ -659,6 +659,7 @@ def main(conn):
 
     targets = args.target.split(',')
     for target in targets:
+        dommac = None
         target_ssh = "@" in target
         if target_ssh:
             print("Assuming target %s as ssh..." % target)
@@ -676,7 +677,9 @@ def main(conn):
             domname = gen_name(target, args.vm_prefix)
             conn.send([domname, args.keep])
             try:
-                domipaddress = create_env(target, domname)[0]
+                dom = create_env(target, domname)
+                domipaddress = dom[0]
+                dommac = dom[3]
                 setup_env(domipaddress, domname, linux_os, tests_dir)
             except Exception as e:
                 # Don't leave a domain that is failed to setup running
@@ -699,7 +702,7 @@ def main(conn):
                     print("Creating environment (%s, %s)..." %
                           (target, domname))
                     domipaddress = create_env(
-                        target, domname, get_dom_disk(domname))[0]
+                        target, domname, get_dom_disk(domname), dommac)[0]
                     print("Waiting for boot (%s)..." % domipaddress)
                     wait_for_boot(domipaddress, linux=linux_os)
                     print("Boot completed.")
