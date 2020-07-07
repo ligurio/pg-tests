@@ -21,7 +21,8 @@ from helpers.pginstall import PgInstall, PGPRO_DEV_SOURCES_BASE,\
     PGPRO_ARCHIVE_SOURCES_BASE, PGPRO_STABLE_SOURCES_BASE, REDHAT_BASED
 from helpers.utils import download_dump, diff_dbs
 
-tempdir = tempfile.gettempdir()
+tempdir = os.path.join(os.path.abspath(os.getcwd()), 'tmp')
+os.mkdir(tempdir)
 
 
 truncate_unlogged_sql = """
@@ -134,7 +135,7 @@ class TestPgprobackup():
             print("PgProBackup test is only for postgrespro std and ent.")
             request.cls.skip = True
             return
-
+        self.fix_permissions(tempdir)
         # Step 1
         self.pginst = PgInstall(product=name, edition=edition, version=version,
                                 milestone=milestone, branch=branch,
@@ -230,7 +231,13 @@ class TestPgprobackup():
         # Step 5
         if self.pginst.edition == 'ent':
             self.pginst.exec_psql("ALTER SYSTEM SET cfs_gc_workers TO '0'")
-        self.pginst.exec_psql("ALTER SYSTEM SET wal_level TO 'replica'")
+        if self.pginst.version == '9.6':
+            with open(os.path.join(self.pginst.get_datadir(), "pg_hba.conf"),
+                      "a") as hba:
+                hba.write("local replication all  trust")
+            self.pginst.exec_psql("ALTER SYSTEM SET wal_level TO 'replica'")
+            self.pginst.exec_psql("ALTER SYSTEM SET max_wal_senders TO '1'")
+            self.pginst.restart_service()
         dump_file_name = download_dump(self.pginst.product,
                                        self.pginst.edition,
                                        self.pginst.version, tempdir)
