@@ -135,7 +135,6 @@ class TestPgprobackup():
             print("PgProBackup test is only for postgrespro std and ent.")
             request.cls.skip = True
             return
-        self.fix_permissions(tempdir)
         # Step 1
         self.pginst = PgInstall(product=name, edition=edition, version=version,
                                 milestone=milestone, branch=branch,
@@ -147,6 +146,8 @@ class TestPgprobackup():
             self.pginst.initdb_start()
         else:
             self.pginst.install_postgres_win()
+
+        self.fix_permissions(tempdir)
 
         self.bindir = self.pginst.get_bin_path() + os.sep
         print('Bindir is %s' % self.bindir)
