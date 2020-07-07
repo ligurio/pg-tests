@@ -230,7 +230,13 @@ class TestPgprobackup():
         # Step 5
         if self.pginst.edition == 'ent':
             self.pginst.exec_psql("ALTER SYSTEM SET cfs_gc_workers TO '0'")
-        self.pginst.exec_psql("ALTER SYSTEM SET wal_level TO 'replica'")
+        if self.pginst.version == '9.6':
+            with open(os.path.join(self.pginst.get_datadir(), "pg_hba.conf"),
+                      "a") as hba:
+                hba.write("local replication all  trust")
+            self.pginst.exec_psql("ALTER SYSTEM SET wal_level TO 'replica'")
+            self.pginst.exec_psql("ALTER SYSTEM SET max_wal_senders TO '1'")
+            self.pginst.restart_service()
         dump_file_name = download_dump(self.pginst.product,
                                        self.pginst.edition,
                                        self.pginst.version, tempdir)
