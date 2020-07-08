@@ -233,8 +233,8 @@ class TestPgprobackup():
         if self.pginst.edition == 'ent':
             self.pginst.exec_psql("ALTER SYSTEM SET cfs_gc_workers TO '0'")
         if self.pginst.version == '9.6':
-            with open(os.path.join(self.pginst.get_datadir(), "pg_hba.conf"),
-                      "a") as hba:
+            with open(os.path.join(self.pginst.get_default_configdir(),
+                                   "pg_hba.conf"), "a") as hba:
                 hba.write("local replication all  trust")
             self.pginst.exec_psql("ALTER SYSTEM SET wal_level TO 'replica'")
             self.pginst.exec_psql("ALTER SYSTEM SET max_wal_senders TO '1'")
@@ -271,7 +271,12 @@ class TestPgprobackup():
         self.execute_pg_probackup("backup", "-b", "full", "-B",
                                   '"%s"' % backup_dir, "-d", "postgres",
                                   "-U", "postgres", "--instance",
-                                  "main", "--stream")
+                                  "main", "--stream", "" if
+                                  self.pginst.get_default_datadir() ==
+                                  self.pginst.get_default_configdir()
+                                  else "--external-dirs=%s" %
+                                       self.pginst.get_default_configdir()
+                                  )
         # Step 9
         # Get last backup id and get out for show command with this backup
         pgprobackup_show = json.loads(
