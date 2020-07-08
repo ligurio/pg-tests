@@ -235,7 +235,10 @@ class TestPgprobackup():
         if self.pginst.version == '9.6':
             with open(os.path.join(self.pginst.get_default_configdir(),
                                    "pg_hba.conf"), "a") as hba:
-                hba.write("local replication all  trust")
+                hba.write("host replication all all  trust") \
+                    if self.system == 'Windows' else \
+                    hba.write("local replication all  trust")
+
             self.pginst.exec_psql("ALTER SYSTEM SET wal_level TO 'replica'")
             self.pginst.exec_psql("ALTER SYSTEM SET max_wal_senders TO '1'")
             self.pginst.restart_service()
