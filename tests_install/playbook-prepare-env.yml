@@ -27,6 +27,7 @@
     become_method: su
     become: true
     when: ansible_os_family != "Windows" and ansible_service_mgr == "systemd"
+    ignore_errors: yes
     tags:
     - skip_ansible_lint
 
