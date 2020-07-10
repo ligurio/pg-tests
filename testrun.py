@@ -30,16 +30,20 @@ if not sys.version_info > (3, 0):
     sys.setdefaultencoding('utf8')
 
 MAX_DURATION = 4 * 60 * 60
-DEBUG = False
+DEBUG = True
 
 IMAGE_BASE_URL = 'http://dist.l.postgrespro.ru/vm-images/test/'
 TEMPLATE_DIR = '/pgpro/templates/'
 WORK_DIR = '/pgpro/test-envs/'
 ANSIBLE_CMD = "ansible-playbook %s -i static/inventory -c %s --limit %s"
 ANSIBLE_PLAYBOOK = 'playbook-prepare-env.yml'
+ANSIBLE_PLAYBOOK_SSH = 'playbook-prepare-env-ssh.yml'
 ANSIBLE_INVENTORY = "%s ansible_host=%s \
                     ansible_become_pass=%s \
                     ansible_ssh_pass=%s \
+                    ansible_user=%s \
+                    ansible_become_user=root\n"
+ANSIBLE_INVENTORY_SSH = "%s ansible_host=%s \
                     ansible_user=%s \
                     ansible_become_user=root\n"
 ANSIBLE_INVENTORY_WIN = "%s ansible_host=%s \
@@ -402,7 +406,11 @@ def setup_env(domipaddress, domname, linux_os, tests_dir, target_ssh=False):
     :return: int: 0 if all OK and 1 if not
     """
 
-    if linux_os:
+    if target_ssh:
+        inv = ANSIBLE_INVENTORY_SSH % (domname, domipaddress, REMOTE_LOGIN)
+        ansible_cmd = ANSIBLE_CMD % (
+            os.path.join(tests_dir, ANSIBLE_PLAYBOOK_SSH), "paramiko", domname)
+    elif linux_os:
         inv = ANSIBLE_INVENTORY % (domname, domipaddress,
                                    REMOTE_ROOT_PASSWORD,
                                    REMOTE_PASSWORD,
@@ -688,7 +696,7 @@ def main(conn):
             domname += '@ssh'
             linux_os = True
             target_start = time.time()
-            setup_env(domipaddress, domname, linux_os, tests_dir)
+            setup_env(domipaddress, domname, linux_os, tests_dir, target_ssh)
         else:
             print("Starting target %s..." % target)
             linux_os = target[0:3] != 'win'
