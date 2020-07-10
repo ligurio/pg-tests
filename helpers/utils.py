@@ -323,7 +323,7 @@ def exec_command_win(cmd, hostname,
             return retcode, stdout, stderr
 
 
-def wait_for_boot(host, time=300, linux=True):
+def wait_for_boot(host, time=600, linux=True):
     print("Waiting for control protocol availability.")
     if linux:
         exec_command(None, host, REMOTE_LOGIN, REMOTE_PASSWORD,
