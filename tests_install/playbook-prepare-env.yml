@@ -26,7 +26,9 @@
       warn: no
     become_method: su
     become: true
-    when: ansible_os_family != "Windows" and ansible_service_mgr == "systemd"
+    when: (ansible_os_family != "Windows" and ansible_service_mgr == "systemd")
+      and not ((ansible_distribution == "ALT" or ansible_distribution == "Altlinux") and ansible_distribution_major_version == "8")
+    ignore_errors: yes
     tags:
     - skip_ansible_lint
 
