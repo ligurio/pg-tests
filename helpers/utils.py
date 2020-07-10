@@ -221,6 +221,7 @@ def exec_command(cmd, hostname, login, password,
                 paramiko.SSHException,
                 socket.error,
                 Exception) as e:
+            print("Try %s of %s" % (trc, connect_retry_count))
             if trc >= connect_retry_count - 1:
                 raise e
             sleep(CONNECT_RETRY_DELAY)
