@@ -709,7 +709,8 @@ def main(conn):
                 except Exception as e:
                     # Don't leave a domain that is failed to boot running
                     try:
-                        close_env(domname, saveimg=False, destroys0=True)
+                        print("Temporary don't kill %s", domname)
+                        # close_env(domname, saveimg=False, destroys0=True)
                     except Exception:
                         pass
                     raise e
