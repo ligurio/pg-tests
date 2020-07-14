@@ -204,7 +204,7 @@ def prepare_payload(tests_dir, clean):
     exec_retry(
         "pip2 download -q -r %s" %
         os.path.abspath(os.path.join(tests_dir, "requirements2.txt")),
-        pgtdpp, 'Download python2 requiremets'
+        pgtdpp, 'Download python2 requirements'
     )
     exec_retry(
         "pip2 download -q --no-deps --only-binary=:all:"
