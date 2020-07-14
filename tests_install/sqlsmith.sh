@@ -34,8 +34,8 @@ elif which zypper; then
     zypper install -y boost-devel
     if grep -q 'PRETTY_NAME="SUSE Linux Enterprise Server 12' /etc/os-release; then
       wget http://download.opensuse.org/distribution/\
-openSUSE-stable/repo/oss/noarch/autoconf-archive-2017.09.28-lp151.2.1.noarch.rpm
-      rpm -i autoconf-archive-2017.09.28-lp151.2.1.noarch.rpm
+openSUSE-stable/repo/oss/noarch/autoconf-archive-2017.09.28-lp152.3.2.noarch.rpm
+      rpm -i autoconf-archive*.noarch.rpm
     else
       zypper install -y autoconf autoconf-archive automake
       zypper install -y libboost_regex*
