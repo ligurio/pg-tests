@@ -183,8 +183,8 @@ def get_test_versions(edition, version, specified_version, current_version):
     # Choose two versions -- newest and oldest supported
     soup = BeautifulSoup(urlopen(archive_url))
     arcversions = []
-    startswith = 'pgproee' if edition == 'ent' else \
-        ('pgpro' if edition == 'std' else 'pg1c')
+    startswith = 'pgproee-' if edition == 'ent' else \
+        ('pgpro-' if edition == 'std' else 'pg1c-')
     specified_version_found = False
     for link in soup.findAll('a'):
         href = link.get('href')
