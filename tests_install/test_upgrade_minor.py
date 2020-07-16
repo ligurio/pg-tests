@@ -28,7 +28,7 @@ ARCHIVE_VERSIONS = {
     },
     # altlinux-spt-7
     "ALT Linux 7.0.4": {
-        'postgrespro-ent-9.6': '9.6.12.1',
+        'postgrespro-ent-9.6': '9.6.13.1',
         'postgrespro-ent-10': '10.6.1',
     },
     # maybe remove?
@@ -47,6 +47,7 @@ ARCHIVE_VERSIONS = {
     },
     'Astra Linux (Smolensk) 1.6': {
         'postgrespro-std-9.6': '9.6.11.1',
+        'postgrespro-ent-9.6': '9.6.13.1',
         'postgrespro-std-10': '10.7.1',
         'postgrespro-ent-10': '10.6.2'
     },
@@ -59,7 +60,7 @@ ARCHIVE_VERSIONS = {
     },
     'Debian GNU/Linux 9': {
         'postgrespro-std-9.6': '9.6.10.2',
-        'postgrespro-ent-9.6': '9.6.12.1'
+        'postgrespro-ent-9.6': '9.6.13.1'
     },
     'Debian GNU/Linux 8': {
         'postgrespro-ent-9.6': '9.6.7.1'
