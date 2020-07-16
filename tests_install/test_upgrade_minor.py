@@ -60,7 +60,7 @@ ARCHIVE_VERSIONS = {
     },
     'Debian GNU/Linux 9': {
         'postgrespro-std-9.6': '9.6.10.2',
-        'postgrespro-ent-9.6': '9.6.12.1'
+        'postgrespro-ent-9.6': '9.6.13.1'
     },
     'Debian GNU/Linux 8': {
         'postgrespro-ent-9.6': '9.6.7.1'
