@@ -101,12 +101,21 @@ class TestMakeCheck(object):
             pginst.install_perl_win()
             pginst.install_postgres_win(port=55432)
 
-        # PGPRO-3591
-        if version != "9.6":
+        if version != "9.6" or self.system == 'Windows':
             buildinfo = os.path.join(pginst.get_pg_prefix(),
                                      'doc', 'buildinfo.txt')
-            with open(buildinfo, 'r') as bi:
-                print("The binary package buildinfo:\n%s\n" % bi.read())
+        else:
+            buildinfo = subprocess.check_output(
+                'ls /usr/share/doc/postgrespro*/buildinfo.txt',
+                shell=True).decode(ConsoleEncoding).strip()
+
+        with open(buildinfo, 'r') as bi:
+            bitxt = bi.read()
+            assert(re.search(r'^Documentation translation', bitxt,
+                             re.MULTILINE))
+            assert(re.search(r'^Source', bitxt, re.MULTILINE))
+            assert(re.search(r'^SPEC', bitxt, re.MULTILINE))
+            print("The binary package buildinfo:\n%s\n" % bi.read())
 
         pginst.exec_psql("ALTER SYSTEM SET max_worker_processes = 16")
         pginst.exec_psql("ALTER SYSTEM SET lc_messages = 'C'")
