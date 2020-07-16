@@ -47,6 +47,7 @@ ARCHIVE_VERSIONS = {
     },
     'Astra Linux (Smolensk) 1.6': {
         'postgrespro-std-9.6': '9.6.11.1',
+        'postgrespro-ent-9.6': '9.6.13.1',
         'postgrespro-std-10': '10.7.1',
         'postgrespro-ent-10': '10.6.2'
     },
