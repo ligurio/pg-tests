@@ -424,7 +424,7 @@
     when: ansible_os_family != "Windows" and not ansible_python_version.startswith('2.')
 
   - name: install required pip modules 2
-    shell: pip install --no-index --find-links file:///home/test/pg-tests/pip-packages -r /home/test/pg-tests/tests_install/requirements2.txt
+    shell: umask 0022; pip install --no-index --find-links file:///home/test/pg-tests/pip-packages -r /home/test/pg-tests/tests_install/requirements2.txt
     args:
       warn: no
     become_method: su
