@@ -106,7 +106,7 @@ FIRST_RELEASE = {
         'postgresql--12': None,
     },
     # redos-7
-    "RED OS 7.1": {
+    "RED OS 7.2": {
         'postgresql--9.6': None,
         'postgresql--10': None,
         'postgresql--11': None,
