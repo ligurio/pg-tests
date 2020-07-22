@@ -86,13 +86,13 @@ PRELOAD_LIBRARIES = {
          'shared_ispell', 'pg_wait_sampling',
          'pg_pathman'],
     'ent-11':
-        ['auth_delay', 'auto_explain', 'in_memory',
+        ['auth_delay', 'auto_explain', 'in_memory', 'timescaledb',
          'pgpro_scheduler',
          'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
          'pg_pathman'],
     'std-11':
-        ['auth_delay', 'auto_explain',
+        ['auth_delay', 'auto_explain', 'timescaledb',
          'plantuner', 'shared_ispell', 'pg_pathman'],
     'std-12':
         ['auth_delay', 'auto_explain',
@@ -1548,6 +1548,10 @@ baseurl=%s
             pgid = '%s-%s' % (self.edition, self.version)
             if pgid in PRELOAD_LIBRARIES:
                 preload_libs = PRELOAD_LIBRARIES[pgid]
+                if 'timescaledb' in preload_libs and \
+                        'timescaledb' not in \
+                        ' '.join(self.all_packages_in_repo):
+                    preload_libs.remove('timescaledb')
                 libs = ','.join(preload_libs)
         if libs:
             self.exec_psql(

@@ -72,7 +72,7 @@ if which apt-get; then
 elif which zypper; then
     zypper install -y gcc make
 elif which yum; then
-    yum install -y gcc make
+    yum install -y gcc make redhat-rpm-config
 fi
 tar fax ../extras/pg_wait_sampling.tar.gz -C /tmp && \
 cd /tmp/pg_wait_sampling*/
