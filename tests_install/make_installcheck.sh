@@ -21,6 +21,7 @@ elif which yum >/dev/null 2>&1; then
     yum install -y perl-devel || true
     yum install -y perl-IPC-Run
     yum install -y perl-Test-Simple perl-Time-HiRes
+    yum install -y perl-bignum || true
     # perl-IPC-Run is not present in some distributions (rhel-7, rosa-sx-7...)
 fi
 if ! perl -e "use IPC::Run"  >/dev/null 2>&1; then
