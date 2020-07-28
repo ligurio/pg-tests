@@ -620,7 +620,7 @@ class PgInstall:
                         baseurl = os.path.join(baseurl,
                                                "7/os/$basearch/rpms")
                     elif self.os_name == "RED OS" and \
-                            self.os_version == "7.1":
+                            self.os_version.startswith("7."):
                         baseurl = os.path.join(baseurl,
                                                "7/os/$basearch/rpms")
                     elif self.os_name == "Red Hat Enterprise Linux" and \
@@ -1041,6 +1041,8 @@ baseurl=%s
         return self.os.remove_package(pkg_name, purge)
 
     def remove_full(self, remove_data=False, purge=False, do_not_remove=None):
+        if do_not_remove is None:
+            do_not_remove = []
         if self.os.is_windows():
             # TODO: Don't stop the service manually
             if self.pg_isready():
@@ -1060,6 +1062,9 @@ baseurl=%s
                 time.sleep(1)
         else:
             pkgs = self.all_packages_in_repo
+            if self.os_name == "RED OS" and \
+                            self.os_version == '7.2':
+                do_not_remove.append(r".*zstd.*")
             if do_not_remove:
                 for pkg in pkgs[:]:
                     for template in do_not_remove:
