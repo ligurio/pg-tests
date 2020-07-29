@@ -42,8 +42,6 @@ if grep 'SUSE Linux Enterprise Server 11' /etc/SuSE-release >/dev/null 2>&1; the
     (cd test-more*/ && perl Makefile.PL && make && make install)
 fi
 
-tar fax postgres*.tar*
-
 cd postgres*/
 echo 'The source archive buildinfo:'
 cat doc/buildinfo.txt

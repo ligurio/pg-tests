@@ -860,7 +860,7 @@ baseurl=%s
         while attempt < 9:
             try:
                 urlretrieve(tar_url, tar_href)
-                return
+                return tar_href
             except Exception as ex:
                 print('Exception occured while downloading sources "%s":' %
                       tar_url)
@@ -872,6 +872,7 @@ baseurl=%s
                 time.sleep(timeout)
         # Last attempt
         urlretrieve(tar_url, tar_href)
+        return tar_href
 
     def install_package(self, pkg_name):
         return self.os.install_package(pkg_name)

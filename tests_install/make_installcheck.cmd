@@ -6,7 +6,7 @@ PowerShell -Command "Set-MpPreference -DisableRealtimeMonitoring $true" 2>NUL
 
 rmdir /S /Q %MD% 2>NUL
 mkdir %MD%\var\src
-copy postgres*.tar.bz2 %MD%\var\src\
+for /d %%A in (postgres*) do mklink /D "%MD%\var\src\%%A" "%%~fA"
 xcopy patches %MD%\var\src\patches\ /E
 
 @REM Output bash script contained in this CMD
@@ -66,7 +66,6 @@ curl -s -O http://cpan.metacpan.org/authors/id/T/TO/TODDR/IPC-Run-20200505.0.tar
 tar fax IPC-Run*
 (cd IPC-Run*/ && perl Makefile.PL && make && make install)
 echo "`date -Iseconds`: Source archive extracting... "
-tar fax postgres*.tar.bz2
 cd postgres*/
 echo 'The source archive buildinfo:'
 cat doc/buildinfo.txt
