@@ -564,14 +564,14 @@
     when: ansible_os_family == "Windows" and
           (ansible_architecture == "32-bit" or ansible_architecture == "32-разрядная")
     win_get_url:
-      url: 'http://dist.l.postgrespro.ru/resources/windows/python-3.8.2.exe'
+      url: 'http://dist.l.postgrespro.ru/resources/windows/python-3.8.exe'
       dest: 'C:\Users\test\python-3.8.exe'
 
   - name: windows - download Python 3.8 installer  (64 bit)
     when: ansible_os_family == "Windows" and
           (ansible_architecture == "64-bit" or ansible_architecture == "64-разрядная")
     win_get_url:
-      url: 'http://dist.l.postgrespro.ru/resources/windows/python-3.8.2-amd64.exe'
+      url: 'http://dist.l.postgrespro.ru/resources/windows/python-3.8-amd64.exe'
       dest: 'C:\Users\test\python-3.8.exe'
 
   - name: windows - install python
