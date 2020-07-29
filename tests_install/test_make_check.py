@@ -5,9 +5,10 @@ import distro
 import subprocess
 import os
 import re
-
+import tarfile
 import pytest
 import allure
+import shutil
 
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall, PRELOAD_LIBRARIES
@@ -88,7 +89,10 @@ class TestMakeCheck(object):
 
         pginst.setup_repo()
         print("Running on %s." % target)
-        pginst.download_source()
+        tarball = pginst.download_source()
+        tar = tarfile.open(tarball, 'r:bz2')
+        tar.extractall()
+        tar.close()
         if self.system != 'Windows':
             pginst.install_full()
             pginst.initdb_start()
@@ -117,6 +121,12 @@ class TestMakeCheck(object):
             assert(re.search(r'^SPEC', bitxt, re.MULTILINE))
             print("The binary package buildinfo:\n%s\n" % bi.read())
 
+        dir = '.'.join(tarball.split('.')[:-2])
+        shutil.copyfile(os.path.join(dir, 'src', 'backend', 'utils',
+                                     'misc', 'postgresql.conf.sample'),
+                        os.path.join(pginst.get_configdir(),
+                                     'postgresql.conf'))
+
         pginst.exec_psql("ALTER SYSTEM SET max_worker_processes = 16")
         pginst.exec_psql("ALTER SYSTEM SET lc_messages = 'C'")
         # Prepare pg_hba.conf for src/interfaces/ecpg/test/connect/test5
@@ -130,7 +140,6 @@ class TestMakeCheck(object):
             conf.write(hba)
         pginst.load_shared_libraries(restart_service=False)
         pginst.restart_service()
-
         if self.system != 'Windows':
             subprocess.check_call(
                 '"%s" "%s"' % (os.path.join(curpath, 'make_installcheck.sh'),
