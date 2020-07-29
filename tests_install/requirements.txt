@@ -6,7 +6,7 @@ matplotlib
 netaddr
 numpy
 psutil
-pytest
+pytest==5.4.3
 pytest-html
 pytest-json
 enum34
