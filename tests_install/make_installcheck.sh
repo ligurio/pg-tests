@@ -102,6 +102,7 @@ patch -p1 --dry-run -i ../patches/69ae9dcb.patch >/dev/null 2>&1 && patch -p1 -i
 set -o pipefail
 sudo -u postgres ./configure --enable-tap-tests --without-readline --prefix=$1 $extraoption || exit $?
 
+test -f contrib/mchar/mchar.sql.in && make -C contrib/mchar mchar.sql
 # Pass to `make installcheck` all the options (with-*, enable-*), which were passed to configure
 confopts="python_majorversion=2"
 opts=`$1/bin/pg_config --configure | grep -Eo "'[^']*'|[^' ]*" | sed -e "s/^'//" -e "s/'$//"`
