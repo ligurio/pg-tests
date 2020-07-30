@@ -104,8 +104,7 @@ class TestMakeCheck(object):
         else:
             pginst.install_perl_win()
             pginst.install_postgres_win(port=55432)
-
-        if version != "9.6" or self.system == 'Windows':
+        if version != "9.6" or self.system == 'Windows' or edition == '1c':
             buildinfo = os.path.join(pginst.get_pg_prefix(),
                                      'doc', 'buildinfo.txt')
         else:
@@ -126,6 +125,10 @@ class TestMakeCheck(object):
                                      'misc', 'postgresql.conf.sample'),
                         os.path.join(pginst.get_configdir(),
                                      'postgresql.conf'))
+        shutil.copyfile(os.path.join(dir, 'src', 'backend', 'utils',
+                                     'misc', 'postgresql.conf.sample'),
+                        os.path.join(pginst.get_pg_prefix(), 'share',
+                                     'postgresql.conf.sample'))
 
         pginst.exec_psql("ALTER SYSTEM SET max_worker_processes = 16")
         pginst.exec_psql("ALTER SYSTEM SET lc_messages = 'C'")
