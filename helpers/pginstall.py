@@ -932,8 +932,9 @@ baseurl=%s
         if self.product == "postgrespro":
             if self.version in ['9.5', '9.6']:
                 if self.os.is_astra() or \
-                   self.os.is_redhat_based() or \
-                   self.os.is_debian_based():
+                        self.os.is_redhat_based() or \
+                        self.os.is_debian_based() or \
+                        (self.os.is_altlinux() and self.edition == '1c'):
                     self.client_path_needed = True
                     self.server_path_needed = True
         elif self.product == "postgresql":
