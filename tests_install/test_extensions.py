@@ -79,9 +79,6 @@ class TestExtensions():
 
     @pytest.mark.test_pgbadger
     def test_pgbadger(self, request):
-        logdir = request.cls.logdir
-        if logdir is None:
-            return
         pginst = request.cls.pginst
         if pginst.edition not in ['std', 'std-cert', 'ent', 'ent-cert']:
             print("The pgbadger test is only performed "
@@ -90,6 +87,7 @@ class TestExtensions():
         if pginst.windows:
             print("The pgbadger test is not supported on Windows")
             return
+        logdir = request.cls.logdir
         pginst.install_package('pgpro-pgbadger')
         cmd = "pgbadger -V"
         pgbadger_version = subprocess.check_output(cmd, shell=True).\
