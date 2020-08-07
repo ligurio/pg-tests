@@ -350,7 +350,7 @@
       name: haldaemon
       state: stopped
       enabled: no
-    when: ansible_os_family == "МСВСфера"
+    when: ansible_os_family == "МСВСфера" or ansible_os_family == "MSVSphere"
     become_method: su
     become: true
 

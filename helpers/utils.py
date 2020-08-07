@@ -369,6 +369,13 @@ def get_distro(remote=False, ip=None):
     else:
         os = platform.platform()
         if "Linux" in os:
+            # Workaround for lsb_release returning "n/a" in MSVSphere 6.3
+            if distro.name(True) == "MSVSphere 6.3":
+                return "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0\xb5" \
+                    "\xd1\x80\xd0\xb0 \xd0\xa1\xd0\xb5\xd1\x80\xd0\xb2" \
+                    "\xd0\xb5\xd1\x80", \
+                    "6.3", \
+                    platform.machine()
             return distro.linux_distribution()[0].strip('"'), \
                 distro.linux_distribution()[1], \
                 platform.machine()
