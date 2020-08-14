@@ -21,6 +21,7 @@ elif which yum >/dev/null 2>&1; then
     yum install -y perl-devel || true
     yum install -y perl-IPC-Run
     yum install -y perl-Test-Simple perl-Time-HiRes
+    yum install -y perl-bignum || true
     # perl-IPC-Run is not present in some distributions (rhel-7, rosa-sx-7...)
 fi
 if ! perl -e "use IPC::Run"  >/dev/null 2>&1; then
@@ -40,8 +41,6 @@ if grep 'SUSE Linux Enterprise Server 11' /etc/SuSE-release >/dev/null 2>&1; the
     tar fax extras/test-more* && \
     (cd test-more*/ && perl Makefile.PL && make && make install)
 fi
-
-tar fax postgres*.tar*
 
 cd postgres*/
 echo 'The source archive buildinfo:'
@@ -103,6 +102,7 @@ patch -p1 --dry-run -i ../patches/69ae9dcb.patch >/dev/null 2>&1 && patch -p1 -i
 set -o pipefail
 sudo -u postgres ./configure --enable-tap-tests --without-readline --prefix=$1 $extraoption || exit $?
 
+test -f contrib/mchar/mchar.sql.in && make -C contrib/mchar mchar.sql
 # Pass to `make installcheck` all the options (with-*, enable-*), which were passed to configure
 confopts="python_majorversion=2"
 opts=`$1/bin/pg_config --configure | grep -Eo "'[^']*'|[^' ]*" | sed -e "s/^'//" -e "s/'$//"`

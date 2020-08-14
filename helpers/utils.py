@@ -11,6 +11,8 @@ import difflib
 import math
 import gc
 import locale
+import random
+import time
 
 from enum import Enum
 from time import sleep
@@ -95,6 +97,29 @@ def command_executor(cmd, remote=False, host=None,
                 else:
                     print(cmd)
                     return subprocess.check_call(shlex.split(cmd))
+
+
+def exec_retry(cmd, cwd='.', description='', retry_cnt=10):
+    attempt = 1
+    timeout = 0
+    if not description:
+        description = cmd
+    print(description + '...')
+    while attempt < retry_cnt:
+        try:
+            return subprocess.check_output(cmd, cwd=cwd, shell=True)
+        except Exception as ex:
+            print('Exception occured while running "%s":' % cmd)
+            print(ex)
+            print('========')
+            attempt += 1
+            timeout += random.randint(1, 8)
+            print('Retrying (attempt %d with delay for %d seconds)...' %
+                  (attempt, timeout))
+            time.sleep(timeout)
+    if retry_cnt > 1:
+        print('Last attempt to execute the command...\n')
+    return subprocess.check_output(cmd, cwd=cwd, shell=True)
 
 
 def get_virt_ip():
@@ -196,6 +221,7 @@ def exec_command(cmd, hostname, login, password,
                 paramiko.SSHException,
                 socket.error,
                 Exception) as e:
+            print("Try %s of %s" % (trc + 1, connect_retry_count))
             if trc >= connect_retry_count - 1:
                 raise e
             sleep(CONNECT_RETRY_DELAY)
@@ -297,7 +323,7 @@ def exec_command_win(cmd, hostname,
             return retcode, stdout, stderr
 
 
-def wait_for_boot(host, time=300, linux=True):
+def wait_for_boot(host, time=600, linux=True):
     print("Waiting for control protocol availability.")
     if linux:
         exec_command(None, host, REMOTE_LOGIN, REMOTE_PASSWORD,
@@ -343,6 +369,13 @@ def get_distro(remote=False, ip=None):
     else:
         os = platform.platform()
         if "Linux" in os:
+            # Workaround for lsb_release returning "n/a" in MSVSphere 6.3
+            if distro.name(True) == "MSVSphere 6.3":
+                return "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0\xb5" \
+                    "\xd1\x80\xd0\xb0 \xd0\xa1\xd0\xb5\xd1\x80\xd0\xb2" \
+                    "\xd0\xb5\xd1\x80", \
+                    "6.3", \
+                    platform.machine()
             return distro.linux_distribution()[0].strip('"'), \
                 distro.linux_distribution()[1], \
                 platform.machine()

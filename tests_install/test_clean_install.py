@@ -74,8 +74,9 @@ class TestCleanInstall():
             return subprocess.check_output(cmd, shell=True)
 
         if self.system == 'Windows' or \
-           pginst.product != "postgrespro" or \
-           pginst.version in ['9.5', '9.6']:
+                pginst.product != "postgrespro" or \
+                pginst.version in ['9.5', '9.6'] or \
+                (pginst.version == '9.6' and pginst.edition == '1c'):
             return
         pginst.stop_service()
         os.unlink('/etc/default/postgrespro-%s-%s' %

@@ -20,13 +20,26 @@
             distribution {{ ansible_distribution }} {{ ansible_distribution_major_version }} \
             ({{ ansible_architecture }})."
 
-  - name: Fix private temps (ALT 8,9)
+  - name: Disable graphical target in systemd
+    shell: systemctl set-default multi-user.target
+    args:
+      warn: no
+    become_method: su
+    become: true
+    when: (ansible_os_family != "Windows" and ansible_service_mgr == "systemd")
+      and not ((ansible_distribution == "ALT" or ansible_distribution == "Altlinux") and ansible_distribution_major_version == "8")
+    ignore_errors: yes
+    tags:
+    - skip_ansible_lint
+
+  - name: Fix private temps (ALT 7,8,9)
     shell: /usr/sbin/control pam_mktemp disabled
     args:
       warn: no
     become_method: su
     become: true
-    when: (ansible_distribution == "ALT" or ansible_distribution == "Altlinux") and (ansible_distribution_major_version == "8" or ansible_distribution_major_version == "9")
+    when: (ansible_distribution == "ALT" or ansible_distribution == "Altlinux") and
+      (ansible_distribution_major_version == "7" or ansible_distribution_major_version == "8" or ansible_distribution_major_version == "9")
     tags:
     - skip_ansible_lint
 
@@ -66,6 +79,17 @@
     args:
       warn: no
     when: ansible_distribution == 'ALT' or ansible_distribution == 'Altlinux'
+    become_method: su
+    become: true
+    tags:
+    - skip_ansible_lint
+
+  - name: Disable env_reset (ALT 7,8)
+    shell: sed -e 's/#\(Defaults:WHEEL_USERS\s\+!env_reset\)/\1/' -i /etc/sudoers
+    args:
+      warn: no
+    when: (ansible_distribution == 'ALT' or ansible_distribution == 'Altlinux') and
+      (ansible_distribution_major_version == "7" or ansible_distribution_major_version == "8")
     become_method: su
     become: true
     tags:
@@ -326,7 +350,7 @@
       name: haldaemon
       state: stopped
       enabled: no
-    when: ansible_os_family == "МСВСфера"
+    when: ansible_os_family == "МСВСфера" or ansible_os_family == "MSVSphere"
     become_method: su
     become: true
 
@@ -400,7 +424,7 @@
     when: ansible_os_family != "Windows" and not ansible_python_version.startswith('2.')
 
   - name: install required pip modules 2
-    shell: pip install --no-index --find-links file:///home/test/pg-tests/pip-packages -r /home/test/pg-tests/tests_install/requirements2.txt
+    shell: umask 0022; pip install --no-index --find-links file:///home/test/pg-tests/pip-packages -r /home/test/pg-tests/tests_install/requirements2.txt
     args:
       warn: no
     become_method: su
@@ -540,14 +564,14 @@
     when: ansible_os_family == "Windows" and
           (ansible_architecture == "32-bit" or ansible_architecture == "32-разрядная")
     win_get_url:
-      url: 'http://dist.l.postgrespro.ru/resources/windows/python-3.8.2.exe'
+      url: 'http://dist.l.postgrespro.ru/resources/windows/python-3.8.exe'
       dest: 'C:\Users\test\python-3.8.exe'
 
   - name: windows - download Python 3.8 installer  (64 bit)
     when: ansible_os_family == "Windows" and
           (ansible_architecture == "64-bit" or ansible_architecture == "64-разрядная")
     win_get_url:
-      url: 'http://dist.l.postgrespro.ru/resources/windows/python-3.8.2-amd64.exe'
+      url: 'http://dist.l.postgrespro.ru/resources/windows/python-3.8-amd64.exe'
       dest: 'C:\Users\test\python-3.8.exe'
 
   - name: windows - install python

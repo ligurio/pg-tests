@@ -28,7 +28,7 @@ ARCHIVE_VERSIONS = {
     },
     # altlinux-spt-7
     "ALT Linux 7.0.4": {
-        'postgrespro-ent-9.6': '9.6.12.1',
+        'postgrespro-ent-9.6': '9.6.13.1',
         'postgrespro-ent-10': '10.6.1',
     },
     # maybe remove?
@@ -47,6 +47,7 @@ ARCHIVE_VERSIONS = {
     },
     'Astra Linux (Smolensk) 1.6': {
         'postgrespro-std-9.6': '9.6.11.1',
+        'postgrespro-ent-9.6': '9.6.13.1',
         'postgrespro-std-10': '10.7.1',
         'postgrespro-ent-10': '10.6.2'
     },
@@ -59,7 +60,7 @@ ARCHIVE_VERSIONS = {
     },
     'Debian GNU/Linux 9': {
         'postgrespro-std-9.6': '9.6.10.2',
-        'postgrespro-ent-9.6': '9.6.12.1'
+        'postgrespro-ent-9.6': '9.6.13.1'
     },
     'Debian GNU/Linux 8': {
         'postgrespro-ent-9.6': '9.6.7.1'
@@ -84,7 +85,7 @@ ARCHIVE_VERSIONS = {
         'postgrespro-ent-9.6': '9.6.8.1',
         'postgrespro-ent-10': '10.2.1'
     },
-    'RED OS 7.1': {
+    'RED OS 7.2': {
         'postgrespro-std-9.6': '9.6.11.1',
         'postgrespro-std-10': '10.6.1',
         'postgrespro-ent-9.6': None,
@@ -182,10 +183,12 @@ def get_test_versions(edition, version, specified_version, current_version):
     # Choose two versions -- newest and oldest supported
     soup = BeautifulSoup(urlopen(archive_url))
     arcversions = []
+    startswith = 'pgproee-' if edition == 'ent' else \
+        ('pgpro-' if edition == 'std' else 'pg1c-')
     specified_version_found = False
     for link in soup.findAll('a'):
         href = link.get('href')
-        if href.startswith('pgpro') and href.endswith('/'):
+        if href.startswith(startswith) and href.endswith('/'):
             vere = re.search(r'\w+-([0-9.]+)/', href)
             if vere:
                 if vere.group(1).startswith(version):

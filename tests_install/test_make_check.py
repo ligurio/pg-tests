@@ -5,9 +5,10 @@ import distro
 import subprocess
 import os
 import re
-
+import tarfile
 import pytest
 import allure
+import shutil
 
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall, PRELOAD_LIBRARIES
@@ -88,7 +89,10 @@ class TestMakeCheck(object):
 
         pginst.setup_repo()
         print("Running on %s." % target)
-        pginst.download_source()
+        tarball = pginst.download_source()
+        tar = tarfile.open(tarball, 'r:bz2')
+        tar.extractall()
+        tar.close()
         if self.system != 'Windows':
             pginst.install_full()
             pginst.initdb_start()
@@ -100,13 +104,31 @@ class TestMakeCheck(object):
         else:
             pginst.install_perl_win()
             pginst.install_postgres_win(port=55432)
-
-        # PGPRO-3591
-        if version != "9.6":
+        if version != "9.6" or self.system == 'Windows' or edition == '1c':
             buildinfo = os.path.join(pginst.get_pg_prefix(),
                                      'doc', 'buildinfo.txt')
-            with open(buildinfo, 'r') as bi:
-                print("The binary package buildinfo:\n%s\n" % bi.read())
+        else:
+            buildinfo = subprocess.check_output(
+                'ls /usr/share/doc/postgrespro*/buildinfo.txt',
+                shell=True).decode(ConsoleEncoding).strip()
+
+        with open(buildinfo, 'r') as bi:
+            bitxt = bi.read()
+            assert(re.search(r'^Documentation translation', bitxt,
+                             re.MULTILINE))
+            assert(re.search(r'^Source', bitxt, re.MULTILINE))
+            assert(re.search(r'^SPEC', bitxt, re.MULTILINE))
+            print("The binary package buildinfo:\n%s\n" % bi.read())
+
+        dir = '.'.join(tarball.split('.')[:-2])
+        shutil.copyfile(os.path.join(dir, 'src', 'backend', 'utils',
+                                     'misc', 'postgresql.conf.sample'),
+                        os.path.join(pginst.get_configdir(),
+                                     'postgresql.conf'))
+        shutil.copyfile(os.path.join(dir, 'src', 'backend', 'utils',
+                                     'misc', 'postgresql.conf.sample'),
+                        os.path.join(pginst.get_pg_prefix(), 'share',
+                                     'postgresql.conf.sample'))
 
         pginst.exec_psql("ALTER SYSTEM SET max_worker_processes = 16")
         pginst.exec_psql("ALTER SYSTEM SET lc_messages = 'C'")
@@ -121,7 +143,6 @@ class TestMakeCheck(object):
             conf.write(hba)
         pginst.load_shared_libraries(restart_service=False)
         pginst.restart_service()
-
         if self.system != 'Windows':
             subprocess.check_call(
                 '"%s" "%s"' % (os.path.join(curpath, 'make_installcheck.sh'),

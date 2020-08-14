@@ -34,8 +34,8 @@ elif which zypper; then
     zypper install -y boost-devel
     if grep -q 'PRETTY_NAME="SUSE Linux Enterprise Server 12' /etc/os-release; then
       wget http://download.opensuse.org/distribution/\
-openSUSE-stable/repo/oss/noarch/autoconf-archive-2017.09.28-lp151.2.1.noarch.rpm
-      rpm -i autoconf-archive-2017.09.28-lp151.2.1.noarch.rpm
+openSUSE-stable/repo/oss/noarch/autoconf-archive-2017.09.28-lp152.3.2.noarch.rpm
+      rpm -i autoconf-archive*.noarch.rpm
     else
       zypper install -y autoconf autoconf-archive automake
       zypper install -y libboost_regex*
@@ -69,6 +69,9 @@ curl --tlsv1.2 -sS -L https://github.com/jtv/libpqxx/archive/6.1.0.tar.gz \
 wget https://github.com/jtv/libpqxx/archive/6.1.0.tar.gz -O libpqxx.tar.gz
 tar fax libpqxx.tar.gz
 cd libpqxx*/
+if which python3 >/dev/null 2>&1; then
+  sed -e 's|^#! /usr/bin/env python$|#! /usr/bin/env python3|' -i tools/splitconfig tools/*.py # https://github.com/jtv/libpqxx/commit/c6cb952f
+fi
 CXXFLAGS="-std=c++11" ./configure --disable-documentation && make && make install
 
 cd ~test/pg-tests

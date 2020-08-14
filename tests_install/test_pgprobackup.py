@@ -18,10 +18,11 @@ import tarfile
 
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall, PGPRO_DEV_SOURCES_BASE,\
-    PGPRO_ARCHIVE_SOURCES_BASE, PGPRO_STABLE_SOURCES_BASE
+    PGPRO_ARCHIVE_SOURCES_BASE, PGPRO_STABLE_SOURCES_BASE, REDHAT_BASED
 from helpers.utils import download_dump, diff_dbs
 
-tempdir = tempfile.gettempdir()
+tempdir = os.path.join(os.path.abspath(os.getcwd()), 'tmp')
+os.mkdir(tempdir)
 
 
 truncate_unlogged_sql = """
@@ -129,10 +130,11 @@ class TestPgprobackup():
         request.node.add_marker(tag_mark)
         branch = request.config.getoption('--branch')
 
+        request.cls.skip = False
         if name != 'postgrespro' or edition == '1c':
             print("PgProBackup test is only for postgrespro std and ent.")
+            request.cls.skip = True
             return
-
         # Step 1
         self.pginst = PgInstall(product=name, edition=edition, version=version,
                                 milestone=milestone, branch=branch,
@@ -144,6 +146,8 @@ class TestPgprobackup():
             self.pginst.initdb_start()
         else:
             self.pginst.install_postgres_win()
+
+        self.fix_permissions(tempdir)
 
         self.bindir = self.pginst.get_bin_path() + os.sep
         print('Bindir is %s' % self.bindir)
@@ -163,10 +167,10 @@ class TestPgprobackup():
 
     @pytest.mark.test_pgprobackup_internal
     def test_pgprobackup_internal(self, request):
-        self.pginst = request.cls.pginst
-        if self.pginst.product != 'postgrespro' or self.pginst.edition == '1c':
+        if request.cls.skip:
             print("PgProBackup test is only for postgrespro std and ent.")
             return
+        self.pginst = request.cls.pginst
         # PBCKP-103
         if sys.version_info > (3, 0):
             print("Only 2 python temporary supported")
@@ -185,10 +189,12 @@ class TestPgprobackup():
         dir = '.'.join(tar_file.split('.')[:-2])
         print(dir)
         self.fix_permissions(dir)
-        subprocess.check_call('pip install testgres==1.8.2', shell=True)
+        subprocess.check_call('pip2 install testgres==1.8.2', shell=True)
         cmd = "%s sh -c 'PG_CONFIG=\"%s/pg_config\" LANG=C" \
-              " PG_PROBACKUP_TEST_BASIC=ON python -m unittest -v tests'" \
-              % (self.pginst.pg_sudo_cmd, self.pginst.get_bin_path())
+              " PG_PROBACKUP_TEST_BASIC=ON python%s -m unittest -v tests'" \
+              % (self.pginst.pg_sudo_cmd, self.pginst.get_bin_path(),
+                 '2.7' if self.pginst.os_name in REDHAT_BASED and
+                 self.pginst.os_version.startswith('6') else '')
         print(subprocess.check_output(cmd, cwd=dir, shell=True).decode())
         print("OK")
 
@@ -208,10 +214,10 @@ class TestPgprobackup():
         10. Check that backup status is OK
         11. Check that backup validation is OK
         """
-        self.pginst = request.cls.pginst
-        if self.pginst.product != 'postgrespro' or self.pginst.edition == '1c':
+        if request.cls.skip:
             print("PgProBackup test is only for postgrespro std and ent.")
             return
+        self.pginst = request.cls.pginst
         self.bindir = self.pginst.get_bin_path() + os.sep
         # Step 1
         backup_dir = os.path.join(tempdir, 'backup')
@@ -226,7 +232,16 @@ class TestPgprobackup():
         # Step 5
         if self.pginst.edition == 'ent':
             self.pginst.exec_psql("ALTER SYSTEM SET cfs_gc_workers TO '0'")
-        self.pginst.exec_psql("ALTER SYSTEM SET wal_level TO 'replica'")
+        if self.pginst.version == '9.6':
+            with open(os.path.join(self.pginst.get_default_configdir(),
+                                   "pg_hba.conf"), "a") as hba:
+                hba.write("host replication all all  trust") \
+                    if self.system == 'Windows' else \
+                    hba.write("local replication all  trust")
+
+            self.pginst.exec_psql("ALTER SYSTEM SET wal_level TO 'replica'")
+            self.pginst.exec_psql("ALTER SYSTEM SET max_wal_senders TO '1'")
+            self.pginst.restart_service()
         dump_file_name = download_dump(self.pginst.product,
                                        self.pginst.edition,
                                        self.pginst.version, tempdir)
@@ -259,7 +274,12 @@ class TestPgprobackup():
         self.execute_pg_probackup("backup", "-b", "full", "-B",
                                   '"%s"' % backup_dir, "-d", "postgres",
                                   "-U", "postgres", "--instance",
-                                  "main", "--stream")
+                                  "main", "--stream", "" if
+                                  self.pginst.get_default_datadir() ==
+                                  self.pginst.get_default_configdir()
+                                  else "--external-dirs=%s" %
+                                       self.pginst.get_default_configdir()
+                                  )
         # Step 9
         # Get last backup id and get out for show command with this backup
         pgprobackup_show = json.loads(

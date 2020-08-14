@@ -175,10 +175,10 @@ def check_executables(pginst, packages):
             good_lines = 0
             for line in gdbout:
                 if re.match(r'Breakpoint 1, [a-z0-9_:]*main ', line):
-                    good_lines += 1
+                    good_lines |= 1
                 if re.match(r'#0\s+([a-z0-9_:]*main|'
                             r'get_progname|pg_logging_init)\s+\(', line):
-                    good_lines += 1
+                    good_lines |= 2
                 # PGPRO-3733 (system libraries CRC failed in altlinux-spt-8)
                 if not (pginst.os_name == 'ALT SPServer'
                         and pginst.os_version == '8.0'
@@ -187,7 +187,7 @@ def check_executables(pginst, packages):
                     print("gdb for %s output:" % f, gdbout)
                     raise Exception("CRC mismatch in debuginfo for %s"
                                     " (or dependencies)." % f)
-            if good_lines != 2:
+            if good_lines != 3:
                 if f in ['/usr/bin/pzstd', '/usr/bin/zstd']:
                     # a newer zstd can be installed from epel (on RH),
                     # but zstd-debuginfo will still be ours

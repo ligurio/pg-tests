@@ -86,13 +86,13 @@ PRELOAD_LIBRARIES = {
          'shared_ispell', 'pg_wait_sampling',
          'pg_pathman'],
     'ent-11':
-        ['auth_delay', 'auto_explain', 'in_memory',
+        ['auth_delay', 'auto_explain', 'in_memory', 'timescaledb',
          'pgpro_scheduler',
          'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
          'pg_pathman'],
     'std-11':
-        ['auth_delay', 'auto_explain',
+        ['auth_delay', 'auto_explain', 'timescaledb',
          'plantuner', 'shared_ispell', 'pg_pathman'],
     'std-12':
         ['auth_delay', 'auto_explain',
@@ -133,6 +133,8 @@ PRELOAD_LIBRARIES = {
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
          'pg_pathman', 'passwordcheck'],
+    '1c-9.6':
+        ['auth_delay', 'auto_explain', 'plantuner'],
     '1c-10':
         ['auth_delay', 'auto_explain', 'plantuner'],
     '1c-11':
@@ -248,6 +250,9 @@ class PgInstall:
 
     def get_base_package_name(self):
         if self.product == 'postgrespro':
+            if self.version == '9.6' and self.edition == '1c':
+                return 'postgresql-pro-1c-9.6' if self.os.is_debian_based() \
+                    else 'postgresql96'
             if self.version in ['9.5', '9.6']:
                 if self.os.is_altlinux():
                     if self.edition in ['ent', 'ent-cert']:
@@ -301,7 +306,9 @@ class PgInstall:
         if self.product == 'postgrespro':
             if self.version in ['9.5', '9.6']:
                 if self.os.is_debian_based():
-                    return '%s-server-dev-%s' % (self.product, self.version)
+                    return '%s-server-dev-%s' % (self.product, self.version) \
+                        if not self.edition == '1c' else \
+                        'postgresql-server-dev-pro-1c-%s' % self.version
             return base_package + (
                 '-dev' if self.os.is_debian_based() else '-devel')
         elif self.product == 'postgresql':
@@ -620,7 +627,7 @@ class PgInstall:
                         baseurl = os.path.join(baseurl,
                                                "7/os/$basearch/rpms")
                     elif self.os_name == "RED OS" and \
-                            self.os_version == "7.1":
+                            self.os_version.startswith("7."):
                         baseurl = os.path.join(baseurl,
                                                "7/os/$basearch/rpms")
                     elif self.os_name == "Red Hat Enterprise Linux" and \
@@ -860,7 +867,7 @@ baseurl=%s
         while attempt < 9:
             try:
                 urlretrieve(tar_url, tar_href)
-                return
+                return tar_href
             except Exception as ex:
                 print('Exception occured while downloading sources "%s":' %
                       tar_url)
@@ -872,6 +879,7 @@ baseurl=%s
                 time.sleep(timeout)
         # Last attempt
         urlretrieve(tar_url, tar_href)
+        return tar_href
 
     def install_package(self, pkg_name):
         return self.os.install_package(pkg_name)
@@ -924,8 +932,9 @@ baseurl=%s
         if self.product == "postgrespro":
             if self.version in ['9.5', '9.6']:
                 if self.os.is_astra() or \
-                   self.os.is_redhat_based() or \
-                   self.os.is_debian_based():
+                        self.os.is_redhat_based() or \
+                        self.os.is_debian_based() or \
+                        (self.os.is_altlinux() and self.edition == '1c'):
                     self.client_path_needed = True
                     self.server_path_needed = True
         elif self.product == "postgresql":
@@ -944,8 +953,9 @@ baseurl=%s
         self.server_path_needed = False
         if self.product == "postgrespro" and self.version in ['9.5', '9.6']:
             if self.os.is_astra() or \
-               self.os.is_redhat_based() or \
-               self.os.is_debian_based():
+                    self.os.is_redhat_based() or \
+                    self.os.is_debian_based() or \
+                    (self.os.is_altlinux() and self.edition == '1c'):
                 self.client_path_needed = True
                 self.server_path_needed = True
         elif self.product == "postgresql":
@@ -1041,6 +1051,8 @@ baseurl=%s
         return self.os.remove_package(pkg_name, purge)
 
     def remove_full(self, remove_data=False, purge=False, do_not_remove=None):
+        if do_not_remove is None:
+            do_not_remove = []
         if self.os.is_windows():
             # TODO: Don't stop the service manually
             if self.pg_isready():
@@ -1060,6 +1072,9 @@ baseurl=%s
                 time.sleep(1)
         else:
             pkgs = self.all_packages_in_repo
+            if self.os_name == "RED OS" and \
+                    self.os_version == '7.2':
+                do_not_remove.append(r".*zstd.*")
             if do_not_remove:
                 for pkg in pkgs[:]:
                     for template in do_not_remove:
@@ -1245,13 +1260,15 @@ baseurl=%s
         else:
             if self.product == "postgrespro":
                 if self.version in ['9.5', '9.6']:
-                    if self.os.is_suse():
-                        return 'postgresql'
-                    elif self.os.is_astra():
-                        return 'postgresql'
-                    elif self.os.is_debian_based():
+                    if self.os.is_debian_based():
                         if os.path.isdir('/run/systemd/system'):
                             return 'postgresql@%s-main' % self.version
+                        return 'postgresql'
+                    elif self.edition == '1c':
+                        return 'postgresql-%s' % self.version
+                    elif self.os.is_suse():
+                        return 'postgresql'
+                    elif self.os.is_astra():
                         return 'postgresql'
                     elif (self.os.is_altlinux() or
                           self.fullversion[:6] in ['9.6.0.', '9.6.1.']):
@@ -1282,6 +1299,8 @@ baseurl=%s
                 if self.version in ['9.5', '9.6']:
                     if self.os.is_debian_based():
                         return '/usr/lib/postgresql/%s' % (self.version)
+                    if self.edition == '1c':
+                        return '/usr/pgsql-%s' % (self.version)
                     if self.os.is_suse():
                         return '/usr/lib/postgrespro%s%s' % (
                             '-enterprise'
@@ -1348,7 +1367,8 @@ baseurl=%s
                     if self.os.is_suse():
                         return '/var/lib/pgsql/data'
                     if (self.os.is_altlinux() or
-                       self.fullversion[:6] in ['9.6.0.', '9.6.1.']):
+                            self.fullversion[:6] in ['9.6.0.', '9.6.1.'] or
+                            self.edition == '1c'):
                         return '/var/lib/pgsql/%s/data' % (self.version)
                     return '/var/lib/pgpro%s/%s/data' % (
                         'ee'
@@ -1393,8 +1413,13 @@ baseurl=%s
         if self.product == 'postgrespro' and self.version == '9.6':
             if self.os.is_debian_based():
                 return
-            if self.os.is_redhat_based():
-                if subprocess.call("which systemctl", shell=True) == 0:
+            if self.os.is_altlinux():
+                subprocess.check_call('/etc/init.d/postgresql-%s initdb' %
+                                      self.version, shell=True)
+                self.start_service()
+            elif self.os.is_redhat_based():
+                if subprocess.call("which systemctl", shell=True) == 0 and \
+                        not (self.version == '9.6' and self.edition == '1c'):
                     binpath = self.get_bin_path()
                     if self.fullversion[:6] in ['9.6.0.', '9.6.1.']:
                         cmd = '%s/postgresql96-setup initdb' % binpath
@@ -1403,10 +1428,6 @@ baseurl=%s
                 else:
                     cmd = 'service "%s" initdb' % self.service_name
                 subprocess.check_call(cmd, shell=True)
-                self.start_service()
-            elif self.os.is_altlinux():
-                subprocess.check_call('/etc/init.d/postgresql-%s initdb' %
-                                      self.version, shell=True)
                 self.start_service()
             elif self.os.is_suse():
                 self.start_service()
@@ -1548,6 +1569,10 @@ baseurl=%s
             pgid = '%s-%s' % (self.edition, self.version)
             if pgid in PRELOAD_LIBRARIES:
                 preload_libs = PRELOAD_LIBRARIES[pgid]
+                if 'timescaledb' in preload_libs and \
+                        'timescaledb' not in \
+                        ' '.join(self.all_packages_in_repo):
+                    preload_libs.remove('timescaledb')
                 libs = ','.join(preload_libs)
         if libs:
             self.exec_psql(
