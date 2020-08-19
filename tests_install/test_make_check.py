@@ -11,7 +11,7 @@ import allure
 import shutil
 
 from allure_commons.types import LabelType
-from helpers.pginstall import PgInstall, PRELOAD_LIBRARIES
+from helpers.pginstall import PgInstall, PRELOAD_LIBRARIES, DEBIAN_BASED
 from helpers.utils import ConsoleEncoding
 
 PRELOAD_LIBRARIES['ent-cert-11'].remove('passwordcheck')
@@ -104,12 +104,13 @@ class TestMakeCheck(object):
         else:
             pginst.install_perl_win()
             pginst.install_postgres_win(port=55432)
-        if version != "9.6" or self.system == 'Windows' or edition == '1c':
+        if version != "9.6" or self.system == 'Windows' or \
+                (edition == '1c' and pginst.os_name not in DEBIAN_BASED):
             buildinfo = os.path.join(pginst.get_pg_prefix(),
                                      'doc', 'buildinfo.txt')
         else:
             buildinfo = subprocess.check_output(
-                'ls /usr/share/doc/postgrespro*/buildinfo.txt',
+                'ls /usr/share/doc/postgres*pro*/buildinfo.txt',
                 shell=True).decode(ConsoleEncoding).strip()
 
         with open(buildinfo, 'r') as bi:
@@ -125,10 +126,18 @@ class TestMakeCheck(object):
                                      'misc', 'postgresql.conf.sample'),
                         os.path.join(pginst.get_configdir(),
                                      'postgresql.conf'))
+        conf_sample_path = os.path.join(pginst.get_pg_prefix(), 'share')
+        if version == '9.6' and pginst.os_name in DEBIAN_BASED:
+            conf_sample_path = '/usr/share/postgresql/9.6'
         shutil.copyfile(os.path.join(dir, 'src', 'backend', 'utils',
                                      'misc', 'postgresql.conf.sample'),
-                        os.path.join(pginst.get_pg_prefix(), 'share',
+                        os.path.join(conf_sample_path,
                                      'postgresql.conf.sample'))
+
+        if version == '9.6' and pginst.os_name in DEBIAN_BASED:
+            with open(os.path.join(pginst.get_configdir(),
+                                   'postgresql.conf'), 'a') as f:
+                f.write("data_directory='%s'" % pginst.get_datadir())
 
         pginst.exec_psql("ALTER SYSTEM SET max_worker_processes = 16")
         pginst.exec_psql("ALTER SYSTEM SET lc_messages = 'C'")
