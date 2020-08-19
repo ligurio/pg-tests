@@ -30,14 +30,13 @@ if not sys.version_info > (3, 0):
     sys.setdefaultencoding('utf8')
 
 MAX_DURATION = 4 * 60 * 60
-DEBUG = True
+DEBUG = False
 
 IMAGE_BASE_URL = 'http://dist.l.postgrespro.ru/vm-images/test/'
 TEMPLATE_DIR = '/pgpro/templates/'
 WORK_DIR = '/pgpro/test-envs/'
 ANSIBLE_CMD = "ansible-playbook %s -i static/inventory -c %s --limit %s"
 ANSIBLE_PLAYBOOK = 'playbook-prepare-env.yml'
-ANSIBLE_PLAYBOOK_SSH = 'playbook-prepare-env-ssh.yml'
 ANSIBLE_INVENTORY = "%s ansible_host=%s \
                     ansible_become_pass=%s \
                     ansible_ssh_pass=%s \
@@ -389,7 +388,8 @@ def setup_env(domipaddress, domname, linux_os, tests_dir, target_ssh=False):
     if target_ssh:
         inv = ANSIBLE_INVENTORY_SSH % (domname, domipaddress, REMOTE_LOGIN)
         ansible_cmd = ANSIBLE_CMD % (
-            os.path.join(tests_dir, ANSIBLE_PLAYBOOK_SSH), "paramiko", domname)
+            os.path.join(tests_dir, ANSIBLE_PLAYBOOK), "paramiko", domname)
+        ansible_cmd += ' --extra-vars use_ssh=1'
     elif linux_os:
         inv = ANSIBLE_INVENTORY % (domname, domipaddress,
                                    REMOTE_ROOT_PASSWORD,
@@ -397,8 +397,6 @@ def setup_env(domipaddress, domname, linux_os, tests_dir, target_ssh=False):
                                    REMOTE_LOGIN)
         ansible_cmd = ANSIBLE_CMD % (
             os.path.join(tests_dir, ANSIBLE_PLAYBOOK), "paramiko", domname)
-        if target_ssh:
-            ansible_cmd += ' "USE_SSH=1"'
     else:
         inv = ANSIBLE_INVENTORY_WIN % (domname, domipaddress,
                                        REMOTE_LOGIN,
