@@ -1,6 +1,5 @@
 import os
 import platform
-import distro
 import subprocess
 import re
 import tempfile
@@ -15,7 +14,8 @@ try:
     from bs4 import BeautifulSoup
 except ImportError:  # py2compat
     from BeautifulSoup import BeautifulSoup
-from helpers.utils import diff_dbs, download_dump, urlopen, ConsoleEncoding
+from helpers.utils import diff_dbs, download_dump, urlopen, ConsoleEncoding,\
+    get_distro
 
 tempdir = tempfile.gettempdir()
 client_dir = 'client'
@@ -252,8 +252,8 @@ class TestUpgradeMinor():
         :return:
         """
         global windows_os
+        dist = " ".join(get_distro()[0:2])
         if self.system == 'Linux':
-            dist = " ".join(distro.linux_distribution()[0:2])
             windows_os = False
         elif self.system == 'Windows':
             dist = 'Windows'

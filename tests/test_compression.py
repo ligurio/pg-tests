@@ -17,6 +17,7 @@ from helpers.os_helpers import load_pgbench
 from helpers.sql_helpers import drop_test_table
 from helpers.sql_helpers import create_test_table
 from tests.settings import TMP_DIR
+from helpers.utils import get_distro
 
 
 @pytest.mark.core_functional
@@ -24,7 +25,7 @@ from tests.settings import TMP_DIR
 class TestCompression():
     dist = ""
     if platform.system() == 'Linux':
-        dist = " ".join(distro.linux_distribution()[0:2])
+        dist = " ".join(get_distro()[0:2])
     elif platform.system() == 'Windows':
         dist = 'Windows'
     else:
