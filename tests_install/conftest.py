@@ -5,10 +5,11 @@ import os
 import sys
 import subprocess
 from helpers.os_helpers import OsHelper
+from helpers.utils import get_distro
 
 dist = []
 if platform.system() == 'Linux':
-    dist = distro.linux_distribution()
+    dist = get_distro()
 elif platform.system() == 'Windows':
     dist = 'Windows'
 else:

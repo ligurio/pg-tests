@@ -14,7 +14,7 @@ import allure
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall
 from helpers.pginstall import PGPRO_ARCHIVE_STANDARD, PGPRO_ARCHIVE_ENTERPRISE
-from helpers.utils import urlopen
+from helpers.utils import urlopen, get_distro
 try:
     from bs4 import BeautifulSoup
 except ImportError:  # py2compat
@@ -239,7 +239,7 @@ class TestHotStandbyCompatibility():
         """
         global windows_os
         if self.system == 'Linux':
-            dist = " ".join(distro.linux_distribution()[0:2])
+            dist = " ".join(get_distro()[0:2])
         elif self.system == 'Windows':
             dist = 'Windows'
             windows_os = True

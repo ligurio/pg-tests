@@ -1,15 +1,13 @@
 import shutil
 import json
 import os
-import tempfile
 import pytest
 import platform
 import subprocess
 import re
 import sys
 import allure
-from helpers.utils import urlretrieve
-import distro
+from helpers.utils import urlretrieve, get_distro
 try:
     from bs4 import BeautifulSoup
 except ImportError:  # py2compat
@@ -114,7 +112,7 @@ class TestPgprobackup():
         3. Check help function
         """
         if self.system == 'Linux':
-            dist = " ".join(distro.linux_distribution()[0:2])
+            dist = " ".join(get_distro()[0:2])
         elif self.system == 'Windows':
             dist = 'Windows'
         else:

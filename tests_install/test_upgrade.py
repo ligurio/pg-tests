@@ -1,5 +1,4 @@
 import platform
-import distro
 import pytest
 import os
 import pytest
@@ -8,7 +7,7 @@ from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall, PGPRO_ARCHIVE_ENTERPRISE,\
     PGPRO_ARCHIVE_STANDARD, ALT_BASED, DEBIAN_BASED
 from helpers.constants import FIRST_RELEASE
-from helpers.utils import diff_dbs, download_dump, urlopen
+from helpers.utils import diff_dbs, download_dump, urlopen, get_distro
 import time
 import tempfile
 import subprocess
@@ -689,13 +688,7 @@ class TestUpgrade():
         5. Check that upgrade successfull (calculate diff between dump)
         :return:
         """
-        dist = ""
-        if self.system == 'Linux':
-            dist = " ".join(distro.linux_distribution()[0:2])
-        elif self.system == 'Windows':
-            dist = " ".join(platform.win32_ver()[0:2])
-        else:
-            raise Exception("OS %s is not supported." % self.system)
+        dist = " ".join(get_distro()[0:2])
         request.cls.dist = dist
         version = request.config.getoption('--product_version')
         name = request.config.getoption('--product_name')

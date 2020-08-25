@@ -1,10 +1,10 @@
 import hashlib
 import platform
-import distro
 import pytest
 import psycopg2
 import random
 from string import ascii_lowercase
+from helpers.utils import get_distro
 
 
 @pytest.mark.core_functional
@@ -15,7 +15,7 @@ class TestScram():
     """
     dist = ""
     if platform.system() == 'Linux':
-        dist = " ".join(distro.linux_distribution()[0:2])
+        dist = " ".join(get_distro()[0:2])
     elif platform.system() == 'Windows':
         dist = 'Windows'
     else:

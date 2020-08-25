@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import platform
-import distro
 import subprocess
 import os
 import re
@@ -12,7 +11,7 @@ import shutil
 
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall, PRELOAD_LIBRARIES, DEBIAN_BASED
-from helpers.utils import ConsoleEncoding
+from helpers.utils import ConsoleEncoding, get_distro
 
 PRELOAD_LIBRARIES['ent-cert-11'].remove('passwordcheck')
 
@@ -51,7 +50,7 @@ class TestMakeCheck(object):
         """
         dist = ""
         if self.system == 'Linux':
-            dist = " ".join(distro.linux_distribution()[0:2])
+            dist = " ".join(get_distro()[0:2])
         elif self.system == 'Windows':
             dist = 'Windows'
         else:
