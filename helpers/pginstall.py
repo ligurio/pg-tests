@@ -1573,6 +1573,10 @@ baseurl=%s
                         'timescaledb' not in \
                         ' '.join(self.all_packages_in_repo):
                     preload_libs.remove('timescaledb')
+                # Tempoprary workaround
+                if 'ptrack' in preload_libs and self.version == '11' and \
+                        self.milestone == 'archive':
+                    preload_libs.remove('ptrack')
                 libs = ','.join(preload_libs)
         if libs:
             self.exec_psql(
