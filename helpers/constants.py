@@ -114,8 +114,11 @@ FIRST_RELEASE = {
         'postgrespro-std-9.6': '9.6.19.1',
         'postgrespro-ent-9.6': None,
         'postgrespro-std-10': '10.14.1',
+        'postgrespro-std-11': '11.9.1',
+        'postgrespro-std-12': '12.4.1',
         'postgrespro-ent-10': None,
         'postgrespro-ent-11': '11.9.1',
+        'postgrespro-ent-12': '12.4.1',
     },
     # astra-smolensk-1.5
     'Astra Linux (Smolensk) 1.5': {
@@ -229,6 +232,8 @@ FIRST_RELEASE = {
         'postgresql--12': None,
         'postgrespro-std-9.6': None,
         'postgrespro-std-10': '10.14.1',
+        'postgrespro-std-11': '11.9.1',
+        'postgrespro-std-12': '12.4.1',
         'postgrespro-ent-9.6': None,
         'postgrespro-ent-10': None,
         'postgrespro-ent-11': None,
