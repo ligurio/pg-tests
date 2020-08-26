@@ -87,13 +87,13 @@ PRELOAD_LIBRARIES = {
          'pg_pathman'],
     'ent-11':
         ['auth_delay', 'auto_explain', 'in_memory', 'timescaledb',
-         'pgpro_scheduler',
+         'pgpro_scheduler', 'ptrack',
          'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
          'pg_pathman'],
     'std-11':
         ['auth_delay', 'auto_explain', 'timescaledb',
-         'plantuner', 'shared_ispell', 'pg_pathman'],
+         'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
     'std-12':
         ['auth_delay', 'auto_explain',
          'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
