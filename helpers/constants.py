@@ -252,7 +252,7 @@ FIRST_RELEASE = {
         'postgrespro-ent-11': '11.5.1',
     },
     # winserv-2012-r2
-    '2012ServerR2 6.3.9600': {
+    'Windows-2012ServerR2 6.3.9600': {
         'postgresql--9.6': None,
         'postgresql--10': None,
         'postgresql--11': None,
