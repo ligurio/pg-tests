@@ -179,7 +179,7 @@ FIRST_RELEASE = {
         'postgrespro-std-11': '11.5.1',
         'postgrespro-ent-9.6': '9.6.15.1',
         'postgrespro-ent-10': '10.10.1',
-        'postgrespro-ent-11': '11.6.1',
+        'postgrespro-ent-11': '11.5.1',
     },
     # ubuntu-18.04
     "Ubuntu 18.04": {
