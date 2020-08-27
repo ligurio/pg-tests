@@ -1575,7 +1575,7 @@ baseurl=%s
                     preload_libs.remove('timescaledb')
                 # Tempoprary workaround
                 if 'ptrack' in preload_libs and self.version == '11' and \
-                        self.milestone == 'archive':
+                        self.milestone not in ('alpha', 'beta'):
                     preload_libs.remove('ptrack')
                 libs = ','.join(preload_libs)
         if libs:
