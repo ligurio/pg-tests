@@ -345,6 +345,14 @@ class TestUpgradeMinor():
             pgold.setup_repo()
             old_ver = '.'.join([d.rjust(4) for d in oldversion.split('.')])
             if not windows_os:
+                # PGPRO-3889
+                if (pgold.os_name.startswith('CentOS') or
+                    pgold.os_name.startswith('Red Hat') or
+                    pgold.os_name.startswith('Oracle Linux')) and \
+                        pgold.os_version.startswith('8'):
+                    for pkg in pgold.all_packages_in_repo[:]:
+                        if ('jit' in pkg):
+                            pgold.all_packages_in_repo.remove(pkg)
                 # PGPRO-2954
                 for pkg in pgold.all_packages_in_repo[:]:
                     if 'bouncer' in pkg or 'badger' in pkg:
