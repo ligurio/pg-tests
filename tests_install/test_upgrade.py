@@ -496,7 +496,7 @@ def install_server(product, edition, version, milestone, branch, windows,
                 if ('libzstd' in pkg):
                     pg.all_packages_in_repo.remove(pkg)
         # PGPRO-3889
-        if (pg.os_name.startswith('Centos') or
+        if (pg.os_name.startswith('CentOS') or
             pg.os_name.startswith('Red Hat') or
             pg.os_name.startswith('Oracle Linux')) and \
                 pg.os_version.startswith('8'):
