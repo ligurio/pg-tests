@@ -14,7 +14,7 @@ except ImportError:  # py2compat
 
 from helpers.utils import command_executor, get_distro, REMOTE_ROOT, \
     REMOTE_ROOT_PASSWORD, write_file, refresh_env_win,\
-    urlretrieve, urlopen, ConsoleEncoding
+    urlretrieve, urlopen, ConsoleEncoding, compare_versions
 
 from helpers.os_helpers import OsHelper
 
@@ -1573,9 +1573,10 @@ baseurl=%s
                         'timescaledb' not in \
                         ' '.join(self.all_packages_in_repo):
                     preload_libs.remove('timescaledb')
-                # Tempoprary workaround
+                # PGPRO-4062
                 if 'ptrack' in preload_libs and self.version == '11' and \
-                        self.milestone not in ('alpha', 'beta'):
+                        compare_versions(self.get_product_minor_version(),
+                                         '11.9.1') < 0:
                     preload_libs.remove('ptrack')
                 libs = ','.join(preload_libs)
         if libs:
