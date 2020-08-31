@@ -601,3 +601,9 @@ def download_dump(product, edition, version, dir, custom_dump=None):
     dump_file_name = os.path.join(dir, dump_file_name)
     urlretrieve(dump_url, dump_file_name)
     return dump_file_name
+
+
+def compare_versions(ver1, ver2):
+    v1 = '.'.join([d.rjust(4) for d in ver1.split('.')])
+    v2 = '.'.join([d.rjust(4) for d in ver2.split('.')])
+    return -1 if v1 < v2 else (0 if v1 == v2 else 1)
