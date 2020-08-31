@@ -2,7 +2,6 @@ import datetime
 import grp
 import os
 import platform
-import distro
 import psycopg2
 import pytest
 import pwd
@@ -12,6 +11,7 @@ from allure_commons.types import LabelType
 from helpers.os_helpers import pg_bindir
 from helpers.sql_helpers import execute
 from tests.settings import TMP_DIR
+from helpers.utils import get_distro
 
 
 @pytest.mark.features
@@ -20,7 +20,7 @@ from tests.settings import TMP_DIR
 class TestPgprobackup():
     dist = ""
     if platform.system() == 'Linux':
-        dist = " ".join(distro.linux_distribution()[0:2])
+        dist = " ".join(get_distro()[0:2])
     elif platform.system() == 'Windows':
         dist = 'Windows'
     else:
@@ -28,7 +28,7 @@ class TestPgprobackup():
 
     # TODO add restore from backup for all test cases
 
-    DISTRO = distro.linux_distribution()[0]
+    DISTRO = get_distro()[0]
 
     PG_HBA_CONFIG = """
 local   replication     all                                     trust

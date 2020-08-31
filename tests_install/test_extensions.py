@@ -1,7 +1,6 @@
 import os
 import platform
 import subprocess
-import distro
 import time
 import re
 
@@ -10,7 +9,7 @@ import allure
 
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall
-from helpers.utils import ConsoleEncoding
+from helpers.utils import ConsoleEncoding, get_distro
 
 
 @pytest.mark.test_extensions
@@ -27,7 +26,7 @@ class TestExtensions():
         :return:
         """
         if self.system == 'Linux':
-            dist = " ".join(distro.linux_distribution()[0:2])
+            dist = " ".join(get_distro()[0:2])
         elif self.system == 'Windows':
             dist = 'Windows'
         else:

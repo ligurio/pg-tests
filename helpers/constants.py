@@ -111,11 +111,14 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
-        'postgrespro-std-9.6': '9.6.11.1',
+        'postgrespro-std-9.6': '9.6.19.1',
         'postgrespro-ent-9.6': None,
-        'postgrespro-std-10': '10.6.1',
+        'postgrespro-std-10': '10.14.1',
+        'postgrespro-std-11': '11.9.1',
+        'postgrespro-std-12': '12.4.1',
         'postgrespro-ent-10': None,
-        'postgrespro-ent-11': '11.6.2',
+        'postgrespro-ent-11': '11.9.1',
+        'postgrespro-ent-12': '12.4.1',
     },
     # astra-smolensk-1.5
     'Astra Linux (Smolensk) 1.5': {
@@ -228,7 +231,9 @@ FIRST_RELEASE = {
         'postgresql--11': None,
         'postgresql--12': None,
         'postgrespro-std-9.6': None,
-        'postgrespro-std-10': '10.6.1',
+        'postgrespro-std-10': '10.14.1',
+        'postgrespro-std-11': '11.9.1',
+        'postgrespro-std-12': '12.4.1',
         'postgrespro-ent-9.6': None,
         'postgrespro-ent-10': None,
         'postgrespro-ent-11': None,
@@ -237,6 +242,8 @@ FIRST_RELEASE = {
     'Red Hat Enterprise Linux 8.1': {
         'postgresql--9.6': None,
         'postgresql--10': None,
+        'postgresql--11': None,
+        'postgresql--12': None,
         'postgrespro-std-9.6': None,
         'postgrespro-std-10': '10.10.1',
         'postgrespro-std-11': '11.5.1',
@@ -245,7 +252,7 @@ FIRST_RELEASE = {
         'postgrespro-ent-11': '11.5.1',
     },
     # winserv-2012-r2
-    '2012ServerR2 6.3.9600': {
+    'Windows-2012ServerR2 6.3.9600': {
         'postgresql--9.6': None,
         'postgresql--10': None,
         'postgresql--11': None,
@@ -262,13 +269,13 @@ FIRST_RELEASE = {
         'postgrespro-ent-11': '11.8.1',
         'postgrespro-ent-12': '12.3.1',
     },
-    '10 10.0.14393': {
+    'Windows-10 10.0.14393': {
         'postgresql--9.6': None,
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
     },
-    '10 10.0.10240': {
+    'Windows-10 10.0.10240': {
         'postgresql--9.6': None,
         'postgresql--10': None,
         'postgresql--11': None,

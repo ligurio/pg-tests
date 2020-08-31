@@ -2,15 +2,14 @@
 
 import os
 import platform
-import distro
 import subprocess
-import time
 
 import pytest
 import allure
 
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall
+from helpers.utils import get_distro
 
 
 @pytest.mark.dev_usage
@@ -33,7 +32,7 @@ class TestDevUsage(object):
         """
         dist = ""
         if self.system == 'Linux':
-            dist = " ".join(distro.linux_distribution()[0:2])
+            dist = " ".join(get_distro()[0:2])
         elif self.system == 'Windows':
             dist = 'Windows'
         else:

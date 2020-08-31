@@ -1,6 +1,5 @@
 import os
 import platform
-import distro
 import subprocess
 import re
 import tempfile
@@ -15,7 +14,8 @@ try:
     from bs4 import BeautifulSoup
 except ImportError:  # py2compat
     from BeautifulSoup import BeautifulSoup
-from helpers.utils import diff_dbs, download_dump, urlopen, ConsoleEncoding
+from helpers.utils import diff_dbs, download_dump, urlopen, ConsoleEncoding,\
+    get_distro
 
 tempdir = tempfile.gettempdir()
 client_dir = 'client'
@@ -84,12 +84,6 @@ ARCHIVE_VERSIONS = {
     'Oracle Linux Server 7.2': {
         'postgrespro-ent-9.6': '9.6.8.1',
         'postgrespro-ent-10': '10.2.1'
-    },
-    'RED OS 7.2': {
-        'postgrespro-std-9.6': '9.6.11.1',
-        'postgrespro-std-10': '10.6.1',
-        'postgrespro-ent-9.6': None,
-        'postgrespro-ent-10': None
     },
     'Red Hat Enterprise Linux Server 6.7': {
         'postgrespro-ent-9.6': None,
@@ -258,8 +252,8 @@ class TestUpgradeMinor():
         :return:
         """
         global windows_os
+        dist = " ".join(get_distro()[0:2])
         if self.system == 'Linux':
-            dist = " ".join(distro.linux_distribution()[0:2])
             windows_os = False
         elif self.system == 'Windows':
             dist = 'Windows'
@@ -351,6 +345,14 @@ class TestUpgradeMinor():
             pgold.setup_repo()
             old_ver = '.'.join([d.rjust(4) for d in oldversion.split('.')])
             if not windows_os:
+                # PGPRO-3889
+                if (pgold.os_name.startswith('CentOS') or
+                    pgold.os_name.startswith('Red Hat') or
+                    pgold.os_name.startswith('Oracle Linux')) and \
+                        pgold.os_version.startswith('8'):
+                    for pkg in pgold.all_packages_in_repo[:]:
+                        if ('jit' in pkg):
+                            pgold.all_packages_in_repo.remove(pkg)
                 # PGPRO-2954
                 for pkg in pgold.all_packages_in_repo[:]:
                     if 'bouncer' in pkg or 'badger' in pkg:

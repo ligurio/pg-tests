@@ -87,13 +87,13 @@ PRELOAD_LIBRARIES = {
          'pg_pathman'],
     'ent-11':
         ['auth_delay', 'auto_explain', 'in_memory', 'timescaledb',
-         'pgpro_scheduler',
+         'pgpro_scheduler', 'ptrack',
          'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
          'pg_pathman'],
     'std-11':
         ['auth_delay', 'auto_explain', 'timescaledb',
-         'plantuner', 'shared_ispell', 'pg_pathman'],
+         'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
     'std-12':
         ['auth_delay', 'auto_explain',
          'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
@@ -1573,6 +1573,10 @@ baseurl=%s
                         'timescaledb' not in \
                         ' '.join(self.all_packages_in_repo):
                     preload_libs.remove('timescaledb')
+                # Tempoprary workaround
+                if 'ptrack' in preload_libs and self.version == '11' and \
+                        self.milestone not in ('alpha', 'beta'):
+                    preload_libs.remove('ptrack')
                 libs = ','.join(preload_libs)
         if libs:
             self.exec_psql(

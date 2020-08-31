@@ -1,10 +1,10 @@
 import glob
 import platform
-import distro
 import pytest
 import os
 import shutil
 import subprocess
+from helpers.utils import get_distro
 
 
 from helpers.os_helpers import delete_data_directory
@@ -12,7 +12,7 @@ from helpers.os_helpers import download_file
 from tests.settings import TMP_DIR
 
 if platform.system() == 'Linux':
-    dist = distro.linux_distribution()
+    dist = get_distro()
 elif platform.system() == 'Windows':
     dist = 'Windows'
 else:
