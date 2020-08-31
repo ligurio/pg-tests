@@ -1,5 +1,4 @@
 import platform
-import distro
 import os
 import subprocess
 
@@ -7,6 +6,7 @@ import pytest
 
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall
+from helpers.utils import get_distro
 import allure
 
 
@@ -25,7 +25,7 @@ class TestCleanInstall():
         :return:
         """
         if self.system == 'Linux':
-            dist = " ".join(distro.linux_distribution()[0:2])
+            dist = " ".join(get_distro()[0:2])
         elif self.system == 'Windows':
             dist = 'Windows'
         else:

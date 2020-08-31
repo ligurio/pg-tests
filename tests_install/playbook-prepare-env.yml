@@ -128,11 +128,11 @@
     become_method: "{{ use_become_method }}"
     become: true
 
-  - name: Setup DVD as yum repository (ROSA)
+  - name: Setup DVD as yum repository (ROSA, OracleLinux-7)
     shell: if [ -d /mnt/dvd/repodata ]; then
              printf "[InstallMedia]\nname=DVD\nmetadata_expire=-1\ngpgcheck=0\nenabled=1\nbaseurl=file:///mnt/dvd" > /etc/yum.repos.d/dvd.repo;
            fi
-    when: use_ssh is not defined and ansible_distribution == "ROSA"
+    when: use_ssh is not defined and (ansible_distribution == "ROSA") or (ansible_distribution == 'OracleLinux' and ansible_distribution_major_version == '7')
     become_method: "{{ use_become_method }}"
     become: true
 

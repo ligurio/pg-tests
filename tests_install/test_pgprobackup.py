@@ -1,15 +1,13 @@
 import shutil
 import json
 import os
-import tempfile
 import pytest
 import platform
 import subprocess
 import re
 import sys
 import allure
-from helpers.utils import urlretrieve
-import distro
+from helpers.utils import urlretrieve, get_distro
 try:
     from bs4 import BeautifulSoup
 except ImportError:  # py2compat
@@ -114,7 +112,7 @@ class TestPgprobackup():
         3. Check help function
         """
         if self.system == 'Linux':
-            dist = " ".join(distro.linux_distribution()[0:2])
+            dist = " ".join(get_distro()[0:2])
         elif self.system == 'Windows':
             dist = 'Windows'
         else:
@@ -188,6 +186,11 @@ class TestPgprobackup():
         tar.close()
         dir = '.'.join(tar_file.split('.')[:-2])
         print(dir)
+        # Patch tests for 2.4.2
+        if (self.version == '2.4.2'):
+            urlretrieve('https://github.com/postgrespro/pg_probackup/raw/8147'
+                        '001/tests/incr_restore.py',
+                        os.path.join(dir, 'tests', 'incr_restore.py'))
         self.fix_permissions(dir)
         subprocess.check_call('pip2 install testgres==1.8.2', shell=True)
         cmd = "%s sh -c 'PG_CONFIG=\"%s/pg_config\" LANG=C" \
