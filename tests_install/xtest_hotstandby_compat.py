@@ -269,9 +269,11 @@ class TestHotStandbyCompatibility():
         # Choose two versions -- newest and oldest supported
         soup = BeautifulSoup(urlopen(archive_url))
         arcversions = []
+        startswith = 'pgproee-' if edition == 'ent' else \
+            ('pgpro-' if edition == 'std' else 'pg1c-')
         for link in soup.findAll('a'):
             href = link.get('href')
-            if href.startswith('pgpro') and href.endswith('/'):
+            if href.startswith(startswith) and href.endswith('/'):
                 vere = re.search(r'\w+-([0-9.]+)/', href)
                 if vere:
                     if vere.group(1).startswith(version):
