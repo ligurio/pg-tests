@@ -266,7 +266,7 @@ class TestPgprobackup():
         self.pginst.exec_psql(
             "CREATE TABLE tbl TABLESPACE pgprobackup"
             " AS SELECT i, rpad('',30,'a')"
-            " FROM generate_series(0,1000000) AS i;")
+            " FROM generate_series(0,100000) AS i;")
 
         before_backup_file = os.path.join(tempdir, 'before.sql')
         self.pginst.do_in_all_dbs(truncate_unlogged_sql)
