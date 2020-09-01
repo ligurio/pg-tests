@@ -7,7 +7,8 @@ from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall, PGPRO_ARCHIVE_ENTERPRISE,\
     PGPRO_ARCHIVE_STANDARD, ALT_BASED, DEBIAN_BASED
 from helpers.constants import FIRST_RELEASE
-from helpers.utils import diff_dbs, download_dump, urlopen, get_distro
+from helpers.utils import diff_dbs, download_dump, urlopen, get_distro, \
+    compare_versions, extend_ver
 import time
 import tempfile
 import subprocess
@@ -660,16 +661,14 @@ def get_last_version(edition, version):
             if vere:
                 if vere.group(1).startswith(version):
                     ver = vere.group(1)
-                    arcvers = ver.split('.')
-                    arcversion = '.'.join([d.rjust(4) for d in arcvers])
                     if version == '9.6':
                         # Due to CATALOG_VERSION_NO change
                         # we don't support lower 9.6 versions
-                        if arcversion < '   9.   6.   4.   1':
-                            arcversion = None
-                    if arcversion:
-                        arcversions.append(arcversion)
-    arcversions.sort()
+                        if compare_versions(ver, '9.6.4.1') < 0:
+                            ver = None
+                    if ver:
+                        arcversions.append(ver)
+    arcversions.sort(key=extend_ver)
     return arcversions[-1]
 
 
@@ -744,10 +743,9 @@ class TestUpgrade():
                 if FIRST_RELEASE[dist][old_key] is None:
                     print("Distributive is not supported")
                     continue
-                first_release = '.'.join(
-                    [d.rjust(4) for d in FIRST_RELEASE[dist][old_key].
-                        split('.')])
-                if first_release > get_last_version(old_edition, old_version):
+                if compare_versions(
+                        FIRST_RELEASE[dist][old_key],
+                        get_last_version(old_edition, old_version)) > 0:
                     print("Wait for %s" % FIRST_RELEASE[dist][old_key])
                     continue
 
@@ -828,10 +826,9 @@ class TestUpgrade():
                 if FIRST_RELEASE[dist][old_key] is None:
                     print("Distributive is not supported")
                     continue
-                first_release = '.'.join(
-                    [d.rjust(4) for d in FIRST_RELEASE[dist][old_key].
-                        split('.')])
-                if first_release > get_last_version(old_edition, old_version):
+                if compare_versions(
+                        FIRST_RELEASE[dist][old_key],
+                        get_last_version(old_edition, old_version)) > 0:
                     print("Wait for %s" % FIRST_RELEASE[dist][old_key])
                     continue
 
