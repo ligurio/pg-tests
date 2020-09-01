@@ -164,7 +164,7 @@ def get_test_versions(edition, version, specified_version, current_version):
     # Do not upgrade himself
     if specified_version and current_version and \
             compare_versions(current_version, specified_version) <= 0:
-            return None
+        return None
     if edition == "ent":
         archive_url = PGPRO_ARCHIVE_ENTERPRISE
     elif edition == "std":
@@ -195,7 +195,7 @@ def get_test_versions(edition, version, specified_version, current_version):
                             ver = None
                     if ver:
                         arcversions.append(ver)
-    arcversions.sort(key = extend_ver)
+    arcversions.sort(key=extend_ver)
     if not arcversions:
         return None
 
