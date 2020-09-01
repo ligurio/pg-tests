@@ -21,185 +21,86 @@
             distribution {{ ansible_distribution }} {{ ansible_distribution_major_version }} \
             ({{ ansible_architecture }})."
 
-  - name: Disable graphical target in systemd
-    shell: systemctl set-default multi-user.target
-    args:
-      warn: no
-    become_method: "{{ use_become_method }}"
-    become: true
-    when: (ansible_os_family != "Windows" and ansible_service_mgr == "systemd")
-      and not ((ansible_distribution == "ALT" or ansible_distribution == "Altlinux") and ansible_distribution_major_version == "8")
-    ignore_errors: yes
-    tags:
-    - skip_ansible_lint
-
-  - name: Fix private temps (ALT 7,8,9)
-    shell: /usr/sbin/control pam_mktemp disabled
-    args:
-      warn: no
-    become_method: "{{ use_become_method }}"
-    become: true
-    when: (ansible_distribution == "ALT" or ansible_distribution == "Altlinux") and
-      (ansible_distribution_major_version == "7" or ansible_distribution_major_version == "8" or ansible_distribution_major_version == "9")
-    tags:
-    - skip_ansible_lint
-
-  - name: Fix problem with sticky bit (ALT 9)
-    sysctl:
-      name="fs.protected_regular"
-      value="0"
-      sysctl_set=yes
-      state=present
-    become_method: "{{ use_become_method }}"
-    become: true
-    when: (ansible_distribution == "ALT" or ansible_distribution == "Altlinux") and ansible_distribution_major_version == "9"
-
   - name: Mount DVD(s) (if available)
     shell: if /sbin/blkid /dev/sr0; then
-             sed -i '/^\/dev\/sr0\s/d' /etc/fstab; umount /dev/sr0;
-             mkdir /mnt/dvd &&
-             echo "/dev/sr0       /mnt/dvd   auto    ro,user,exec,utf8        0    0" >> /etc/fstab &&
-             mount /dev/sr0;
-           fi;
-           if /sbin/blkid /dev/sr1; then
-             mkdir /mnt/dvd2 &&
-             echo "/dev/sr1       /mnt/dvd2  auto    ro,user,exec,utf8        0    0" >> /etc/fstab &&
-             mount /dev/sr1;
-           fi;
+      sed -i '/^\/dev\/sr0\s/d' /etc/fstab; umount /dev/sr0;
+      mkdir /mnt/dvd &&
+      echo "/dev/sr0       /mnt/dvd   auto    ro,user,exec,utf8        0    0" >> /etc/fstab &&
+      mount /dev/sr0;
+      fi;
+      if /sbin/blkid /dev/sr1; then
+      mkdir /mnt/dvd2 &&
+      echo "/dev/sr1       /mnt/dvd2  auto    ro,user,exec,utf8        0    0" >> /etc/fstab &&
+      mount /dev/sr1;
+      fi;
     when: use_ssh is not defined and ansible_os_family != "Windows"
-    become_method: "{{ use_become_method }}"
+    become_method: su
     become: true
-
-  - name: Update repos and install acpid-events-power, gdb (ALT)
-    shell: apt-get update &&
-           apt-get install -y gdb acpid-events-power && /sbin/service acpid restart || exit 1;
-           apt-get install -y glibc-core;
-           sed s/#ZONE=/ZONE=/ -i /etc/sysconfig/clock; /sbin/service clock tzset;
-           echo "Enable coredump on altlinux-spt-7 ( https://www.altlinux.org/Features/Core )";
-           sed "s/^\(ulimit -Sc 0\)/# \1/" -i /etc/profile;
-    args:
-      warn: no
-    when: ansible_distribution == 'ALT' or ansible_distribution == 'Altlinux'
-    become_method: "{{ use_become_method }}"
-    become: true
-    tags:
-    - skip_ansible_lint
 
   - name: Setup DVDs as apt repositories (Astra Smolensk)
     shell: if [ -d /mnt/dvd/dists ]; then
-             echo "deb file:///mnt/dvd smolensk contrib main non-free" >> /etc/apt/sources.list.d/repo-dvd.list;
-           fi;
-           if [ -d /mnt/dvd2/dists ]; then
-             echo "deb file:///mnt/dvd2 smolensk contrib main non-free" >> /etc/apt/sources.list.d/repo-dvd.list;
-           fi;
-           apt-get update;
+      echo "deb file:///mnt/dvd smolensk contrib main non-free" >> /etc/apt/sources.list.d/repo-dvd.list;
+      fi;
+      if [ -d /mnt/dvd2/dists ]; then
+      echo "deb file:///mnt/dvd2 smolensk contrib main non-free" >> /etc/apt/sources.list.d/repo-dvd.list;
+      fi;
+      apt-get update;
     when: use_ssh is not defined and ansible_distribution == 'Astra Linux (Smolensk)'
-    become_method: "{{ use_become_method }}"
+    become_method: su
     become: true
 
     # Issue with installing libxml2 that requires libicu57, but download.astralinux.ru/astra/current/orel/ contains only libicu63
   - name: Setup DVD as apt repository (Astra Orel)
     shell: if [ -d /mnt/dvd/dists ]; then
-             echo "deb file:///mnt/dvd orel main contrib non-free" > /etc/apt/sources.list.d/repo-dvd.list;
-             apt-get update;
-           fi;
+      echo "deb file:///mnt/dvd orel main contrib non-free" > /etc/apt/sources.list.d/repo-dvd.list;
+      apt-get update;
+      fi;
     when: use_ssh is not defined and ansible_distribution == 'Astra Linux (Orel)'
-    become_method: "{{ use_become_method }}"
+    become_method: su
     become: true
 
-  - name: Configure ACPI (Astra)
-    shell: echo '/sbin/shutdown -h -P now "Power button pressed"' > /etc/acpi/powerbtn-acpi-support.sh
-    when: ansible_distribution == 'Astra Linux (Smolensk)' or ansible_distribution == 'Astra Linux (Orel)'
+  - name: Setup DVD as yum repository (ROSA, OracleLinux-7)
+    shell: if [ -d /mnt/dvd/repodata ]; then
+      printf "[InstallMedia]\nname=DVD\nmetadata_expire=-1\ngpgcheck=0\nenabled=1\nbaseurl=file:///mnt/dvd" > /etc/yum.repos.d/dvd.repo;
+      fi
+    when: use_ssh is not defined and (ansible_distribution == "ROSA") or (ansible_distribution == 'OracleLinux' and ansible_distribution_major_version == '7')
+    become_method: su
+    become: true
+
+  - name: Disable automatic updates (Debian-based)
+    shell: for aptconf in `grep -E '^\s*APT::Periodic::(Update-Package-Lists|Unattended-Upgrade)' -l -r /etc/apt/apt.conf.d/`;
+      do sed -e 's#^\(\s*APT::Periodic::\(Update-Package-Lists\|Unattended-Upgrade\)\)#// \1#' -i $aptconf; done; \
+      if which systemctl; then \
+      systemctl mask apt-daily.timer; \
+      systemctl mask apt-daily-upgrade.timer; \
+      systemctl mask apt-daily.service; systemctl stop apt-daily.service; \
+      systemctl mask apt-daily-upgrade.service; systemctl stop apt-daily-upgrade.service; \
+      fi
+    when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu' or
+      ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux')
     become_method: "{{ use_become_method }}"
     become: true
 
   - name: Setup DVD as yum repository (RHEL) # Based on https://access.redhat.com/solutions/328863
     shell: if [ -f /mnt/dvd/media.repo ]; then
-             cp --no-preserve=all /mnt/dvd/media.repo /etc/yum.repos.d/rhel-dvd.repo &&
-             echo "enabled=1" >> /etc/yum.repos.d/rhel-dvd.repo &&
-             if [ -d /mnt/dvd/repodata ]; then echo "baseurl=file:///mnt/dvd" >> /etc/yum.repos.d/rhel-dvd.repo; fi;
-             if [ -d /mnt/dvd/Server/repodata ]; then echo "baseurl=file:///mnt/dvd/Server" >> /etc/yum.repos.d/rhel-dvd.repo; fi;
-             if [ -d /mnt/dvd/BaseOS/repodata ]; then echo "baseurl=file:///mnt/dvd/BaseOS" >> /etc/yum.repos.d/rhel-dvd.repo; fi;
-             if [ -d /mnt/dvd/AppStream/repodata ]; then
-               printf "[InstallAppMedia]\nname=AppStream\nmetadata_expire=-1\ngpgcheck=0\nenabled=1\nbaseurl=file:///mnt/dvd/AppStream\n" > /etc/yum.repos.d/rhel-dvd-apps.repo;
-             fi
-           fi
+      cp --no-preserve=all /mnt/dvd/media.repo /etc/yum.repos.d/rhel-dvd.repo &&
+      echo "enabled=1" >> /etc/yum.repos.d/rhel-dvd.repo &&
+      if [ -d /mnt/dvd/repodata ]; then echo "baseurl=file:///mnt/dvd" >> /etc/yum.repos.d/rhel-dvd.repo; fi;
+      if [ -d /mnt/dvd/Server/repodata ]; then echo "baseurl=file:///mnt/dvd/Server" >> /etc/yum.repos.d/rhel-dvd.repo; fi;
+      if [ -d /mnt/dvd/BaseOS/repodata ]; then echo "baseurl=file:///mnt/dvd/BaseOS" >> /etc/yum.repos.d/rhel-dvd.repo; fi;
+      if [ -d /mnt/dvd/AppStream/repodata ]; then
+      printf "[InstallAppMedia]\nname=AppStream\nmetadata_expire=-1\ngpgcheck=0\nenabled=1\nbaseurl=file:///mnt/dvd/AppStream\n" > /etc/yum.repos.d/rhel-dvd-apps.repo;
+      fi
+      fi
     when: use_ssh is not defined and ansible_distribution == "RedHat"
-    become_method: "{{ use_become_method }}"
+    become_method: su
     become: true
-
-  - name: Setup DVD as yum repository (ROSA, OracleLinux-7)
-    shell: if [ -d /mnt/dvd/repodata ]; then
-             printf "[InstallMedia]\nname=DVD\nmetadata_expire=-1\ngpgcheck=0\nenabled=1\nbaseurl=file:///mnt/dvd" > /etc/yum.repos.d/dvd.repo;
-           fi
-    when: use_ssh is not defined and (ansible_distribution == "ROSA") or (ansible_distribution == 'OracleLinux' and ansible_distribution_major_version == '7')
-    become_method: "{{ use_become_method }}"
-    become: true
-
-  - name: Disable automatic updates (Debian-based)
-    shell: for aptconf in `grep -E '^\s*APT::Periodic::(Update-Package-Lists|Unattended-Upgrade)' -l -r /etc/apt/apt.conf.d/`;
-             do sed -e 's#^\(\s*APT::Periodic::\(Update-Package-Lists\|Unattended-Upgrade\)\)#// \1#' -i $aptconf; done; \
-           if which systemctl; then \
-             systemctl mask apt-daily.timer; \
-             systemctl mask apt-daily-upgrade.timer; \
-             systemctl mask apt-daily.service; systemctl stop apt-daily.service; \
-             systemctl mask apt-daily-upgrade.service; systemctl stop apt-daily-upgrade.service; \
-           fi
-    when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu' or
-          ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux')
-    become_method: "{{ use_become_method }}"
-    become: true
-
-# https://www.mail-archive.com/debian-user@lists.debian.org/msg747870.html
-  - name: Fix Debian 10 repository url (temporary workaround)
-    shell: sed 's/deb.debian.org/ftp.us.debian.org/' -i /etc/apt/sources.list
-    when: ansible_distribution == 'Debian' and ansible_distribution_major_version == '10'
-    become_method: "{{ use_become_method }}"
-    become: true
-    tags:
-    - skip_ansible_lint
 
   - name: Disable RedHat subscription (RedHat 7, 8)
     shell: subscription-manager remove --all;
-           subscription-manager unregister;
-           subscription-manager clean
+      subscription-manager unregister;
+      subscription-manager clean
     when: ansible_distribution == "RedHat" and (ansible_distribution_major_version == "7" or ansible_distribution_major_version == "8")
-    become_method: "{{ use_become_method }}"
-    become: true
-
-  - name: Enable rels repository Rosa SX 7
-    shell: sed s/enabled=0/enabled=1/ -i /etc/yum.repos.d/rels.repo;
-    args:
-      warn: no
-    when: ansible_distribution == "ROSA" and ansible_distribution_major_version == "7"
-    become_method: "{{ use_become_method }}"
-    become: true
-
-  - name: Fix repositories and prepare local repository; update tzdata (МСВСфера)
-    shell: if [ -d /mnt/dvd/repodata ]; then
-             ln -s /mnt/dvd /media/MSVSphere_6.3_Server &&
-             sed s/enabled=0/enabled=1/ -i /etc/yum.repos.d/install.repo;
-             sed s/enabled=1/enabled=0/ -i /etc/yum.repos.d/pgpro.repo;
-           fi; \
-           echo "Workaround for PGPRO-1259"; \
-           mkdir /opt/localrepo && cd /opt/localrepo && \
-           wget http://vault.centos.org/6.8/os/x86_64/Packages/libicu-4.2.1-14.el6.x86_64.rpm && \
-           wget http://vault.centos.org/6.8/os/x86_64/Packages/libicu-devel-4.2.1-14.el6.x86_64.rpm && \
-           createrepo . && cd ~ && \
-           rpm --import http://vault.centos.org/6.8/os/x86_64/RPM-GPG-KEY-CentOS-6 && \
-           printf "[localrepo]\nname=localrepo\nbaseurl=file:///opt/localrepo\nenabled=1\n" > /etc/yum.repos.d/local.repo; \
-           yum update; \
-           curl -O http://vault.centos.org/6.8/os/x86_64/Packages/tzdata-2016c-1.el6.noarch.rpm && \
-           yum install -y tzdata-*.rpm
-    when: use_ssh is not defined and ansible_distribution == "МСВСфера"
-    become_method: "{{ use_become_method }}"
-    become: true
-
-  - name: install required packages (YUM)
-    shell: yum install -y acpid gcc gdb python-devel libicu-devel
-    args:
-      warn: no
-    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "yum"
     become_method: "{{ use_become_method }}"
     become: true
 
@@ -208,8 +109,28 @@
     args:
       warn: no
     when: ansible_os_family != "Windows" and ansible_pkg_mgr == "yum" and
-          ansible_selinux is defined and ansible_selinux != False
-    become_method: "{{ use_become_method }}"
+      ansible_selinux is defined and ansible_selinux != False
+    become_method: '{{ use_become_method }}'
+    become: true
+
+  - name: Fix repositories and prepare local repository; update tzdata (МСВСфера)
+    shell: if [ -d /mnt/dvd/repodata ]; then
+      ln -s /mnt/dvd /media/MSVSphere_6.3_Server &&
+      sed s/enabled=0/enabled=1/ -i /etc/yum.repos.d/install.repo;
+      sed s/enabled=1/enabled=0/ -i /etc/yum.repos.d/pgpro.repo;
+      fi; \
+      echo "Workaround for PGPRO-1259"; \
+      mkdir /opt/localrepo && cd /opt/localrepo && \
+      wget http://vault.centos.org/6.8/os/x86_64/Packages/libicu-4.2.1-14.el6.x86_64.rpm && \
+      wget http://vault.centos.org/6.8/os/x86_64/Packages/libicu-devel-4.2.1-14.el6.x86_64.rpm && \
+      createrepo . && cd ~ && \
+      rpm --import http://vault.centos.org/6.8/os/x86_64/RPM-GPG-KEY-CentOS-6 && \
+      printf "[localrepo]\nname=localrepo\nbaseurl=file:///opt/localrepo\nenabled=1\n" > /etc/yum.repos.d/local.repo; \
+      yum update; \
+      curl -O http://vault.centos.org/6.8/os/x86_64/Packages/tzdata-2016c-1.el6.noarch.rpm && \
+      yum install -y tzdata-*.rpm
+    when: use_ssh is not defined and ansible_distribution == "МСВСфера"
+    become_method: su
     become: true
 
   - name: Add sudoers.d directory
@@ -233,6 +154,139 @@
     tags:
       - skip_ansible_lint
 
+    # see https://bugzilla.redhat.com/show_bug.cgi?id=1020147
+  - name: comment out requiretty option in /etc/sudoers
+    copy:
+      dest: /etc/sudoers.d/requiretty
+      content: |
+        Defaults !requiretty
+      mode: 0400
+    when: ansible_os_family == "RedHat" or ansible_os_family == "МСВСфера"
+    become_method: "{{ use_become_method }}"
+    become: true
+
+  - name: allow 'wheel' group to have passwordless become_method
+    copy:
+      dest: /etc/sudoers.d/wheel
+      content: |
+        %wheel ALL=(ALL) NOPASSWD: ALL
+      mode: 0400
+    become_method: "{{ use_become_method }}"
+    become: true
+    when: ansible_os_family != "Windows"
+
+  - name: add extra repository (SUSE)
+    shell: if [ -f /mnt/dvd/content ]; then
+      zypper addrepo -t yast2 /mnt/dvd/ disk1;
+      elif [ -d /mnt/dvd/media.1 ]; then
+      zypper addrepo /mnt/dvd/ disk1;
+      fi;
+      if [ -f /mnt/dvd2/content ]; then
+      zypper addrepo -t yast2 file:///mnt/dvd2/./ disk2;
+      fi
+    when: ansible_os_family == 'Suse'
+    become_method: "{{ use_become_method }}"
+    become: true
+
+  - name: Install sudo
+    package:
+      name: sudo
+      state: present
+      update_cache: true
+    become: true
+    become_method: su
+    when: use_ssh is not defined
+
+  - name: Add test to sudoers
+    copy:
+      dest: /etc/sudoers.d/test
+      content: |
+        test    ALL=(ALL)       NOPASSWD: ALL
+        Defaults !requiretty
+      mode: 0400
+    become: true
+    become_method: su
+    when: use_ssh is not defined
+
+  - name: Disable graphical target in systemd
+    shell: systemctl set-default multi-user.target
+    args:
+      warn: no
+    become_method: sudo
+    become: true
+    when: (ansible_os_family != "Windows" and ansible_service_mgr == "systemd")
+      and not ((ansible_distribution == "ALT" or ansible_distribution == "Altlinux") and ansible_distribution_major_version == "8")
+    ignore_errors: yes
+    tags:
+    - skip_ansible_lint
+
+  - name: Fix private temps (ALT 7,8,9)
+    shell: /usr/sbin/control pam_mktemp disabled
+    args:
+      warn: no
+    become_method: sudo
+    become: true
+    when: (ansible_distribution == "ALT" or ansible_distribution == "Altlinux") and
+      (ansible_distribution_major_version == "7" or ansible_distribution_major_version == "8" or ansible_distribution_major_version == "9")
+    tags:
+    - skip_ansible_lint
+
+  - name: Fix problem with sticky bit (ALT 9)
+    sysctl:
+      name="fs.protected_regular"
+      value="0"
+      sysctl_set=yes
+      state=present
+    become_method: sudo
+    become: true
+    when: (ansible_distribution == "ALT" or ansible_distribution == "Altlinux") and ansible_distribution_major_version == "9"
+
+  - name: Update repos and install acpid-events-power, gdb (ALT)
+    shell: apt-get update &&
+           apt-get install -y gdb acpid-events-power && /sbin/service acpid restart || exit 1;
+           apt-get install -y glibc-core;
+           sed s/#ZONE=/ZONE=/ -i /etc/sysconfig/clock; /sbin/service clock tzset;
+           echo "Enable coredump on altlinux-spt-7 ( https://www.altlinux.org/Features/Core )";
+           sed "s/^\(ulimit -Sc 0\)/# \1/" -i /etc/profile;
+    args:
+      warn: no
+    when: ansible_distribution == 'ALT' or ansible_distribution == 'Altlinux'
+    become_method: sudo
+    become: true
+    tags:
+    - skip_ansible_lint
+
+  - name: Configure ACPI (Astra)
+    shell: echo '/sbin/shutdown -h -P now "Power button pressed"' > /etc/acpi/powerbtn-acpi-support.sh
+    when: ansible_distribution == 'Astra Linux (Smolensk)' or ansible_distribution == 'Astra Linux (Orel)'
+    become_method: sudo
+    become: true
+
+# https://www.mail-archive.com/debian-user@lists.debian.org/msg747870.html
+  - name: Fix Debian 10 repository url (temporary workaround)
+    shell: sed 's/deb.debian.org/ftp.us.debian.org/' -i /etc/apt/sources.list
+    when: ansible_distribution == 'Debian' and ansible_distribution_major_version == '10'
+    become_method: sudo
+    become: true
+    tags:
+    - skip_ansible_lint
+
+  - name: Enable rels repository Rosa SX 7
+    shell: sed s/enabled=0/enabled=1/ -i /etc/yum.repos.d/rels.repo;
+    args:
+      warn: no
+    when: ansible_distribution == "ROSA" and ansible_distribution_major_version == "7"
+    become_method: sudo
+    become: true
+
+  - name: install required packages (YUM)
+    shell: yum install -y acpid gcc gdb python-devel libicu-devel
+    args:
+      warn: no
+    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "yum"
+    become_method: sudo
+    become: true
+
   - name: install required packages (APT)
     apt:
       name:
@@ -244,7 +298,7 @@
       update_cache: yes
     when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu' or
           ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux')
-    become_method: "{{ use_become_method }}"
+    become_method: sudo
     become: true
 
   - name: install required python-dev (APT)
@@ -256,7 +310,7 @@
     when: (ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu' or
           ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux')) and
           ansible_python_version.startswith('2.')
-    become_method: "{{ use_become_method }}"
+    become_method: sudo
     become: true
 
   - name: install required python3-dev (APT)
@@ -268,7 +322,7 @@
     when: (ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu' or
           ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux')) and
           ansible_python_version.startswith('3.')
-    become_method: "{{ use_become_method }}"
+    become_method: sudo
     become: true
 
   - name: install required packages (APT)
@@ -278,7 +332,7 @@
       state: present
       update_cache: yes
     when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
-    become_method: "{{ use_become_method }}"
+    become_method: sudo
     become: true
 
   - name: install coredump (APT)
@@ -288,7 +342,7 @@
       state: present
       update_cache: yes
     when: ansible_distribution == 'Debian' and ansible_distribution_major_version == '9'
-    become_method: "{{ use_become_method }}"
+    become_method: sudo
     become: true
 
   - name: install required packages (Astra)
@@ -298,7 +352,7 @@
       state: present
       update_cache: yes
     when: ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux')
-    become_method: "{{ use_become_method }}"
+    become_method: sudo
     become: true
 
   - name: install required packages (ALT 8)
@@ -306,7 +360,7 @@
     args:
       warn: no
     when: ansible_distribution == "ALT" and ansible_distribution_major_version == "8"
-    become_method: "{{ use_become_method }}"
+    become_method: sudo
     become: true
     tags:
     - skip_ansible_lint
@@ -317,20 +371,7 @@
         - gcc
         - lib64python-devel
     when: ansible_os_family != "Windows" and ansible_pkg_mgr == "urpmi"
-    become_method: "{{ use_become_method }}"
-    become: true
-
-  - name: add extra repository (SUSE)
-    shell: if [ -f /mnt/dvd/content ]; then
-              zypper addrepo -t yast2 /mnt/dvd/ disk1;
-           elif [ -d /mnt/dvd/media.1 ]; then
-              zypper addrepo /mnt/dvd/ disk1;
-           fi;
-           if [ -f /mnt/dvd2/content ]; then
-              zypper addrepo -t yast2 file:///mnt/dvd2/./ disk2;
-           fi
-    when: ansible_os_family == 'Suse'
-    become_method: "{{ use_become_method }}"
+    become_method: sudo
     become: true
 
   - name: install required packages (Zypper)
@@ -343,7 +384,7 @@
       update_cache: yes
       force: yes
     when: ansible_os_family != "Windows" and ansible_pkg_mgr == "zypper"
-    become_method: "{{ use_become_method }}"
+    become_method: sudo
     become: true
 
   - name: set up ssh authorized_keys
@@ -362,7 +403,7 @@
       state: stopped
       enabled: no
     when: ansible_os_family == "МСВСфера" or ansible_os_family == "MSVSphere"
-    become_method: "{{ use_become_method }}"
+    become_method: sudo
     become: true
 
   - name: start acpid
@@ -370,7 +411,7 @@
       name: acpid
       state: started
       enabled: yes
-    become_method: "{{ use_become_method }}"
+    become_method: sudo
     become: true
     when: ansible_os_family != "Windows" and ansible_os_family != 'Suse'
 
@@ -378,7 +419,7 @@
     file:
       path: /home/test/pg-tests
       state: absent
-    become_method: "{{ use_become_method }}"
+    become_method: sudo
     become: true
     when: ansible_os_family != "Windows"
 
@@ -403,19 +444,19 @@
       - { path: '/home/test/pg-tests', mode: '0777' }
       - { path: '/home/test', mode: '0751' }
     when: ansible_os_family != "Windows"
-    become_method: "{{ use_become_method }}"
+    become_method: sudo
 
   - name: change secure path in sudoers
     copy:
       dest: /etc/sudoers.d/secure_path
       content: |
-          Defaults secure_path=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin:/opt/python2.7/bin
+          Defaults secure_path=/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/opt/python2.7/bin
       mode: 0400
     when:
       - ansible_os_family != "Windows"
       - ansible_distribution != "ALT"
       - ansible_distribution != "Altlinux"
-    become_method: "{{ use_become_method }}"
+    become_method: sudo
     become: true
 
   - name: install pip
@@ -424,7 +465,7 @@
     delay: 10
     register: result
     until: result.rc == 0
-    become_method: "{{ use_become_method }}"
+    become_method: sudo
     become: true
     tags:
     - skip_ansible_lint
@@ -438,7 +479,7 @@
     pip:
       requirements: "/home/test/pg-tests/tests_install/requirements.txt"
       umask: "0022"
-    become_method: "{{ use_become_method }}"
+    become_method: sudo
     become: true
     when: ansible_os_family != "Windows" and not ansible_python_version.startswith('2.')
 
@@ -446,7 +487,7 @@
     shell: umask 0022; pip install --no-index --find-links file:///home/test/pg-tests/pip-packages -r /home/test/pg-tests/tests_install/requirements2.txt
     args:
       warn: no
-    become_method: "{{ use_become_method }}"
+    become_method: sudo
     become: true
     when: ansible_os_family != "Windows" and ansible_python_version.startswith('2.')
 
@@ -454,37 +495,16 @@
     group:
       name: wheel
       state: present
-    become_method: "{{ use_become_method }}"
+    become_method: sudo
     become: true
     when: ansible_os_family != "Windows"
-
-  - name: allow 'wheel' group to have passwordless become_method
-    copy:
-      dest: /etc/sudoers.d/wheel
-      content: |
-          %wheel ALL=(ALL) NOPASSWD: ALL
-      mode: 0400
-    become_method: "{{ use_become_method }}"
-    become: true
-    when: ansible_os_family != "Windows"
-
-  # see https://bugzilla.redhat.com/show_bug.cgi?id=1020147
-  - name: comment out requiretty option in /etc/sudoers
-    copy:
-      dest: /etc/sudoers.d/requiretty
-      content: |
-          Defaults !requiretty
-      mode: 0400
-    when: ansible_os_family == "RedHat" or ansible_os_family == "МСВСфера"
-    become_method: "{{ use_become_method }}"
-    become: true
 
   - name: add user 'test' to the 'wheel' group
     user:
       name: "test"
       groups: wheel
       append: yes
-    become_method: "{{ use_become_method }}"
+    become_method: sudo
     become: true
     when: ansible_os_family != "Windows"
 
@@ -494,13 +514,13 @@
       - test
       - postgres
       - root
-    become_method: "{{ use_become_method }}"
+    become_method: sudo
     become: true
     when: ansible_os_family != "Windows"
 
   - name: make a directory for coredumps
     file: path="/var/coredumps" state=directory mode=0777
-    become_method: "{{ use_become_method }}"
+    become_method: sudo
     become: true
     when: ansible_os_family != "Windows"
 
@@ -510,7 +530,7 @@
         - net.bridge.bridge-nf-call-arptables
         - net.bridge.bridge-nf-call-iptables
         - net.bridge.bridge-nf-call-ip6tables
-    become_method: "{{ use_become_method }}"
+    become_method: sudo
     become: true
     when: ansible_os_family == "GosLinux" or ansible_os_family == "ROSA"
 
@@ -521,12 +541,12 @@
       line: 'enabled=0'
       state: present
     when: ansible_distribution == 'Ubuntu'
-    become_method: "{{ use_become_method }}"
+    become_method: sudo
     become: true
 
   - name: change coredump filename pattern
     sysctl: name="kernel.core_pattern" value="/var/coredumps/core-%e-%p-%t-EXE:%E" sysctl_set=yes state=present
-    become_method: "{{ use_become_method }}"
+    become_method: sudo
     become: true
     when:
       - use_ssh is not defined
@@ -537,7 +557,7 @@
 
   - name: change coredump filename pattern (RedHat 7)
     sysctl: name="kernel.core_pattern" value="| /usr/lib/systemd/systemd-coredump %p %u %g %s %t %c %e" sysctl_set=yes state=present
-    become_method: "{{ use_become_method }}"
+    become_method: sudo
     become: true
     when: use_ssh is not defined and ((ansible_os_family == 'RedHat' or ansible_os_family == 'AlterOS') and ansible_distribution_major_version == '7')
 
@@ -546,7 +566,7 @@
                sed "s/^#DefaultLimitCORE=$/DefaultLimitCORE=infinity/" -i /etc/systemd/system.conf;
                systemctl daemon-reexec;
            fi
-    become_method: "{{ use_become_method }}"
+    become_method: sudo
     become: true
     when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu' or
           ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux') or
