@@ -14,7 +14,7 @@ import allure
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall
 from helpers.pginstall import PGPRO_ARCHIVE_STANDARD, PGPRO_ARCHIVE_ENTERPRISE
-from helpers.utils import urlopen, get_distro
+from helpers.utils import urlopen, get_distro, compare_versions, extend_ver
 try:
     from bs4 import BeautifulSoup
 except ImportError:  # py2compat
@@ -277,33 +277,33 @@ class TestHotStandbyCompatibility():
                 vere = re.search(r'\w+-([0-9.]+)/', href)
                 if vere:
                     if vere.group(1).startswith(version):
-                        arcvers = vere.group(1).split('.')
-                        arcversion = '.'.join([d.rjust(4) for d in arcvers])
+                        arcvers = vere.group(1)
                         if version == '9.6':
                             # Due to CATALOG_VERSION_NO change
                             # we don't support lower 9.6 versions
-                            if arcversion < '   9.   6.   4.   1':
-                                arcversion = None
+                            if compare_versions(arcvers, '9.6.4.1') < 0:
+                                arcvers = None
                         # PGPRO-3227, PGPRO-3834
                         if windows_os and version == '10':
-                            if arcversion < '  10.  11.   1':
-                                arcversion = None
+                            if compare_versions(arcvers, '10.11.1'):
+                                arcvers = None
                         if windows_os and version == '11':
-                            if arcversion < '  11.   6.   1':
-                                arcversion = None
-                        if arcversion:
-                            arcversions.append(arcversion)
-        arcversions.sort()
+                            if compare_versions(arcvers, '11.6.1') < 0:
+                                arcvers = None
+                        if arcvers:
+                            arcversions.append(arcvers)
+        arcversions.sort(key=extend_ver)
         if not arcversions:
             print("No previous minor versions found. Test skipped.")
             return
         # Choose first and last versions
-        testversions = [arcversions[0].replace(' ', ''),
-                        arcversions[-1].replace(' ', '')]
+        testversions = [arcversions[0], arcversions[-1]]
+        if testversions[0] == testversions[1]:
+            testversions = [testversions[0]]
         # Workaround for unsupported libpq options
         fix_extra_libpq_options = False
         if edition == 'ent' and version == '10':
-            if arcversions[0] < '  10.   4.   1':
+            if compare_versions(arcversions[0], '10.4.1') < 0:
                 fix_extra_libpq_options = True
         pre12version = version in ['9.6', '10', '11']
 
@@ -424,5 +424,4 @@ class TestHotStandbyCompatibility():
             shutil.rmtree(oldpgprefix)
             if windows_os:
                 subprocess.check_call('sc delete postgres-old', shell=True)
-
         print("OK")

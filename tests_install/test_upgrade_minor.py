@@ -15,7 +15,7 @@ try:
 except ImportError:  # py2compat
     from BeautifulSoup import BeautifulSoup
 from helpers.utils import diff_dbs, download_dump, urlopen, ConsoleEncoding,\
-    get_distro
+    get_distro, compare_versions, extend_ver
 
 tempdir = tempfile.gettempdir()
 client_dir = 'client'
@@ -162,10 +162,8 @@ for distr in FIRST_RELEASE:
 
 def get_test_versions(edition, version, specified_version, current_version):
     # Do not upgrade himself
-    if specified_version and current_version:
-        specified_ver = '.'.join([d.rjust(4)
-                                  for d in specified_version.split('.')])
-        if current_version <= specified_ver:
+    if specified_version and current_version and \
+            compare_versions(current_version, specified_version) <= 0:
             return None
     if edition == "ent":
         archive_url = PGPRO_ARCHIVE_ENTERPRISE
@@ -187,20 +185,17 @@ def get_test_versions(edition, version, specified_version, current_version):
             if vere:
                 if vere.group(1).startswith(version):
                     ver = vere.group(1)
-                    arcvers = ver.split('.')
                     if not specified_version_found and \
                             ver == specified_version:
                         specified_version_found = True
-
-                    arcversion = '.'.join([d.rjust(4) for d in arcvers])
                     if version == '9.6':
                         # Due to CATALOG_VERSION_NO change
                         # we don't support lower 9.6 versions
-                        if arcversion < '   9.   6.   4.   1':
-                            arcversion = None
-                    if arcversion:
-                        arcversions.append(arcversion)
-    arcversions.sort()
+                        if compare_versions(ver, '9.6.4.1') < 0:
+                            ver = None
+                    if ver:
+                        arcversions.append(ver)
+    arcversions.sort(key = extend_ver)
     if not arcversions:
         return None
 
@@ -209,13 +204,13 @@ def get_test_versions(edition, version, specified_version, current_version):
         print("Specified first version is not present in archive yet.")
         return None
     n = len(arcversions) - 1
-    while n >= 0 and current_version <= arcversions[n]:
+    while n >= 0 and compare_versions(current_version, arcversions[n]) <= 0:
         n = n - 1
     if n < 0:
         return None
     res = [specified_version if
-           specified_version else arcversions[0].replace(' ', ''),
-           arcversions[n].replace(' ', '')]
+           specified_version else arcversions[0],
+           arcversions[n]]
     if res[0] == res[1]:
         return [res[0]]
     else:
@@ -322,7 +317,6 @@ class TestUpgradeMinor():
             vere = re.search(r'VERSION\s=\s\w+\s([0-9.]+)', pgconfig)
             current_ver = vere.group(1)
         print("Current version is %s" % current_ver)
-        current_ver = '.'.join([d.rjust(4) for d in current_ver.split('.')])
         test_versions = get_test_versions(edition, version,
                                           specified_version, current_ver)
 
@@ -343,7 +337,6 @@ class TestUpgradeMinor():
                               branch=None, windows=windows_os)
 
             pgold.setup_repo()
-            old_ver = '.'.join([d.rjust(4) for d in oldversion.split('.')])
             if not windows_os:
                 # PGPRO-3889
                 if (pgold.os_name.startswith('CentOS') or
@@ -361,7 +354,7 @@ class TestUpgradeMinor():
                         and pgnew.os_version.startswith('7.3') \
                         and edition == 'std' \
                         and version == '9.6' \
-                        and old_ver == '   9.   6.  13.   1':
+                        and compare_versions(oldversion, '9.6.13.1') == 0:
                     for pkg in pgold.all_packages_in_repo[:]:
                         if 'probackup' in pkg:
                             pgold.all_packages_in_repo.remove(pkg)

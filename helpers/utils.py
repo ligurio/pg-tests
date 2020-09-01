@@ -603,7 +603,11 @@ def download_dump(product, edition, version, dir, custom_dump=None):
     return dump_file_name
 
 
+def extend_ver(ver):
+    return '.'.join([d.rjust(4) for d in ver.split('.')])
+
+
 def compare_versions(ver1, ver2):
-    v1 = '.'.join([d.rjust(4) for d in ver1.split('.')])
-    v2 = '.'.join([d.rjust(4) for d in ver2.split('.')])
+    v1 = extend_ver(ver1)
+    v2 = extend_ver(ver2)
     return -1 if v1 < v2 else (0 if v1 == v2 else 1)
