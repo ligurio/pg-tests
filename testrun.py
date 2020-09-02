@@ -42,6 +42,9 @@ ANSIBLE_INVENTORY = "%s ansible_host=%s \
                     ansible_ssh_pass=%s \
                     ansible_user=%s \
                     ansible_become_user=root\n"
+ANSIBLE_INVENTORY_SSH = "%s ansible_host=%s \
+                    ansible_user=%s \
+                    ansible_become_user=root\n"
 ANSIBLE_INVENTORY_WIN = "%s ansible_host=%s \
                     ansible_user=%s  \
                     ansible_password=%s \
@@ -382,15 +385,18 @@ def setup_env(domipaddress, domname, linux_os, tests_dir, target_ssh=False):
     :return: int: 0 if all OK and 1 if not
     """
 
-    if linux_os:
+    if target_ssh:
+        inv = ANSIBLE_INVENTORY_SSH % (domname, domipaddress, REMOTE_LOGIN)
+        ansible_cmd = ANSIBLE_CMD % (
+            os.path.join(tests_dir, ANSIBLE_PLAYBOOK), "paramiko", domname)
+        ansible_cmd += ' --extra-vars use_ssh=1'
+    elif linux_os:
         inv = ANSIBLE_INVENTORY % (domname, domipaddress,
                                    REMOTE_ROOT_PASSWORD,
                                    REMOTE_PASSWORD,
                                    REMOTE_LOGIN)
         ansible_cmd = ANSIBLE_CMD % (
             os.path.join(tests_dir, ANSIBLE_PLAYBOOK), "paramiko", domname)
-        if target_ssh:
-            ansible_cmd += ' "USE_SSH=1"'
     else:
         inv = ANSIBLE_INVENTORY_WIN % (domname, domipaddress,
                                        REMOTE_LOGIN,
@@ -669,7 +675,7 @@ def main(conn):
             domname += '@ssh'
             linux_os = True
             target_start = time.time()
-            setup_env(domipaddress, domname, linux_os, tests_dir)
+            setup_env(domipaddress, domname, linux_os, tests_dir, target_ssh)
         else:
             print("Starting target %s..." % target)
             linux_os = target[0:3] != 'win'
