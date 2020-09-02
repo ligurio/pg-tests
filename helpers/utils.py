@@ -212,7 +212,7 @@ def exec_command(cmd, hostname, login, password,
             client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             client.connect(hostname=hostname,
                            username=login, password=password,
-                           port=SSH_PORT, look_for_keys=False,
+                           port=SSH_PORT, look_for_keys=True,
                            timeout=CONNECT_RETRY_DELAY)
             chan = client.get_transport().open_session()
             break
