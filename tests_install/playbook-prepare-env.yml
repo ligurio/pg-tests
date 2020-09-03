@@ -388,7 +388,7 @@
     become: true
 
   - name: set up ssh authorized_keys
-    authorized_key: user=test key="{{ item }}" state=present exclusive=yes
+    authorized_key: user=test key="{{ item }}" state=present exclusive=no
     when: ansible_os_family != "Windows"
     with_file:
     - ../static/authorized_keys
