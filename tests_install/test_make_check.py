@@ -120,23 +120,13 @@ class TestMakeCheck(object):
             assert(re.search(r'^SPEC', bitxt, re.MULTILINE))
             print("The binary package buildinfo:\n%s\n" % bi.read())
 
-        dir = '.'.join(tarball.split('.')[:-2])
-        shutil.copyfile(os.path.join(dir, 'src', 'backend', 'utils',
-                                     'misc', 'postgresql.conf.sample'),
-                        os.path.join(pginst.get_configdir(),
-                                     'postgresql.conf'))
+        pginst.install_default_config()
         conf_sample_path = os.path.join(pginst.get_pg_prefix(), 'share')
         if version == '9.6' and pginst.os_name in DEBIAN_BASED:
             conf_sample_path = '/usr/share/postgresql/9.6'
-        shutil.copyfile(os.path.join(dir, 'src', 'backend', 'utils',
-                                     'misc', 'postgresql.conf.sample'),
-                        os.path.join(conf_sample_path,
-                                     'postgresql.conf.sample'))
-
-        if version == '9.6' and pginst.os_name in DEBIAN_BASED:
-            with open(os.path.join(pginst.get_configdir(),
-                                   'postgresql.conf'), 'a') as f:
-                f.write("data_directory='%s'" % pginst.get_datadir())
+        with open(os.path.join(conf_sample_path,
+                               'postgresql.conf.sample'), 'w'):
+            pass
 
         pginst.exec_psql("ALTER SYSTEM SET max_worker_processes = 16")
         pginst.exec_psql("ALTER SYSTEM SET lc_messages = 'C'")
