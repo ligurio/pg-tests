@@ -518,31 +518,37 @@ def read_dump(file):
     lines_to_sort = []
     copy_line = ''
     sort_patterns = [
-        r"\s?CREATE\s+(UNIQUE\s+)?INDEX\s.*",
-        r"\s?ALTER\s+TABLE\s+(ONLY\s+)?.*(ADD\sCONSTRAINT\s)?.*"
+        re.compile(r"\s?CREATE\s+(UNIQUE\s+)?INDEX\s.*"),
+        re.compile(r"\s?CREATE\s+OPERATOR\s.*"),
+        re.compile(r"\s?ALTER\s+OPERATOR\s.*"),
+        re.compile(r"\s?ALTER\s+TABLE\s+(ONLY\s+)?.*(ADD\sCONSTRAINT\s)?.*")
     ]
+    copy_pattern = re.compile(r"\s?COPY\s+.*FROM\sstdin.*")
     sort_item = []
+    sort_body = []
     sort_items = []
     with open(file, 'rb') as f:
         for line in f:
             line = preprocess(line.decode()).strip()
             if line:
                 for pattern in sort_patterns:
-                    if re.match(pattern, line):
+                    if pattern.match(line):
                         sort_item.append('')
+                        sort_body = []
                         break
-
                 if (sort_item):
-                    sort_item.append(line)
+                    if len(sort_item) > 1:
+                        sort_body.append(line[:-1].strip())
+                    else:
+                        sort_item.append(line)
                     if (line.endswith(';')):
+                        sort_body.sort()
+                        sort_item.extend(sort_body)
                         sort_items.append("\n".join(sort_item))
                         sort_item = []
                     continue
 
-                if re.match(
-                    r"\s?COPY\s+.*FROM\sstdin.*",
-                    line
-                ):
+                if copy_pattern.match(line):
                     copy_line = line
                     continue
                 if line == "\\.":
