@@ -431,13 +431,16 @@ BEGIN
     LOOP
         EXECUTE alter_command;
     END LOOP;
+    DROP VIEW IF EXISTS my_locks;
 END;
 $$;
 """
-drop_oids_sql = """
+prepare_for_12_plus_sql = """
 DO $$
 DECLARE
     table_name TEXT;
+    attname TEXT;
+    typname TEXT;
 BEGIN
     FOR table_name IN
         SELECT '"' || n.nspname || '"."' || c.relname || '"' AS tab
@@ -447,6 +450,45 @@ BEGIN
             NOT IN ('pg_catalog') order by c.oid
     LOOP
         EXECUTE 'ALTER TABLE ' || table_name || ' SET WITHOUT OIDS';
+    END LOOP;
+    FOR table_name, attname, typname IN
+        SELECT
+            '"' || n.nspname || '"."' || c.relname || '"' AS tab,
+            pa.attname as col,
+            pt.typname as typname
+        FROM
+            pg_catalog.pg_class c
+            JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid
+            JOIN pg_catalog.pg_attribute pa ON pa.attrelid=c.oid
+            JOIN pg_catalog.pg_type pt ON pa.atttypid=pt.oid
+        WHERE
+            n.nspname NOT IN ('pg_catalog')
+            AND pt.typname IN ('abstime','reltime','tinterval','smgr',
+                '_abstime','_reltime','_tinterval','_smgr')
+        ORDER BY c.oid
+    LOOP
+        EXECUTE 'ALTER TABLE ' || table_name || ' ALTER COLUMN ' || attname ||
+         ' TYPE VARCHAR';
+    END LOOP;
+END;
+$$;
+"""
+prepare_for_13_plus_sql = """
+DO $$
+DECLARE
+    con_name TEXT;
+BEGIN
+    FOR con_name IN
+        SELECT
+            '"' || n.nspname || '"."' || pc.conname || '"' AS cname
+        FROM pg_catalog.pg_conversion pc
+            JOIN pg_catalog.pg_namespace n ON pc.connamespace = n.oid
+        WHERE
+            n.nspname NOT IN ('pg_catalog')
+            AND 'SQL_ASCII' IN (pg_encoding_to_char(pc.conforencoding),
+                                pg_encoding_to_char(pc.contoencoding))
+    LOOP
+        EXECUTE 'DROP CONVERSION ' || con_name || ';';
     END LOOP;
 END;
 $$;
@@ -516,7 +558,10 @@ def install_server(product, edition, version, milestone, branch, windows,
         pg.install_postgres_win()
         pg.client_path_needed = True
         pg.server_path_needed = True
-        pg.load_shared_libraries()
+        pg.load_shared_libraries(restart_service=False)
+        stop(pg)
+        pg.install_default_config()
+        start(pg)
     return pg
 
 
@@ -525,11 +570,22 @@ def generate_db(pg, pgnew, custom_dump=None):
     dump_file_name = download_dump(pg.product, pg.edition, pg.version,
                                    tempdir, custom_dump)
     with open(os.path.join(tempdir, 'load-%s.log' % key), 'wb') as out:
-        pg.exec_psql_file(dump_file_name, '-q',
+        pg.exec_psql_file(dump_file_name, '-q -v ON_ERROR_STOP=1',
                           stdout=out)
-    if pgnew.version not in ["9.6", "10", "11"] and \
-            pg.version in ["9.6", "10", "11"]:
-        pg.do_in_all_dbs(drop_oids_sql)
+    if compare_versions(pg.version, '12') < 0 and \
+            compare_versions(pgnew.version, '12') >= 0:
+        pg.do_in_all_dbs(prepare_for_12_plus_sql)
+    if compare_versions(pg.version, '13') < 0 and \
+            compare_versions(pgnew.version, '13') >= 0:
+        pg.do_in_all_dbs(prepare_for_13_plus_sql)
+    # wait for 12.5
+    if pg.version == '12':
+        pg.exec_psql('DROP TABLE IF EXISTS test_like_5c CASCADE',
+                     '-d regression')
+    # BUG #16622
+    if pg.version == '12':
+        pg.exec_psql('DROP TABLE IF EXISTS gtest1_1 CASCADE',
+                     '-d regression')
     if pgnew.edition in ['ent', 'ent-cert'] and \
             pg.edition not in ['ent', 'ent-cert']:
         pg.do_in_all_dbs(remove_xid_type_columns_sql)
@@ -622,6 +678,7 @@ def init_cluster(pg, force_remove=True, initdb_params='',
     else:
         stop(pg, stopped)
         pg.init_cluster(force_remove, '-k ' + initdb_params)
+        pg.install_default_config()
         start(pg)
         if load_libs:
             pg.load_shared_libraries(restart_service=False)
@@ -773,7 +830,8 @@ class TestUpgrade():
                 ])
             # PGPRO-2459
             if pgold.os_name in DEBIAN_BASED and \
-                    old_name == "postgrespro" and old_version == "9.6":
+                    old_name == "postgrespro" and old_version == "9.6" and \
+                    old_edition != '1c':
                 subprocess.check_call("apt-get purge -y postgrespro-common "
                                       "postgrespro-client-common", shell=True)
 
