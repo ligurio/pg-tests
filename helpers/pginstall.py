@@ -1587,3 +1587,9 @@ baseurl=%s
 
     def get_product_dir(self):
         return self.__get_product_dir()
+
+    def install_default_config(self):
+        with open(os.path.join(self.get_configdir(),
+                               'postgresql.conf'), 'w') as f:
+            if self.version == '9.6' and self.os.is_debian_based():
+                f.write("data_directory='%s'" % self.get_datadir())
