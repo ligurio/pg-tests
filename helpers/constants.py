@@ -283,3 +283,479 @@ FIRST_RELEASE = {
     },
 
 }
+
+UPGRADE_ROUTES = {
+    'postgrespro-1c-10': {
+        'from': [
+            {
+                'name': 'postgresql', 'edition': '', 'version': '9.6',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '10',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgrespro', 'edition': '1c', 'version': '9.6'
+            }
+        ]
+    },
+
+    'postgrespro-1c-11': {
+        'from': [
+            {
+                'name': 'postgresql', 'edition': '', 'version': '9.6',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '10',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '11',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgrespro', 'edition': '1c', 'version': '9.6'
+            },
+            {
+                'name': 'postgrespro', 'edition': '1c', 'version': '10'
+            }
+        ]
+    },
+
+    'postgrespro-1c-12': {
+        'from': [
+            {
+                'name': 'postgresql', 'edition': '', 'version': '9.6',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '10',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '11',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '12',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgrespro', 'edition': '1c', 'version': '9.6'
+            },
+            {
+                'name': 'postgrespro', 'edition': '1c', 'version': '10'
+            },
+            {
+                'name': 'postgrespro', 'edition': '1c', 'version': '11'
+            }
+        ]
+    },
+
+    'postgrespro-1c-13': {
+        'from': [
+            {
+                'name': 'postgresql', 'edition': '', 'version': '9.6',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '10',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '11',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '12',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgrespro', 'edition': '1c', 'version': '9.6'
+            },
+            {
+                'name': 'postgrespro', 'edition': '1c', 'version': '10'
+            },
+            {
+                'name': 'postgrespro', 'edition': '1c', 'version': '11'
+            },
+            {
+                'name': 'postgrespro', 'edition': '1c', 'version': '12'
+            }
+        ]
+    },
+
+    'postgrespro-std-9.6': {
+        'from': [
+            {
+                'name': 'postgresql', 'edition': '', 'version': '9.6',
+                'initdb-params': '--locale=C'
+            }
+        ]
+    },
+
+    'postgrespro-std-10': {
+        'from': [
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '10',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '9.6',
+                'initdb-params': '--locale=C'
+            },
+        ]
+    },
+
+    'postgrespro-std-11': {
+        'from': [
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '10'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '11',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '10',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '9.6',
+                'initdb-params': '--locale=C'
+            },
+        ]
+    },
+    'postgrespro-std-12': {
+        'from': [
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '11'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '10'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '11',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '10',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '9.6',
+                'initdb-params': '--locale=C'
+            },
+        ]
+    },
+    'postgrespro-std-cert-11': {
+        'from': [
+            {
+                'name': 'postgrespro', 'edition': 'std-cert', 'version': '10'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '10'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '11',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '10',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '9.6',
+                'initdb-params': '--locale=C'
+            },
+        ]
+    },
+
+    'postgrespro-ent-10': {
+        'from': [
+            {
+                'name': 'postgrespro', 'edition': 'ent', 'version': '9.6'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '10'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '10',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '9.6',
+                'initdb-params': '--locale=C'
+            }
+        ]
+    },
+
+    'postgrespro-ent-11': {
+        'from': [
+            {
+                'name': 'postgrespro', 'edition': 'ent', 'version': '9.6'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'ent', 'version': '10'
+            }
+        ]
+    },
+
+    'postgrespro-ent-12': {
+        'from': [
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '12'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '11'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '10'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'ent', 'version': '11'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'ent', 'version': '10'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'ent', 'version': '9.6'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '12',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '11',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '10',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '9.6',
+                'initdb-params': '--locale=C'
+            },
+        ]
+    }
+
+}
+
+DUMP_RESTORE_ROUTES = {
+
+    'postgrespro-std-9.6': {
+        'from': [
+            {
+                'name': 'postgresql', 'edition': '', 'version': '9.6',
+                'initdb-params': '--locale=C'
+            }
+        ]
+    },
+
+    'postgrespro-std-10': {
+        'from': [
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '10',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '9.6',
+                'initdb-params': '--locale=C'
+            },
+        ]
+    },
+
+    'postgrespro-std-11': {
+        'from': [
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '10'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '11',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '10',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '9.6',
+                'initdb-params': '--locale=C'
+            },
+        ]
+    },
+    'postgrespro-std-12': {
+        'from': [
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '11'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '10'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '11',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '10',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '9.6',
+                'initdb-params': '--locale=C'
+            },
+        ]
+    },
+    'postgrespro-std-cert-11': {
+        'from': [
+            {
+                'name': 'postgrespro', 'edition': 'std-cert', 'version': '10'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '10'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '11',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '10',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '9.6',
+                'initdb-params': '--locale=C'
+            },
+        ]
+    },
+
+    'postgrespro-ent-10': {
+        'from': [
+            {
+                'name': 'postgrespro', 'edition': 'ent', 'version': '9.6'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '10'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '10',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '9.6',
+                'initdb-params': '--locale=C'
+            }
+        ]
+    },
+
+    'postgrespro-ent-11': {
+        'from': [
+            {
+                'name': 'postgrespro', 'edition': 'ent', 'version': '9.6'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'ent', 'version': '10'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '10'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '11'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '10',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '11',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '9.6',
+                'initdb-params': '--locale=C'
+            }
+        ]
+    },
+
+    'postgrespro-ent-12': {
+        'from': [
+            {
+                'name': 'postgrespro', 'edition': 'ent', 'version': '9.6'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'ent', 'version': '10'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'ent', 'version': '11'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '10'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '11'
+            },
+            {
+                'name': 'postgrespro', 'edition': 'std', 'version': '12'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '10',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '11',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '12',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '9.6',
+                'initdb-params': '--locale=C'
+            }
+        ]
+    }
+
+}
