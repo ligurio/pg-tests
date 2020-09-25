@@ -196,10 +196,8 @@ def install_server(product, edition, version, milestone, branch, windows,
         pg.install_postgres_win()
         pg.client_path_needed = True
         pg.server_path_needed = True
-        pg.load_shared_libraries(restart_service=False)
-        stop(pg)
         pg.install_default_config()
-        start(pg)
+        pg.load_shared_libraries()
     return pg
 
 
@@ -219,10 +217,6 @@ def generate_db(pg, pgnew, custom_dump=None):
     # wait for 12.5
     if pg.version == '12':
         pg.exec_psql('DROP TABLE IF EXISTS test_like_5c CASCADE',
-                     '-d regression')
-    # BUG #16622
-    if pg.version == '12':
-        pg.exec_psql('DROP TABLE IF EXISTS gtest1_1 CASCADE',
                      '-d regression')
     if pgnew.edition in ['ent', 'ent-cert'] and \
             pg.edition not in ['ent', 'ent-cert']:
