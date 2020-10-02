@@ -125,8 +125,22 @@ class TestMakeCheck(object):
         if version == '9.6' and pginst.os_name in DEBIAN_BASED:
             conf_sample_path = '/usr/share/postgresql/9.6'
         with open(os.path.join(conf_sample_path,
-                               'postgresql.conf.sample'), 'w'):
-            pass
+                               'postgresql.conf.sample'), 'w') as f:
+            f.write("#max_connections = 100\n"
+                    "#shared_buffers = 32MB\n"
+                    "#unix_socket_directories = '/tmp'\n"
+                    "#port = 5432\n"
+                    "#min_wal_size = 80MB\n"
+                    "#max_wal_size = 1GB\n"
+                    "#lc_messages = 'C'\n"
+                    "#lc_monetary = 'C'\n"
+                    "#lc_numeric = 'C'\n"
+                    "#datestyle = 'iso, mdy'\n"
+                    "#default_text_search_config = 'pg_catalog.simple'\n"
+                    "#timezone = 'GMT'\n"
+                    "#dynamic_shared_memory_type = posix\n"
+                    "#backend_flush_after = 0\n"
+                    "#checkpoint_flush_after = 0\n")
 
         pginst.exec_psql("ALTER SYSTEM SET max_worker_processes = 16")
         pginst.exec_psql("ALTER SYSTEM SET lc_messages = 'C'")
