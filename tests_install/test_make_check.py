@@ -138,8 +138,14 @@ class TestMakeCheck(object):
                     "#datestyle = 'iso, mdy'\n"
                     "#default_text_search_config = 'pg_catalog.simple'\n"
                     "#timezone = 'GMT'\n"
+                    "#lc_time = 'C'\n"
+                    "#log_timezone = 'GMT'\n"
+                    "#password_encryption = md5\n"
+                    "#log_file_mode = 0600\n"                    
                     "#dynamic_shared_memory_type = posix\n"
                     "#backend_flush_after = 0\n"
+                    "#bgwriter_flush_after = 0\n"
+                    "#effective_io_concurrency = 0\n"
                     "#checkpoint_flush_after = 0\n")
 
         pginst.exec_psql("ALTER SYSTEM SET max_worker_processes = 16")
