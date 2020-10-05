@@ -318,11 +318,12 @@ class TestFullInstall():
                 assert ppedition == 'standard'
             print('pgpro_source_id:',
                   pginst.exec_psql_select("SELECT pgpro_build()"))
-        if version not in ["9.6", "10"]:
+        if version not in ["9.6", "10", "13"]:
             pginst.env = {}
             for var in os.environ:
                 pginst.env[var] = str(os.environ[var])
             pginst.env["LANG"] = 'C'
+            # PGPRO-4100 TODO: Use pgpro_controldata
             cdout = pginst.exec_server_bin('pg_controldata',
                                            '"%s"' % pginst.get_datadir()
                                            ).split('\n')
