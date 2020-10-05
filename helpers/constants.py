@@ -21,7 +21,7 @@ FIRST_RELEASE = {
         'postgresql--12': None,
     },
     # sles-12
-    "SLES 12.3": {
+    "SLES 12.5": {
         'postgresql--9.6': None,
         'postgresql--10': None,
         'postgresql--11': None,
