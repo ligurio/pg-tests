@@ -11,7 +11,6 @@ from helpers.constants import FIRST_RELEASE, UPGRADE_ROUTES,\
 from helpers.utils import diff_dbs, download_dump, urlopen, get_distro, \
     compare_versions, extend_ver
 import time
-import tempfile
 import subprocess
 import shutil
 try:
@@ -21,8 +20,13 @@ except ImportError:  # py2compat
 import re
 
 system = platform.system()
-tempdir = tempfile.gettempdir()
-upgrade_dir = os.path.join(tempfile.gettempdir(), 'upgrade')
+if system == 'Windows':
+    tempdir = 'C:\\pg-temp'
+else:
+    tempdir = '/var/pg-temp'
+os.mkdir(tempdir)
+os.chmod(tempdir, 0o777)
+upgrade_dir = os.path.join(tempdir, 'upgrade')
 amcheck_sql = """
 create extension if not exists amcheck;
 alter extension amcheck update;
@@ -228,7 +232,6 @@ def generate_db(pg, pgnew, custom_dump=None):
 
 def dump_and_diff_dbs(oldKey, pgNew, prefix):
     result_file_name = "%s-%s-result.sql" % (prefix, oldKey)
-    tempdir = tempfile.gettempdir()
     dumpall(pgNew, result_file_name)
     file1 = os.path.join(tempdir, result_file_name)
     file2 = os.path.join(tempdir, '%s-expected.sql' % oldKey)
@@ -275,7 +278,7 @@ def dumpall(pg, file):
               pg.get_server_bin_path(),
               file
           )
-    subprocess.check_call(cmd, shell=True, cwd=tempfile.gettempdir())
+    subprocess.check_call(cmd, shell=True, cwd=tempdir)
 
 
 def after_upgrade(pg, pgOld):
@@ -450,7 +453,7 @@ class TestUpgrade():
 
             generate_db(pgold, pg)
             dumpall(pgold,
-                    os.path.join(tempfile.gettempdir(), "%s.sql" % old_key))
+                    os.path.join(tempdir, "%s.sql" % old_key))
             stop(pgold)
             upgrade(pg, pgold)
             start(pg)
@@ -524,7 +527,7 @@ class TestUpgrade():
 
             print("=====Check dump-restore from %s" % old_key)
 
-            file_name = os.path.join(tempfile.gettempdir(), "%s.sql" % old_key)
+            file_name = os.path.join(tempdir, "%s.sql" % old_key)
 
             if (os.path.isfile(file_name)):
                 start(pg)
