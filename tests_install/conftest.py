@@ -93,6 +93,10 @@ if [ ! -z "`ls /var/coredumps`" ]; then
                 # The qemu-ga coredump encountered on SLES 15 SP2
                 continue
                 ;;
+            *":!bin!cp")
+                The cp coredump on SIGQUIT encountered on AltLinux 8
+                continue
+                ;;
         esac
         result=1
         echo "Coredump found: $dump"
