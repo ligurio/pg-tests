@@ -85,8 +85,8 @@ if [ ! -z "`which coredumpctl 2>/dev/null`" ]; then
         exit 1
     fi
 fi
+result=0
 if [ ! -z "`ls /var/coredumps`" ]; then
-    result=0
     for dump in /var/coredumps/*; do
         case $dump in
             *":!usr!bin!qemu-ga")
@@ -105,19 +105,24 @@ if [ ! -z "`ls /var/coredumps`" ]; then
             gdb --batch --eval-command=bt $exepath --core="$dump";
         fi
     done
-    exit $result
 fi
 if [ -d /var/crash ] && [ ! -z "`ls /var/crash`" ]; then
-    echo "The /var/crash directory is not empty."
     for dump in /var/crash/*; do
-        echo "Dump found: $dump"
+        case $dump in
+            *"/_usr_bin_do-release-upgrade."*".crash")
+                # The do-release-upgrade coredump encountered on Ubuntu 18.04
+                continue
+                ;;
+        esac
+        result=1
+        echo "Coredump found: $dump"
     done
-    exit 1
 fi
 if dmesg | grep ' segfault at '; then
     echo "A segfault recorded in dmesg."
-    exit 1
+    result=1
 fi
+exit $result
 """
             script_file = '/tmp/check-coredumps.sh'
             with open(script_file, 'w') as scrf:
