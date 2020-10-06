@@ -86,9 +86,16 @@ if [ ! -z "`which coredumpctl 2>/dev/null`" ]; then
     fi
 fi
 if [ ! -z "`ls /var/coredumps`" ]; then
-    echo "The /var/coredumps directory is not empty."
+    result=0
     for dump in /var/coredumps/*; do
-        echo "Dump found: $dump"
+        case $dump in
+            *":!usr!bin!qemu-ga")
+                # The qemu-ga coredump encountered on SLES 15 SP2
+                continue
+                ;;
+        esac
+        result=1
+        echo "Coredump found: $dump"
         exepath="${dump##*-EXE:}"
         if [ X"$dump" = X"$exepath" ]; then
             gdb --batch --eval-command=bt $dump;
@@ -98,7 +105,7 @@ if [ ! -z "`ls /var/coredumps`" ]; then
             gdb --batch --eval-command=bt $exepath --core="$dump";
         fi
     done
-    exit 1
+    exit $result
 fi
 if [ -d /var/crash ] && [ ! -z "`ls /var/crash`" ]; then
     echo "The /var/crash directory is not empty."
