@@ -31,6 +31,7 @@ amcheck_sql = """
 create extension if not exists amcheck;
 alter extension amcheck update;
 create extension if not exists pageinspect;
+alter extension pageinspect update;
 create or replace function bt_index_full_check(indexrelid oid, version int)
 returns void
 as $$ begin

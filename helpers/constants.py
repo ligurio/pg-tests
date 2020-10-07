@@ -97,6 +97,7 @@ FIRST_RELEASE = {
         'postgrespro-ent-9.6': None,
         'postgrespro-ent-10': None,
         'postgrespro-ent-11': None,
+        'postgrespro-1c-9.6': None
     },
     # may be remove?
     "GosLinux 6.4": {
@@ -237,6 +238,7 @@ FIRST_RELEASE = {
         'postgrespro-ent-9.6': None,
         'postgrespro-ent-10': None,
         'postgrespro-ent-11': None,
+        'postgrespro-1c-9.6': None
     },
     # rhel-8
     'Red Hat Enterprise Linux 8.1': {
