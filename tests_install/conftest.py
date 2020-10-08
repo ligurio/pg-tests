@@ -90,7 +90,7 @@ if [ ! -z "`ls /var/coredumps`" ]; then
     for dump in /var/coredumps/*; do
         case $dump in
             *":!bin!bash")
-                # The base coredump encountered on MSVSphere 6.3
+                # The bash coredump encountered on MSVSphere 6.3
                 continue
                 ;;
             *":!usr!bin!dash")
