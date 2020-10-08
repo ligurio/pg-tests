@@ -280,6 +280,7 @@ FIRST_RELEASE = {
         'postgrespro-ent-10': '10.13.1',
         'postgrespro-ent-11': '11.8.1',
         'postgrespro-ent-12': '12.3.1',
+        'postgrespro-1c-9.6': None,
     },
     'Windows-10 10.0.14393': {
         'postgresql--9.6': None,
