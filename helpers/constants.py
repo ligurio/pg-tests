@@ -177,6 +177,7 @@ FIRST_RELEASE = {
         'postgrespro-std-11': '11.4.1',
         'postgrespro-ent-9.6': None,
         'postgrespro-ent-10': '10.9.1',
+        'postgrespro-1c-9.6': None,
     },
     # debian-10
     "Debian GNU/Linux 10": {
@@ -204,6 +205,7 @@ FIRST_RELEASE = {
         'postgrespro-ent-9.6': None,
         'postgrespro-ent-10': None,
         'postgrespro-ent-11': None,
+        'postgrespro-1c-9.6': None,
     },
     # ubuntu-20.04
     "Ubuntu 20.04": {
