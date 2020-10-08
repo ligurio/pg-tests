@@ -73,6 +73,7 @@ FIRST_RELEASE = {
         'postgrespro-ent-10': '10.13.1',
         'postgrespro-ent-11': '11.8.1',
         'postgrespro-ent-12': '12.3.1',
+        'postgrespro-1c-9.6': None,
     },
     # altlinux-9
     "ALT Server 9.0": {
@@ -86,6 +87,7 @@ FIRST_RELEASE = {
         'postgrespro-std-11': '11.6.1',
         'postgrespro-ent-10': '10.11.1',
         'postgrespro-ent-11': '11.6.1',
+        'postgrespro-1c-9.6': None,
     },
     # goslinux-7
     "GosLinux 7": {
@@ -160,6 +162,7 @@ FIRST_RELEASE = {
         'postgrespro-ent-9.6': None,
         'postgrespro-ent-10': '10.9.1',
         'postgrespro-ent-11': '11.4.1',
+        'postgrespro-1c-9.6': None,
     },
     # sles-15
     "SLES 15": {
@@ -223,6 +226,7 @@ FIRST_RELEASE = {
         'postgrespro-ent-9.6': None,
         'postgrespro-ent-10': '10.9.1',
         'postgrespro-ent-11': '11.2.1',
+        'postgrespro-1c-9.6': None,
     },
     # msvsphere-6.3
     "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0\xb5\xd1\x80\xd0\xb0"
@@ -252,6 +256,7 @@ FIRST_RELEASE = {
         'postgrespro-ent-9.6': None,
         'postgrespro-ent-10': '10.10.1',
         'postgrespro-ent-11': '11.5.1',
+        'postgrespro-1c-9.6': None,
     },
     # winserv-2012-r2
     'Windows-2012ServerR2 6.3.9600': {
