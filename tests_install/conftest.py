@@ -89,6 +89,14 @@ result=0
 if [ ! -z "`ls /var/coredumps`" ]; then
     for dump in /var/coredumps/*; do
         case $dump in
+            *":!bin!bash")
+                # The base coredump encountered on MSVSphere 6.3
+                continue
+                ;;
+            *":!usr!bin!dash")
+                # The dash coredump encountered on Ubuntu 19.10
+                continue
+                ;;
             *":!usr!bin!qemu-ga")
                 # The qemu-ga coredump encountered on SLES 15 SP2
                 continue
