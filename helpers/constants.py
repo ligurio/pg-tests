@@ -204,6 +204,7 @@ FIRST_RELEASE = {
         'postgrespro-ent-9.6': None,
         'postgrespro-ent-10': None,
         'postgrespro-ent-11': None,
+        'postgrespro-1c-9.6': None,
     },
     # ubuntu-20.04
     "Ubuntu 20.04": {
