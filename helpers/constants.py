@@ -150,6 +150,7 @@ FIRST_RELEASE = {
         'postgresql--9.6': None,
         'postgresql--10': None,
         'postgresql--11': None,
+        'postgrespro-1c-9.6': None,
     },
     # alteros-7
     "AlterOS 7": {
