@@ -269,6 +269,7 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgrespro-ent-12': '12.3.1',
     },
     # oraclelinux-8
     'Oracle Linux Server 8.0': {
@@ -287,12 +288,14 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgrespro-ent-12': '12.3.1',
     },
     'Windows-10 10.0.10240': {
         'postgresql--9.6': None,
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgrespro-ent-12': '12.3.1',
     },
 
 }
