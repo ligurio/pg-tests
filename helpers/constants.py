@@ -167,7 +167,7 @@ FIRST_RELEASE = {
         'postgrespro-1c-9.6': None,
     },
     # sles-15
-    "SLES 15": {
+    "SLES 15.2": {
         'postgresql--9.6': None,
         'postgresql--10': None,
         'postgresql--11': None,
