@@ -251,7 +251,6 @@ class TestUpgradeMinor():
         if self.system == 'Linux':
             windows_os = False
         elif self.system == 'Windows':
-            dist = 'Windows'
             windows_os = True
         else:
             raise Exception("OS %s is not supported." % self.system)
