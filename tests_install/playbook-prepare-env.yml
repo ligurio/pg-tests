@@ -380,6 +380,7 @@
         - gcc
         - gdb
         - python-devel
+        - python-xml
       state: present
       update_cache: yes
       force: yes
