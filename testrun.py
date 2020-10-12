@@ -142,7 +142,7 @@ def create_image(domname, name):
     if not os.path.exists(WORK_DIR):
         os.makedirs(WORK_DIR)
 
-    retcode = call("qemu-img create -b %s -f qcow2 %s" %
+    retcode = call("qemu-img create -b %s -f qcow2 -F qcow2 %s" %
                    (image_original, domimage), shell=True)
     if retcode != 0:
         raise Exception("Could not create qemu image.")
