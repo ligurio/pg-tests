@@ -345,6 +345,11 @@ class TestUpgradeMinor():
                     for pkg in pgold.all_packages_in_repo[:]:
                         if ('jit' in pkg):
                             pgold.all_packages_in_repo.remove(pkg)
+                if (pgold.os_name.startswith('SLES') and
+                        pgold.os_version.startswith('15')):
+                    for pkg in pgold.all_packages_in_repo[:]:
+                        if 'zstd' in pkg:
+                            pgold.all_packages_in_repo.remove(pkg)
                 # PGPRO-2954
                 for pkg in pgold.all_packages_in_repo[:]:
                     if 'bouncer' in pkg or 'badger' in pkg:
