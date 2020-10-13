@@ -5,7 +5,8 @@ import pytest
 import allure
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall, PGPRO_ARCHIVE_ENTERPRISE,\
-    PGPRO_ARCHIVE_STANDARD, ALT_BASED, DEBIAN_BASED
+    PGPRO_ARCHIVE_STANDARD
+from helpers.os_helpers import ALT_BASED, DEBIAN_BASED
 from helpers.constants import FIRST_RELEASE, UPGRADE_ROUTES,\
     DUMP_RESTORE_ROUTES
 from helpers.utils import diff_dbs, download_dump, urlopen, get_distro, \

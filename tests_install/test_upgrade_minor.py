@@ -8,7 +8,8 @@ import pytest
 import allure
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall, PGPRO_ARCHIVE_STANDARD,\
-    PGPRO_ARCHIVE_ENTERPRISE, DEBIAN_BASED
+    PGPRO_ARCHIVE_ENTERPRISE
+from helpers.os_helpers import DEBIAN_BASED
 from helpers.constants import FIRST_RELEASE
 try:
     from bs4 import BeautifulSoup
