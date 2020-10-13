@@ -10,7 +10,8 @@ import allure
 import shutil
 
 from allure_commons.types import LabelType
-from helpers.pginstall import PgInstall, PRELOAD_LIBRARIES, DEBIAN_BASED
+from helpers.pginstall import PgInstall, PRELOAD_LIBRARIES
+from helpers.os_helpers import DEBIAN_BASED
 from helpers.utils import ConsoleEncoding, get_distro
 
 PRELOAD_LIBRARIES['ent-cert-11'].remove('passwordcheck')

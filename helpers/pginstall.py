@@ -16,7 +16,7 @@ from helpers.utils import command_executor, get_distro, REMOTE_ROOT, \
     REMOTE_ROOT_PASSWORD, write_file, refresh_env_win,\
     urlretrieve, urlopen, ConsoleEncoding, compare_versions
 
-from helpers.os_helpers import OsHelper
+from helpers.os_helpers import OsHelper, dist
 
 PGPRO_ARCHIVE_STANDARD = "http://localrepo.l.postgrespro.ru/stable/archive/"
 PGPRO_ARCHIVE_ENTERPRISE = "http://localrepo.l.postgrespro.ru/stable/archive/"
@@ -32,51 +32,6 @@ PGPROBETA_BASE = "http://localrepo.l.postgrespro.ru/stable/"
 PGPROCERT_BASE = "http://localrepo.l.postgrespro.ru/cert/"
 PSQL_BASE = "http://download.postgresql.org/pub"
 WIN_INST_DIR = "C:\\Users\\test\\pg-tests\\pg_installer"
-REDHAT_BASED = ['CentOS Linux', 'CentOS',
-                'Red Hat Enterprise Linux Server', 'Red Hat Enterprise Linux',
-                'Oracle Linux Server',
-                'ROSA Enterprise Linux Server',
-                'ROSA Enterprise Linux Cobalt', 'GosLinux',
-                "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0\xb5"
-                "\xd1\x80\xd0\xb0 \xd0\xa1\xd0\xb5\xd1\x80\xd0\xb2"
-                "\xd0\xb5\xd1\x80",
-                'RED OS', 'AlterOS']
-YUM_BASED = ['CentOS Linux', 'CentOS',
-             'Red Hat Enterprise Linux Server', 'Red Hat Enterprise Linux',
-             'Oracle Linux Server',
-             'ROSA Enterprise Linux Server',
-             'ROSA Enterprise Linux Cobalt', 'GosLinux',
-             "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0\xb5\xd1\x80\xd0\xb0"
-             " \xd0\xa1\xd0\xb5\xd1\x80\xd0\xb2\xd0\xb5\xd1\x80",
-             'RED OS', 'AlterOS']
-DEBIAN_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux',
-                'Astra Linux (Smolensk)', 'Astra Linux (Orel)']
-APT_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux',
-             'Astra Linux (Smolensk)', 'Astra Linux (Orel)',
-             'ALT Linux', 'ALT Server', 'ALT SPServer']
-ASTRA_BASED = ['Astra Linux (Smolensk)', 'Astra Linux (Orel)']
-ALT_BASED = ['ALT Linux', 'ALT Server', 'ALT SPServer']
-SUSE_BASED = ['SLES']
-ZYPPER_BASED = ['SLES']
-WIN_BASED = ['Windows-2012ServerR2', 'Windows-10', 'Windows-8.1', 'Windows-7']
-
-dist = {"Oracle Linux Server": 'oraclelinux',
-        "CentOS Linux": 'centos',
-        "CentOS": 'centos',
-        "RHEL": 'rhel',
-        "Red Hat Enterprise Linux Server": 'rhel',
-        "Red Hat Enterprise Linux": 'rhel',
-        "debian": 'debian',
-        "Debian GNU/Linux": 'debian',
-        "Ubuntu": 'ubuntu',
-        "ROSA Enterprise Linux Server": 'rosa-el',
-        "ROSA Enterprise Linux Cobalt": 'rosa-sx',
-        "SLES": 'sles',
-        "ALT Linux": 'altlinux',
-        "ALT Server": 'altlinux',
-        "GosLinux": 'goslinux',
-        "RED OS": 'redos',
-        "AlterOS": 'alteros'}
 
 PRELOAD_LIBRARIES = {
     'ent-12':

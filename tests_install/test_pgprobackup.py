@@ -16,7 +16,8 @@ import tarfile
 
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall, PGPRO_DEV_SOURCES_BASE,\
-    PGPRO_ARCHIVE_SOURCES_BASE, PGPRO_STABLE_SOURCES_BASE, REDHAT_BASED
+    PGPRO_ARCHIVE_SOURCES_BASE, PGPRO_STABLE_SOURCES_BASE
+from helpers.os_helpers import REDHAT_BASED
 from helpers.utils import download_dump, diff_dbs
 
 tempdir = os.path.join(os.path.abspath(os.getcwd()), 'tmp')
