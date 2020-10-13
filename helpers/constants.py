@@ -297,6 +297,14 @@ FIRST_RELEASE = {
         'postgresql--12': None,
         'postgrespro-ent-12': '12.3.1',
     },
+    # winserv-2019
+    'Windows-10 10.0.17763': {
+        'postgresql--9.6': None,
+        'postgresql--10': None,
+        'postgresql--11': None,
+        'postgresql--12': None,
+        'postgrespro-ent-12': '12.3.1',
+    },
 
 }
 
