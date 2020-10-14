@@ -106,7 +106,7 @@ class TestMakeCheck(object):
             pginst.install_postgres_win(port=55432)
             try:
                 pginst.exec_psql('CREATE EXTENSION plpython3u')
-            except:
+            except Exception:
                 subprocess.check_call('SETX PYTHONHOME C:\\Python27 -m',
                                       shell=True)
         if version != "9.6" or self.system == 'Windows' or \
