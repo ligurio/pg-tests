@@ -674,14 +674,6 @@
     when: ansible_os_family == "Windows"
     win_shell: 'pip3 install -r C:\Users\test\pg-tests\tests_install\requirements.txt'
 
-  - name: windows - temporary setup Python home as 2.7
-    win_environment:
-        state: present
-        name: PYTHONHOME
-        value: C:\Python27
-        level: machine
-    when: ansible_os_family == "Windows"
-
   - name: windows - stop w32time service
     when: ansible_os_family == "Windows"
     win_service:
