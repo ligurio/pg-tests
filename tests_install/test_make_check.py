@@ -104,6 +104,11 @@ class TestMakeCheck(object):
         else:
             pginst.install_perl_win()
             pginst.install_postgres_win(port=55432)
+            try:
+                pginst.exec_psql('CREATE EXTENSION plpython3u')
+            except Exception:
+                subprocess.check_call('SETX PYTHONHOME C:\\Python27 -m',
+                                      shell=True)
         if version != "9.6" or self.system == 'Windows' or \
                 (edition == '1c' and pginst.os_name not in DEBIAN_BASED):
             buildinfo = os.path.join(pginst.get_pg_prefix(),
