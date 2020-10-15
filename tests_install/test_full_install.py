@@ -423,6 +423,7 @@ $$ LANGUAGE plpython3u;"""
         # Step 4
         pginst.exec_psql("DROP FUNCTION py_test_function()")
 
+    @pytest.mark.skipif('platform.system() == "Windows"')
     def test_pltcl(self, request):
         """Test for pltcl language
         Scenario:
