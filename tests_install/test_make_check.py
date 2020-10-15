@@ -26,7 +26,6 @@ def get_pg_prefix(pginst):
     return pg_prefix
 
 
-@pytest.mark.make_check
 class TestMakeCheck(object):
     """
     Test that performs 'make installcheck' and 'make check'
@@ -35,7 +34,6 @@ class TestMakeCheck(object):
 
     system = platform.system()
 
-    @pytest.mark.test_make_check
     def test_make_check(self, request):
         """
         Scenario:
@@ -155,7 +153,6 @@ class TestMakeCheck(object):
                 shell=True)
             request.session.customexitstatus = 222
 
-    @pytest.mark.test_sqlsmith
     def test_sqlsmith(self, request):
         pginst = request.cls.pginst
         if not pginst.make_check_passed:

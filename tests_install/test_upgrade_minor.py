@@ -233,12 +233,10 @@ def remove_alternatives():
                     shell=True)
 
 
-@pytest.mark.upgrade_minor
 class TestUpgradeMinor():
 
     system = platform.system()
 
-    @pytest.mark.upgrade_minor
     def test_upgrade_minor(self, request):
         """
         Scenario:

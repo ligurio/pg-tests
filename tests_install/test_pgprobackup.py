@@ -43,7 +43,6 @@ $$;
 """
 
 
-@pytest.mark.feature_pgprobackup
 class TestPgprobackup():
     system = platform.system()
 
@@ -103,7 +102,6 @@ class TestPgprobackup():
         urlretrieve(baseurl + '/' + tar_href, tar_href)
         return tar_href
 
-    @pytest.mark.test_install
     def test_install(self, request):
         """ Install pg_probackup utility and configure postgresql
              for running pg_probackup.
@@ -165,7 +163,6 @@ class TestPgprobackup():
         assert self.version
         request.cls.version = self.version
 
-    @pytest.mark.test_pgprobackup_internal
     def test_pgprobackup_internal(self, request):
         if request.cls.skip:
             print("PgProBackup test is only for postgrespro std and ent.")
@@ -198,7 +195,6 @@ class TestPgprobackup():
         print(subprocess.check_output(cmd, cwd=dir, shell=True).decode())
         print("OK")
 
-    @pytest.mark.test_pgprobackup_simple_backup_restore
     def test_pgprobackup_simple_backup_restore(self, request):
         """Test pg_probackup with compression feature
             and full continous backup

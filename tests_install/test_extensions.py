@@ -12,12 +12,10 @@ from helpers.pginstall import PgInstall
 from helpers.utils import ConsoleEncoding, get_distro
 
 
-@pytest.mark.test_extensions
 class TestExtensions():
 
     system = platform.system()
 
-    @pytest.mark.test_extensions_prepare
     def test_extensions_prepare(self, request):
         """
         Scenario:
@@ -55,7 +53,6 @@ class TestExtensions():
         else:
             pginst.install_postgres_win()
 
-    @pytest.mark.test_pgbadger_prepare
     def test_pgbadger_prepare(self, request):
         pginst = request.cls.pginst
         pginst.exec_psql("ALTER SYSTEM SET log_min_duration_statement = 0")
@@ -76,7 +73,6 @@ class TestExtensions():
             os.remove(os.path.join(logdir, lf))
         pginst.start_service()
 
-    @pytest.mark.test_pgbadger
     def test_pgbadger(self, request):
         pginst = request.cls.pginst
         if pginst.edition not in ['std', 'std-cert', 'ent', 'ent-cert']:
@@ -130,7 +126,6 @@ class TestExtensions():
             return
         raise Exception('Log files in "%s" are not found.' % logdir)
 
-    @pytest.mark.test_sr_plan
     def test_sr_plan(self, request):
         return
         pginst = request.cls.pginst

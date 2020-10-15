@@ -12,7 +12,6 @@ from helpers.pginstall import PgInstall
 from helpers.utils import get_distro
 
 
-@pytest.mark.dev_usage
 class TestDevUsage(object):
     """
     Test that performs 'make installcheck' and 'make check'
@@ -21,7 +20,6 @@ class TestDevUsage(object):
 
     system = platform.system()
 
-    @pytest.mark.test_dev_usage
     def test_dev_usage(self, request):
         """
         Scenario:

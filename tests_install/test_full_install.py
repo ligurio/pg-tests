@@ -249,12 +249,10 @@ def check_package_contents(pginst, packages):
             check_contents(package, pfiles, [], sapps + capps + dapps)
 
 
-@pytest.mark.full_install
 class TestFullInstall():
 
     system = platform.system()
 
-    @pytest.mark.test_full_install
     def test_full_install(self, request):
         """
         Scenario:
@@ -336,7 +334,6 @@ class TestFullInstall():
                     assert cdedition == 'Postgres Pro Standard'
         print("OK")
 
-    @pytest.mark.test_mamonsu
     def test_mamonsu(self, request):
         if self.system == 'Windows':
             pytest.skip("This mamonsu test is not implemented on Windows yet.")
@@ -354,7 +351,6 @@ class TestFullInstall():
         assert len(response[0]) != 0
         assert len(response[1]) == 0
 
-    @pytest.mark.test_all_extensions
     def test_all_extensions(self, request):
         pginst = request.cls.pginst
         iprops = pginst.get_initdb_props()
@@ -372,7 +368,6 @@ class TestFullInstall():
                 "CREATE EXTENSION IF NOT EXISTS \\\"%s\\\" CASCADE" %
                 extension)
 
-    @pytest.mark.test_plpython
     def test_plpython(self, request):
         """Test for plpython language
         Scenario:
@@ -399,7 +394,6 @@ $$ LANGUAGE plpython2u;"""
         # Step 4
         pginst.exec_psql("DROP FUNCTION py_test_function()")
 
-    @pytest.mark.test_plpython
     def test_plpython3(self, request):
         """Test for plpython language
         Scenario:
@@ -429,8 +423,6 @@ $$ LANGUAGE plpython3u;"""
         # Step 4
         pginst.exec_psql("DROP FUNCTION py_test_function()")
 
-    @pytest.mark.skipif('platform.system() == "Windows"')
-    @pytest.mark.test_pltcl
     def test_pltcl(self, request):
         """Test for pltcl language
         Scenario:
@@ -455,7 +447,6 @@ $$ LANGUAGE pltcl;"""
         # Step 4
         pginst.exec_psql("DROP FUNCTION pltcl_test_function()")
 
-    @pytest.mark.test_plperl
     def test_plperl(self, request):
         """Test for plperl language
         Scenario:
@@ -483,7 +474,6 @@ $$ LANGUAGE plperl;"""
         # Step 4
         pginst.exec_psql("DROP FUNCTION plperl_test_function()")
 
-    @pytest.mark.test_plpgsql
     def test_plpgsql(self, request):
         """Test for plpgsql language
         Scenario:
@@ -513,7 +503,6 @@ $$ LANGUAGE plpgsql;"""
         # Step 4
         pginst.exec_psql("DROP FUNCTION plpgsql_test_function()")
 
-    @pytest.mark.test_passwordcheck
     def test_passwordcheck(self, request):
         """Test for passwordcheck feature for certified enterprise version
         Scenario:
@@ -538,7 +527,6 @@ $$ LANGUAGE plpgsql;"""
         result = pginst.exec_psql_select("SHOW passwordcheck.with_nonletters")
         assert result == "on"
 
-    @pytest.mark.test_src_debug
     def test_src_debug(self, request):
         if self.system == 'Windows':
             pytest.skip("This test is not for Windows.")
@@ -552,7 +540,6 @@ $$ LANGUAGE plpgsql;"""
                     "Directory /usr/src/debug/postgrespro* is not empty.")
             print("Directory %s is empty." % pgsrcdir)
 
-    @pytest.mark.test_full_remove
     def test_full_remove(self, request):
         """Try to delete all installed packages for version under test
         Scenario:

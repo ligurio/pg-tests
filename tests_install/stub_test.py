@@ -1,7 +1,6 @@
 import pytest
 
 
-@pytest.mark.test_stub
 def test_stub(request):
     """ This is a stub test
     Scenario:
