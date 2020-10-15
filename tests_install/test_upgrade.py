@@ -384,7 +384,7 @@ class TestUpgrade():
         """
         Scenario:
         1. Install testible version
-        2. if route install upgradeble version
+        2. if route install upgradeable version
         3. Create DB with covering dump
         4. Upgrade by pg_upgrade
         5. Check that upgrade successfull (calculate diff between dump)
