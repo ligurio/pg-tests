@@ -174,7 +174,7 @@ def get_test_versions(edition, version, specified_version, current_version):
         raise Exception("Unsupported postgrespro edition (%s)." % edition)
 
     # Choose two versions -- newest and oldest supported
-    soup = BeautifulSoup(urlopen(archive_url))
+    soup = BeautifulSoup(urlopen(archive_url), 'html_parser')
     arcversions = []
     startswith = 'pgproee-' if edition == 'ent' else \
         ('pgpro-' if edition == 'std' else 'pg1c-')

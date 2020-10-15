@@ -544,7 +544,7 @@ class PgInstall:
                            (self.get_repo_base(), product_dir)
                 dist_name = self.get_distname_for_pgpro()
                 try:
-                    soup = BeautifulSoup(urlopen(repo_rpm))
+                    soup = BeautifulSoup(urlopen(repo_rpm), 'html_parser')
                     for link in soup.findAll('a'):
                         href = link.get('href')
                         if href.startswith('%s.%s' % (reponame, dist_name)):
@@ -1058,7 +1058,7 @@ baseurl=%s
         :param url: str:
         :return: str: last postgrespro exe file
         """
-        soup = BeautifulSoup(urlopen(url))
+        soup = BeautifulSoup(urlopen(url), 'html_parser')
         exe_arch = r'_[X]?64bit_' if arch == 'AMD64' else r'_32bit_'
         setup_files = []
         for link in soup.findAll('a'):
@@ -1077,7 +1077,7 @@ baseurl=%s
         """
 
         msi_files = []
-        soup = BeautifulSoup(urlopen(url))
+        soup = BeautifulSoup(urlopen(url), 'html_parser')
         for link in soup.findAll('a'):
             href = link.get('href')
             if re.search(r'\.msi$', href, re.I):
