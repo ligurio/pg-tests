@@ -50,14 +50,19 @@ select count(*) from (
         i.indexrelid::regclass,
         i.indexrelid,
         am.amname,
-        bt_index_full_check(i.indexrelid,
-                            (bt_metap(indexrelid::regclass::varchar)).version)
+        case when ae.default_version = '1.0' then
+          bt_index_parent_check(i.indexrelid)
+        else
+          bt_index_full_check(i.indexrelid,
+                              (bt_metap(indexrelid::regclass::varchar)).version)
+        end
     from
         pg_index i
         join pg_opclass op ON i.indclass[0] = op.oid
         join pg_am am ON op.opcmethod = am.oid
         join pg_class c ON i.indexrelid = c.oid
         join pg_namespace n ON c.relnamespace = n.oid
+        join pg_available_extensions ae ON ae.name='amcheck'
     where
         am.amname='btree' and n.nspname != 'pg_catalog'
         and c.relpersistence != 't'
