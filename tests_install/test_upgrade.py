@@ -375,11 +375,9 @@ def get_last_version(edition, version):
     return arcversions[-1]
 
 
-@pytest.mark.upgrade
 class TestUpgrade():
     system = system
 
-    @pytest.mark.test_upgrade
     def test_upgrade(self, request):
         """
         Scenario:
@@ -481,7 +479,6 @@ class TestUpgrade():
                 subprocess.check_call("apt-get purge -y postgrespro-common "
                                       "postgrespro-client-common", shell=True)
 
-    @pytest.mark.test_dump_restore
     def test_dump_restore(self, request):
         """
         Scenario:

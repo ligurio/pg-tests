@@ -223,12 +223,10 @@ exit $exitcode''' %
     subprocess.check_call(cmd, cwd=pgsrcdir, shell=True)
 
 
-@pytest.mark.hotstandby_compatibility
 class TestHotStandbyCompatibility():
 
     system = platform.system()
 
-    @pytest.mark.test_hotstandby_compat
     def test_hotstandby_compat(self, request):
         """
         Scenario:

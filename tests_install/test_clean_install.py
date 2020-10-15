@@ -10,12 +10,10 @@ from helpers.utils import get_distro
 import allure
 
 
-@pytest.mark.clean_install
 class TestCleanInstall():
 
     system = platform.system()
 
-    @pytest.mark.test_clean_install
     def test_clean_install(self, request):
         """
         Scenario:
@@ -61,7 +59,6 @@ class TestCleanInstall():
               (server_version, client_version))
         print("OK")
 
-    @pytest.mark.test_full_remove
     def test_pg_setup(self, request):
         pginst = request.cls.pginst
 

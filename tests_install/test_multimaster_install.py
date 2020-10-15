@@ -463,7 +463,6 @@ class Multimaster(object):
         raise Exception('Time is out')
 
 
-@pytest.mark.multimaster_install
 class TestMultimasterInstall():
     system = platform.system()
 
@@ -473,7 +472,6 @@ class TestMultimasterInstall():
         elif self.system == 'Windows':
             os.system('route print')
 
-    @pytest.mark.test_clean_install
     def test_multimaster_install(self, request):
         """
         Scenario:
