@@ -265,7 +265,7 @@ class TestHotStandbyCompatibility():
         print("Running on %s." % target)
 
         # Choose two versions -- newest and oldest supported
-        soup = BeautifulSoup(urlopen(archive_url), 'html_parser')
+        soup = BeautifulSoup(urlopen(archive_url), 'html.parser')
         arcversions = []
         startswith = 'pgproee-' if edition == 'ent' else \
             ('pgpro-' if edition == 'std' else 'pg1c-')

@@ -355,7 +355,7 @@ def get_last_version(edition, version):
         raise Exception("Unsupported postgrespro edition (%s)." % edition)
 
     # Choose two versions -- newest and oldest supported
-    soup = BeautifulSoup(urlopen(archive_url), 'html_parser')
+    soup = BeautifulSoup(urlopen(archive_url), 'html.parser')
     arcversions = []
     for link in soup.findAll('a'):
         href = link.get('href')
