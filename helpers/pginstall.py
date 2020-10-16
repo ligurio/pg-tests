@@ -1539,7 +1539,11 @@ baseurl=%s
         return self.__get_product_dir()
 
     def install_default_config(self):
+        config_file = os.path.join(self.get_configdir(), 'postgresql.conf')
         if self.product == 'postgresql':
+            with open(config_file, 'w') as f:
+                if self.os.is_debian_based():
+                    f.write("data_directory='%s'" % self.get_datadir())
             return
         conf_sample_path = os.path.join(self.get_pg_prefix(), 'share')
         if self.version == '9.6' and self.os.is_debian_based():
@@ -1570,7 +1574,6 @@ baseurl=%s
                         "#effective_io_concurrency = 0\n"
                         "#checkpoint_flush_after = 0\n")
 
-        config_file = os.path.join(self.get_configdir(), 'postgresql.conf')
         shutil.copyfile(conf_sample, config_file)
 
         if self.version == '9.6' and self.os.is_debian_based():
