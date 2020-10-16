@@ -451,7 +451,8 @@ def refresh_env_win():
         i += 1
         if envvar.upper() == 'PATH':
             os.environ[envvar] = os.path.expandvars(envval)
-        elif envvar.upper().startswith('PG'):
+        elif (envvar.upper().startswith('PG') or
+              envvar.upper().startswith('PYTHON')):
             os.environ[envvar] = envval
 
 
