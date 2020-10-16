@@ -3,9 +3,7 @@ import os
 import subprocess
 import shutil
 import time
-import sys
 
-import pytest
 import allure
 
 from allure_commons.types import LabelType

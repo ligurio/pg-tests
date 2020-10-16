@@ -2,8 +2,6 @@ import platform
 import os
 import subprocess
 
-import pytest
-
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall
 from helpers.utils import get_distro

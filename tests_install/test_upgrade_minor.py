@@ -4,19 +4,14 @@ import subprocess
 import re
 import tempfile
 import time
-import pytest
 import allure
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall, PGPRO_ARCHIVE_STANDARD,\
     PGPRO_ARCHIVE_ENTERPRISE
 from helpers.os_helpers import DEBIAN_BASED
 from helpers.constants import FIRST_RELEASE
-try:
-    from bs4 import BeautifulSoup
-except ImportError:  # py2compat
-    from BeautifulSoup import BeautifulSoup
 from helpers.utils import diff_dbs, download_dump, urlopen, ConsoleEncoding,\
-    get_distro, compare_versions, extend_ver
+    get_distro, compare_versions, extend_ver, get_soup
 
 tempdir = tempfile.gettempdir()
 client_dir = 'client'
@@ -174,7 +169,7 @@ def get_test_versions(edition, version, specified_version, current_version):
         raise Exception("Unsupported postgrespro edition (%s)." % edition)
 
     # Choose two versions -- newest and oldest supported
-    soup = BeautifulSoup(urlopen(archive_url), 'html.parser')
+    soup = get_soup(archive_url)
     arcversions = []
     startswith = 'pgproee-' if edition == 'ent' else \
         ('pgpro-' if edition == 'std' else 'pg1c-')

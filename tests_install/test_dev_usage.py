@@ -4,7 +4,6 @@ import os
 import platform
 import subprocess
 
-import pytest
 import allure
 
 from allure_commons.types import LabelType

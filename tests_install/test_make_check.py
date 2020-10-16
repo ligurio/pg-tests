@@ -5,9 +5,7 @@ import subprocess
 import os
 import re
 import tarfile
-import pytest
 import allure
-import shutil
 
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall, PRELOAD_LIBRARIES
