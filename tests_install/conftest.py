@@ -93,6 +93,10 @@ if [ ! -z "`ls /var/coredumps`" ]; then
                 # The bash coredump encountered on MSVSphere 6.3
                 continue
                 ;;
+            *":!usr!dash")
+                # The dash coredump encountered on Ubuntu 18.04
+                continue
+                ;;
             *":!usr!bin!dash")
                 # The dash coredump encountered on Ubuntu 19.10
                 continue
