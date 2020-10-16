@@ -1544,6 +1544,8 @@ baseurl=%s
         return self.__get_product_dir()
 
     def install_default_config(self):
+        if self.product == 'postgresql':
+            return
         conf_sample_path = os.path.join(self.get_pg_prefix(), 'share')
         if self.version == '9.6' and self.os.is_debian_based():
             conf_sample_path = '/usr/share/postgresql/9.6'
