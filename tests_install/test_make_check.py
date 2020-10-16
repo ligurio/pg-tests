@@ -10,7 +10,7 @@ import allure
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall, PRELOAD_LIBRARIES
 from helpers.os_helpers import DEBIAN_BASED
-from helpers.utils import ConsoleEncoding, get_distro
+from helpers.utils import ConsoleEncoding, get_distro, refresh_env_win
 
 PRELOAD_LIBRARIES['ent-cert-11'].remove('passwordcheck')
 
@@ -72,6 +72,8 @@ class TestMakeCheck(object):
 
         if self.system == 'Windows':
             if os.path.exists(pginst.get_default_bin_path()):
+                # Refresh environment to get correct PYTHONHOME
+                refresh_env_win()
                 # The instance is already installed and
                 # installcheck environment is presumably prepared,
                 # so just run make_installcheck (once more)
