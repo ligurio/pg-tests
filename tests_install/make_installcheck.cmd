@@ -78,7 +78,7 @@ pwd
 test -f contrib/mchar/mchar.sql.in && make -C contrib/mchar mchar.sql
 
 # Pass to `make installcheck` all the options (with-*, enable-*), that were passed to configure
-confopts="python_majorversion=`'$PYTHONHOME\python' -c 'import sys; print(sys.version_info.major)'`"
+confopts="python_majorversion=`\"$PYTHONHOME\\python\" -c 'import sys; print(sys.version_info.major)'`"
 opts=`"$PGPATH/bin/pg_config" --configure | grep -Eo "'[^']*'|[^' ]*" | sed -e "s/^'//" -e "s/'$//"`
 while read -r opt;
     do case "$opt" in --with-*=*) ;; --with-* | --enable-*) opt="${opt/#--/}"; opt="${opt//-/_}" confopts="$confopts $opt=yes ";; esac;
