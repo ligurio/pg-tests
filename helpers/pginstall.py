@@ -7,14 +7,9 @@ import time
 import shutil
 import glob
 
-try:
-    from bs4 import BeautifulSoup
-except ImportError:  # py2compat
-    from BeautifulSoup import BeautifulSoup
-
 from helpers.utils import command_executor, get_distro, REMOTE_ROOT, \
     REMOTE_ROOT_PASSWORD, write_file, refresh_env_win,\
-    urlretrieve, urlopen, ConsoleEncoding, compare_versions
+    urlretrieve, urlopen, ConsoleEncoding, compare_versions, get_soup
 
 from helpers.os_helpers import OsHelper, dist
 
@@ -544,7 +539,7 @@ class PgInstall:
                            (self.get_repo_base(), product_dir)
                 dist_name = self.get_distname_for_pgpro()
                 try:
-                    soup = BeautifulSoup(urlopen(repo_rpm), 'html.parser')
+                    soup = get_soup(repo_rpm)
                     for link in soup.findAll('a'):
                         href = link.get('href')
                         if href.startswith('%s.%s' % (reponame, dist_name)):
@@ -1058,7 +1053,7 @@ baseurl=%s
         :param url: str:
         :return: str: last postgrespro exe file
         """
-        soup = BeautifulSoup(urlopen(url), 'html.parser')
+        soup = get_soup(url)
         exe_arch = r'_[X]?64bit_' if arch == 'AMD64' else r'_32bit_'
         setup_files = []
         for link in soup.findAll('a'):
@@ -1077,7 +1072,7 @@ baseurl=%s
         """
 
         msi_files = []
-        soup = BeautifulSoup(urlopen(url), 'html.parser')
+        soup = get_soup(url)
         for link in soup.findAll('a'):
             href = link.get('href')
             if re.search(r'\.msi$', href, re.I):

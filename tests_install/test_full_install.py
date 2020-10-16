@@ -1,11 +1,8 @@
 import os
 import platform
-import distro
 import glob
-import time
 import subprocess
 import re
-import io
 import sys
 import pytest
 import allure

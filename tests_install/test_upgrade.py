@@ -1,7 +1,5 @@
 import platform
-import pytest
 import os
-import pytest
 import allure
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall, PGPRO_ARCHIVE_ENTERPRISE,\
@@ -10,14 +8,10 @@ from helpers.os_helpers import ALT_BASED, DEBIAN_BASED
 from helpers.constants import FIRST_RELEASE, UPGRADE_ROUTES,\
     DUMP_RESTORE_ROUTES
 from helpers.utils import diff_dbs, download_dump, urlopen, get_distro, \
-    compare_versions, extend_ver
+    compare_versions, extend_ver, get_soup
 import time
 import subprocess
 import shutil
-try:
-    from bs4 import BeautifulSoup
-except ImportError:  # py2compat
-    from BeautifulSoup import BeautifulSoup
 import re
 
 system = platform.system()
@@ -355,7 +349,7 @@ def get_last_version(edition, version):
         raise Exception("Unsupported postgrespro edition (%s)." % edition)
 
     # Choose two versions -- newest and oldest supported
-    soup = BeautifulSoup(urlopen(archive_url), 'html.parser')
+    soup = get_soup(archive_url)
     arcversions = []
     for link in soup.findAll('a'):
         href = link.get('href')

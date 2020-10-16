@@ -1,7 +1,6 @@
 import os
 import platform
 import distro
-import random
 import shlex
 import socket
 import subprocess
@@ -617,3 +616,16 @@ def compare_versions(ver1, ver2):
     v1 = extend_ver(ver1)
     v2 = extend_ver(ver2)
     return -1 if v1 < v2 else (0 if v1 == v2 else 1)
+
+
+def get_soup(url):
+    try:
+        from bs4 import BeautifulSoup
+    except ImportError:  # py2compat
+        from BeautifulSoup import BeautifulSoup
+
+    if (sys.version_info > (3, 0)):
+        soup = BeautifulSoup(urlopen(url), 'html.parser')
+    else:
+        soup = BeautifulSoup(urlopen(url))
+    return soup

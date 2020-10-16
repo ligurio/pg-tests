@@ -1,10 +1,8 @@
 import os
 import platform
 import subprocess
-import time
 import re
 
-import pytest
 import allure
 
 from allure_commons.types import LabelType

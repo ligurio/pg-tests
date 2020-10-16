@@ -1,17 +1,12 @@
 import shutil
 import json
 import os
-import pytest
 import platform
 import subprocess
 import re
 import sys
 import allure
 from helpers.utils import urlretrieve, get_distro
-try:
-    from bs4 import BeautifulSoup
-except ImportError:  # py2compat
-    from BeautifulSoup import BeautifulSoup
 import tarfile
 
 from allure_commons.types import LabelType
