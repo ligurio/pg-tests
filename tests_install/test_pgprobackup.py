@@ -16,8 +16,6 @@ from helpers.os_helpers import REDHAT_BASED
 from helpers.utils import download_dump, diff_dbs
 
 tempdir = os.path.join(os.path.abspath(os.getcwd()), 'tmp')
-os.mkdir(tempdir)
-
 
 truncate_unlogged_sql = """
 DO $$
