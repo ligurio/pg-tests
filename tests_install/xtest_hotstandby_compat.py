@@ -14,7 +14,8 @@ import allure
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall
 from helpers.pginstall import PGPRO_ARCHIVE_STANDARD, PGPRO_ARCHIVE_ENTERPRISE
-from helpers.utils import urlopen, get_distro, compare_versions, extend_ver
+from helpers.utils import urlopen, get_distro, compare_versions, extend_ver, \
+    get_soup
 try:
     from bs4 import BeautifulSoup
 except ImportError:  # py2compat
@@ -265,7 +266,7 @@ class TestHotStandbyCompatibility():
         print("Running on %s." % target)
 
         # Choose two versions -- newest and oldest supported
-        soup = BeautifulSoup(urlopen(archive_url), 'html.parser')
+        soup = get_soup(archive_url)
         arcversions = []
         startswith = 'pgproee-' if edition == 'ent' else \
             ('pgpro-' if edition == 'std' else 'pg1c-')
