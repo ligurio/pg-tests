@@ -1548,6 +1548,8 @@ baseurl=%s
         conf_sample_path = os.path.join(self.get_pg_prefix(), 'share')
         if self.version == '9.6' and self.os.is_debian_based():
             conf_sample_path = '/usr/share/postgresql/9.6'
+        if self.version == '9.6' and self.os.is_altlinux():
+            conf_sample_path = '/usr/share/pgsql'
 
         conf_sample = os.path.join(conf_sample_path, 'postgresql.conf.sample')
         if self.version == '9.6' and self.edition == '1c':
