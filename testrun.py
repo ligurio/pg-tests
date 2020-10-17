@@ -29,7 +29,7 @@ if not sys.version_info > (3, 0):
     # pylint: disable = no-member
     sys.setdefaultencoding('utf8')
 
-MAX_DURATION = 4 * 60 * 60
+MAX_DURATION = 5 * 60 * 60
 DEBUG = False
 
 IMAGE_BASE_URL = 'http://dist.l.postgrespro.ru/vm-images/test/'
