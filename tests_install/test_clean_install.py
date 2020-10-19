@@ -77,10 +77,11 @@ class TestCleanInstall():
         pginst.stop_service()
         os.unlink('/etc/default/postgrespro-%s-%s' %
                   (pginst.alter_edtn, pginst.version))
-        shutil.rmtree('/tmp/db1')
         # This is a workaround for the problem described in PGPRO-3596
         if pginst.os.is_altlinux() and pginst.os.os_arch == 'aarch64':
             os.environ['LANG'] = 'en_US.UTF-8'
+        if os.path.isdir('/tmp/db1'):
+            shutil.rmtree('/tmp/db1')
         exec_pg_setup('initdb -D /tmp/db1')
         exec_pg_setup('service start')
         exec_pg_setup('service status')
