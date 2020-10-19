@@ -514,20 +514,6 @@ UPGRADE_ROUTES = {
             {
                 'name': 'postgrespro', 'edition': 'ent', 'version': '9.6'
             },
-            {
-                'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
-            },
-            {
-                'name': 'postgrespro', 'edition': 'std', 'version': '10'
-            },
-            {
-                'name': 'postgresql', 'edition': '', 'version': '10',
-                'initdb-params': '--locale=C'
-            },
-            {
-                'name': 'postgresql', 'edition': '', 'version': '9.6',
-                'initdb-params': '--locale=C'
-            }
         ]
     },
 
