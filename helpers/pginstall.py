@@ -32,7 +32,7 @@ PRELOAD_LIBRARIES = {
     'ent-12':
         ['auth_delay', 'auto_explain', 'in_memory',
          'pgpro_scheduler', 'ptrack',
-         'pg_stat_statements', 'plantuner',
+         'pg_stat_statements', 'pgpro_stats', 'plantuner',
          'shared_ispell', 'pg_wait_sampling',
          'pg_pathman'],
     'ent-11':

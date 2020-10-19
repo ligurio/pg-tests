@@ -124,6 +124,16 @@ if [ $exitcode -eq 0 ]; then
     fi
 fi
 if [ $exitcode -eq 0 ]; then
+    if [ -f ../pgpro-stats*.tar* ]; then
+        (
+        cd .. &&
+        tar fax pgpro-stats*.tar* &&
+        cd pgpro-stats*/ && chown -R postgres . &&
+        sudo -u postgres make USE_PGXS=1 installcheck; exitcode=$?
+        )
+    fi
+fi
+if [ $exitcode -eq 0 ]; then
     # Extra tests
     sudo -u postgres $1/bin/initdb -D tmpdb
     printf "\n
