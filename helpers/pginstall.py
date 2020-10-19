@@ -74,6 +74,7 @@ dist = {"Oracle Linux Server": 'oraclelinux',
         "SLES": 'sles',
         "ALT Linux": 'altlinux',
         "ALT Server": 'altlinux',
+        "starter kit": 'altlinux',
         "GosLinux": 'goslinux',
         "RED OS": 'redos',
         "AlterOS": 'alteros'}
@@ -677,10 +678,12 @@ baseurl=%s
             elif self.product == "postgrespro":
                 repo = "deb %s %s main" % (baseurl, codename)
                 if self.os.is_altlinux():
+                    print('OS_VERSION: %s' % self.os_version)
                     os_major_version = self.os_version.split('.')[0]
-                    repo = "rpm %s/%s x86_64 pgpro\n" \
+                    os_major_version = os_major_version.replace('p', '')
+                    repo = "rpm %s/%s %s pgpro\n" \
                            "rpm %s/%s noarch pgpro\n" % \
-                           (baseurl, os_major_version,
+                           (baseurl, os_major_version, self.os_arch,
                             baseurl, os_major_version)
 
             if repo:

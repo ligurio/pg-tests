@@ -558,6 +558,8 @@ def restore_env(domname):
 
 
 def close_env(domname, saveimg=False, destroys0=False):
+    if domname.find('@') != -1:
+        return
     import libvirt
     conn = libvirt.open(None)
     dom = conn.lookupByName(domname)

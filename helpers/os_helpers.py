@@ -29,9 +29,9 @@ DEBIAN_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux',
                 'Astra Linux (Smolensk)', 'Astra Linux (Orel)']
 APT_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux',
              'Astra Linux (Smolensk)', 'Astra Linux (Orel)',
-             'ALT Linux', 'ALT Server', 'ALT SPServer']
+             'ALT Linux', 'ALT Server', 'ALT SPServer', 'starter kit']
 ASTRA_BASED = ['Astra Linux (Smolensk)', 'Astra Linux (Orel)']
-ALT_BASED = ['ALT Linux', 'ALT Server', 'ALT SPServer']
+ALT_BASED = ['ALT Linux', 'ALT Server', 'ALT SPServer', 'starter kit']
 SUSE_BASED = ['SLES']
 ZYPPER_BASED = ['SLES']
 WIN_BASED = ['Windows-2012ServerR2', 'Windows-10', 'Windows-8.1', 'Windows-7']
