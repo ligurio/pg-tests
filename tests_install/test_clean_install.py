@@ -6,6 +6,7 @@ from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall
 from helpers.utils import get_distro
 import allure
+import shutil
 
 
 class TestCleanInstall():
@@ -76,6 +77,10 @@ class TestCleanInstall():
         pginst.stop_service()
         os.unlink('/etc/default/postgrespro-%s-%s' %
                   (pginst.alter_edtn, pginst.version))
+        shutil.rmtree('/tmp/db1')
+        # This is a workaround for the problem described in PGPRO-3596
+        if pginst.os.is_altlinux() and pginst.os.os_arch == 'aarch64':
+            os.environ['LANG'] = 'en_US.UTF-8'
         exec_pg_setup('initdb -D /tmp/db1')
         exec_pg_setup('service start')
         exec_pg_setup('service status')
