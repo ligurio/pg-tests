@@ -128,7 +128,7 @@ class TestMakeCheck(object):
                              re.MULTILINE))
             assert(re.search(r'^Source', bitxt, re.MULTILINE))
             assert(re.search(r'^SPEC', bitxt, re.MULTILINE))
-            print("The binary package buildinfo:\n%s\n" % bi.read())
+            print("The binary package buildinfo:\n%s\n" % bitxt)
 
         pginst.install_default_config()
 
