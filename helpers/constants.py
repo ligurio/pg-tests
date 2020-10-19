@@ -288,6 +288,8 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        # Dump crash server for earlier versions
+        'postgrespro-ent-9.6': '9.6.10.3',
         'postgrespro-ent-12': '12.3.1',
     },
     'Windows-10 10.0.10240': {
@@ -295,6 +297,7 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgrespro-ent-9.6': '9.6.10.3',
         'postgrespro-ent-12': '12.3.1',
     },
     # winserv-2019
@@ -303,6 +306,7 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgrespro-ent-9.6': '9.6.10.3',
         'postgrespro-ent-12': '12.3.1',
     },
 
