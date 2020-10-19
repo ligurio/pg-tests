@@ -1,6 +1,5 @@
 import glob
 import json
-import matplotlib.pyplot as plot  # pylint: disable=import-error
 import numpy  # pylint: disable=import-error
 import os
 import platform
@@ -274,6 +273,7 @@ def dump_stats(stats, filename):
 
 
 def plot_stats(stats, connstring):
+    import matplotlib.pyplot as plot  # pylint: disable=import-error
 
     sql_query_analyze = "EXPLAIN ANALYZE " + stats['query']
     filename = str(query_to_hash(sql_query_analyze, connstring)[0][0])

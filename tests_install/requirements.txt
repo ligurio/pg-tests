@@ -2,7 +2,6 @@ distro
 allure-pytest
 beautifulsoup4
 kiwisolver
-matplotlib
 netaddr
 numpy
 psutil
