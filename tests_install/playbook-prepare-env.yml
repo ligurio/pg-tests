@@ -19,7 +19,7 @@
       msg: "System {{ inventory_hostname }}/{{ ansible_host }} \
             ({{ ansible_connection }}) has os_family {{ ansible_os_family }}, \
             distribution {{ ansible_distribution }} {{ ansible_distribution_major_version }} \
-            ({{ ansible_architecture }})."
+            ({{ ansible_architecture }} {{ ansible_pkg_mgr }})."
 
   - name: Mount DVD(s) (if available)
     shell: if /sbin/blkid /dev/sr0; then
@@ -389,7 +389,7 @@
     become: true
 
   - name: set up ssh authorized_keys
-    authorized_key: user=test key="{{ item }}" state=present exclusive=yes
+    authorized_key: user=test key="{{ item }}" state=present exclusive=no
     when: ansible_os_family != "Windows"
     with_file:
     - ../static/authorized_keys
