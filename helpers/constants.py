@@ -550,51 +550,16 @@ UPGRADE_ROUTES = {
             {
                 'name': 'postgrespro', 'edition': 'ent', 'version': '9.6'
             },
-            {
-                'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
-            },
-            {
-                'name': 'postgrespro', 'edition': 'std', 'version': '10'
-            },
-            {
-                'name': 'postgresql', 'edition': '', 'version': '10',
-                'initdb-params': '--locale=C'
-            },
-            {
-                'name': 'postgresql', 'edition': '', 'version': '9.6',
-                'initdb-params': '--locale=C'
-            }
         ]
     },
 
     'postgrespro-ent-11': {
         'from': [
             {
-                'name': 'postgrespro', 'edition': 'std', 'version': '11'
-            },
-            {
-                'name': 'postgrespro', 'edition': 'std', 'version': '10'
-            },
-            {
-                'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
-            },
-            {
                 'name': 'postgrespro', 'edition': 'ent', 'version': '10'
             },
             {
                 'name': 'postgrespro', 'edition': 'ent', 'version': '9.6'
-            },
-            {
-                'name': 'postgresql', 'edition': '', 'version': '11',
-                'initdb-params': '--locale=C'
-            },
-            {
-                'name': 'postgresql', 'edition': '', 'version': '10',
-                'initdb-params': '--locale=C'
-            },
-            {
-                'name': 'postgresql', 'edition': '', 'version': '9.6',
-                'initdb-params': '--locale=C'
             },
         ]
     },
