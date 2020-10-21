@@ -48,11 +48,47 @@ def urlopen(url):
     return urlrequest.urlopen(url)
 
 
-def urlcontent(url):
+def urlcontent(url, retry_cnt=5):
+    timeout = 0
+    attempt = 1
+    while attempt < retry_cnt:
+        try:
+            return urlopen(url).read().decode()
+        except Exception as ex:
+            print('Exception occured while opening url "%s":' % url)
+            print(ex)
+            print('========')
+            attempt += 1
+            timeout += 5
+            print('Retrying (attempt %d with delay for %d seconds)...' %
+                  (attempt, timeout))
+            time.sleep(timeout)
+    if retry_cnt > 1:
+        print('Last attempt to open url...\n')
     return urlopen(url).read().decode()
 
 
-def urlretrieve(url, target):
+def urlretrieve(url, target, retry_cnt=5):
+    timeout = 0
+    attempt = 1
+    while attempt < retry_cnt:
+        try:
+            if os.path.exists(target):
+                os.remove(target)
+            return urlrequest.urlretrieve(url, target)
+        except Exception as ex:
+            print('Exception occured while retrieving url "%s":' % url)
+            print(ex)
+            print('========')
+            attempt += 1
+            timeout += 5
+            print('Retrying (attempt %d with delay for %d seconds)...' %
+                  (attempt, timeout))
+            time.sleep(timeout)
+    if retry_cnt > 1:
+        print('Last attempt to retrieve url...\n')
+    if os.path.exists(target):
+        os.remove(target)
     return urlrequest.urlretrieve(url, target)
 
 
