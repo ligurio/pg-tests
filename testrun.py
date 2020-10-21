@@ -65,7 +65,7 @@ def list_images():
     names = []
     page = ''
     try:
-        page = urlcontent(IMAGE_BASE_URL)
+        page = urlcontent(IMAGE_BASE_URL, retry_cnt=1)
     except IOError:
         for f in os.listdir(TEMPLATE_DIR):
             fp = os.path.splitext(f)
@@ -126,7 +126,7 @@ def create_image(domname, name):
 
     page = ''
     try:
-        page = urlcontent(IMAGE_BASE_URL)
+        page = urlcontent(IMAGE_BASE_URL, retry_cnt=1)
     except IOError:
         print("%s is not available, no *.iso will be downloaded." %
               IMAGE_BASE_URL)
