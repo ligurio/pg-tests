@@ -94,6 +94,6 @@ LD_LIBRARY_PATH=$1/lib \
 result=$?
 if [ $result -ne 0 ]; then
   echo "sqlsmith failed (see sqlsmith.log):"
-  tail ../sqlsmith.log
+  tail -500 ../sqlsmith.log
   exit $result
 fi
