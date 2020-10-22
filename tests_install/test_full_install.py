@@ -121,9 +121,10 @@ DEV_APPLICATIONS = {
 
 def check_executables(pginst, packages):
     # PGPRO-2761
-    if pginst.os_name == \
-            "\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0\xb5\xd1\x80\xd0" \
-            "\xb0 \xd0\xa1\xd0\xb5\xd1\x80\xd0\xb2\xd0\xb5\xd1\x80":
+    if pginst.os_name in \
+            ["\xd0\x9c\xd0\xa1\xd0\x92\xd0\xa1\xd1\x84\xd0\xb5\xd1\x80\xd0"
+             "\xb0 \xd0\xa1\xd0\xb5\xd1\x80\xd0\xb2\xd0\xb5\xd1\x80",
+             "OSNova Linux (Onyx)"]:
         return
     for package in packages:
         print('Analyzing package %s.' % package)

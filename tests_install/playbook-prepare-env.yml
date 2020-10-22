@@ -18,8 +18,8 @@
     debug:
       msg: "System {{ inventory_hostname }}/{{ ansible_host }} \
             ({{ ansible_connection }}) has os_family {{ ansible_os_family }}, \
-            distribution {{ ansible_distribution }} {{ ansible_distribution_major_version }} \
-            ({{ ansible_architecture }}."
+            distribution {{ ansible_distribution }}, major version {{ ansible_distribution_major_version }} \
+            ({{ ansible_architecture }})."
 
   - name: Mount DVD(s) (if available)
     shell: if /sbin/blkid /dev/sr0; then
@@ -297,6 +297,7 @@
       state: present
       update_cache: yes
     when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu' or
+          ansible_distribution == 'OSNova Linux (Onyx)' or
           ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux')
     become_method: sudo
     become: true
@@ -308,6 +309,7 @@
       state: present
       update_cache: yes
     when: (ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu' or
+          ansible_distribution == 'OSNova Linux (Onyx)' or
           ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux')) and
           ansible_python_version.startswith('2.')
     become_method: sudo
