@@ -26,10 +26,12 @@ YUM_BASED = ['CentOS Linux', 'CentOS',
              " \xd0\xa1\xd0\xb5\xd1\x80\xd0\xb2\xd0\xb5\xd1\x80",
              'RED OS', 'AlterOS']
 DEBIAN_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux',
-                'Astra Linux (Smolensk)', 'Astra Linux (Orel)']
+                'Astra Linux (Smolensk)', 'Astra Linux (Orel)',
+                'OSNova Linux (Onyx)']
 APT_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux',
              'Astra Linux (Smolensk)', 'Astra Linux (Orel)',
-             'ALT Linux', 'ALT Server', 'ALT SPServer', 'starter kit']
+             'ALT Linux', 'ALT Server', 'ALT SPServer', 'starter kit',
+             'OSNova Linux (Onyx)']
 ASTRA_BASED = ['Astra Linux (Smolensk)', 'Astra Linux (Orel)']
 ALT_BASED = ['ALT Linux', 'ALT Server', 'ALT SPServer', 'starter kit']
 SUSE_BASED = ['SLES']
@@ -45,6 +47,7 @@ dist = {"Oracle Linux Server": 'oraclelinux',
         "debian": 'debian',
         "Debian GNU/Linux": 'debian',
         "Ubuntu": 'ubuntu',
+        "OSNova Linux (Onyx)": "osnova",
         "ROSA Enterprise Linux Server": 'rosa-el',
         "ROSA Enterprise Linux Cobalt": 'rosa-sx',
         "SLES": 'sles',
