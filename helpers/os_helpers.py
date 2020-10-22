@@ -6,7 +6,7 @@ import time
 import subprocess
 from helpers.utils import command_executor, get_distro, REMOTE_ROOT, \
     REMOTE_ROOT_PASSWORD, write_file, refresh_env_win, \
-    urlretrieve, urlopen, ConsoleEncoding
+    urlretrieve, ConsoleEncoding
 
 REDHAT_BASED = ['CentOS Linux', 'CentOS',
                 'Red Hat Enterprise Linux Server', 'Red Hat Enterprise Linux',

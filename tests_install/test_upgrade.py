@@ -7,7 +7,7 @@ from helpers.pginstall import PgInstall, PGPRO_ARCHIVE_ENTERPRISE,\
 from helpers.os_helpers import ALT_BASED, DEBIAN_BASED
 from helpers.constants import FIRST_RELEASE, UPGRADE_ROUTES,\
     DUMP_RESTORE_ROUTES
-from helpers.utils import diff_dbs, download_dump, urlopen, get_distro, \
+from helpers.utils import diff_dbs, download_dump, get_distro, \
     compare_versions, extend_ver, get_soup
 import time
 import subprocess
