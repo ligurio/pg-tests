@@ -9,7 +9,7 @@ import glob
 
 from helpers.utils import command_executor, get_distro, REMOTE_ROOT, \
     REMOTE_ROOT_PASSWORD, write_file, refresh_env_win,\
-    urlretrieve, urlopen, ConsoleEncoding, compare_versions, get_soup
+    urlretrieve, ConsoleEncoding, compare_versions, get_soup
 
 from helpers.os_helpers import OsHelper, dist
 

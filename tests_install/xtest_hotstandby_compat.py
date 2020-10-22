@@ -14,7 +14,7 @@ import allure
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall
 from helpers.pginstall import PGPRO_ARCHIVE_STANDARD, PGPRO_ARCHIVE_ENTERPRISE
-from helpers.utils import urlopen, get_distro, compare_versions, extend_ver, \
+from helpers.utils import get_distro, compare_versions, extend_ver, \
     get_soup
 try:
     from bs4 import BeautifulSoup
