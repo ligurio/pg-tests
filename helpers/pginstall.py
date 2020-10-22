@@ -705,6 +705,8 @@ baseurl=%s
             raise Exception("Unsupported distro %s" % self.os_name)
         self.reponame = reponame
         self.all_packages_in_repo = self.get_all_packages_in_repo()
+        if not self.all_packages_in_repo:
+            raise Exception("No packages in %s" % baseurl)
 
     def setup_extra_repos(self):
         if self.product == 'postgrespro' and self.os.is_altlinux():
