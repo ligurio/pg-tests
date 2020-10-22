@@ -309,6 +309,25 @@ FIRST_RELEASE = {
         'postgrespro-ent-9.6': '9.6.10.3',
         'postgrespro-ent-12': '12.3.1',
     },
+    # osnova-2.0
+    'OSNova Linux (Onyx) 2.0': {
+        'postgresql--9.6': None,
+        'postgresql--10': None,
+        'postgresql--11': None,
+        'postgresql--12': None,
+        'postgrespro-std-9.6': None,
+        'postgrespro-std-10': None,
+        'postgrespro-std-11': None,
+        'postgrespro-std-12': None,
+        'postgrespro-ent-9.6': None,
+        'postgrespro-ent-10': None,
+        'postgrespro-ent-11': None,
+        'postgrespro-ent-12': '12.5.1',
+        'postgrespro-1c-9.6': None,
+        'postgrespro-1c-10': None,
+        'postgrespro-1c-11': None,
+        'postgrespro-1c-12': None,
+    },
 
 }
 
