@@ -12,6 +12,7 @@ import gc
 import locale
 import random
 import time
+import functools
 
 from enum import Enum
 from time import sleep
@@ -44,27 +45,43 @@ class MySuites(Enum):
     EPIC = 'epic'
 
 
+def retry(exc_type=Exception, action='processing', arg=None):
+    def decorator(func):
+        @functools.wraps(func)
+        def result(*args, **kwargs):
+            timeout = 0
+            count = 5
+            act = action
+            if 'retry_cnt' in kwargs:
+                count = kwargs['retry_cnt']
+                kwargs.pop('retry_cnt')
+            if '%s' in action and arg is not None:
+                act = action % args[arg - 1]
+            for attempt in range(count - 1):
+                try:
+                    return func(*args, **kwargs)
+                except exc_type as ex:
+                    print('Exception occured while %s' % act)
+                    print(ex)
+                    print('========')
+                    timeout += 5
+                    print(
+                        'Retrying (attempt %d with delay for %d seconds)...' %
+                        (attempt + 1, timeout))
+                    time.sleep(timeout)
+            if count > 1:
+                print('Last attempt to perform %s\n' % act)
+            return func(*args, **kwargs)
+        return result
+    return decorator
+
+
 def urlopen(url):
     return urlrequest.urlopen(url)
 
 
-def urlcontent(url, retry_cnt=5):
-    timeout = 0
-    attempt = 1
-    while attempt < retry_cnt:
-        try:
-            return urlopen(url).read().decode()
-        except Exception as ex:
-            print('Exception occured while opening url "%s":' % url)
-            print(ex)
-            print('========')
-            attempt += 1
-            timeout += 5
-            print('Retrying (attempt %d with delay for %d seconds)...' %
-                  (attempt, timeout))
-            time.sleep(timeout)
-    if retry_cnt > 1:
-        print('Last attempt to open url...\n')
+@retry(action='getting content from %s', arg=1)
+def urlcontent(url):
     return urlopen(url).read().decode()
 
 
