@@ -67,7 +67,7 @@ def retry(exc_type=Exception, action='processing', arg=None):
                     timeout += 5
                     print(
                         'Retrying (attempt %d with delay for %d seconds)...' %
-                        (attempt + 1, timeout))
+                        (attempt + 2, timeout))
                     time.sleep(timeout)
             if count > 1:
                 print('Last attempt to perform %s\n' % act)
@@ -81,7 +81,7 @@ def urlopen(url):
 
 
 @retry(action='getting content from %s', arg=1)
-def urlcontent(url):
+def urlcontent(url, retry_cnt=5):
     return urlopen(url).read().decode()
 
 
