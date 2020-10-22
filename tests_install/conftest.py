@@ -109,6 +109,10 @@ if [ ! -z "`ls /var/coredumps`" ]; then
                 The cp coredump on SIGQUIT encountered on AltLinux 8
                 continue
                 ;;
+            *":!bin!sh")
+                The sh coredump on SIGQUIT encountered on AltLinux SPT 7
+                continue
+                ;;
         esac
         result=1
         echo "Coredump found: $dump"
