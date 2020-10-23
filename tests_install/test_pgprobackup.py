@@ -6,7 +6,7 @@ import subprocess
 import re
 import sys
 import allure
-from helpers.utils import urlretrieve, get_distro
+from helpers.utils import urlretrieve, get_distro, compare_versions
 import tarfile
 
 from allure_commons.types import LabelType
@@ -181,9 +181,11 @@ class TestPgprobackup():
         self.fix_permissions(dir)
         subprocess.check_call('pip2 install testgres==1.8.2', shell=True)
         cmd = "%s sh -c 'PG_CONFIG=\"%s/pg_config\"" \
-              " LANG=C PG_PROBACKUP_PTRACK=ON " \
+              " LANG=C PG_PROBACKUP_PTRACK=%s " \
               " PG_PROBACKUP_TEST_BASIC=ON python%s -m unittest -v tests'" \
               % (self.pginst.pg_sudo_cmd, self.pginst.get_bin_path(),
+                 'ON' if compare_versions(self.pginst.version, '10') >= 0
+                 else 'OFF',
                  '2.7' if self.pginst.os_name in REDHAT_BASED and
                  self.pginst.os_version.startswith('6') else '')
         print(subprocess.check_output(cmd, cwd=dir, shell=True).decode())
