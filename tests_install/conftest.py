@@ -16,7 +16,7 @@ else:
     print("Unknown Distro")
 
 # sysctl.conf ubuntu bug
-if dist[0] == 'Ubuntu' and compare_versions(dist[1],'20.04') >= 0:
+if dist[0] == 'Ubuntu' and compare_versions(dist[1], '20.04') >= 0:
     subprocess.check_call('sysctl fs.protected_regular=0', shell=True)
 
 # py2compat
