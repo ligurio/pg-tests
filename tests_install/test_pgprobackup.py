@@ -180,7 +180,8 @@ class TestPgprobackup():
         print(dir)
         self.fix_permissions(dir)
         subprocess.check_call('pip2 install testgres==1.8.2', shell=True)
-        cmd = "%s sh -c 'PG_CONFIG=\"%s/pg_config\" LANG=C" \
+        cmd = "%s sh -c 'PG_CONFIG=\"%s/pg_config\"" \
+              " LANG=C PG_PROBACKUP_PTRACK=ON " \
               " PG_PROBACKUP_TEST_BASIC=ON python%s -m unittest -v tests'" \
               % (self.pginst.pg_sudo_cmd, self.pginst.get_bin_path(),
                  '2.7' if self.pginst.os_name in REDHAT_BASED and
