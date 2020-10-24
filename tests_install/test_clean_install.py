@@ -8,6 +8,7 @@ from helpers.utils import get_distro
 import allure
 import shutil
 
+tempdir = os.path.join(os.path.abspath(os.getcwd()), 'tmp')
 
 class TestCleanInstall():
 
@@ -80,9 +81,10 @@ class TestCleanInstall():
         # This is a workaround for the problem described in PGPRO-3596
         if pginst.os.is_altlinux() and pginst.os.os_arch == 'aarch64':
             os.environ['LANG'] = 'en_US.UTF-8'
-        if os.path.isdir('/tmp/db1'):
-            shutil.rmtree('/tmp/db1')
-        exec_pg_setup('initdb -D /tmp/db1')
+        dbpath = os.path.join(tempdir, 'db1')
+        if os.path.isdir(dbpath):
+            shutil.rmtree(dbpath)
+        exec_pg_setup('initdb -D "%s"' % dbpath)
         exec_pg_setup('service start')
         exec_pg_setup('service status')
         pginst.get_server_version()
