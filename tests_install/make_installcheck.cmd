@@ -21,6 +21,16 @@ powershell -Command "$shell = New-Object -ComObject Shell.Application; $zip_src 
 powershell -Command "((new-object net.webclient).DownloadFile('http://dist.l.postgrespro.ru/resources/windows/msys2-base-i686-20200517.tar.xz', '%TEMP%\msys.tar.xz'))"
 %TEMP%\7za.exe x %TEMP%\msys.tar.xz -so 2>%TEMP%/7z-msys0.log | %TEMP%\7za.exe  x -aoa -si -ttar >%TEMP%/7z-msys1.log 2>&1
 
+@REM First run is performed to setup the environment
+%MD%\usr\bin\bash --login -i -c exit >%TEMP%\msys-setup.log 2>&1
+
+@REM Keyring updated manually due to invalid key 4A6129F4E4B84AE46ED7F635628F528CF3053E04 (waiting for a newer msys2- base...)
+%MD%\usr\bin\bash --login -i -c ^" ^
+curl -sS -O http://repo.msys2.org/msys/x86_64/msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz ^&^& ^
+curl -sS -O http://repo.msys2.org/msys/x86_64/msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz.sig ^&^& ^
+pacman --noconfirm -U --config ^<(echo) msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz ^&^& ^
+pacman --noconfirm -Sy ^" >>%TEMP%\msys-update.log 2>&1
+
 @REM Grant access to Users (including postgres user) to src/test/regress/testtablespace/
 icacls %MD%\var\src /grant *S-1-5-32-545:(OI)(CI)F /T
 
@@ -36,9 +46,6 @@ powershell -Command "$group=(New-Object System.Security.Principal.SecurityIdenti
 
 :main
 echo %time%: Main cmd script starting
-
-@REM First run is performed to setup the environment
-%MD%\usr\bin\bash --login -i -c exit >%TEMP%\msys-setup.log 2>&1
 
 %MD%\usr\bin\bash --login -i /var/src/make_check.sh %1
 SET LEVEL=%ERRORLEVEL%
