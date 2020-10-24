@@ -10,6 +10,7 @@ import shutil
 
 tempdir = os.path.join(os.path.abspath(os.getcwd()), 'tmp')
 
+
 class TestCleanInstall():
 
     system = platform.system()
