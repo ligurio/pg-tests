@@ -690,6 +690,13 @@
       start_mode: disabled
       state: stopped
 
+  - name: windows - stop Windows Search service
+    when: ansible_os_family == "Windows"
+    win_service:
+      name: wsearch
+      start_mode: disabled
+      state: stopped
+
   - name: windows - enable usermode crashdumps collection
     when: ansible_os_family == "Windows"
     win_regedit:
