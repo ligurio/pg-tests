@@ -32,7 +32,7 @@ pacman --noconfirm -U --config ^<(echo) msys2-keyring-r21.b39fb11-1-any.pkg.tar.
 pacman --noconfirm -Sy ^" >%TEMP%\msys-update.log 2>&1
 
 %MD%\usr\bin\bash --login -i -c "pacman --noconfirm -S tar make diffutils patch perl" >>%TEMP%\msys-update.log 2>&1
-%MD%\autorebase >>%TEMP%\msys-update.log 2>&1
+call %MD%\autorebase >>%TEMP%\msys-update.log 2>&1
 
 @REM Grant access to Users (including postgres user) to src/test/regress/testtablespace/
 icacls %MD%\var\src /grant *S-1-5-32-545:(OI)(CI)F /T
