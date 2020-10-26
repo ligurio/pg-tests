@@ -15,16 +15,8 @@ import shutil
 import re
 
 system = platform.system()
-if system == 'Windows':
-    tempdir = 'C:\\pg-temp'
-    os.mkdir(tempdir)
-    subprocess.check_call(
-        'icacls "%s" /grant *S-1-1-0:(OI)(CI)F /T' % tempdir,
-        shell=True)
-else:
-    tempdir = '/var/pg-temp'
-    os.mkdir(tempdir)
-    os.chmod(tempdir, 0o777)
+tempdir = os.path.join(os.path.abspath(os.getcwd()), 'tmp')
+
 upgrade_dir = os.path.join(tempdir, 'upgrade')
 amcheck_sql = """
 create extension if not exists amcheck;

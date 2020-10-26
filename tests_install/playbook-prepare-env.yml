@@ -445,6 +445,7 @@
       mode: '{{ item.mode }}'
     with_items:
       - { path: '/home/test/pg-tests', mode: '0777' }
+      - { path: '/home/test/pg-tests/tmp', mode: '0777' }
       - { path: '/home/test', mode: '0751' }
     when: ansible_os_family != "Windows"
     become_method: sudo

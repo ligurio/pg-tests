@@ -1,11 +1,10 @@
-import distro
 import platform
 import pytest
 import os
 import sys
 import subprocess
 from helpers.os_helpers import OsHelper
-from helpers.utils import get_distro, compare_versions
+from helpers.utils import get_distro
 
 dist = []
 if platform.system() == 'Linux':
@@ -15,9 +14,6 @@ elif platform.system() == 'Windows':
 else:
     print("Unknown Distro")
 
-# sysctl.conf ubuntu bug
-if dist[0] == 'Ubuntu' and compare_versions(dist[1], '20.04') >= 0:
-    subprocess.check_call('sysctl fs.protected_regular=0', shell=True)
 
 # py2compat
 if not sys.version_info > (3, 0):
