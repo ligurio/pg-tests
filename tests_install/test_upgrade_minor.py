@@ -13,7 +13,8 @@ from helpers.constants import FIRST_RELEASE
 from helpers.utils import diff_dbs, download_dump, ConsoleEncoding,\
     get_distro, compare_versions, extend_ver, get_soup
 
-tempdir = tempfile.gettempdir()
+tempdir = os.path.join(os.path.abspath(os.getcwd()), 'tmp')
+
 client_dir = 'client'
 
 ARCHIVE_VERSIONS = {
