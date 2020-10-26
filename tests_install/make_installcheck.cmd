@@ -29,7 +29,10 @@ powershell -Command "((new-object net.webclient).DownloadFile('http://dist.l.pos
 curl -sS -O http://repo.msys2.org/msys/x86_64/msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz ^&^& ^
 curl -sS -O http://repo.msys2.org/msys/x86_64/msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz.sig ^&^& ^
 pacman --noconfirm -U --config ^<(echo) msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz ^&^& ^
-pacman --noconfirm -Sy ^" >>%TEMP%\msys-update.log 2>&1
+pacman --noconfirm -Sy ^" >%TEMP%\msys-update.log 2>&1
+
+%MD%\usr\bin\bash --login -i -c "pacman --noconfirm -S tar make diffutils patch perl" >>%TEMP%\msys-update.log 2>&1
+%MD%\autorebase >>%TEMP%\msys-update.log 2>&1
 
 @REM Grant access to Users (including postgres user) to src/test/regress/testtablespace/
 icacls %MD%\var\src /grant *S-1-5-32-545:(OI)(CI)F /T
@@ -62,7 +65,7 @@ bitness=32; gcc=mingw-w64-i686-gcc; host=i686-w64-mingw32;
 else
 bitness=64; gcc=mingw-w64-x86_64-gcc; host=x86_64-w64-mingw32;
 fi
-pacman --noconfirm -S tar make diffutils patch perl $gcc
+pacman --noconfirm -S $gcc
 export PATH="/mingw$bitness/bin:/usr/bin/core_perl:$PATH:$PGPATH/bin"
 echo PATH=$PATH
 echo PGPORT=$PGPORT
