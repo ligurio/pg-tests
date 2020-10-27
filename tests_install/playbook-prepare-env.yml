@@ -691,7 +691,7 @@
       state: stopped
 
   - name: windows - stop Windows Search service
-    when: ansible_os_family == "Windows"
+    when: ansible_os_family == "Windows" and not ansible_distribution.startswith("Microsoft Windows Server 2012")
     win_service:
       name: wsearch
       start_mode: disabled
