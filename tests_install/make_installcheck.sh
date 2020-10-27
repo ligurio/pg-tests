@@ -32,7 +32,7 @@ IPC-Run-20200505.0.tar.gz && \
 fi
 
 if [ -d ~test/pg-tests ]; then
-    chmod 777 ~test
+    chmod 777 ~test/pg-tests
     cd ~test/pg-tests
 fi
 
