@@ -34,7 +34,7 @@ echo export PATH=\"/mingw64/bin:/usr/bin/core_perl:$PGPATH/bin:$PATH\" ^> setenv
 source setenv.sh ^&^& ^
 set -o pipefail ^&^& ^
 echo "`date -Iseconds`: Configuring... " ^&^& ^
-CFLAGS=" -D WINVER=0x0600 -D _WIN32_WINNT=0x0600" LIBS="-lktmw32" ./configure --host=$host --without-zlib --prefix="$PGPATH" 2^>^&1 ^| tee configure.log ^
+CFLAGS=" -D WINVER=0x0600 -D _WIN32_WINNT=0x0600" LIBS="-lktmw32 -ladvapi32" ./configure --host=$host --without-zlib --prefix="$PGPATH" 2^>^&1 ^| tee configure.log ^
 
 > %MD%\tmp\make_check.sh
 %MD%\usr\bin\bash --login -i /tmp/make_check.sh
