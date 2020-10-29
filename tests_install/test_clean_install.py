@@ -43,6 +43,8 @@ class TestCleanInstall():
         pginst = PgInstall(product=name, edition=edition,
                            version=version, milestone=milestone,
                            branch=branch, windows=(self.system == 'Windows'))
+        if pginst.os.is_altlinux() and pginst.os.os_arch == 'aarch64':
+            os.environ['LANG'] = 'en_US.UTF-8'
 
         request.cls.pginst = pginst
         pginst.setup_repo()
@@ -84,7 +86,7 @@ class TestCleanInstall():
             os.environ['LANG'] = 'en_US.UTF-8'
         dbpath = os.path.join(tempdir, 'db1')
         if os.path.isdir(dbpath):
-            shutil.rmtree(dbpath)
+            shutil.rmtree(dbpath, True)
         exec_pg_setup('initdb -D "%s"' % dbpath)
         exec_pg_setup('service start')
         exec_pg_setup('service status')

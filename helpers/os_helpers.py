@@ -53,6 +53,7 @@ dist = {"Oracle Linux Server": 'oraclelinux',
         "SLES": 'sles',
         "ALT Linux": 'altlinux',
         "ALT Server": 'altlinux',
+        "starter kit": 'altlinux',
         "GosLinux": 'goslinux',
         "RED OS": 'redos',
         "AlterOS": 'alteros'}

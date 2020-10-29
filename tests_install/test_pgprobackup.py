@@ -132,6 +132,8 @@ class TestPgprobackup():
                                 windows=(self.system == 'Windows'))
 
         self.pginst.setup_repo()
+        if self.pginst.os.is_altlinux()and self.pginst.os.os_arch == 'aarch64':
+            os.environ['LANG'] = 'en_US.UTF-8'
         if self.system != 'Windows':
             self.pginst.install_full()
             self.pginst.initdb_start()
