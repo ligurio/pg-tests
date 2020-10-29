@@ -170,7 +170,6 @@ exit $result
             with open(orig_pack_list, 'w') as pack_list:
                 pack_list.write('\n'.join(packages))
         subprocess.check_call('rm -f /etc/default/postgrespro*', shell=True)
-        subprocess.check_call('rm -rf /tmp/db1', shell=True)
         subprocess.check_call('rm -rf /var/lib/pgsql', shell=True)
         subprocess.check_call('rm -rf /var/lib/pgpro', shell=True)
         subprocess.check_call('rm -rf /opt/pgpro', shell=True)
