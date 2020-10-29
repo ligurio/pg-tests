@@ -99,6 +99,9 @@ fi
 # Backpatch 69ae9dcb to version 11 (pgsql-bugs #15349) (uri-regress.c: undefined reference to PQconninfoParse, PQconndefaults)
 patch -p1 --dry-run -i ../patches/69ae9dcb.patch >/dev/null 2>&1 && patch -p1 -i ../patches/69ae9dcb.patch
 
+#Check /etc/localtime exist
+[ -f /etc/localtime] || ln -s /usr/share/zoneinfo/UTC /etc/localtime
+
 set -o pipefail
 sudo -u postgres ./configure --enable-tap-tests --without-readline --prefix=$1 $extraoption || exit $?
 
