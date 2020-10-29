@@ -327,6 +327,15 @@
     become_method: sudo
     become: true
 
+  - name: Install iptables
+    package:
+      name: iptables
+      state: present
+      update_cache: true
+    become: true
+    become_method: sudo
+    when: ansible_os_family != "Windows"
+
   - name: install required packages (APT)
     apt:
       name:

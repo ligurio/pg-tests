@@ -280,6 +280,8 @@ class TestUpgradeMinor():
         pgnew = PgInstall(product=name, edition=edition,
                           version=version, milestone=milestone,
                           branch=branch, windows=windows_os)
+        if pgnew.os.is_altlinux() and pgnew.os.os_arch == 'aarch64':
+            os.environ['LANG'] = 'en_US.UTF-8'
         pgnew.setup_repo()
         if not windows_os:
             pgnew.install_full()
@@ -329,6 +331,8 @@ class TestUpgradeMinor():
                               version=oldversion,
                               milestone='archive',
                               branch=None, windows=windows_os)
+            if pgold.os.is_altlinux() and pgold.os.os_arch == 'aarch64':
+                os.environ['LANG'] = 'en_US.UTF-8'
 
             pgold.setup_repo()
             if not windows_os:
@@ -374,6 +378,8 @@ class TestUpgradeMinor():
             pgnew = PgInstall(product=name, edition=edition,
                               version=version, milestone=milestone,
                               branch=None, windows=windows_os)
+            if pgnew.os.is_altlinux() and pgnew.os.os_arch == 'aarch64':
+                os.environ['LANG'] = 'en_US.UTF-8'
             pgnew.setup_repo()
             pgold.stop_service()
             if not windows_os:

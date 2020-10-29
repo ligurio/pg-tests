@@ -69,6 +69,8 @@ class TestMakeCheck(object):
         request.cls.pginst = pginst
         pginst.make_check_passed = False
         curpath = os.path.dirname(os.path.abspath(__file__))
+        if pginst.os.is_altlinux() and pginst.os.os_arch == 'aarch64':
+            os.environ['LANG'] = 'en_US.UTF-8'
 
         if self.system == 'Windows':
             if os.path.exists(pginst.get_default_bin_path()):

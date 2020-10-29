@@ -3,6 +3,10 @@ if  grep -q 'PRETTY_NAME="ALT Server 9' /etc/os-release; then
     echo 'Test is temporarily skipped.'
     exit 0
 fi
+if  grep -q 'PRETTY_NAME="ALT Starterkit (Hypericum)' /etc/os-release; then
+    echo 'Test is temporarily skipped.'
+    exit 0
+fi
 if grep -q 'ALT Linux 6\.' /etc/altlinux-release || \
    grep -q 'PRETTY_NAME="ALT Linux 7' /etc/os-release || \
    grep -q 'PRETTY_NAME="ALT Server 9' /etc/os-release || \

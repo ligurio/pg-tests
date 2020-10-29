@@ -168,7 +168,7 @@ class Multimaster(object):
         else:
             self.has_referee = False
         if not os.path.isdir(self.rootdir):
-            os.mkdir(self.rootdir, 0o755)
+            os.makedirs(self.rootdir, 0o755)
         host_base = '.'.join(ip_base.split('.')[0:2]) + '.'
         hosts = {}
         for i in range(1, self.size + 1):
@@ -507,6 +507,8 @@ class TestMultimasterInstall():
                            version=version, milestone=milestone,
                            branch=branch, windows=(self.system == 'Windows'))
         request.cls.pginst = pginst
+        if pginst.os.is_altlinux() and pginst.os.os_arch == 'aarch64':
+            os.environ['LANG'] = 'en_US.UTF-8'
         pginst.setup_repo()
         print("Running on %s." % target)
         if self.system != 'Windows':
