@@ -78,7 +78,7 @@ result=0
 if [ ! -z "`which coredumpctl 2>/dev/null`" ]; then
     for cdexe in `coredumpctl list --field=COREDUMP_EXE`; do
         case $cdexe in
-        /bin/cp|/bin/dash|/bin/bash|/bin/sh)
+        /bin/cp|/bin/dash|/bin/bash|/bin/sh|/usr/bin/cp|/usr/bin/bash)
             continue
         ;;
         esac
