@@ -74,14 +74,24 @@ if ps -o comm= -C systemd-coredump; then
         exit 1
     fi
 fi
+result=0
 if [ ! -z "`which coredumpctl 2>/dev/null`" ]; then
-    if coredumpctl; then
-        echo "Coredump found. Check coredumpctl."
-        printf "set pagination off\nbt" | coredumpctl gdb
-        exit 1
+    for cdexe in `coredumpctl list --field=COREDUMP_EXE`; do
+        case $cdexe in
+        /bin/cp|/bin/dash|/bin/bash|/bin/sh|/usr/bin/cp|/usr/bin/bash)
+            continue
+        ;;
+        esac
+        result=1
+        break
+    done
+    if [ $result -eq 1 ]; then
+        coredumpctl list
+        for pid in `coredumpctl list --field=COREDUMP_PID`; do
+            printf "set pagination off\nbt" | coredumpctl gdb $pid
+        done
     fi
 fi
-result=0
 if [ ! -z "`ls /var/coredumps`" ]; then
     for dump in /var/coredumps/*; do
         case $dump in
