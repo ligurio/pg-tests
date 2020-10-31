@@ -3,3 +3,4 @@ reports/
 static/inventory
 *.retry
 */resources/
+.vscode/
