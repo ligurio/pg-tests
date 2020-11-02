@@ -287,6 +287,14 @@
     become_method: sudo
     become: true
 
+  - name: install required packages (DNF)
+    shell: dnf install -y gdb wget
+    args:
+      warn: no
+    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "dnf"
+    become_method: sudo
+    become: true
+
   - name: install required packages (APT)
     apt:
       name:
@@ -330,24 +338,6 @@
   - name: Install iptables
     package:
       name: iptables
-      state: present
-      update_cache: true
-    become: true
-    become_method: sudo
-    when: ansible_os_family != "Windows"
-
-  - name: Install wget
-    package:
-      name: wget
-      state: present
-      update_cache: true
-    become: true
-    become_method: sudo
-    when: ansible_os_family != "Windows"
-
-  - name: Install gdb
-    package:
-      name: gdb
       state: present
       update_cache: true
     become: true
