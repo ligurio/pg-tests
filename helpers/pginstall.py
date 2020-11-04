@@ -774,7 +774,7 @@ baseurl=%s
                     self.os_version.startswith('7.'):
                 extra_yum_repo = "oraclelinux-7"
 
-        if extra_yum_repo and self.os.os_arch !='aarch64':
+        if extra_yum_repo and self.os.os_arch != 'aarch64':
             cmd = "sh -c 'mkdir /opt/{0}; cd $_; " \
                   "wget -q -r -nd --no-parent -A \"*.rpm\" " \
                   "http://dist.l.postgrespro.ru/resources/linux/{1}/;" \
