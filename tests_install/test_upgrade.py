@@ -376,7 +376,10 @@ class TestUpgrade():
         5. Check that upgrade successfull (calculate diff between dump)
         :return:
         """
-        dist = " ".join(get_distro()[0:2])
+        distro = get_distro()
+        if distro[2] == 'x86_64':
+            distro = distro[:-1]
+        dist = " ".join(distro)
         request.cls.dist = dist
         version = request.config.getoption('--product_version')
         name = request.config.getoption('--product_name')

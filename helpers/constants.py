@@ -108,6 +108,20 @@ FIRST_RELEASE = {
         'postgrespro-1c-12': None,
         'postgrespro-1c-13': None,
     },
+    # centos-8 ARM64
+    "CentOS Linux 8 aarch64": {
+        'postgrespro-std-9.6': None,
+        'postgrespro-std-10': None,
+        'postgrespro-std-11': '11.6.1',
+        'postgrespro-ent-9.6': None,
+        'postgrespro-ent-10': None,
+        'postgrespro-ent-11': '11.6.1',
+        'postgresql--9.6': None,
+        'postgresql--10': None,
+        'postgresql--11': None,
+        'postgrespro-1c-9.6': None,
+    },
+
     # goslinux-7
     "GosLinux 7": {
         'postgresql--9.6': None,
