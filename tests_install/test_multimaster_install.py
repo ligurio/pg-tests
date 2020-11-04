@@ -288,16 +288,10 @@ class Multimaster(object):
         self.__link__(n1, n2, False)
 
     def __isolate__(self, n, do_isolate=True):
-        if self.pginst.windows:
-            if do_isolate:
-                mode = 'add'
-            else:
-                mode = 'delete'
+        if do_isolate:
+            mode = 'add'
         else:
-            if do_isolate:
-                mode = 'add'
-            else:
-                mode = 'delete'
+            mode = 'delete'
         ip = self.nodes[n].host
         net = '.'.join(ip.split('.')[0:3]) + '.0/24'
         if self.pginst.windows:

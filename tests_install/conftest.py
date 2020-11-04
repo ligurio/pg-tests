@@ -183,7 +183,7 @@ exit $result
         subprocess.check_call('rm -rf /var/lib/pgsql', shell=True)
         subprocess.check_call('rm -rf /var/lib/pgpro', shell=True)
         subprocess.check_call('rm -rf /opt/pgpro', shell=True)
-        subprocess.check_call('rm -rf /yum.repos.d/'
+        subprocess.check_call('rm -rf /etc/yum.repos.d/'
                               'postgres*.repo', shell=True)
         subprocess.check_call('rm -rf /opt/postgrespro*', shell=True)
         subprocess.check_call('rm -rf /etc/apt/sources.list.d/postgres*',
