@@ -164,7 +164,7 @@ def get_test_versions(edition, version, specified_version, current_version):
         return None
     if edition == "ent":
         archive_url = PGPRO_ARCHIVE_ENTERPRISE
-    elif edition == "std":
+    elif edition in ["std", "1c"]:
         archive_url = PGPRO_ARCHIVE_STANDARD
     else:
         raise Exception("Unsupported postgrespro edition (%s)." % edition)
@@ -259,8 +259,8 @@ class TestUpgradeMinor():
         tag_mark = allure.label(LabelType.TAG, product_info)
         request.node.add_marker(tag_mark)
         branch = request.config.getoption('--branch')
-        if edition not in ['std', 'ent']:
-            print("Minor upgrade only for std and ent")
+        if edition not in ['std', 'ent', '1c']:
+            print("Minor upgrade only for 1c, std and ent")
             return
         if name != 'postgrespro':
             print("Minor upgrade test is only for postgrespro.")
@@ -322,7 +322,8 @@ class TestUpgradeMinor():
 
         print(test_versions)
 
-        dump_file_name = download_dump(name, edition, version, tempdir)
+        dump_file_name = download_dump(name, edition, version + '-old',
+                                       tempdir)
 
         for oldversion in test_versions:
             print("Installing", oldversion)
@@ -368,7 +369,7 @@ class TestUpgradeMinor():
             pgold.load_shared_libraries()
             with open(os.path.join(tempdir, 'load-%s.log' % oldversion),
                       'wb') as out:
-                pgold.exec_psql_file(dump_file_name, '-q',
+                pgold.exec_psql_file(dump_file_name, '-q -v ON_ERROR_STOP=1',
                                      stdout=out)
 
             expected_file_name = os.path.join(tempdir,
