@@ -322,7 +322,8 @@ class TestUpgradeMinor():
 
         print(test_versions)
 
-        dump_file_name = download_dump(name, edition, version + '-old', tempdir)
+        dump_file_name = download_dump(name, edition, version + '-old',
+                                       tempdir)
 
         for oldversion in test_versions:
             print("Installing", oldversion)
