@@ -270,12 +270,12 @@ class Multimaster(object):
                 'route %s %s mask 255.255.255.255 192.168.0.1 if 1' % (
                     mode, self.nodes[n2].listen_ips[n1]))
         else:
-            cmd = 'ip rule %s blackhole from %s/32 ' % (
+            cmd = 'ip route %s blackhole %s/32 table local' % (
                 mode, self.nodes[n1].listen_ips[n2])
             subprocess.check_call(cmd, shell=True,
                                   stderr=subprocess.STDOUT,
                                   stdout=subprocess.PIPE)
-            cmd = 'ip rule %s blackhole from %s/32 ' % (
+            cmd = 'ip route %s blackhole %s/32 table local' % (
                 mode, self.nodes[n2].listen_ips[n1])
             subprocess.check_call(cmd, shell=True,
                                   stderr=subprocess.STDOUT,
@@ -302,11 +302,11 @@ class Multimaster(object):
                     'route %s %s mask 255.255.255.255 192.168.0.1 if 1' % (
                         mode, self.nodes[i].listen_ips[n]))
         else:
-            cmd = 'ip rule %s blackhole from %s' % (mode, net)
+            cmd = 'ip route %s blackhole %s table local' % (mode, net)
             subprocess.check_call(cmd, shell=True, stderr=subprocess.STDOUT,
                                   stdout=subprocess.PIPE)
             for i in range(1, self.size + 1):
-                cmd = 'ip rule %s blackhole from %s/32' % (
+                cmd = 'ip route %s blackhole %s/32 table local' % (
                     mode, self.nodes[i].listen_ips[n])
                 subprocess.check_call(cmd, shell=True,
                                       stderr=subprocess.STDOUT,
