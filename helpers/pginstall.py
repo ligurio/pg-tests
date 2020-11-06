@@ -405,11 +405,10 @@ class PgInstall:
                 pkgs = [self.get_base_package_name() + '*']
 
         else:
-            # PGPRO-???? PGPRO-4315
+            # PGPRO-???? (PGPRO-4315 - temporary revert)
             # Filter out the package that is not supported by Postgres Pro yet
             pkgs = [pkg for pkg in self.get_packages_in_repo() if
-                    (not pkg.startswith("oracle-fdw-") and
-                     not pkg.startswith('pgadmin3'))]
+                    (not pkg.startswith("oracle-fdw-"))]
 
         return pkgs
 
