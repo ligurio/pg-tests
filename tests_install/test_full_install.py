@@ -163,6 +163,8 @@ def check_executables(pginst, packages):
             if error:
                 print('ldd "%s":' % f, lddout)
                 raise Exception("Invalid dynamic dependencies")
+            if f.startswith('pgadmin3'):
+                continue
             if f.endswith('.so') or '.so.' in os.path.basename(f):
                 continue
             gdbout = subprocess.check_output(
