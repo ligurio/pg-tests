@@ -15,7 +15,7 @@ xcopy patches %MD%\var\src\patches\ /E
 
 cd /D c:\
 @REM Prepare 7-zip for expanding msys
-powershell -Command "((new-object net.webclient).DownloadFile('https://netcologne.dl.sourceforge.net/project/sevenzip/7-Zip/9.20/7za920.zip', '%TEMP%\7z.zip'))"
+powershell -Command "((new-object net.webclient).DownloadFile('http://dist.l.postgrespro.ru/resources/windows/7za920.zip', '%TEMP%\7z.zip'))"
 powershell -Command "$shell = New-Object -ComObject Shell.Application; $zip_src = $shell.NameSpace('%TEMP%\7z.zip'); $zip_dest = $shell.NameSpace('%TEMP%'); $zip_dest.CopyHere($zip_src.Items(), 1044)"
 @REM Download and extract msys
 powershell -Command "((new-object net.webclient).DownloadFile('http://dist.l.postgrespro.ru/resources/windows/msys2-base-i686-20200517.tar.xz', '%TEMP%\msys.tar.xz'))"
