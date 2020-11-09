@@ -12,6 +12,7 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgrespro-1c-9.6': '9.6.19',
     },
     # rosa-el-7
     "ROSA Enterprise Linux Server 7.3": {
@@ -19,6 +20,7 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgrespro-1c-9.6': '9.6.19',
     },
     # sles-12
     "SLES 12.5": {
@@ -38,13 +40,7 @@ FIRST_RELEASE = {
         'postgresql--11': None,
         'postgresql--12': None,
         'postgrespro-std-cert-10': None,
-    },
-    # maybe remove?
-    "ALT Linux  6.0.1": {
-        'postgresql--9.6': None,
-        'postgresql--10': None,
-        'postgresql--11': None,
-        'postgresql--12': None,
+        'postgrespro-1c-9.6': '9.6.19',
     },
     # altlinux-7
     "ALT Linux 7.0.5": {
@@ -59,6 +55,7 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgrespro-1c-9.6': '9.6.19',
     },
     # altlinux-spt-8
     "ALT SPServer 8.0": {
@@ -159,6 +156,7 @@ FIRST_RELEASE = {
         'postgrespro-ent-10': None,
         'postgrespro-ent-11': '11.9.1',
         'postgrespro-ent-12': '12.4.1',
+        'postgrespro-1c-9.6': '9.6.19',
     },
     # astra-smolensk-1.5
     'Astra Linux (Smolensk) 1.5': {
@@ -166,6 +164,7 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgrespro-1c-9.6': '9.6.19',
     },
     # astra-smolensk-1.6
     'Astra Linux (Smolensk) 1.6': {
@@ -173,7 +172,12 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
-        'postgrespro-ent-9.6': '9.6.12.1'
+        'postgrespro-ent-9.6': '9.6.12.1',
+        'postgrespro-1c-9.6': '9.6.19',
+    },
+    # centos-7
+    "CentOS Linux 7": {
+        'postgrespro-1c-9.6': '9.6.19',
     },
     # centos-8
     "CentOS Linux 8": {
@@ -215,6 +219,14 @@ FIRST_RELEASE = {
         'postgrespro-ent-10': '10.9.1',
         'postgrespro-1c-9.6': None,
     },
+    # debian-8
+    "Debian GNU/Linux 8": {
+        'postgrespro-1c-9.6': '9.6.19',
+    },
+    # debian-9
+    "Debian GNU/Linux 9": {
+        'postgrespro-1c-9.6': '9.6.19',
+    },
     # debian-10
     "Debian GNU/Linux 10": {
         'postgrespro-std-9.6': '9.6.15.1',
@@ -223,12 +235,18 @@ FIRST_RELEASE = {
         'postgrespro-ent-9.6': '9.6.15.1',
         'postgrespro-ent-10': '10.13.1',
         'postgrespro-ent-11': '11.5.1',
+        'postgrespro-1c-9.6': '9.6.19',
+    },
+    # ubuntu-16.04
+    "Ubuntu 16.04": {
+        'postgrespro-1c-9.6': '9.6.19',
     },
     # ubuntu-18.04
     "Ubuntu 18.04": {
         'postgrespro-std-9.6': '9.6.10.2',
         'postgrespro-std-10': '10.9.1',
-        'postgrespro-ent-9.6': '9.6.11.1'
+        'postgrespro-ent-9.6': '9.6.11.1',
+        'postgrespro-1c-9.6': '9.6.19',
     },
     # ubuntu-19.10
     "Ubuntu 19.10": {
@@ -302,6 +320,10 @@ FIRST_RELEASE = {
         'postgrespro-ent-11': None,
         'postgrespro-1c-9.6': None
     },
+    # rhel-7
+    'Red Hat Enterprise Linux 7.7': {
+        'postgrespro-1c-9.6': '9.6.19',
+    },
     # rhel-8
     'Red Hat Enterprise Linux 8.1': {
         'postgresql--9.6': None,
@@ -323,6 +345,10 @@ FIRST_RELEASE = {
         'postgresql--11': None,
         'postgresql--12': None,
         'postgrespro-ent-12': '12.3.1',
+    },
+    # oraclelinux-7
+    'Oracle Linux Server 7.2': {
+        'postgrespro-1c-9.6': '9.6.19',
     },
     # oraclelinux-8
     'Oracle Linux Server 8.0': {
