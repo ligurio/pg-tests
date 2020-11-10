@@ -337,7 +337,7 @@ def get_last_version(edition, version):
 
     if edition == "ent":
         archive_url = PGPRO_ARCHIVE_ENTERPRISE
-    elif edition == "std":
+    elif edition in ["std", "1c"]:
         archive_url = PGPRO_ARCHIVE_STANDARD
     else:
         raise Exception("Unsupported postgrespro edition (%s)." % edition)
@@ -345,9 +345,11 @@ def get_last_version(edition, version):
     # Choose two versions -- newest and oldest supported
     soup = get_soup(archive_url)
     arcversions = []
+    startswith = 'pgproee-' if edition == 'ent' else \
+        ('pgpro-' if edition == 'std' else 'pg1c-')
     for link in soup.findAll('a'):
         href = link.get('href')
-        if href.startswith('pgpro') and href.endswith('/'):
+        if href.startswith(startswith) and href.endswith('/'):
             vere = re.search(r'\w+-([0-9.]+)/', href)
             if vere:
                 if vere.group(1).startswith(version):
