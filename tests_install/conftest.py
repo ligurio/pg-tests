@@ -119,6 +119,10 @@ if [ ! -z "`ls /var/coredumps`" ]; then
                 The cp coredump on SIGQUIT encountered on AltLinux 8
                 continue
                 ;;
+            *":!usr!bin!cp")
+                The cp coredump on SIGQUIT encountered on Rosa EL 7
+                continue
+                ;;
             *":!bin!sh")
                 The sh coredump on SIGQUIT encountered on AltLinux SPT 7
                 continue

@@ -182,11 +182,12 @@ class TestPgprobackup():
         print(dir)
         self.fix_permissions(dir)
         subprocess.check_call('pip2 install testgres==1.8.2', shell=True)
+        # PGPRO-4108 wait ptrack2.0 in 10
         cmd = "%s sh -c 'PG_CONFIG=\"%s/pg_config\"" \
               " LANG=C PG_PROBACKUP_PTRACK=%s " \
               " PG_PROBACKUP_TEST_BASIC=ON python%s -m unittest -v tests'" \
               % (self.pginst.pg_sudo_cmd, self.pginst.get_bin_path(),
-                 'ON' if compare_versions(self.pginst.version, '10') >= 0
+                 'ON' if compare_versions(self.pginst.version, '10') > 0
                  else 'OFF',
                  '2.7' if self.pginst.os_name in REDHAT_BASED and
                  self.pginst.os_version.startswith('6') else '')
