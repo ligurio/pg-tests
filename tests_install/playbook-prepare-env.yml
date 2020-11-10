@@ -280,7 +280,7 @@
     become: true
 
   - name: install required packages (YUM)
-    shell: yum install -y acpid gcc gdb python-devel wget
+    shell: yum install -y acpid tar gcc gdb python-devel wget
     args:
       warn: no
     when: ansible_os_family != "Windows" and ansible_pkg_mgr == "yum"
