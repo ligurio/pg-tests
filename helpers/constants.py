@@ -106,24 +106,6 @@ FIRST_RELEASE = {
         'postgrespro-1c-12': None,
         'postgrespro-1c-13': None,
     },
-    # "starter kit p9" ALT For ARM64
-    "starter kit p9": {
-        'postgresql--9.6': None,
-        'postgresql--10': None,
-        'postgresql--11': None,
-        'postgresql--12': None,
-        'postgrespro-std-9.6': None,
-        'postgrespro-ent-9.6': None,
-        'postgrespro-std-10': None,
-        'postgrespro-std-11': '11.9.1',
-        'postgrespro-ent-10': None,
-        'postgrespro-ent-11': '11.9.1',
-        'postgrespro-1c-9.6': None,
-        'postgrespro-1c-10': None,
-        'postgrespro-1c-11': None,
-        'postgrespro-1c-12': None,
-        'postgrespro-1c-13': None,
-    },
     # goslinux-7
     "GosLinux 7": {
         'postgresql--9.6': None,
@@ -195,6 +177,19 @@ FIRST_RELEASE = {
         'postgresql--11': None,
         'postgrespro-1c-9.6': None,
     },
+    # centos-8 ARM64
+    "CentOS Linux 8 aarch64": {
+        'postgrespro-std-9.6': None,
+        'postgrespro-std-10': None,
+        'postgrespro-std-11': '11.6.1',
+        'postgrespro-ent-9.6': None,
+        'postgrespro-ent-10': None,
+        'postgrespro-ent-11': '11.6.1',
+        'postgresql--9.6': None,
+        'postgresql--10': None,
+        'postgresql--11': None,
+        'postgrespro-1c-9.6': None,
+    },
     # alteros-7
     "AlterOS 7": {
         'postgresql--9.6': None,
@@ -240,6 +235,15 @@ FIRST_RELEASE = {
         'postgrespro-ent-11': '11.5.1',
         'postgrespro-1c-9.6': '9.6.19',
     },
+    # debian-10 ARM64
+    "Debian GNU/Linux 10 aarch64": {
+        'postgrespro-std-9.6': None,
+        'postgrespro-std-10': None,
+        'postgrespro-std-11': '11.5.1',
+        'postgrespro-ent-9.6': None,
+        'postgrespro-ent-10': None,
+        'postgrespro-ent-11': '11.5.1',
+    },
     # ubuntu-16.04
     "Ubuntu 16.04": {
         'postgrespro-1c-9.6': '9.6.19',
@@ -277,6 +281,18 @@ FIRST_RELEASE = {
         'postgrespro-1c-9.6': None,
         'postgrespro-1c-10': '10.13',
         'postgrespro-1c-11': '11.8',
+    },
+    # ubuntu-20.04 ARM64
+    "Ubuntu 20.04 aarch64": {
+        'postgrespro-std-9.6': None,
+        'postgrespro-std-10': None,
+        'postgrespro-std-11': '11.8.1',
+        'postgrespro-std-12': '12.3.1',
+        'postgrespro-ent-9.6': None,
+        'postgrespro-ent-10': None,
+        'postgrespro-ent-11': '11.8.1',
+        'postgrespro-ent-12': '12.3.1',
+        'postgrespro-1c-9.6': None,
     },
     # ubuntu-20.10
     "Ubuntu 20.10": {
@@ -954,5 +970,4 @@ DUMP_RESTORE_ROUTES = {
             }
         ]
     }
-
 }

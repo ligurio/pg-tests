@@ -280,10 +280,18 @@
     become: true
 
   - name: install required packages (YUM)
-    shell: yum install -y acpid gcc gdb python-devel libicu-devel
+    shell: yum install -y acpid tar gcc gdb python-devel wget
     args:
       warn: no
     when: ansible_os_family != "Windows" and ansible_pkg_mgr == "yum"
+    become_method: sudo
+    become: true
+
+  - name: install required packages (DNF)
+    shell: dnf install -y acpid tar gcc gdb python3-devel wget
+    args:
+      warn: no
+    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "dnf"
     become_method: sudo
     become: true
 
@@ -326,15 +334,6 @@
           ansible_python_version.startswith('3.')
     become_method: sudo
     become: true
-
-  - name: Install iptables
-    package:
-      name: iptables
-      state: present
-      update_cache: true
-    become: true
-    become_method: sudo
-    when: ansible_os_family != "Windows"
 
   - name: install required packages (APT)
     apt:

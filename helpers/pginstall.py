@@ -301,7 +301,7 @@ class PgInstall:
                 if len(pkginfo) != 3:
                     print("Invalid line in yum list output:", line)
                     raise Exception('Invalid line in yum list output')
-                pkgname = re.sub(r'\.(x86_64|noarch)$', '', pkginfo[0])
+                pkgname = re.sub(r'\.(aarch64|x86_64|noarch)$', '', pkginfo[0])
                 result.append(pkgname)
             if self.version == '9.6':
                 if 'pgbadger' in result and 'pgpro-pgbadger' in result:
@@ -466,8 +466,9 @@ class PgInstall:
         if self.product == "postgresql":
             if self.os.is_pm_yum():
                 gpg_key_url = "http://download.postgresql.org/" \
-                    "pub/repos/yum/RPM-GPG-KEY-PGDG-%s" % \
-                    self.version.replace('.', '')
+                              "pub/repos/yum/RPM-GPG-KEY-PGDG-%s" % \
+                              (self.version.replace('.', '') if
+                               self.os.os_arch != 'aarch64' else 'AARCH64')
                 product_dir = "/repos/yum/%s/redhat/" \
                     "rhel-$releasever-$basearch" % self.version
             elif self.os.is_pm_apt():
@@ -773,7 +774,7 @@ baseurl=%s
                     self.os_version.startswith('7.'):
                 extra_yum_repo = "oraclelinux-7"
 
-        if extra_yum_repo:
+        if extra_yum_repo and self.os.os_arch != 'aarch64':
             cmd = "sh -c 'mkdir /opt/{0}; cd $_; " \
                   "wget -q -r -nd --no-parent -A \"*.rpm\" " \
                   "http://dist.l.postgrespro.ru/resources/linux/{1}/;" \

@@ -242,7 +242,10 @@ class TestUpgradeMinor():
         :return:
         """
         global windows_os
-        dist = " ".join(get_distro()[0:2])
+        distro = get_distro()
+        if distro[2] == 'x86_64':
+            distro = distro[:-1]
+        dist = " ".join(distro)
         if self.system == 'Linux':
             windows_os = False
         elif self.system == 'Windows':

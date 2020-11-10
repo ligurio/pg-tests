@@ -270,12 +270,12 @@ class Multimaster(object):
                 'route %s %s mask 255.255.255.255 192.168.0.1 if 1' % (
                     mode, self.nodes[n2].listen_ips[n1]))
         else:
-            cmd = 'iptables %s INPUT -d %s/32 -j DROP' % (
+            cmd = 'ip route %s blackhole %s/32 table local' % (
                 mode, self.nodes[n1].listen_ips[n2])
             subprocess.check_call(cmd, shell=True,
                                   stderr=subprocess.STDOUT,
                                   stdout=subprocess.PIPE)
-            cmd = 'iptables %s INPUT -d %s/32 -j DROP' % (
+            cmd = 'ip route %s blackhole %s/32 table local' % (
                 mode, self.nodes[n2].listen_ips[n1])
             subprocess.check_call(cmd, shell=True,
                                   stderr=subprocess.STDOUT,
@@ -288,16 +288,10 @@ class Multimaster(object):
         self.__link__(n1, n2, False)
 
     def __isolate__(self, n, do_isolate=True):
-        if self.pginst.windows:
-            if do_isolate:
-                mode = 'add'
-            else:
-                mode = 'delete'
+        if do_isolate:
+            mode = 'add'
         else:
-            if do_isolate:
-                mode = '-I'
-            else:
-                mode = '-D'
+            mode = 'delete'
         ip = self.nodes[n].host
         net = '.'.join(ip.split('.')[0:3]) + '.0/24'
         if self.pginst.windows:
@@ -308,19 +302,15 @@ class Multimaster(object):
                     'route %s %s mask 255.255.255.255 192.168.0.1 if 1' % (
                         mode, self.nodes[i].listen_ips[n]))
         else:
-            cmd = 'iptables %s INPUT -d %s -j DROP' % (mode, net)
+            cmd = 'ip route %s blackhole %s table local' % (mode, net)
             subprocess.check_call(cmd, shell=True, stderr=subprocess.STDOUT,
                                   stdout=subprocess.PIPE)
             for i in range(1, self.size + 1):
-                cmd = 'iptables %s INPUT -d %s/32 -j DROP' % (
+                cmd = 'ip route %s blackhole %s/32 table local' % (
                     mode, self.nodes[i].listen_ips[n])
                 subprocess.check_call(cmd, shell=True,
                                       stderr=subprocess.STDOUT,
                                       stdout=subprocess.PIPE)
-            cmd = 'iptables %s INPUT -d %s -j ACCEPT' % (
-                mode, self.nodes[n].host)
-            subprocess.check_call(cmd, shell=True, stderr=subprocess.STDOUT,
-                                  stdout=subprocess.PIPE)
 
     def isolate(self, n):
         self.__isolate__(n, True)
