@@ -72,6 +72,7 @@ FIRST_RELEASE = {
         'postgrespro-ent-11': '11.8.1',
         'postgrespro-ent-12': '12.3.1',
         'postgrespro-1c-9.6': None,
+        'postgrespro-1c-10': '10.13',
     },
     # altlinux-9
     "ALT Server 9.0": {
@@ -157,6 +158,8 @@ FIRST_RELEASE = {
         'postgrespro-ent-11': '11.9.1',
         'postgrespro-ent-12': '12.4.1',
         'postgrespro-1c-9.6': '9.6.19',
+        'postgrespro-1c-10': '10.14',
+        'postgrespro-1c-11': '11.9',
     },
     # astra-smolensk-1.5
     'Astra Linux (Smolensk) 1.5': {
@@ -272,6 +275,8 @@ FIRST_RELEASE = {
         'postgrespro-ent-11': '11.8.1',
         'postgrespro-ent-12': '12.3.1',
         'postgrespro-1c-9.6': None,
+        'postgrespro-1c-10': '10.13',
+        'postgrespro-1c-11': '11.8',
     },
     # ubuntu-20.10
     "Ubuntu 20.10": {
@@ -318,7 +323,8 @@ FIRST_RELEASE = {
         'postgrespro-ent-9.6': None,
         'postgrespro-ent-10': None,
         'postgrespro-ent-11': None,
-        'postgrespro-1c-9.6': None
+        'postgrespro-1c-9.6': None,
+        'postgrespro-1c-10': '10.14',
     },
     # rhel-7
     'Red Hat Enterprise Linux 7.7': {
@@ -361,6 +367,8 @@ FIRST_RELEASE = {
         'postgrespro-ent-11': '11.8.1',
         'postgrespro-ent-12': '12.3.1',
         'postgrespro-1c-9.6': None,
+        'postgrespro-1c-10': '10.12',
+        'postgrespro-1c-11': '11.8',
     },
     'Windows-10 10.0.14393': {
         'postgresql--9.6': None,
