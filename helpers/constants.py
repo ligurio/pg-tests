@@ -211,6 +211,15 @@ FIRST_RELEASE = {
         'postgrespro-ent-10': '10.9.1',
         'postgrespro-1c-9.6': None,
     },
+    # debian-10 ARM64
+    "Debian GNU/Linux 10 aarch64": {
+        'postgrespro-std-9.6': None,
+        'postgrespro-std-10': None,
+        'postgrespro-std-11': '11.5.1',
+        'postgrespro-ent-9.6': None,
+        'postgrespro-ent-10': None,
+        'postgrespro-ent-11': '11.5.1',
+    },
     # debian-10
     "Debian GNU/Linux 10": {
         'postgrespro-std-9.6': '9.6.15.1',
