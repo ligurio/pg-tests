@@ -89,7 +89,7 @@ FIRST_RELEASE = {
         'postgrespro-1c-9.6': None,
     },
     # "starter kit p9" ALT For ARM64
-    "starter kit p9": {
+    "starter kit p9 aarch64": {
         'postgresql--9.6': None,
         'postgresql--10': None,
         'postgresql--11': None,
