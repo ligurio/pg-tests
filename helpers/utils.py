@@ -433,7 +433,7 @@ def get_distro(remote=False, ip=None):
                 platform.machine()
         elif "Windows" in os:
             return 'Windows-' + platform.win32_ver()[0], \
-                platform.win32_ver()[1], \
+                '.'.join(platform.win32_ver()[1].split('.')[:-1]), \
                 platform.machine()
         else:
             raise Exception("Unknown OS platform (%s)." % os)
