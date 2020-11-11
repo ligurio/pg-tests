@@ -73,6 +73,7 @@ FIRST_RELEASE = {
         'postgrespro-ent-12': '12.3.1',
         'postgrespro-1c-9.6': None,
         'postgrespro-1c-10': '10.13',
+        'postgrespro-1c-11': '11.8',
     },
     # altlinux-9
     "ALT Server 9.0": {
@@ -341,6 +342,7 @@ FIRST_RELEASE = {
         'postgrespro-ent-11': None,
         'postgrespro-1c-9.6': None,
         'postgrespro-1c-10': '10.14',
+        'postgrespro-1c-11': '11.8',
     },
     # rhel-7
     'Red Hat Enterprise Linux 7.7': {
@@ -404,6 +406,7 @@ FIRST_RELEASE = {
         'postgresql--11': None,
         'postgresql--12': None,
         'postgrespro-ent-12': '12.3.1',
+        'postgrespro-1c-9.6': None,
         'postgrespro-1c-10': '10.13',
     },
     # winserv-2012-r2
