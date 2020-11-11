@@ -342,7 +342,7 @@ FIRST_RELEASE = {
         'postgrespro-ent-11': None,
         'postgrespro-1c-9.6': None,
         'postgrespro-1c-10': '10.14',
-        'postgrespro-1c-11': '11.8',
+        'postgrespro-1c-11': '11.9',
     },
     # rhel-7
     'Red Hat Enterprise Linux 7.7': {
