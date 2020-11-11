@@ -379,7 +379,7 @@ class TestUpgrade():
         :return:
         """
         distro = get_distro()
-        if distro[2] == 'x86_64':
+        if distro[2].startswith('x86_64'):
             distro = distro[:-1]
         dist = " ".join(distro)
         request.cls.dist = dist
