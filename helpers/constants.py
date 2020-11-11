@@ -408,6 +408,7 @@ FIRST_RELEASE = {
         'postgrespro-ent-12': '12.3.1',
         'postgrespro-1c-9.6': None,
         'postgrespro-1c-10': '10.13',
+        'postgrespro-1c-11': '11.8',
     },
     # winserv-2012-r2
     'Windows-2012ServerR2 6.3': {
@@ -417,6 +418,7 @@ FIRST_RELEASE = {
         'postgresql--12': None,
         'postgrespro-ent-12': '12.3.1',
         'postgrespro-1c-10': '10.13',
+        'postgrespro-1c-11': '11.8',
     },
     'Windows-10 10.0': {
         'postgresql--9.6': None,
@@ -427,6 +429,7 @@ FIRST_RELEASE = {
         'postgrespro-ent-9.6': '9.6.10.3',
         'postgrespro-ent-12': '12.3.1',
         'postgrespro-1c-10': '10.13',
+        'postgrespro-1c-11': '11.8',
     },
 
 }
