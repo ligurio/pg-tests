@@ -243,7 +243,7 @@ class TestUpgradeMinor():
         """
         global windows_os
         distro = get_distro()
-        if distro[2].startswith('x86_64'):
+        if distro[2] == 'x86_64' or self.system == 'Windows':
             distro = distro[:-1]
         dist = " ".join(distro)
         if self.system == 'Linux':
