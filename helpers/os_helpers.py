@@ -500,13 +500,16 @@ def is_service_installed(service, windows=False):
     if systemd_version > 210:
         cmd = 'LANG=C systemctl list-unit-files' \
                 ' --no-legend --no-pager "%s.service"' % service
-        result = subprocess.check_output(cmd, shell=True). \
-            decode(ConsoleEncoding).strip()
-        if result:
-            if ' masked' in result:
-                return False
-            return True
-        return False
+        try:
+            result = subprocess.check_output(cmd, shell=True). \
+                decode(ConsoleEncoding).strip()
+            if result:
+                if ' masked' in result:
+                    return False
+                return True
+            return False
+        except Exception as e:
+            return False
     cmd = 'LANG=C service "%s" status' % service
     srv = subprocess.Popen(cmd,
                            shell=True,
