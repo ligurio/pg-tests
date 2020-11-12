@@ -8,7 +8,6 @@ tparts=(${job//-/ })
 codename=${tparts[0]}
 version=${tparts[1]}
 
-echo $branch
 stest=${job#*~}
 if [ X"$stest" = X"$job" ]; then
     stest=""
@@ -45,18 +44,21 @@ esac
 
 ext=${os##*-}
 case "$ext" in
+aarch64)
+    targetopt=""
+    ;;
 amd64)
-    target=${os%-amd64}
+    targetopt="--target ${os%-amd64}"
     ;;
 x86)
-    target=${os%-x86}
+    targetopt="--target ${os%-x86}"
     ;;
 multimaster)
     echo "Invalid project extension ($ext) in $1"
     exit 1
     ;;
 *)
-    target=$os
+    targetopt="--target $os"
     ;;
 esac
 
@@ -92,4 +94,4 @@ pgpro | pgproee | pg1c )
 esac
 
 sudo chmod -R 777 .
-sudo -u tester -i sh -c "cd '$PWD'; ./testrun.py --product_name $product --product_edition $edition --product_version $version --target $target $extraopt --test tests_install/$stest --clean --export $2 $3 $4"
+sudo -u tester -i sh -c "cd '$PWD'; ./testrun.py --product_name $product --product_edition $edition --product_version $version $targetopt $extraopt --test tests_install/$stest --clean --export $2 $3 $4"
