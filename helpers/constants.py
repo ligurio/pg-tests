@@ -74,6 +74,7 @@ FIRST_RELEASE = {
         'postgrespro-1c-9.6': None,
         'postgrespro-1c-10': '10.13',
         'postgrespro-1c-11': '11.8',
+        'postgrespro-1c-12': '12.3',
     },
     # altlinux-9
     "ALT Server 9.0": {
@@ -143,6 +144,7 @@ FIRST_RELEASE = {
         'postgrespro-1c-9.6': '9.6.19',
         'postgrespro-1c-10': '10.14',
         'postgrespro-1c-11': '11.9',
+        'postgrespro-1c-12': '12.3',
     },
     # astra-smolensk-1.5
     'Astra Linux (Smolensk) 1.5': {
@@ -282,6 +284,7 @@ FIRST_RELEASE = {
         'postgrespro-1c-9.6': None,
         'postgrespro-1c-10': '10.13',
         'postgrespro-1c-11': '11.8',
+        'postgrespro-1c-12': '12.3',
     },
     # ubuntu-20.04 ARM64
     "Ubuntu 20.04 aarch64": {
@@ -308,9 +311,9 @@ FIRST_RELEASE = {
         'postgrespro-ent-10': None,
         'postgrespro-ent-11': None,
         'postgrespro-1c-9.6': None,
-        'postgrespro-1c-10': '10.15.1',
-        'postgrespro-1c-11': '11.10.1',
-        'postgrespro-1c-12': '12.5.1',
+        'postgrespro-1c-10': '10.15',
+        'postgrespro-1c-11': '11.10',
+        'postgrespro-1c-12': '12.5',
     },
     # astra-orel-2.12
     'Astra Linux (Orel) 2.12.29': {
@@ -343,6 +346,7 @@ FIRST_RELEASE = {
         'postgrespro-1c-9.6': None,
         'postgrespro-1c-10': '10.14',
         'postgrespro-1c-11': '11.9',
+        'postgrespro-1c-12': '12.3',
     },
     # rhel-7
     'Red Hat Enterprise Linux 7.7': {
@@ -379,6 +383,7 @@ FIRST_RELEASE = {
         'postgrespro-1c-9.6': None,
         'postgrespro-1c-10': '10.12',
         'postgrespro-1c-11': '11.8',
+        'postgrespro-1c-12': '12.2',
     },
     # osnova-2.0
     'OSNova Linux (Onyx) 2.0': {
