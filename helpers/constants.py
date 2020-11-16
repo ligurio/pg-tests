@@ -144,7 +144,7 @@ FIRST_RELEASE = {
         'postgrespro-1c-9.6': '9.6.19',
         'postgrespro-1c-10': '10.14',
         'postgrespro-1c-11': '11.9',
-        'postgrespro-1c-12': '12.3',
+        'postgrespro-1c-12': '12.4',
     },
     # astra-smolensk-1.5
     'Astra Linux (Smolensk) 1.5': {
@@ -347,7 +347,7 @@ FIRST_RELEASE = {
         'postgrespro-1c-9.6': None,
         'postgrespro-1c-10': '10.14',
         'postgrespro-1c-11': '11.9',
-        'postgrespro-1c-12': '12.3',
+        'postgrespro-1c-12': '12.4',
     },
     # rhel-7
     'Red Hat Enterprise Linux 7.7': {
