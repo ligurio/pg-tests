@@ -178,6 +178,7 @@ FIRST_RELEASE = {
         'postgresql--9.6': None,
         'postgresql--10': None,
         'postgresql--11': None,
+        'postgresql--12': None,
         'postgrespro-1c-9.6': None,
     },
     # centos-8 ARM64
