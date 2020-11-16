@@ -588,6 +588,18 @@
     when: ansible_os_family == "Windows" and not ansible_distribution.startswith("Microsoft Windows Server 2012")
     win_command: 'powershell -Command "Set-MpPreference -DisableRealtimeMonitoring $true; Set-MpPreference -ScanAvgCPULoadFactor 1"'
 
+  - name: windows - enable high perfomance power mode
+    when: ansible_os_family == "Windows"
+    win_command: powercfg /s 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c
+
+  - name: windows - allocate processor resources to adjust for best performance in background services
+    when: ansible_os_family == "Windows"
+    win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl
+      name: Win32PrioritySeparation
+      data: 0x18
+      type: dword
+
   - name: windows - download dskcache.exe # Windows2000-KB811392-x86-ENU.exe
     when: ansible_os_family == "Windows"
     win_get_url:
