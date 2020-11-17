@@ -76,7 +76,10 @@ cd libpqxx*/
 if which python3 >/dev/null 2>&1; then
   sed -e 's|^#! /usr/bin/env python$|#! /usr/bin/env python3|' -i tools/splitconfig tools/*.py # https://github.com/jtv/libpqxx/commit/c6cb952f
 fi
-CXXFLAGS="-std=c++11" ./configure --disable-documentation && make && make install
+
+extraopt=""
+[ X"$(uname -m)" == X"aarch64" ] && extraopt="--build=unknown-unknown-linux"
+CXXFLAGS="-std=c++11" ./configure $extraopt --disable-documentation && make && make install
 
 cd ~test/pg-tests
 curl --tlsv1.2 -sS -L https://github.com/anse1/sqlsmith/archive/master.tar.gz \
