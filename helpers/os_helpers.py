@@ -415,20 +415,19 @@ class OsHelper:
                 return False
         cmd = 'LANG=C service "%s" status' % service
         srv = subprocess.Popen(cmd,
-                            shell=True,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE)
+                               shell=True,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE)
         srvout, srverr = srv.communicate()
         srverr = srverr.decode(ConsoleEncoding)
         if srv.returncode == 0:
             return True
         elif srv.returncode == 1 or srv.returncode == 4:
             if srverr.strip().lower().endswith(': unrecognized service') or \
-            srverr.strip().endswith(' could not be found.') or \
-            srverr.startswith('service: no such service'):
+               srverr.strip().endswith(' could not be found.') or \
+               srverr.startswith('service: no such service'):
                 return False
         return True
-
 
     def is_service_running(self, service):
         if self.is_windows():
@@ -441,9 +440,9 @@ class OsHelper:
                 return winsrv['status'] == 'running'
         cmd = 'service "%s" status' % service
         result = subprocess.call(cmd,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE,
-                                shell=True)
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE,
+                                 shell=True)
         return result == 0
 
     def service_action(self, service, action='start'):
