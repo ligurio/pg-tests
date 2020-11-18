@@ -315,6 +315,7 @@ FIRST_RELEASE = {
         'postgrespro-1c-10': '10.15',
         'postgrespro-1c-11': '11.10',
         'postgrespro-1c-12': '12.5',
+        'postgrespro-1c-13': '13.1',
     },
     # astra-orel-2.12
     'Astra Linux (Orel) 2.12.29': {
