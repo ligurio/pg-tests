@@ -1435,15 +1435,7 @@ baseurl=%s
         self.configdir = self.get_datadir()
 
     def service_action(self, action='start', wait_for_completion=True):
-        if self.os.is_windows():
-            if action == 'restart':
-                cmd = 'net stop "{0}" & net start "{0}"'.format(
-                    self.service_name)
-            else:
-                cmd = 'net %s "%s"' % (action, self.service_name)
-        else:
-            cmd = 'service "%s" %s' % (self.service_name, action)
-        subprocess.check_call(cmd, shell=True)
+        self.os.service_action(self.service_name, action)
         action_timeout = 120
         if wait_for_completion:
             for i in range(1, action_timeout):
