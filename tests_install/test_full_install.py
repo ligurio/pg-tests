@@ -353,6 +353,18 @@ class TestFullInstall():
         assert len(response[0]) != 0
         assert len(response[1]) == 0
 
+    def test_pgbouncer(self, request):
+        if self.system == 'Windows':
+            pytest.skip("This mamonsu test is not implemented on Windows yet.")
+        pginst = request.cls.pginst
+        if pginst.edition not in ['std', 'std-cert', 'ent', 'ent-cert']:
+            pytest.skip("The pgbouncer test is only performed "
+                        "for Standard and Enterprise editions")
+        assert pginst.os.is_service_installed('pgbouncer')
+        assert not (pginst.os.is_service_running('pgbouncer'))
+        pginst.os.service_action('pgbouncer', 'start')
+        assert pginst.os.is_service_running('pgbouncer')
+
     def test_all_extensions(self, request):
         pginst = request.cls.pginst
         iprops = pginst.get_initdb_props()
@@ -579,4 +591,6 @@ $$ LANGUAGE plpgsql;"""
             if not (pginst.os_name == 'Astra Linux (Smolensk)' and
                     pginst.os_version == '1.5'):
                 assert not (pginst.os.is_service_installed('mamonsu'))
+                assert not (pginst.os.is_service_installed('pgbouncer'))
             assert not (pginst.os.is_service_running('mamonsu'))
+            assert not (pginst.os.is_service_running('pgbouncer'))
