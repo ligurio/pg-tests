@@ -584,10 +584,6 @@
           ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux') or
           ansible_distribution == 'ROSA'
 
-  - name: windows - restrict Windows Defender
-    when: ansible_os_family == "Windows" and not ansible_distribution.startswith("Microsoft Windows Server 2012")
-    win_command: 'powershell -Command "Set-MpPreference -DisableRealtimeMonitoring $true; Set-MpPreference -ScanAvgCPULoadFactor 1"'
-
   - name: windows - enable high perfomance power mode
     when: ansible_os_family == "Windows"
     win_command: powercfg /s 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c
@@ -609,6 +605,16 @@
   - name: windows - turn off write-cache buffer flushing
     when: ansible_os_family == "Windows"
     win_command: C:\Users\test\dskcache.exe +p
+
+  - name: windows - download nsudo.exe # https://github.com/M2Team/NSudo
+    when: ansible_os_family == "Windows"
+    win_get_url:
+        url: http://dist.l.postgrespro.ru/resources/windows/NSudoLC.exe
+        dest: C:\Users\test\NSudoLC.exe
+
+  - name: windows - stop and remove Windows Defender
+    when: ansible_os_family == "Windows" and not ansible_distribution.startswith("Microsoft Windows Server 2012")
+    win_command: C:\Users\test\NSudoLC.exe -U:T -P:E -UseCurrentConsole cmd /c "sc stop WinDefend & sc delete WinDefend"
 
   - name: windows - disable activestate applications updates
     win_shell: echo 127.0.0.1 update.activestate.com >> %windir%\System32\Drivers\etc\hosts
