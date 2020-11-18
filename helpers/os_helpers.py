@@ -391,6 +391,71 @@ class OsHelper:
                 result.append(pkgname)
         return result
 
+    def is_service_installed(self, service):
+        if self.is_windows():
+            winsrv = None
+            try:
+                winsrv = psutil.win_service_get(service)
+            except psutil.NoSuchProcess:
+                return False
+            return winsrv is not None
+        systemd_version = get_systemd_version()
+        if systemd_version > 210:
+            cmd = 'LANG=C systemctl list-unit-files' \
+                    ' --no-legend --no-pager "%s.service"' % service
+            try:
+                result = subprocess.check_output(cmd, shell=True). \
+                    decode(ConsoleEncoding).strip()
+                if result:
+                    if ' masked' in result:
+                        return False
+                    return True
+                return False
+            except Exception as e:
+                return False
+        cmd = 'LANG=C service "%s" status' % service
+        srv = subprocess.Popen(cmd,
+                               shell=True,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE)
+        srvout, srverr = srv.communicate()
+        srverr = srverr.decode(ConsoleEncoding)
+        if srv.returncode == 0:
+            return True
+        elif srv.returncode == 1 or srv.returncode == 4:
+            if srverr.strip().lower().endswith(': unrecognized service') or \
+               srverr.strip().endswith(' could not be found.') or \
+               srverr.startswith('service: no such service'):
+                return False
+        return True
+
+    def is_service_running(self, service):
+        if self.is_windows():
+            winsrv = None
+            try:
+                winsrv = psutil.win_service_get(service).as_dict()
+            except psutil.NoSuchProcess:
+                return False
+            if winsrv:
+                return winsrv['status'] == 'running'
+        cmd = 'service "%s" status' % service
+        result = subprocess.call(cmd,
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE,
+                                 shell=True)
+        return result == 0
+
+    def service_action(self, service, action='start'):
+        if self.is_windows():
+            if action == 'restart':
+                cmd = 'net stop "{0}" & net start "{0}"'.format(
+                    service)
+            else:
+                cmd = 'net %s "%s"' % (action, service)
+        else:
+            cmd = 'service "%s" %s' % (service, action)
+        subprocess.check_call(cmd, shell=True)
+
 
 def download_file(url, path):
     """ Download file from remote path
@@ -486,62 +551,6 @@ def get_systemd_version():
     if not m:
         return None
     return int(m.group(1))
-
-
-def is_service_installed(service, windows=False):
-    if windows:
-        winsrv = None
-        try:
-            winsrv = psutil.win_service_get(service)
-        except psutil.NoSuchProcess:
-            return False
-        return winsrv is not None
-    systemd_version = get_systemd_version()
-    if systemd_version > 210:
-        cmd = 'LANG=C systemctl list-unit-files' \
-                ' --no-legend --no-pager "%s.service"' % service
-        try:
-            result = subprocess.check_output(cmd, shell=True). \
-                decode(ConsoleEncoding).strip()
-            if result:
-                if ' masked' in result:
-                    return False
-                return True
-            return False
-        except Exception as e:
-            return False
-    cmd = 'LANG=C service "%s" status' % service
-    srv = subprocess.Popen(cmd,
-                           shell=True,
-                           stdout=subprocess.PIPE,
-                           stderr=subprocess.PIPE)
-    srvout, srverr = srv.communicate()
-    srverr = srverr.decode(ConsoleEncoding)
-    if srv.returncode == 0:
-        return True
-    elif srv.returncode == 1 or srv.returncode == 4:
-        if srverr.strip().lower().endswith(': unrecognized service') or \
-           srverr.strip().endswith(' could not be found.') or \
-           srverr.startswith('service: no such service'):
-            return False
-    return True
-
-
-def is_service_running(service, windows=False):
-    if windows:
-        winsrv = None
-        try:
-            winsrv = psutil.win_service_get(service).as_dict()
-        except psutil.NoSuchProcess:
-            return False
-        if winsrv:
-            return winsrv['status'] == 'running'
-    cmd = 'service "%s" status' % service
-    result = subprocess.call(cmd,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE,
-                             shell=True)
-    return result == 0
 
 
 def create_tablespace_directory():

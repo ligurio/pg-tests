@@ -9,7 +9,6 @@ import allure
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall
 from helpers.os_helpers import get_directory_size, get_process_pids
-from helpers.os_helpers import is_service_running, is_service_installed
 from helpers.utils import ConsoleEncoding, get_distro
 
 
@@ -344,8 +343,8 @@ class TestFullInstall():
         if pginst.edition not in ['std', 'std-cert', 'ent', 'ent-cert']:
             pytest.skip("The mamonsu test is only performed "
                         "for Standard and Enterprise editions")
-        assert is_service_installed('mamonsu')
-        assert not (is_service_running('mamonsu'))
+        assert pginst.os.is_service_installed('mamonsu')
+        assert not (pginst.os.is_service_running('mamonsu'))
         output = subprocess.Popen(["mamonsu", "--help"],
                                   stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE)
@@ -353,6 +352,18 @@ class TestFullInstall():
         assert output.returncode == 2
         assert len(response[0]) != 0
         assert len(response[1]) == 0
+
+    def test_pgbouncer(self, request):
+        if self.system == 'Windows':
+            pytest.skip("This mamonsu test is not implemented on Windows yet.")
+        pginst = request.cls.pginst
+        if pginst.edition not in ['std', 'std-cert', 'ent', 'ent-cert']:
+            pytest.skip("The pgbouncer test is only performed "
+                        "for Standard and Enterprise editions")
+        assert pginst.os.is_service_installed('pgbouncer')
+        assert not (pginst.os.is_service_running('pgbouncer'))
+        pginst.os.service_action('pgbouncer', 'start')
+        assert pginst.os.is_service_running('pgbouncer')
 
     def test_all_extensions(self, request):
         pginst = request.cls.pginst
@@ -579,5 +590,7 @@ $$ LANGUAGE plpgsql;"""
             # as a configuration file on Debian without systemd
             if not (pginst.os_name == 'Astra Linux (Smolensk)' and
                     pginst.os_version == '1.5'):
-                assert not (is_service_installed('mamonsu'))
-            assert not (is_service_running('mamonsu'))
+                assert not (pginst.os.is_service_installed('mamonsu'))
+                assert not (pginst.os.is_service_installed('pgbouncer'))
+            assert not (pginst.os.is_service_running('mamonsu'))
+            assert not (pginst.os.is_service_running('pgbouncer'))
