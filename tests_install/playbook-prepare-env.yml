@@ -108,8 +108,9 @@
     command: dnf clean packages
     args:
       warn: no
-    become_method: su
-    when: ansible_pkg_mgr == "dnf"
+    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "dnf"
+    become_method: '{{ use_become_method }}'
+    become: true
 
   - name: install selinux required packages (YUM)
     shell: yum install -y libselinux-python;
