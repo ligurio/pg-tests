@@ -355,7 +355,7 @@ class TestFullInstall():
 
     def test_pgbouncer(self, request):
         if self.system == 'Windows':
-            pytest.skip("This mamonsu test is not implemented on Windows yet.")
+            pytest.skip("The pgbouncer test is not implemented on Windows.")
         pginst = request.cls.pginst
         if pginst.edition not in ['std', 'std-cert', 'ent', 'ent-cert']:
             pytest.skip("The pgbouncer test is only performed "
