@@ -104,7 +104,7 @@
     become_method: "{{ use_become_method }}"
     become: true
 
- - name: DNF clean metadata
+  - name: DNF clean metadata
     command: dnf clean packages
     args:
       warn: no
