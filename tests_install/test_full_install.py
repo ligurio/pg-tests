@@ -591,6 +591,6 @@ $$ LANGUAGE plpgsql;"""
             if not (pginst.os_name == 'Astra Linux (Smolensk)' and
                     pginst.os_version == '1.5'):
                 assert not (pginst.os.is_service_installed('mamonsu'))
+                assert not (pginst.os.is_service_running('mamonsu'))
                 assert not (pginst.os.is_service_installed('pgbouncer'))
-            assert not (pginst.os.is_service_running('mamonsu'))
-            assert not (pginst.os.is_service_running('pgbouncer'))
+                assert not (pginst.os.is_service_running('pgbouncer'))
