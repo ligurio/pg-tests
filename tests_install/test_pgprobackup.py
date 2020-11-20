@@ -180,6 +180,11 @@ class TestPgprobackup():
         tar.close()
         dir = '.'.join(tar_file.split('.')[:-2])
         print(dir)
+        # Patch tests for 2.4.2
+        if (self.version == '2.4.2'):
+            urlretrieve('https://github.com/postgrespro/pg_probackup/raw/8147'
+                        '001/tests/incr_restore.py',
+                        os.path.join(dir, 'tests', 'incr_restore.py'))
         self.fix_permissions(dir)
         subprocess.check_call('pip2 install testgres==1.8.2', shell=True)
         # PGPRO-4108 wait ptrack2.0 in 10
