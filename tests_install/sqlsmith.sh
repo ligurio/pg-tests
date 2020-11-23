@@ -15,15 +15,18 @@ then
 fi
 if which apt-get; then
     apt-get install -y build-essential pkg-config autoconf
-    apt-get install -y autoconf-archive libtool
+    apt-get install -y autoconf-archive
+    apt-get install -y libtool
     apt-get install -y libboost-regex-dev
-    apt-get install -y wget gcc-c++ boost-regex-devel gcc5-c++
+    apt-get install -y wget
+    apt-get install -y gcc-c++
+    apt-get install -y boost-regex-devel
+    apt-get install -y gcc5-c++
     if grep 'PRETTY_NAME="Ubuntu 14\.04' /etc/os-release; then
         CONF_OPTIONS="--with-boost-libdir=/usr/lib/x86_64-linux-gnu"
     fi
     if grep 'PRETTY_NAME="ALT 8' /etc/os-release; then
-        apt-get install -y gcc5-c++ autoconf_2.60 automake_1.14 \
-        boost-regex-devel
+        apt-get install -y autoconf_2.60 automake_1.14 libtool_2.4
     fi
 elif which zypper; then
     zypper install -y gcc-c++
