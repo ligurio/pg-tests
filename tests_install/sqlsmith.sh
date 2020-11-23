@@ -1,15 +1,6 @@
 set -x
-if  grep -q 'PRETTY_NAME="ALT Server 9' /etc/os-release; then
-    echo 'Test is temporarily skipped.'
-    exit 0
-fi
-if  grep -q 'PRETTY_NAME="ALT Starterkit (Hypericum)' /etc/os-release; then
-    echo 'Test is temporarily skipped.'
-    exit 0
-fi
 if grep -q 'ALT Linux 6\.' /etc/altlinux-release || \
    grep -q 'PRETTY_NAME="ALT Linux 7' /etc/os-release || \
-   grep -q 'PRETTY_NAME="ALT Server 9' /etc/os-release || \
    grep -q 'PRETTY_NAME="Astra Linux (Smolensk 1.5)"' /etc/os-release || \
    grep -q 'PRETTY_NAME="Debian GNU/Linux 7' /etc/os-release || \
    grep -q 'PRETTY_NAME="SUSE Linux Enterprise Server 11' /etc/os-release || \
@@ -25,13 +16,17 @@ fi
 if which apt-get; then
     apt-get install -y build-essential pkg-config autoconf
     apt-get install -y autoconf-archive
+    apt-get install -y libtool
     apt-get install -y libboost-regex-dev
+    apt-get install -y wget
+    apt-get install -y gcc-c++
+    apt-get install -y boost-regex-devel
+    apt-get install -y gcc5-c++
     if grep 'PRETTY_NAME="Ubuntu 14\.04' /etc/os-release; then
         CONF_OPTIONS="--with-boost-libdir=/usr/lib/x86_64-linux-gnu"
     fi
     if grep 'PRETTY_NAME="ALT 8' /etc/os-release; then
-        apt-get install -y gcc5-c++ autoconf_2.60 automake_1.14 \
-        boost-regex-devel
+        apt-get install -y autoconf_2.60 automake_1.14 libtool_2.4
     fi
 elif which zypper; then
     zypper install -y gcc-c++
@@ -46,6 +41,7 @@ openSUSE-stable/repo/oss/noarch/autoconf-archive-2017.09.28-lp152.3.2.noarch.rpm
     fi
 elif which yum; then
     yum install -y autoconf automake >/dev/null
+    yum install -y libtool >/dev/null
     yum install -y gcc-c++ >/dev/null
     yum install -y boost-devel >/dev/null
     yum install -y autoconf-archive >/dev/null || \
@@ -68,6 +64,7 @@ elif which yum; then
 fi
 export PATH=$1/bin:$PATH
 cd ~test/pg-tests
+basedir=`pwd`
 curl --tlsv1.2 -sS -L https://github.com/jtv/libpqxx/archive/6.1.0.tar.gz \
     -o libpqxx.tar.gz || \
 wget https://github.com/jtv/libpqxx/archive/6.1.0.tar.gz -O libpqxx.tar.gz
@@ -76,11 +73,8 @@ cd libpqxx*/
 if which python3 >/dev/null 2>&1; then
   sed -e 's|^#! /usr/bin/env python$|#! /usr/bin/env python3|' -i tools/splitconfig tools/*.py # https://github.com/jtv/libpqxx/commit/c6cb952f
 fi
-
-extraopt=""
-[ X"$(uname -m)" == X"aarch64" ] && extraopt="--build=unknown-unknown-linux"
-CXXFLAGS="-std=c++11" ./configure $extraopt --disable-documentation && make && make install
-
+autoreconf -fi
+CXXFLAGS="-std=c++11" ./configure --prefix=$basedir/libpqxx --disable-documentation && make && make install
 cd ~test/pg-tests
 curl --tlsv1.2 -sS -L https://github.com/anse1/sqlsmith/archive/master.tar.gz \
     -o ss.tar.gz || \
@@ -90,8 +84,8 @@ cd sqlsmith*/
 sed -e 's|\[m4_esyscmd_s(\[git describe --dirty --tags --always\])\]|1|' -i configure.ac # To do with old autoconf and without git
 autoreconf -i
 sed -e 's|char conninfo="dbname = postgres";|char conninfo[]="dbname = postgres";|' -i configure # https://github.com/autoconf-archive/autoconf-archive/pull/158
-PKG_CONFIG_PATH=/usr/local/lib/pkgconfig/:$1/lib/pkgconfig/ \
-LIBPQXX_LIBS="-L$1/lib -lpqxx -lpq" ./configure $CONF_OPTIONS || exit 1
+PKG_CONFIG_PATH=$basedir/libpqxx/lib/pkgconfig/:$1/lib/pkgconfig/ \
+LIBPQXX_LIBS="-L$1/lib -L$basedir/libpqxx/lib -lpqxx -lpq" ./configure $CONF_OPTIONS || exit 1
 [ -f gitrev.h ] || echo "#define GITREV \"1\"" >gitrev.h # To do without git
 sed -i -e 's|/\* re-throw to outer loop to recover session. \*/|return 1;|' sqlsmith.cc
 make || exit $?
