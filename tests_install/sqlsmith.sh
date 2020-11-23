@@ -41,6 +41,7 @@ openSUSE-stable/repo/oss/noarch/autoconf-archive-2017.09.28-lp152.3.2.noarch.rpm
     fi
 elif which yum; then
     yum install -y autoconf automake >/dev/null
+    yum install -y libtool >/dev/null
     yum install -y gcc-c++ >/dev/null
     yum install -y boost-devel >/dev/null
     yum install -y autoconf-archive >/dev/null || \
