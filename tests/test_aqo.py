@@ -1,6 +1,6 @@
 import glob
 import json
-import numpy  # pylint: disable=import-error
+#import numpy  # pylint: disable=import-error
 import os
 import platform
 import psycopg2
@@ -109,6 +109,8 @@ def parse_explain_stat(explain_output):
 
 
 def parse_explain_analyze_stat(explain_output):
+    import numpy.log as log  # pylint: disable=import-error
+    import numpy.mean as mean  # pylint: disable=import-error
 
     dict = {'planning_time': '',
             'execution_time': '',
@@ -362,6 +364,7 @@ def test_available_modes(install_postgres):
 
 
 def evaluate_aqo(stats):
+    import numpy.mean as mean  # pylint: disable=import-error
     """
     This function is intended to validate aqo with specific query.
 

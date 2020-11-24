@@ -2,7 +2,6 @@ distro
 allure-pytest
 beautifulsoup4
 netaddr
-numpy
 psutil
 pytest==5.4.3
 pytest-html
