@@ -150,13 +150,13 @@ def parse_explain_analyze_stat(explain_output):
         if rows is not None:
             predicted_rows = int(rows.group(1))
             actual_rows = int(rows.group(2))
-            log_rows_predicted.append(numpy.log(predicted_rows))
-            log_rows_actual.append(numpy.log(actual_rows))
+            log_rows_predicted.append(log(predicted_rows))
+            log_rows_actual.append(log(actual_rows))
 
     assert len(log_rows_predicted) == len(log_rows_actual)
 
-    dict['cardinality_error'] = abs(numpy.mean(
-        log_rows_predicted) - numpy.mean(log_rows_actual))
+    dict['cardinality_error'] = abs(mean(
+        log_rows_predicted) - mean(log_rows_actual))
 
     return dict
 
@@ -365,6 +365,7 @@ def test_available_modes(install_postgres):
 
 def evaluate_aqo(stats):
     import numpy.mean as mean  # pylint: disable=import-error
+    import numpy.max as max  # pylint: disable=import-error
     """
     This function is intended to validate aqo with specific query.
 
@@ -394,10 +395,10 @@ def evaluate_aqo(stats):
     # FIXME:
     # assert (numpy.mean(dict['default']['total_time']) <
     #  numpy.mean(dict['aqo_stat']['total_time']))
-    assert (numpy.mean(dict['aqo']['total_time']) /
-            numpy.mean(dict['aqo_stat']['total_time'])) < 0.15
-    diff = numpy.mean(dict['default']['cardinality_error']) - \
-        numpy.mean(dict['aqo_stat']['cardinality_error'])
+    assert (mean(dict['aqo']['total_time']) /
+            mean(dict['aqo_stat']['total_time'])) < 0.15
+    diff = mean(dict['default']['cardinality_error']) - \
+        mean(dict['aqo_stat']['cardinality_error'])
     assert diff < 0.5 and diff > 0
 
     IGNORE_ITER = 65
@@ -412,7 +413,7 @@ def evaluate_aqo(stats):
             dict[k]['cardinality_error'] = [
                 float(x['cardinality_error']) for x in stats[k]]
 
-        assert numpy.max(dict['aqo']['total_time']) < numpy.mean(
+        assert max(dict['aqo']['total_time']) < mean(
             dict['aqo']['total_time']) * FACTOR_SPIKE
 
 
