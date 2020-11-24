@@ -216,6 +216,16 @@
     become_method: su
     when: ansible_os_family != "Windows" and use_ssh is not defined
 
+  - name: Configure locale
+    shell: if localectl | grep -E 'System Locale:\s*n/a'; then
+       if locale -a | grep en_US.utf8; then
+       localectl set-locale LANG=en_US.UTF-8;
+       fi
+       fi
+    when: ansible_os_family != "Windows"
+    become_method: sudo
+    become: true
+
   - name: Disable graphical target in systemd
     shell: systemctl set-default multi-user.target
     args:
