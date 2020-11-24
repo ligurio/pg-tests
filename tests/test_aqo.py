@@ -1,6 +1,5 @@
 import glob
 import json
-# import numpy  # pylint: disable=import-error
 import os
 import platform
 import psycopg2
