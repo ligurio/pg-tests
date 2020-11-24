@@ -187,10 +187,6 @@ def check_executables(pginst, packages):
                     raise Exception("CRC mismatch in debuginfo for %s"
                                     " (or dependencies)." % f)
             if good_lines != 3:
-                if f in ['/usr/bin/pzstd', '/usr/bin/zstd']:
-                    # a newer zstd can be installed from epel (on RH),
-                    # but zstd-debuginfo will still be ours
-                    continue
                 if f.startswith('/llvm5.0/bin/') or \
                    f.startswith('/usr/bin/python'):
                     continue
