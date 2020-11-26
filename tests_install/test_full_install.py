@@ -166,6 +166,10 @@ def check_executables(pginst, packages):
                 continue
             if f.endswith('.so') or '.so.' in os.path.basename(f):
                 continue
+            if f in ['/usr/bin/pzstd', '/usr/bin/zstd']:
+                # a newer zstd can be installed from epel or OS repository,
+                # but zstd-debuginfo will still be ours
+                continue
             gdbout = subprocess.check_output(
                 'LANG=C gdb --batch -ex "b main" -ex run -ex next -ex bt'
                 '  -ex cont --args  "%s" --version' % f,
