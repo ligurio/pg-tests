@@ -745,7 +745,7 @@ baseurl=%s
                                    'ROSA Enterprise Linux Cobalt',
                                    'ROSA Enterprise Linux Server'] and
                   self.os_version.startswith('7')):
-                cmd = "yum localinstall -y https://dl.fedoraproject.org/pub/" \
+                cmd = "yum localinstall -y https://mirror.yandex.ru/" \
                     "epel/epel-release-latest-7.noarch.rpm"
             if cmd:
                 self.exec_cmd_retry(cmd)
