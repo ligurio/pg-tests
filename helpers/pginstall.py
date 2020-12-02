@@ -47,6 +47,9 @@ PRELOAD_LIBRARIES = {
     'std-12':
         ['auth_delay', 'auto_explain',
          'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
+    'std-13':
+        ['auth_delay', 'auto_explain',
+         'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
     'std-cert-11':
         ['auth_delay', 'auto_explain',
          'plantuner', 'shared_ispell', 'pg_pathman',
