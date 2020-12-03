@@ -129,6 +129,7 @@ BEGIN
     LOOP
         EXECUTE 'DROP CONVERSION ' || con_name || ';';
     END LOOP;
+    EXECUTE 'DROP EXTENSION IF EXISTS hunspell_ne_np CASCADE';
 END;
 $$;
 """
