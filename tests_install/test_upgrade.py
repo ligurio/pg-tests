@@ -236,7 +236,7 @@ def dump_and_diff_dbs(oldKey, pgNew, prefix):
     file1 = os.path.join(tempdir, result_file_name)
     file2 = os.path.join(tempdir, '%s-expected.sql' % oldKey)
     diff_file = os.path.join(tempdir, "%s-%s.sql.diff" % (prefix, oldKey))
-    diff_dbs(file1, file2, diff_file)
+    diff_dbs(file2, file1, diff_file)
     pgNew.do_in_all_dbs(amcheck_sql)
 
 
