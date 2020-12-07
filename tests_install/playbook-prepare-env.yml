@@ -631,7 +631,8 @@
         dest: C:\Users\test\NSudoLC.exe
 
   - name: windows - stop and remove Windows Defender
-    when: ansible_os_family == "Windows" and not ansible_distribution.startswith("Microsoft Windows Server 2012")
+    when: ansible_os_family == "Windows" and not ansible_distribution.startswith("Microsoft Windows Server 2012") and
+          (ansible_architecture == "64-bit" or ansible_architecture == "64-разрядная")
     win_command: C:\Users\test\NSudoLC.exe -U:T -P:E -UseCurrentConsole cmd /c "sc stop WinDefend & sc delete WinDefend"
 
   - name: windows - disable activestate applications updates
