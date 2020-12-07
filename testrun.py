@@ -20,7 +20,8 @@ from helpers.utils import (copy_file, copy_reports_win,
                            exec_command, gen_name, exec_retry,
                            exec_command_win, wait_for_boot,
                            REMOTE_LOGIN, REMOTE_PASSWORD,
-                           REMOTE_ROOT_PASSWORD, urlcontent, urlretrieve)
+                           REMOTE_ROOT_PASSWORD, is_remote_file_differ,
+                           urlcontent, urlretrieve)
 
 # py2compat
 if not sys.version_info > (3, 0):
@@ -113,6 +114,11 @@ def create_image(domname, name):
     domimage = get_dom_disk(domname)
     image_url = IMAGE_BASE_URL + name + '.qcow2'
     image_original = TEMPLATE_DIR + name + '.qcow2'
+
+    if os.path.isfile(image_original) and \
+            is_remote_file_differ(image_url, image_original):
+        print('Remote image differs with local, erasing it...')
+        os.remove(image_original)
 
     if not os.path.isfile(image_original):
         if not os.path.exists(TEMPLATE_DIR):
