@@ -83,7 +83,7 @@ def urlopen(url):
 def is_remote_file_differ(url, file_name):
     req = urlopen(url)
     return int(req.info()['Content-Length']) != \
-           int(os.stat(file_name).st_size)
+        int(os.stat(file_name).st_size)
 
 
 @retry(action='getting content from %s', arg=1)
