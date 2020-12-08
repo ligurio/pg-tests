@@ -535,6 +535,8 @@ def read_dump(file):
     numre = re.compile(r"\b[-+]?[0-9]*\.?[0-9]+([e][-+]?[0-9]+)?")
     exre = re.compile(r"EXECUTE\s+\w+")
     alterrolere = re.compile(r"(ALTER ROLE.*)PASSWORD\s'[^']+'")
+    createdatabaselocalere = re.compile(
+        r"(CREATE DATABASE.*)LOCALE\s*=\s*'([^']+)'(.*)")
     createdatabasere = re.compile(
         r"(CREATE DATABASE.*)LC_COLLATE\s*=\s*'([^@]+)@[^']+'(.*)")
 
@@ -565,6 +567,8 @@ def read_dump(file):
         if 'ALTER ROLE' in ustr:
             result = alterrolere.sub(r"\1PASSWORD ''", result)
         elif 'CREATE DATABASE' in ustr:
+            result = createdatabaselocalere.sub(
+                r"\1LC_COLLATE = '\2' LC_CTYPE = '\2'\3", result)
             result = createdatabasere.sub(r"\1LC_COLLATE = '\2'\3", result)
         elif 'EXECUTE' in ustr:
             result = exre.sub(r"EXECUTE ***", result)
