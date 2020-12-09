@@ -31,7 +31,7 @@ WIN_INST_DIR = "C:\\Users\\test\\pg-tests\\pg_installer"
 PRELOAD_LIBRARIES = {
     'ent-12':
         ['auth_delay', 'auto_explain', 'in_memory',
-         'pgpro_scheduler', 'ptrack',
+         'pgpro_scheduler', 'ptrack', 'pgpro_stats',
          'pg_stat_statements', 'pgpro_stats', 'plantuner',
          'shared_ispell', 'pg_wait_sampling',
          'pg_pathman'],
@@ -45,10 +45,10 @@ PRELOAD_LIBRARIES = {
         ['auth_delay', 'auto_explain', 'timescaledb',
          'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
     'std-12':
-        ['auth_delay', 'auto_explain', 'timescaledb',
+        ['auth_delay', 'auto_explain', 'timescaledb', 'pgpro_stats',
          'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
     'std-13':
-        ['auth_delay', 'auto_explain',
+        ['auth_delay', 'auto_explain', 'pgpro_stats',
          'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
     'std-cert-11':
         ['auth_delay', 'auto_explain',

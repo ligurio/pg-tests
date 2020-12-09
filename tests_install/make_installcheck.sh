@@ -43,6 +43,7 @@ if grep 'SUSE Linux Enterprise Server 11' /etc/SuSE-release >/dev/null 2>&1; the
 fi
 
 cd postgres*/
+BASEDIR=`pwd`
 echo 'The source archive buildinfo:'
 cat doc/buildinfo.txt
 
@@ -118,22 +119,20 @@ echo "Running: $confopts make -e installcheck-world ..."
 sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" $confopts make -e installcheck-world EXTRA_TESTS=numeric_big 2>&1" | tee /tmp/installcheck.log; exitcode=$?
 if [ $exitcode -eq 0 ]; then
     if [ -f ../plv8*.tar* ]; then
-        (
         cd .. &&
         tar fax plv8*.tar* &&
         cd plv8*/ && chown -R postgres . &&
         sudo -u postgres make installcheck; exitcode=$?
-        )
+        cd $BASEDIR
     fi
 fi
 if [ $exitcode -eq 0 ]; then
     if [ -f ../pgpro-stats*.tar* ]; then
-        (
         cd .. &&
         tar fax pgpro-stats*.tar* &&
         cd pgpro-stats*/ && chown -R postgres . &&
         sudo -u postgres make USE_PGXS=1 installcheck; exitcode=$?
-        )
+        cd $BASEDIR
     fi
 fi
 if [ $exitcode -eq 0 ]; then
