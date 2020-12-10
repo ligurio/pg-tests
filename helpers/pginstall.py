@@ -1527,6 +1527,10 @@ baseurl=%s
                         compare_versions(self.get_product_minor_version(),
                                          '11.9.1') < 0:
                     preload_libs.remove('ptrack')
+                if 'pgpro-stats' in preload_libs and self.version == '12' and \
+                        compare_versions(self.get_product_minor_version(),
+                                         '12.5.1') < 0:
+                    preload_libs.remove('pgpro-stats')
                 libs = ','.join(preload_libs)
         if libs:
             self.exec_psql(
