@@ -1,0 +1,326 @@
+diff --git a/src/Makefile.global.in b/src/Makefile.global.in
+index 8792725d68..624ab28de3 100644
+--- a/src/Makefile.global.in
++++ b/src/Makefile.global.in
+@@ -263,7 +263,13 @@ PG_SYSROOT = @PG_SYSROOT@
+ 
+ override CPPFLAGS := $(ICU_CFLAGS) $(CPPFLAGS)
+ 
++ifdef USE_INSTALLED_ASSETS
++USE_INCLUDEDIR = 1
++endif
+ ifdef PGXS
++USE_INCLUDEDIR = 1
++endif
++ifdef USE_INCLUDEDIR
+ override CPPFLAGS := -I$(includedir_server) -I$(includedir_internal) $(CPPFLAGS)
+ else # not PGXS
+ override CPPFLAGS := -I$(top_srcdir)/src/include $(CPPFLAGS)
+@@ -324,7 +330,13 @@ with_gnu_ld = @with_gnu_ld@
+ # "LDFLAGS := something" anywhere, ditto for LDFLAGS_INTERNAL.
+ # These initial assignments must be "=" type, and elsewhere we must only do
+ # "LDFLAGS += something" or "LDFLAGS_INTERNAL += something".
++ifdef USE_INSTALLED_ASSETS
++  USE_LIBDIR = 1
++endif
+ ifdef PGXS
++  USE_LIBDIR = 1
++endif
++ifdef USE_LIBDIR
+   LDFLAGS_INTERNAL = -L$(libdir)
+ else
+   LDFLAGS_INTERNAL = -L$(top_builddir)/src/port -L$(top_builddir)/src/common
+diff --git a/src/interfaces/ecpg/Makefile b/src/interfaces/ecpg/Makefile
+index 41460a17c9..d235059f01 100644
+--- a/src/interfaces/ecpg/Makefile
++++ b/src/interfaces/ecpg/Makefile
+@@ -26,5 +26,8 @@ install-ecpglib-recurse: install-pgtypeslib-recurse
+ clean distclean maintainer-clean:
+ 	$(MAKE) -C test clean
+ 
+-check checktcp installcheck:
++check checktcp:
+ 	$(MAKE) -C test $@
++
++installcheck:
++	USE_INSTALLED_ASSETS=1 $(MAKE) -C test $@
+diff --git a/src/interfaces/ecpg/test/Makefile.regress b/src/interfaces/ecpg/test/Makefile.regress
+index 06c0461f66..1b803bc832 100644
+--- a/src/interfaces/ecpg/test/Makefile.regress
++++ b/src/interfaces/ecpg/test/Makefile.regress
+@@ -1,19 +1,26 @@
+ # This file is included into the Makefiles of subdirectories of ecpg/test/,
+ # so the file references have one more level of .. than you might expect.
+ 
+-override CPPFLAGS := -I../../include -I$(top_srcdir)/src/interfaces/ecpg/include \
+-	-I$(libpq_srcdir) $(CPPFLAGS)
+ override CFLAGS += $(PTHREAD_CFLAGS)
+ 
+-LDFLAGS_INTERNAL += -L../../ecpglib -lecpg -L../../pgtypeslib -lpgtypes $(libpq)
+-
+ override LIBS += $(PTHREAD_LIBS)
+ 
+-# Standard way to invoke the ecpg preprocessor
++ifdef USE_INSTALLED_ASSETS
++ECPG = '$(DESTDIR)$(bindir)/ecpg' --regression -I'$(DESTDIR)$(includedir)' \
++	-I'$(DESTDIR)$(pkgincludedir)/informix/esql'
++override CPPFLAGS := -I'$(DESTDIR)$(includedir)' \
++	-I'$(DESTDIR)$(pkgincludedir)/informix/esql' $(CPPFLAGS)
++LDFLAGS_INTERNAL += -lecpg -lpgtypes $(libpq)
++else
+ ECPG = ../../preproc/ecpg --regression -I$(srcdir)/../../include -I$(srcdir)
++ECPG_DEP = ../../preproc/ecpg$(X)
++override CPPFLAGS := -I../../include -I$(top_srcdir)/src/interfaces/ecpg/include \
++	-I$(libpq_srcdir) $(CPPFLAGS)
++LDFLAGS_INTERNAL += -L../../ecpglib -lecpg -L../../pgtypeslib -lpgtypes $(libpq)
++endif
+ 
+ # Files that most or all ecpg preprocessor test outputs depend on
+-ECPG_TEST_DEPENDENCIES = ../../preproc/ecpg$(X) \
++ECPG_TEST_DEPENDENCIES = $(ECPG_DEP) \
+ 	$(srcdir)/../regression.h \
+ 	$(srcdir)/../printf_hack.h \
+ 	$(srcdir)/../../include/sqlca.h \
+diff --git a/src/interfaces/libpq/test/Makefile b/src/interfaces/libpq/test/Makefile
+index 4832fab9d2..d28e191170 100644
+--- a/src/interfaces/libpq/test/Makefile
++++ b/src/interfaces/libpq/test/Makefile
+@@ -13,7 +13,11 @@ PROGS = uri-regress
+ 
+ all: $(PROGS)
+ 
+-installcheck: all
++.PHONY: installed-all
++installed-all:
++	USE_INSTALLED_ASSETS=1 $(MAKE) all
++
++installcheck: installed-all
+ 	SRCDIR='$(top_srcdir)' SUBDIR='$(subdir)' \
+ 		   $(PERL) $(top_srcdir)/$(subdir)/regress.pl
+ 
+diff --git a/src/makefiles/pgxs.mk b/src/makefiles/pgxs.mk
+index 271e7eaba82..879bb91e201 100644
+--- a/src/makefiles/pgxs.mk
++++ b/src/makefiles/pgxs.mk
+@@ -415,6 +415,7 @@ endif
+ # Standard rules to run regression tests including multiple test suites.
+ # Runs against an installed postmaster.
+ ifndef NO_INSTALLCHECK
++installcheck: export USE_INSTALLED_ASSETS=1
+ installcheck: submake $(REGRESS_PREP)
+ ifdef REGRESS
+ 	$(pg_regress_installcheck) $(REGRESS_OPTS) $(REGRESS)
+ endif
+diff --git a/src/pl/plperl/GNUmakefile b/src/pl/plperl/GNUmakefile
+index 9b1c514101..613ad4d05c 100644
+--- a/src/pl/plperl/GNUmakefile
++++ b/src/pl/plperl/GNUmakefile
+@@ -113,13 +113,17 @@ uninstall-data:
+ check: submake
+ 	$(pg_regress_check) $(REGRESS_OPTS) $(REGRESS)
+ 
+-installcheck: submake
++installcheck: installed-submake
+ 	$(pg_regress_installcheck) $(REGRESS_OPTS) $(REGRESS)
+ 
+ .PHONY: submake
+ submake:
+ 	$(MAKE) -C $(top_builddir)/src/test/regress pg_regress$(X)
+ 
++.PHONY: installed-submake
++installed-submake:
++	USE_INSTALLED_ASSETS=1 $(MAKE) -C $(top_builddir)/src/test/regress pg_regress$(X)
++
+ clean distclean maintainer-clean: clean-lib
+ 	rm -f SPI.c Util.c $(OBJS) perlchunks.h plperl_opmask.h
+ 	rm -rf $(pg_regress_clean_files)
+diff --git a/src/pl/plpgsql/src/Makefile b/src/pl/plpgsql/src/Makefile
+index 25a5a9d448..18e82b5379 100644
+--- a/src/pl/plpgsql/src/Makefile
++++ b/src/pl/plpgsql/src/Makefile
+@@ -76,13 +76,16 @@ plerrcodes.h: $(top_srcdir)/src/backend/utils/errcodes.txt generate-plerrcodes.p
+ check: submake
+ 	$(pg_regress_check) $(REGRESS_OPTS) $(REGRESS)
+ 
+-installcheck: submake
++installcheck: installed-submake
+ 	$(pg_regress_installcheck) $(REGRESS_OPTS) $(REGRESS)
+ 
+ .PHONY: submake
+ submake:
+ 	$(MAKE) -C $(top_builddir)/src/test/regress pg_regress$(X)
+ 
++.PHONY: installed-submake
++installed-submake:
++	USE_INSTALLED_ASSETS=1 $(MAKE) -C $(top_builddir)/src/test/regress pg_regress$(X)
+ 
+ distprep: pl_gram.h pl_gram.c plerrcodes.h pl_reserved_kwlist_d.h pl_unreserved_kwlist_d.h
+ 
+diff --git a/src/pl/plpython/Makefile b/src/pl/plpython/Makefile
+index 667a74469e..ec5c8c0afd 100644
+--- a/src/pl/plpython/Makefile
++++ b/src/pl/plpython/Makefile
+@@ -142,7 +142,7 @@ include $(srcdir)/regress-python3-mangle.mk
+ check: submake-pg-regress
+ 	$(pg_regress_check) $(REGRESS_OPTS) $(REGRESS)
+ 
+-installcheck: submake-pg-regress
++installcheck: installed-submake-pg-regress
+ 	$(pg_regress_installcheck) $(REGRESS_OPTS) $(REGRESS)
+ 
+ 
+@@ -150,6 +150,10 @@ installcheck: submake-pg-regress
+ submake-pg-regress: | submake-generated-headers
+ 	$(MAKE) -C $(top_builddir)/src/test/regress pg_regress$(X)
+ 
++.PHONY: installed-submake-pg-regress
++installed-submake-pg-regress: | submake-generated-headers
++	USE_INSTALLED_ASSETS=1 $(MAKE) -C $(top_builddir)/src/test/regress pg_regress$(X)
++
+ clean distclean: clean-lib
+ 	rm -f $(OBJS)
+ 	rm -rf $(pg_regress_clean_files)
+diff --git a/src/pl/tcl/Makefile b/src/pl/tcl/Makefile
+index ef61ee596e..5b054961a4 100644
+--- a/src/pl/tcl/Makefile
++++ b/src/pl/tcl/Makefile
+@@ -82,13 +82,17 @@ uninstall-data:
+ check: submake
+ 	$(pg_regress_check) $(REGRESS_OPTS) $(REGRESS)
+ 
+-installcheck: submake
++installcheck: installed-submake
+ 	$(pg_regress_installcheck) $(REGRESS_OPTS) $(REGRESS)
+ 
+ .PHONY: submake
+ submake:
+ 	$(MAKE) -C $(top_builddir)/src/test/regress pg_regress$(X)
+ 
++.PHONY: installed-submake
++installed-submake:
++	USE_INSTALLED_ASSETS=1 $(MAKE) -C $(top_builddir)/src/test/regress pg_regress$(X)
++
+ # pltclerrcodes.h is in the distribution tarball, so don't clean it here.
+ clean distclean: clean-lib
+ 	rm -f $(OBJS)
+diff --git a/src/test/isolation/Makefile b/src/test/isolation/Makefile
+index c3c8280ea2..7e48a86629 100644
+--- a/src/test/isolation/Makefile
++++ b/src/test/isolation/Makefile
+@@ -9,12 +9,21 @@ subdir = src/test/isolation
+ top_builddir = ../../..
+ include $(top_builddir)/src/Makefile.global
+ 
++# we need to build these libs only when we don't use installed ones
++ifndef USE_INSTALLED_ASSETS
++SUBMAKE_LIBPGPORT = submake-libpgport
++SUBMAKE_LIBPQ = submake-libpq
++endif
++
+ override CPPFLAGS := -I$(srcdir) -I$(libpq_srcdir) -I$(srcdir)/../regress $(CPPFLAGS)
+ 
+ OBJS =  specparse.o isolationtester.o $(WIN32RES)
+ 
+ all: isolationtester$(X) pg_isolation_regress$(X)
+ 
++installed-all:
++	USE_INSTALLED_ASSETS=1 $(MAKE) all
++
+ # Though we don't install these binaries, build them during installation
+ # (including temp-install).  Otherwise, "make -j check-world" and "make -j
+ # installcheck-world" would spawn multiple, concurrent builds in this
+@@ -31,7 +40,7 @@ pg_regress.o: | submake-regress
+ pg_isolation_regress$(X): isolation_main.o pg_regress.o $(WIN32RES)
+ 	$(CC) $(CFLAGS) $^ $(LDFLAGS) $(LDFLAGS_EX) $(LIBS) -o $@
+ 
+-isolationtester$(X): $(OBJS) | submake-libpq submake-libpgport
++isolationtester$(X): $(OBJS) | $(SUBMAKE_LIBPQ) $(SUBMAKE_LIBPGPORT)
+ 	$(CC) $(CFLAGS) $^ $(libpq_pgport) $(LDFLAGS) $(LDFLAGS_EX) $(LIBS) -o $@
+ 
+ distprep: specparse.c specscanner.c
+@@ -49,7 +58,7 @@ clean distclean:
+ maintainer-clean: distclean
+ 	rm -f specparse.c specscanner.c
+ 
+-installcheck: all
++installcheck: installed-all
+ 	$(pg_isolation_regress_installcheck) --schedule=$(srcdir)/isolation_schedule
+ 
+ check: all
+diff --git a/src/test/regress/GNUmakefile b/src/test/regress/GNUmakefile
+index 378bd01753..46f59c28fc 100644
+--- a/src/test/regress/GNUmakefile
++++ b/src/test/regress/GNUmakefile
+@@ -28,6 +28,11 @@ EXTRADEFS = '-DHOST_TUPLE="$(host_tuple)"' \
+ 	'-DSHELLPROG="$(SHELL)"' \
+ 	'-DDLSUFFIX="$(DLSUFFIX)"'
+ 
++# we need to build libpgport only when we don't use installed libs
++ifndef USE_INSTALLED_ASSETS
++SUBMAKE_LIBPGPORT = submake-libpgport
++endif
++
+ ##
+ ## Prepare for tests
+ ##
+@@ -36,15 +41,19 @@ EXTRADEFS = '-DHOST_TUPLE="$(host_tuple)"' \
+ 
+ all: pg_regress$(X)
+ 
+-pg_regress$(X): pg_regress.o pg_regress_main.o $(WIN32RES) | submake-libpgport
++pg_regress$(X): pg_regress.o pg_regress_main.o $(WIN32RES) | $(SUBMAKE_LIBPGPORT)
+ 	$(CC) $(CFLAGS) $^ $(LDFLAGS) $(LDFLAGS_EX) $(LIBS) -o $@
+ 
++.PHONY: installed-all
++installed-all:
++	USE_INSTALLED_ASSETS=1 $(MAKE) all
++
+ # dependencies ensure that path changes propagate
+ pg_regress.o: pg_regress.c $(top_builddir)/src/port/pg_config_paths.h
+ pg_regress.o: override CPPFLAGS += -I$(top_builddir)/src/port $(EXTRADEFS)
+ 
+ # note: because of the submake dependency, this rule's action is really a no-op
+-$(top_builddir)/src/port/pg_config_paths.h: | submake-libpgport
++$(top_builddir)/src/port/pg_config_paths.h: | $(SUBMAKE_LIBPGPORT)
+ 	$(MAKE) -C $(top_builddir)/src/port pg_config_paths.h
+ 
+ install: all installdirs
+@@ -67,7 +76,7 @@ include $(top_srcdir)/src/Makefile.shlib
+ all: all-lib
+ 
+ # Ensure parallel safety if a build is started in this directory
+-$(OBJS): | submake-libpgport submake-generated-headers
++$(OBJS): | $(SUBMAKE_LIBPGPORT) submake-generated-headers
+ 
+ # Test input and expected files.  These are created by pg_regress itself, so we
+ # don't have a rule to create them.  We do need rules to clean them however.
+@@ -109,7 +118,7 @@ $(top_builddir)/contrib/spi/refint$(DLSUFFIX): | submake-contrib-spi ;
+ 
+ $(top_builddir)/contrib/spi/autoinc$(DLSUFFIX): | submake-contrib-spi ;
+ 
+-submake-contrib-spi: | submake-libpgport submake-generated-headers
++submake-contrib-spi: | $(SUBMAKE_LIBPGPORT) submake-generated-headers
+ 	$(MAKE) -C $(top_builddir)/contrib/spi
+ 
+ .PHONY: submake-contrib-spi
+@@ -134,16 +143,16 @@ check: all tablespace-setup
+ check-tests: all tablespace-setup | temp-install
+ 	$(pg_regress_check) $(REGRESS_OPTS) $(MAXCONNOPT) $(TESTS) $(EXTRA_TESTS)
+ 
+-installcheck: all tablespace-setup
++installcheck: installed-all tablespace-setup
+ 	$(pg_regress_installcheck) $(REGRESS_OPTS) --schedule=$(srcdir)/serial_schedule $(EXTRA_TESTS)
+ 
+-installcheck-parallel: all tablespace-setup
++installcheck-parallel: installed-all tablespace-setup
+ 	$(pg_regress_installcheck) $(REGRESS_OPTS) --schedule=$(srcdir)/parallel_schedule $(MAXCONNOPT) $(EXTRA_TESTS)
+ 
+-installcheck-tests: all tablespace-setup
++installcheck-tests: installed-all tablespace-setup
+ 	$(pg_regress_installcheck) $(REGRESS_OPTS) $(TESTS) $(EXTRA_TESTS)
+ 
+-standbycheck: all
++standbycheck: installed-all
+ 	$(pg_regress_installcheck) $(REGRESS_OPTS) --schedule=$(srcdir)/standby_schedule --use-existing
+ 
+ # old interfaces follow...
