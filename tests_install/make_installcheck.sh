@@ -122,7 +122,7 @@ if [ $exitcode -eq 0 ]; then
         cd .. &&
         tar fax plv8*.tar* &&
         cd plv8*/ && chown -R postgres . &&
-        sudo -u postgres make installcheck; exitcode=$?
+        sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make installcheck"; exitcode=$?
         cd $BASEDIR
     fi
 fi
@@ -131,7 +131,7 @@ if [ $exitcode -eq 0 ]; then
         cd .. &&
         tar fax pgpro-stats*.tar* &&
         cd pgpro-stats*/ && chown -R postgres . &&
-        sudo -u postgres make USE_PGXS=1 installcheck; exitcode=$?
+        sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make USE_PGXS=1 installcheck"; exitcode=$?
         cd $BASEDIR
     fi
 fi
