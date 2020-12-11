@@ -110,6 +110,9 @@ fi
 # Backpatch 69ae9dcb to version 11 (pgsql-bugs #15349) (uri-regress.c: undefined reference to PQconninfoParse, PQconndefaults)
 patch -p1 --dry-run -i ../patches/69ae9dcb.patch >/dev/null 2>&1 && patch -p1 -i ../patches/69ae9dcb.patch
 
+# Enable the installcheck mode for pg_stat_statements testing
+sed 's|NO_INSTALLCHECK|# NO_INSTALLCHECK|' -i contrib/pg_stat_statements/Makefile
+
 #Check /etc/localtime exist
 [ -f /etc/localtime ] || ln -s /usr/share/zoneinfo/UTC /etc/localtime
 
