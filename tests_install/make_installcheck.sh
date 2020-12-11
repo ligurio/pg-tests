@@ -146,6 +146,15 @@ if [ $exitcode -eq 0 ]; then
     fi
 fi
 if [ $exitcode -eq 0 ]; then
+    if [ -f ../pg-portal-modify*.tar* ]; then
+        cd .. &&
+        tar fax pg-portal-modify*.tar* &&
+        cd pg-portal-modify*/ && chown -R postgres . &&
+        sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make USE_PGXS=1 installcheck"; exitcode=$?
+        cd $BASEDIR
+    fi
+fi
+if [ $exitcode -eq 0 ]; then
     # Extra tests
     sudo -u postgres $1/bin/initdb -D tmpdb
     printf "\n

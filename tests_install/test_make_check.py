@@ -107,6 +107,11 @@ class TestMakeCheck(object):
                 pginst.download_source(
                     'pgpro-stats',
                     pginst.get_package_version(stats_pkg), 'tar.gz')
+            pm_pkg = 'pg-portal-modify-%s-%s' % (edition, version)
+            if pm_pkg in pginst.all_packages_in_repo:
+                pginst.download_source(
+                    'pg-portal-modify',
+                    pginst.get_package_version(pm_pkg), 'tar.gz')
         else:
             pginst.install_perl_win()
             pginst.install_postgres_win(port=55432)
