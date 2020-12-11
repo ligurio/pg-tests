@@ -102,11 +102,11 @@ class TestMakeCheck(object):
                 pginst.download_source(
                     'plv8',
                     pginst.get_package_version(plv8_pkg), 'tar.gz')
-            stats_pkg = 'pgpro-stats-%s-%s' % (edition, version)
-            if stats_pkg in pginst.all_packages_in_repo:
-                pginst.download_source(
-                    'pgpro-stats',
-                    pginst.get_package_version(stats_pkg), 'tar.gz')
+#            stats_pkg = 'pgpro-stats-%s-%s' % (edition, version)
+#            if stats_pkg in pginst.all_packages_in_repo:
+#                pginst.download_source(
+#                    'pgpro-stats',
+#                    pginst.get_package_version(stats_pkg), 'tar.gz')
             pm_pkg = 'pg-portal-modify-%s-%s' % (edition, version)
             if pm_pkg in pginst.all_packages_in_repo:
                 pginst.download_source(
