@@ -85,6 +85,9 @@ echo "`date -Iseconds`: Configuring... "
 CFLAGS=" -D WINVER=0x0600 -D _WIN32_WINNT=0x0600" LIBS="-lktmw32 -ladvapi32" ./configure --enable-tap-tests --host=$host --without-zlib --prefix="$PGPATH" 2>&1 | tee configure.log
 pwd
 
+# Enable the installcheck mode for pg_stat_statements testing
+sed 's|NO_INSTALLCHECK|# NO_INSTALLCHECK|' -i contrib/pg_stat_statements/Makefile
+
 test -f contrib/mchar/mchar.sql.in && make -C contrib/mchar mchar.sql
 
 # Pass to `make installcheck` all the options (with-*, enable-*), that were passed to configure
