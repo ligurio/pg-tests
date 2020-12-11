@@ -764,6 +764,15 @@
       data: "O:NSG:BAD:P(A;;GA;;;BA)(A;;GR;;;IU)(A;;GAGR;;;RM)S:P(AU;FA;GA;;;WD)(AU;SA;GXGW;;;WD)"
       type: string
 
+  # Microsoft Windows Server 2019 allow smb guest access
+  - name: windows - Server 2019 allow smb guest access
+    when: ansible_os_family == "Windows"
+    win_regedit:
+      path: HKLM:\SYSTEM\CurrentControlSet\Services\LanmanWorkstation\Parameters
+      name: AllowInsecureGuestAuth
+      data: 1
+      type: DWord
+
   - name: windows - restart WinRM service
     when: ansible_os_family == "Windows"
     win_command: 'powershell -Command "Register-ScheduledTask -TaskName Restart-WinRM -User System -Action (New-ScheduledTaskAction -Execute \"Powershell.exe\" -Argument \"-Command Restart-Service -Name WinRM\"); Start-ScheduledTask -TaskName Restart-WinRM"'

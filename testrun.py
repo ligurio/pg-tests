@@ -756,6 +756,14 @@ def main(conn):
                         retcode, stdout, stderr = exec_command(
                             cmd, domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD,
                             skip_ret_code_check=True)
+                    if args.export:
+                        export_results(
+                            domname, linux_os, domipaddress, reportname,
+                            operating_system=target,
+                            product_name=args.product_name,
+                            product_version=args.product_version,
+                            product_edition=args.product_edition,
+                            tests=testname)
                 except Exception as ex:
                     log("Test execution failed.")
                     if not args.keep:
@@ -765,15 +773,6 @@ def main(conn):
                             pass
                     raise ex
                 log("Test ended.")
-
-                if args.export:
-                    export_results(
-                        domname, linux_os, domipaddress, reportname,
-                        operating_system=target,
-                        product_name=args.product_name,
-                        product_version=args.product_version,
-                        product_edition=args.product_edition,
-                        tests=testname)
 
                 if retcode == 222:
                     stage += 1
