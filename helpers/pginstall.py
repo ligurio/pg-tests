@@ -42,20 +42,20 @@ PRELOAD_LIBRARIES = {
          'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
          'pg_pathman'],
     'std-11':
-        ['auth_delay', 'auto_explain', 'timescaledb',
+        ['auth_delay', 'auto_explain', 'timescaledb', 'pg_stat_statements',
          'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
     'std-12':
-        ['auth_delay', 'auto_explain', 'timescaledb', 'pgpro_stats',
-         'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
+        ['auth_delay', 'auto_explain', 'timescaledb', 'pg_stat_statements',
+         'pgpro_stats', 'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
     'std-13':
-        ['auth_delay', 'auto_explain', 'pgpro_stats',
-         'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
+        ['auth_delay', 'auto_explain', 'pg_stat_statements',
+         'pgpro_stats', 'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
     'std-cert-11':
-        ['auth_delay', 'auto_explain',
+        ['auth_delay', 'auto_explain', 'pg_stat_statements',
          'plantuner', 'shared_ispell', 'pg_pathman',
          'pg_proaudit'],
     'std-10':
-        ['auth_delay', 'auto_explain',
+        ['auth_delay', 'auto_explain', 'pg_stat_statements',
          'plantuner', 'shared_ispell', 'pg_pathman'],
     'ent-10':
         ['auth_delay', 'auto_explain', 'in_memory',
@@ -63,10 +63,10 @@ PRELOAD_LIBRARIES = {
          'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
          'pg_pathman'],
     'std-cert-10':
-        ['auth_delay', 'auto_explain', 'pgaudit',
+        ['auth_delay', 'auto_explain', 'pgaudit', 'pg_stat_statements',
          'plantuner', 'shared_ispell', 'pg_pathman'],
     'std-9.6':
-        ['auth_delay', 'auto_explain',
+        ['auth_delay', 'auto_explain', 'pg_stat_statements',
          'plantuner', 'shared_ispell', 'pg_pathman'],
     'ent-9.6':
         ['auth_delay', 'auto_explain',
@@ -87,15 +87,15 @@ PRELOAD_LIBRARIES = {
          'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
          'pg_pathman', 'passwordcheck'],
     '1c-9.6':
-        ['auth_delay', 'auto_explain', 'plantuner'],
+        ['auth_delay', 'auto_explain', 'pg_stat_statements', 'plantuner'],
     '1c-10':
-        ['auth_delay', 'auto_explain', 'plantuner'],
+        ['auth_delay', 'auto_explain', 'pg_stat_statements', 'plantuner'],
     '1c-11':
-        ['auth_delay', 'auto_explain', 'plantuner'],
+        ['auth_delay', 'auto_explain', 'pg_stat_statements', 'plantuner'],
     '1c-12':
-        ['auth_delay', 'auto_explain', 'plantuner'],
+        ['auth_delay', 'auto_explain', 'pg_stat_statements', 'plantuner'],
     '1c-13':
-        ['auth_delay', 'auto_explain', 'plantuner'],
+        ['auth_delay', 'auto_explain', 'pg_stat_statements', 'plantuner'],
 }
 
 
