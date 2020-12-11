@@ -86,22 +86,22 @@ fi
 sed -s 's|logging_collector = on|# logging_collector = off|' -i `$1/bin/pg_config --sharedir`/postgresql.conf.sample
 
 makeecpg=true
-if patch -p1 --dry-run -i ../patches/make-installcheck-13.patch >/dev/null 2>&1; then
+if patch -p1 --dry-run -F 0 -i ../patches/make-installcheck-13.patch >/dev/null 2>&1; then
     echo "Fixing Makefiles v13 for installcheck-world..."
     patch -p1 -i ../patches/make-installcheck-13.patch
     makeecpg=false
 fi
-if patch -p1 --dry-run -i ../patches/make-installcheck-12.patch >/dev/null 2>&1; then
+if patch -p1 --dry-run -F 0 -i ../patches/make-installcheck-12.patch >/dev/null 2>&1; then
     echo "Fixing Makefiles v12 for installcheck-world..."
     patch -p1 -i ../patches/make-installcheck-12.patch
     makeecpg=false
 fi
-if patch -p1 --dry-run -i ../patches/make-installcheck-11.patch >/dev/null 2>&1; then
+if patch -p1 --dry-run -F 0 -i ../patches/make-installcheck-11.patch >/dev/null 2>&1; then
     echo "Fixing Makefiles v11 for installcheck-world..."
     patch -p1 -i ../patches/make-installcheck-11.patch
     makeecpg=false
 fi
-if patch -p1 --dry-run -i ../patches/make-installcheck-10.patch >/dev/null 2>&1; then
+if patch -p1 --dry-run -F 0 -i ../patches/make-installcheck-10.patch >/dev/null 2>&1; then
     echo "Fixing Makefiles v10 for installcheck-world..."
     patch -p1 -i ../patches/make-installcheck-10.patch
     makeecpg=false
