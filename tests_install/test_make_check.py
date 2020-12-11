@@ -142,6 +142,8 @@ class TestMakeCheck(object):
             hba = re.sub(r'^(local\s+all\s+all\s+peer)$',
                          "local all regress_ecpg_user1  md5\n"
                          "local all regress_ecpg_user2  md5\n"
+                         "local all regress_hacker trust\n"
+                         "local all regress_superuser trust\n"
                          r'\1', conf.read(), flags=re.MULTILINE)
             conf.seek(0)
             conf.write(hba)
