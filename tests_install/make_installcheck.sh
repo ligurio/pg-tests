@@ -136,6 +136,15 @@ done <<< "$opts";
 echo "Running: $confopts make -e installcheck-world ..."
 sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" $confopts make -e installcheck-world EXTRA_TESTS=numeric_big 2>&1" | tee /tmp/installcheck.log; exitcode=$?
 if [ $exitcode -eq 0 ]; then
+    if [ -f ../orafce*.tar* ]; then
+        cd .. &&
+        tar fax orafce*.tar* &&
+        cd orafce*/ && chown -R postgres . &&
+        sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make installcheck"; exitcode=$?
+        cd $BASEDIR
+    fi
+fi
+if [ $exitcode -eq 0 ]; then
     if [ -f ../plv8*.tar* ]; then
         cd .. &&
         tar fax plv8*.tar* &&
