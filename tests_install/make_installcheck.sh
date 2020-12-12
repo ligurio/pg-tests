@@ -184,5 +184,5 @@ make installcheck-force -C contrib/test_decoding"
     exitcode=$?
     sudo -u postgres $1/bin/pg_ctl -D tmpdb -w stop
 fi
-for df in `find . -name *.diffs`; do echo;echo "    vvvv $df vvvv    "; cat $df; echo "    ^^^^^^^^"; done
+for df in `find .. -name *.diffs`; do echo;echo "    vvvv $df vvvv    "; cat $df; echo "    ^^^^^^^^"; done
 exit $exitcode
