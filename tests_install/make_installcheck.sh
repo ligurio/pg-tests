@@ -1,27 +1,32 @@
 #!/bin/bash
 
 if which apt-get >/dev/null 2>&1; then
+    (
     apt-get install -y gcc || true
     apt-get install -y make flex bison perl
     apt-get install -y zlib1g-dev || apt-get install -y zlib-devel
-    apt-get install -y libicu-dev || true
-    apt-get install -y libicu-devel || true
+    apt-get install -y libicu-dev || apt-get install -y libicu-devel
     apt-get install -y pkg-config
     apt-get install -y libipc-run-perl || apt-get install -y perl-IPC-Run
     apt-get install -y patch || true
     apt-get install -y perl-devel || true
     apt-get install -y perl-bignum || true
+    ) 2>&1
 elif which zypper >/dev/null 2>&1; then
+    (
     zypper install -y gcc make flex bison perl patch
     zypper install -y --force --force-resolution zlib-devel
     zypper install -y --force --force-resolution libicu-devel
     zypper install -y libipc-run-perl
+    ) 2>&1
 elif which yum >/dev/null 2>&1; then
+    (
     yum install -y gcc make flex bison perl bzip2 zlib-devel libicu-devel patch
     yum install -y perl-devel || true
     yum install -y perl-IPC-Run
     yum install -y perl-Test-Simple perl-Time-HiRes
     yum install -y perl-bignum || true
+    ) 2>&1
     # perl-IPC-Run is not present in some distributions (rhel-7, rosa-sx-7...)
 fi
 if ! perl -e "use IPC::Run"  >/dev/null 2>&1; then
