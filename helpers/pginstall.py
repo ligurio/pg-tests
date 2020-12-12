@@ -271,6 +271,9 @@ class PgInstall:
         return base_package
 
     def get_package_version(self, package_name):
+        if self.os.is_windows():
+            pkgs = self.get_packages_in_repo()
+            return pkgs[package_name]
         return self.os.get_package_version(package_name)
 
     def get_product_minor_version(self):
