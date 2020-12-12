@@ -271,6 +271,9 @@ class PgInstall:
         return base_package
 
     def get_package_version(self, package_name):
+        if self.os.is_windows():
+            pkgs = self.get_packages_in_repo()
+            return pkgs[package_name]
         return self.os.get_package_version(package_name)
 
     def get_product_minor_version(self):
@@ -290,7 +293,7 @@ class PgInstall:
         if self.os.is_windows():
             for f in os.listdir(WIN_INST_DIR):
                 inst = os.path.splitext(os.path.basename(f))[0]
-                # TODO: PGPRO-xxxx
+                # PGPRO-4573
                 inst = re.sub(r"-X64$", "", inst)
                 pvre = re.search(r"(.*)-([0-9.]+)$", inst)
                 if pvre:
