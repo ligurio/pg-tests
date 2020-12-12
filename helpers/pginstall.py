@@ -286,9 +286,17 @@ class PgInstall:
                 ('' if self.version == '9.6' else '-libs'))
 
     def get_packages_in_repo(self):
-        result = []
+        result = {}
         if self.os.is_windows():
-            return result
+            for f in os.listdir(WIN_INST_DIR):
+                inst = os.path.splitext(os.path.basename(f))[0]
+                # TODO: PGPRO-xxxx
+                inst = re.sub(r"-X64$", "", inst)
+                pvre = re.search(r"(.*)-([0-9.]+)$", inst)
+                if pvre:
+                    result[pvre.group(1)] = pvre.group(2)
+                else:
+                    result[inst] = ''
         if self.os.is_pm_yum():
             cmd = "script -q -c \"stty cols 150; " \
                   "LANG=C yum -q --disablerepo='*' " \
@@ -305,10 +313,10 @@ class PgInstall:
                     print("Invalid line in yum list output:", line)
                     raise Exception('Invalid line in yum list output')
                 pkgname = re.sub(r'\.(aarch64|x86_64|noarch)$', '', pkginfo[0])
-                result.append(pkgname)
+                result[pkgname] = pkginfo[1]
             if self.version == '9.6':
                 if 'pgbadger' in result and 'pgpro-pgbadger' in result:
-                    result.remove('pgbadger')
+                    del result['pgbadger']
         elif self.os.is_altlinux():
             # Parsing binary package info in lists/ is unfeasible,
             # so the only way to find packages from the repository is
@@ -348,7 +356,7 @@ class PgInstall:
                         state = 2
                 elif state == 2:
                     if ('(/tmp/t_r/' + self.reponame) in line:
-                        result.append(pkgname)
+                        result[pkgname] = ''
         elif self.os.is_pm_apt():
             cmd = "sh -c \"grep -h -e 'Package:\\s\\+' " \
                   "/var/lib/apt/lists/%s*\"" % self.reponame
@@ -362,7 +370,7 @@ class PgInstall:
                 if pkgname == 'Auto-Built-debug-symbols':
                     continue
                 if pkgname not in result:
-                    result.append(pkgname)
+                    result[pkgname] = ''
             if self.version == '9.6':
                 # PGPRO-2286
                 exclude = []
@@ -371,7 +379,7 @@ class PgInstall:
                         if ('postgrespro-' + pkgname) in result:
                             exclude.append(pkgname)
                 for pkgname in exclude:
-                    result.remove(pkgname)
+                    del result[pkgname]
         elif self.os.is_pm_zypper():
             cmd = "sh -c \"LANG=C zypper search --repo %s\"" % self.reponame
             zsout = command_executor(cmd, self.remote, self.host,
@@ -384,7 +392,7 @@ class PgInstall:
                 pkgname = pkginfo[1].strip()
                 if pkgname == 'Name':
                     continue
-                result.append(pkgname)
+                result[pkgname] = ''
         return result
 
     def get_files_in_package(self, pkgname):
@@ -692,6 +700,10 @@ baseurl=%s
             cmd = "zypper --gpg-auto-import-keys refresh"
             self.exec_cmd_retry(cmd)
         elif self.os.is_windows():
+            reponame = "%s-%s%s" % (
+                self.product,
+                self.edition + '-' if self.product == 'postgrespro' else '',
+                self.version)
             installer_name = self.__get_last_winstaller_file(
                 baseurl, self.os_arch)
             windows_installer_url = baseurl + installer_name
