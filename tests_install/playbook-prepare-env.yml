@@ -12,7 +12,7 @@
     wait_for_connection: timeout=600
 
   - name: Gather facts
-    setup:
+    setup: gather_timeout=600
 
   - name: Debug message
     debug:
