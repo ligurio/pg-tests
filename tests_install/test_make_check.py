@@ -93,26 +93,22 @@ class TestMakeCheck(object):
         tar = tarfile.open(tarball, 'r:bz2')
         tar.extractall()
         tar.close()
+        # TODO: PGPRO-4567 pg-portal-modify
+        # TODO: pgpro-stats
+        # TODO: pgpro-pwr
+        # TODO: orafce
+        for comp in ['plv8']:
+            pkgname = '%s-%s-%s' % (comp, edition, version)
+            if pkgname not in pginst.get_packages_in_repo():
+                pkgname = comp
+                if pkgname not in pginst.get_packages_in_repo():
+                    continue
+            pginst.download_source(
+                comp,
+                pginst.get_package_version(pkgname), 'tar.gz')
         if self.system != 'Windows':
             pginst.install_full()
             pginst.initdb_start()
-
-            plv8_pkg = 'plv8-%s-%s' % (edition, version)
-            if plv8_pkg in pginst.all_packages_in_repo:
-                pginst.download_source(
-                    'plv8',
-                    pginst.get_package_version(plv8_pkg), 'tar.gz')
-#            stats_pkg = 'pgpro-stats-%s-%s' % (edition, version)
-#            if stats_pkg in pginst.all_packages_in_repo:
-#                pginst.download_source(
-#                    'pgpro-stats',
-#                    pginst.get_package_version(stats_pkg), 'tar.gz')
-# PGPRO-4567
-#            pm_pkg = 'pg-portal-modify-%s-%s' % (edition, version)
-#            if pm_pkg in pginst.all_packages_in_repo:
-#                pginst.download_source(
-#                    'pg-portal-modify',
-#                    pginst.get_package_version(pm_pkg), 'tar.gz')
         else:
             pginst.install_perl_win()
             pginst.install_postgres_win(port=55432)
