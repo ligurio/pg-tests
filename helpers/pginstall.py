@@ -290,7 +290,7 @@ class PgInstall:
         if self.os.is_windows():
             for f in os.listdir(WIN_INST_DIR):
                 inst = os.path.splitext(os.path.basename(f))[0]
-                # TODO: PGPRO-xxxx
+                # PGPRO-4573
                 inst = re.sub(r"-X64$", "", inst)
                 pvre = re.search(r"(.*)-([0-9.]+)$", inst)
                 if pvre:
