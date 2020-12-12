@@ -7,6 +7,7 @@ PowerShell -Command "Set-MpPreference -DisableRealtimeMonitoring $true" 2>NUL
 rmdir /S /Q %MD% 2>NUL
 mkdir %MD%\var\src
 for /d %%A in (postgres*) do mklink /D "%MD%\var\src\%%A" "%%~fA"
+xcopy *.tar* %MD%\var\src\
 xcopy patches %MD%\var\src\patches\ /E
 
 @REM Output bash script contained in this CMD
@@ -36,6 +37,10 @@ call %MD%\autorebase >>%TEMP%\msys-update.log 2>&1
 
 @REM Grant access to Users (including postgres user) to src/test/regress/testtablespace/
 icacls %MD%\var\src /grant *S-1-5-32-545:(OI)(CI)F /T
+
+@REM Grant access to Users to %PGROOT%/lib/pgxs
+mkdir %1\lib\pgxs
+icacls %1\lib\pgxs /grant *S-1-5-32-545:(OI)(CI)F /T
 
 @REM "Switching log messages language to English (for src/bin/scripts/ tests)"
 (echo. & echo lc_messages = 'English_United States.1252') >> %1\share\postgresql.conf.sample
@@ -122,9 +127,19 @@ echo "`date -Iseconds`: Making native MinGW libs 2"
 (cd src/backend && make -j4 libpostgres.a 2>&1 | tee /tmp/make_libpostgres.log)
 echo "`date -Iseconds`: Making ecpg"
 make -C src/interfaces/ecpg
+echo "`date -Iseconds`: Making pg_regress"
+make -C src/test/regress
+
+echo "Preparing pgxs/ for tests"
+mkdir -p "$1/lib/pgxs/src/makefiles"
+mkdir -p "$1/lib/pgxs/src/test/regress"
+cp src/makefiles/pgxs.mk "$1/lib/pgxs/src/makefiles/"
+cp src/Makefile.global src/Makefile.shlib src/Makefile.port "$1/lib/pgxs/src/"
+cp src/test/regress/pg_regress.exe "$1/lib/pgxs/src/test/regress/"
 
 set +e
 echo "`date -Iseconds`: Running $confopts make -e installcheck-world ..."
 sh -c "$confopts EXTRA_REGRESS_OPTS='--dlpath=\"$PGPATH/lib\"' make -e installcheck-world EXTRA_TESTS=numeric_big" 2>&1 | gawk '{ print strftime("%H:%M:%S "), $0; fflush() }' | tee /tmp/installcheck.log; exitcode=$?
-for df in `find .. -name *.diffs`; do echo;echo "    vvvv $df vvvv    "; cat $df; echo "    ^^^^^^^^"; done;
+
+for df in `find /var/src -name *.diffs`; do echo;echo "    vvvv $df vvvv    "; cat $df; echo "    ^^^^^^^^"; done;
 exit $exitcode
