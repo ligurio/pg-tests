@@ -216,16 +216,6 @@
     become_method: su
     when: ansible_os_family != "Windows" and use_ssh is not defined
 
-  - name: Configure locale
-    shell: if localectl | grep -E 'System Locale:\s*n/a'; then
-       if locale -a | grep en_US.utf8; then
-       localectl set-locale LANG=en_US.UTF-8;
-       fi
-       fi
-    when: ansible_os_family != "Windows"
-    become_method: sudo
-    become: true
-
   - name: Disable graphical target in systemd
     shell: systemctl set-default multi-user.target
     args:
@@ -413,6 +403,27 @@
       update_cache: yes
       force: yes
     when: ansible_os_family != "Windows" and ansible_pkg_mgr == "zypper"
+    become_method: sudo
+    become: true
+
+  - name: setup en_US locale for Debian-based OS # Needed for the orafce test
+    shell: if ! locale -a | grep en_US.utf8; then
+             sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen;
+             dpkg-reconfigure --frontend=noninteractive locales;
+           fi
+    when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu' or
+          ansible_distribution == 'OSNova Linux (Onyx)' or
+          ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux')
+    become_method: sudo
+    become: true
+
+  - name: configure locale
+    shell: if localectl | grep -E 'System Locale:\s*n/a'; then
+       if locale -a | grep en_US.utf8; then
+       localectl set-locale LANG=en_US.UTF-8;
+       fi
+       fi
+    when: ansible_os_family != "Windows"
     become_method: sudo
     become: true
 
