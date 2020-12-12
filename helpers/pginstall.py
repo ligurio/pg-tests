@@ -702,11 +702,11 @@ baseurl=%s
                                                installer_name)
             urlretrieve(windows_installer_url,
                         self.installer_name)
-            msi_files = self.__get_msi_files(baseurl)
-            for msi in msi_files:
+            inst_files = self.__get_inst_files(baseurl)
+            for inst in inst_files:
                 urlretrieve(
-                    baseurl + msi,
-                    os.path.join(WIN_INST_DIR, msi))
+                    baseurl + inst,
+                    os.path.join(WIN_INST_DIR, inst))
         else:
             raise Exception("Unsupported distro %s" % self.os_name)
         self.reponame = reponame
@@ -981,8 +981,19 @@ baseurl=%s
         msis = glob.glob(os.path.join(WIN_INST_DIR, '*.msi'))
         for msi in sorted(msis):
             msilog = "%s.log" % msi
+            print('Installing %s...' % msi)
             cmd = 'msiexec /i %s /quiet /qn /norestart /log %s' % \
                 (msi, msilog)
+            command_executor(cmd, windows=True)
+        exes = glob.glob(os.path.join(WIN_INST_DIR, '*.exe'))
+        for exe in sorted(exes):
+            # PGPRO-4503
+            if os.path.basename(exe).startswith('mamonsu'):
+                continue
+            if exe == self.installer_name:
+                continue
+            print('Installing %s...' % exe)
+            cmd = "%s /S" % exe
             command_executor(cmd, windows=True)
         refresh_env_win()
         self.client_path_needed = False
@@ -995,9 +1006,7 @@ baseurl=%s
             exename = 'ActivePerl-5.22.4.2205-MSWin32-x86-64int-403863.exe'
         url = 'http://dist.l.postgrespro.ru/resources/windows/' + \
             exename
-        if not os.path.exists(WIN_INST_DIR):
-            os.mkdir(WIN_INST_DIR)
-        target_path = os.path.join(WIN_INST_DIR, exename)
+        target_path = os.path.join(tempfile.gettempdir(), exename)
         urlretrieve(url, target_path)
 
         cmd = target_path + " /quiet PERL_PATH=Yes PERL_EXT=Yes ADDLOCAL=PERL"
@@ -1075,25 +1084,25 @@ baseurl=%s
                             (exe_arch, url))
         return setup_files[-1]
 
-    def __get_msi_files(self, url):
+    def __get_inst_files(self, url):
         """Get all msi files from our repo
         :param url: str:
         :return: array with file names
         """
 
-        msi_files = []
+        inst_files = []
         soup = get_soup(url)
         for link in soup.findAll('a'):
             href = link.get('href')
-            if re.search(r'\.msi$', href, re.I):
+            if re.search(r'\.(msi|exe)$', href, re.I):
                 # PGPRO-3184
                 # (pg-probackup-std-10-2.1.5.msi,
                 #  pg-probackup-std-10-2.1.5-standalone-en.msi, and
                 #  pg-probackup-std-10-2.1.5-standalone-en.msi conflict)
                 if re.search('pg-probackup-.*standalone', href):
                     continue
-                msi_files.append(href)
-        return msi_files
+                inst_files.append(href)
+        return inst_files
 
     def delete_repo(self):
         """ Delete repo file
