@@ -834,22 +834,6 @@ baseurl=%s
             version = self.get_product_minor_version()
         tar_href = '%s-%s.%s' % (package, version, ext)
         tar_url = baseurl + '/' + tar_href
-        attempt = 1
-        timeout = 0
-        while attempt < 9:
-            try:
-                urlretrieve(tar_url, tar_href)
-                return tar_href
-            except Exception as ex:
-                print('Exception occured while downloading sources "%s":' %
-                      tar_url)
-                print(ex)
-                attempt += 1
-                timeout += 5
-                print('Retrying (attempt %d with delay for %d seconds)...' %
-                      (attempt, timeout))
-                time.sleep(timeout)
-        # Last attempt
         urlretrieve(tar_url, tar_href)
         return tar_href
 
