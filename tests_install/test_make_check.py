@@ -93,7 +93,7 @@ class TestMakeCheck(object):
         tar = tarfile.open(tarball, 'r:bz2')
         tar.extractall()
         tar.close()
-        # TODO: PGPRO-4567 pg-portal-modify
+        # TODO: PGPRO-4567 pg-portal-modify, pg-repack, pg-filedump
         # TODO: pgpro-stats
         # TODO: pgpro-pwr
         for comp in ['orafce', 'plv8']:
@@ -145,6 +145,7 @@ class TestMakeCheck(object):
                          "local all regress_ecpg_user2  md5\n"
                          "local all regress_hacker trust\n"
                          "local all regress_superuser trust\n"
+                         "local all nosuper trust\n"
                          r'\1', conf.read(), flags=re.MULTILINE)
             conf.seek(0)
             conf.write(hba)

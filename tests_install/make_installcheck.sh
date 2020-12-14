@@ -172,6 +172,25 @@ if [ $exitcode -eq 0 ]; then
     fi
 fi
 if [ $exitcode -eq 0 ]; then
+    if [ -f ../pg_repack*.tar* ]; then
+        cd .. && sudo -u postgres mkdir tmp/testts &&
+        tar fax pg_repack*.tar* &&
+        cd pg_repack*/ && chown -R postgres . &&
+        sudo -u postgres "$1/bin/psql" -c "create tablespace testts location '`pwd`/../tmp/testts'" &&
+        sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make USE_PGXS=1 installcheck"; exitcode=$?
+        cd $BASEDIR
+    fi
+fi
+if [ $exitcode -eq 0 ]; then
+    if [ -f ../pg_filedump*.tar* ]; then
+        cd .. &&
+        tar fax pg_filedump*.tar* &&
+        cd pg_filedump*/ && chown -R postgres . &&
+        sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make USE_PGXS=1 installcheck"; exitcode=$?
+        cd $BASEDIR
+    fi
+fi
+if [ $exitcode -eq 0 ]; then
     # Extra tests
     sudo -u postgres $1/bin/initdb -D tmpdb
     printf "\n
