@@ -723,7 +723,9 @@ def main(conn):
                 except Exception as e:
                     # Don't leave a domain that is failed to boot running
                     try:
-                        close_env(domname, saveimg=False, destroys0=True)
+                        # Temporary leave domain
+                        pass
+                        # close_env(domname, saveimg=False, destroys0=True)
                     except Exception:
                         pass
                     raise e
