@@ -8,20 +8,20 @@
 
   tasks:
 
-  - name: Wait for system to become reachable
+  - name: wait for system to become reachable
     wait_for_connection: timeout=600
 
-  - name: Gather facts
-    setup:
+  - name: gather facts
+    setup: gather_timeout=600
 
-  - name: Debug message
+  - name: debug message
     debug:
       msg: "System {{ inventory_hostname }}/{{ ansible_host }} \
             ({{ ansible_connection }}) has os_family {{ ansible_os_family }}, \
             distribution {{ ansible_distribution }}, major version {{ ansible_distribution_major_version }} \
             ({{ ansible_architecture }})."
 
-  - name: Mount DVD(s) (if available)
+  - name: mount DVD(s) (if available)
     shell: if /sbin/blkid /dev/sr0; then
       sed -i '/^\/dev\/sr0\s/d' /etc/fstab; umount /dev/sr0;
       mkdir /mnt/dvd &&
@@ -37,7 +37,7 @@
     become_method: su
     become: true
 
-  - name: Setup DVDs as apt repositories (Astra Smolensk)
+  - name: setup DVDs as apt repositories (Astra Smolensk)
     shell: if [ -d /mnt/dvd/dists ]; then
       echo "deb file:///mnt/dvd smolensk contrib main non-free" >> /etc/apt/sources.list.d/repo-dvd.list;
       fi;
@@ -50,7 +50,7 @@
     become: true
 
     # Issue with installing libxml2 that requires libicu57, but download.astralinux.ru/astra/current/orel/ contains only libicu63
-  - name: Setup DVD as apt repository (Astra Orel)
+  - name: setup DVD as apt repository (Astra Orel)
     shell: if [ -d /mnt/dvd/dists ]; then
       echo "deb file:///mnt/dvd orel main contrib non-free" > /etc/apt/sources.list.d/repo-dvd.list;
       apt-get update;
@@ -59,7 +59,7 @@
     become_method: su
     become: true
 
-  - name: Setup DVD as yum repository (ROSA, OracleLinux-7)
+  - name: setup DVD as yum repository (ROSA, OracleLinux-7)
     shell: if [ -d /mnt/dvd/repodata ]; then
       printf "[InstallMedia]\nname=DVD\nmetadata_expire=-1\ngpgcheck=0\nenabled=1\nbaseurl=file:///mnt/dvd" > /etc/yum.repos.d/dvd.repo;
       fi
@@ -67,21 +67,7 @@
     become_method: su
     become: true
 
-  - name: Disable automatic updates (Debian-based)
-    shell: for aptconf in `grep -E '^\s*APT::Periodic::(Update-Package-Lists|Unattended-Upgrade)' -l -r /etc/apt/apt.conf.d/`;
-      do sed -e 's#^\(\s*APT::Periodic::\(Update-Package-Lists\|Unattended-Upgrade\)\)#// \1#' -i $aptconf; done; \
-      if which systemctl; then \
-      systemctl mask apt-daily.timer; \
-      systemctl mask apt-daily-upgrade.timer; \
-      systemctl mask apt-daily.service; systemctl stop apt-daily.service; \
-      systemctl mask apt-daily-upgrade.service; systemctl stop apt-daily-upgrade.service; \
-      fi
-    when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu' or
-      ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux')
-    become_method: "{{ use_become_method }}"
-    become: true
-
-  - name: Setup DVD as yum repository (RHEL) # Based on https://access.redhat.com/solutions/328863
+  - name: setup DVD as yum repository (RHEL) # Based on https://access.redhat.com/solutions/328863
     shell: if [ -f /mnt/dvd/media.repo ]; then
       cp --no-preserve=all /mnt/dvd/media.repo /etc/yum.repos.d/rhel-dvd.repo &&
       echo "enabled=1" >> /etc/yum.repos.d/rhel-dvd.repo &&
@@ -96,32 +82,20 @@
     become_method: su
     become: true
 
-  - name: Disable RedHat subscription (RedHat 7, 8)
-    shell: subscription-manager remove --all;
-      subscription-manager unregister;
-      subscription-manager clean
-    when: ansible_distribution == "RedHat" and (ansible_distribution_major_version == "7" or ansible_distribution_major_version == "8")
+  - name: setup DVD as zypper repository (SUSE)
+    shell: if [ -f /mnt/dvd/content ]; then
+      zypper addrepo -t yast2 /mnt/dvd/ disk1;
+      elif [ -d /mnt/dvd/media.1 ]; then
+      zypper addrepo /mnt/dvd/ disk1;
+      fi;
+      if [ -f /mnt/dvd2/content ]; then
+      zypper addrepo -t yast2 file:///mnt/dvd2/./ disk2;
+      fi
+    when: ansible_os_family == 'Suse'
     become_method: "{{ use_become_method }}"
     become: true
 
-  - name: DNF clean metadata
-    command: dnf clean packages
-    args:
-      warn: no
-    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "dnf"
-    become_method: '{{ use_become_method }}'
-    become: true
-
-  - name: install selinux required packages (YUM)
-    shell: yum install -y libselinux-python;
-    args:
-      warn: no
-    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "yum" and
-      ansible_selinux is defined and ansible_selinux != False
-    become_method: '{{ use_become_method }}'
-    become: true
-
-  - name: Fix repositories and prepare local repository; update tzdata (МСВСфера)
+  - name: fix repositories and prepare local repository; update tzdata (МСВСфера)
     shell: if [ -d /mnt/dvd/repodata ]; then
       ln -s /mnt/dvd /media/MSVSphere_6.3_Server &&
       sed s/enabled=0/enabled=1/ -i /etc/yum.repos.d/install.repo;
@@ -138,10 +112,66 @@
       curl -O http://vault.centos.org/6.8/os/x86_64/Packages/tzdata-2016c-1.el6.noarch.rpm && \
       yum install -y tzdata-*.rpm
     when: use_ssh is not defined and ansible_distribution == "МСВСфера"
-    become_method: su
+    become_method: "{{ use_become_method }}"
     become: true
 
-  - name: Add sudoers.d directory
+  - name: disable automatic updates (Debian-based)
+    shell: for aptconf in `grep -E '^\s*APT::Periodic::(Update-Package-Lists|Unattended-Upgrade)' -l -r /etc/apt/apt.conf.d/`;
+      do sed -e 's#^\(\s*APT::Periodic::\(Update-Package-Lists\|Unattended-Upgrade\)\)#// \1#' -i $aptconf; done; \
+      if which systemctl; then \
+      systemctl mask apt-daily.timer; \
+      systemctl mask apt-daily-upgrade.timer; \
+      systemctl mask apt-daily.service; systemctl stop apt-daily.service; \
+      systemctl mask apt-daily-upgrade.service; systemctl stop apt-daily-upgrade.service; \
+      fi
+    when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu' or
+      ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux')
+    become_method: "{{ use_become_method }}"
+    become: true
+
+# https://www.mail-archive.com/debian-user@lists.debian.org/msg747870.html
+  - name: fix Debian 10 repository url (temporary workaround)
+    shell: sed 's/deb.debian.org/ftp.us.debian.org/' -i /etc/apt/sources.list
+    when: ansible_distribution == 'Debian' and ansible_distribution_major_version == '10'
+    become_method: "{{ use_become_method }}"
+    become: true
+    tags:
+    - skip_ansible_lint
+
+  - name: enable rels repository for Rosa SX 7
+    shell: sed s/enabled=0/enabled=1/ -i /etc/yum.repos.d/rels.repo;
+    args:
+      warn: no
+    when: ansible_distribution == "ROSA" and ansible_distribution_major_version == "7"
+    become_method: "{{ use_become_method }}"
+    become: true
+
+  - name: disable RedHat subscription (RedHat 7, 8)
+    shell: subscription-manager remove --all;
+      subscription-manager unregister;
+      subscription-manager clean
+    when: ansible_distribution == "RedHat" and (ansible_distribution_major_version == "7" or ansible_distribution_major_version == "8")
+    become_method: "{{ use_become_method }}"
+    become: true
+
+  - name: clean DNF metadata
+    command: dnf clean packages
+    args:
+      warn: no
+    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "dnf"
+    become_method: '{{ use_become_method }}'
+    become: true
+
+  - name: install selinux required packages (YUM)
+    shell: yum install -y libselinux-python;
+    args:
+      warn: no
+    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "yum" and
+      ansible_selinux is defined and ansible_selinux != False
+    become_method: '{{ use_become_method }}'
+    become: true
+
+  - name: add sudoers.d directory
     file:
       path: /etc/sudoers.d
       state: directory
@@ -149,7 +179,7 @@
     become_method: "{{ use_become_method }}"
     when: ansible_os_family != "Windows"
 
-  - name: Disable env_reset (ALT 7,8)
+  - name: disable env_reset (ALT 7,8)
     copy:
       dest: /etc/sudoers.d/env_reset
       content: |
@@ -183,20 +213,7 @@
     become: true
     when: ansible_os_family != "Windows"
 
-  - name: add extra repository (SUSE)
-    shell: if [ -f /mnt/dvd/content ]; then
-      zypper addrepo -t yast2 /mnt/dvd/ disk1;
-      elif [ -d /mnt/dvd/media.1 ]; then
-      zypper addrepo /mnt/dvd/ disk1;
-      fi;
-      if [ -f /mnt/dvd2/content ]; then
-      zypper addrepo -t yast2 file:///mnt/dvd2/./ disk2;
-      fi
-    when: ansible_os_family == 'Suse'
-    become_method: "{{ use_become_method }}"
-    become: true
-
-  - name: Install sudo
+  - name: install sudo
     package:
       name: sudo
       state: present
@@ -205,7 +222,7 @@
     become_method: su
     when: ansible_os_family != "Windows" and use_ssh is not defined
 
-  - name: Add test to sudoers
+  - name: add the test user to sudoers
     copy:
       dest: /etc/sudoers.d/test
       content: |
@@ -216,17 +233,7 @@
     become_method: su
     when: ansible_os_family != "Windows" and use_ssh is not defined
 
-  - name: Configure locale
-    shell: if localectl | grep -E 'System Locale:\s*n/a'; then
-       if locale -a | grep en_US.utf8; then
-       localectl set-locale LANG=en_US.UTF-8;
-       fi
-       fi
-    when: ansible_os_family != "Windows"
-    become_method: sudo
-    become: true
-
-  - name: Disable graphical target in systemd
+  - name: disable graphical target in systemd
     shell: systemctl set-default multi-user.target
     args:
       warn: no
@@ -238,7 +245,7 @@
     tags:
     - skip_ansible_lint
 
-  - name: Fix private temps (ALT 7,8,9)
+  - name: fix private temps (ALT 7,8,9)
     shell: /usr/sbin/control pam_mktemp disabled
     args:
       warn: no
@@ -249,7 +256,7 @@
     tags:
     - skip_ansible_lint
 
-  - name: Fix problem with sticky bit (ALT 9)
+  - name: fix problem with sticky bit (ALT 9)
     sysctl:
       name="fs.protected_regular"
       value="0"
@@ -259,7 +266,7 @@
     become: true
     when: (ansible_distribution == "ALT" or ansible_distribution == "Altlinux") and ansible_distribution_major_version == "9"
 
-  - name: Update repos and install acpid-events-power, gdb (ALT)
+  - name: update repos and install acpid-events-power, gdb (ALT)
     shell: apt-get update &&
            apt-get install -y gdb acpid-events-power && /sbin/service acpid restart || exit 1;
            apt-get install -y glibc-core;
@@ -274,26 +281,9 @@
     tags:
     - skip_ansible_lint
 
-  - name: Configure ACPI (Astra)
+  - name: configure ACPI (Astra)
     shell: echo '/sbin/shutdown -h -P now "Power button pressed"' > /etc/acpi/powerbtn-acpi-support.sh
     when: ansible_distribution == 'Astra Linux (Smolensk)' or ansible_distribution == 'Astra Linux (Orel)'
-    become_method: sudo
-    become: true
-
-# https://www.mail-archive.com/debian-user@lists.debian.org/msg747870.html
-  - name: Fix Debian 10 repository url (temporary workaround)
-    shell: sed 's/deb.debian.org/ftp.us.debian.org/' -i /etc/apt/sources.list
-    when: ansible_distribution == 'Debian' and ansible_distribution_major_version == '10'
-    become_method: sudo
-    become: true
-    tags:
-    - skip_ansible_lint
-
-  - name: Enable rels repository Rosa SX 7
-    shell: sed s/enabled=0/enabled=1/ -i /etc/yum.repos.d/rels.repo;
-    args:
-      warn: no
-    when: ansible_distribution == "ROSA" and ansible_distribution_major_version == "7"
     become_method: sudo
     become: true
 
@@ -413,6 +403,27 @@
       update_cache: yes
       force: yes
     when: ansible_os_family != "Windows" and ansible_pkg_mgr == "zypper"
+    become_method: sudo
+    become: true
+
+  - name: setup en_US locale for Debian-based OS # Needed for the orafce test
+    shell: if ! locale -a | grep en_US.utf8; then
+           sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen;
+           dpkg-reconfigure --frontend=noninteractive locales;
+           fi
+    when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu' or
+          ansible_distribution == 'OSNova Linux (Onyx)' or
+          ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux')
+    become_method: sudo
+    become: true
+
+  - name: configure locale
+    shell: if localectl | grep -E 'System Locale:\s*n/a'; then
+       if locale -a | grep en_US.utf8; then
+       localectl set-locale LANG=en_US.UTF-8;
+       fi
+       fi
+    when: ansible_os_family != "Windows"
     become_method: sudo
     become: true
 
@@ -564,7 +575,7 @@
     become: true
     when: ansible_os_family == "GosLinux" or ansible_os_family == "ROSA"
 
-  - name: Disable apport service (Ubuntu)
+  - name: disable apport service (Ubuntu)
     lineinfile:
       dest: /etc/default/apport
       regexp: '^enabled='
@@ -649,21 +660,21 @@
       product_id: '{692514A8-5484-45FC-B0AE-BE2DF7A75891}'
       state: present
 
-  - name: windows - download Python 3.8 installer (32 bit)
+  - name: windows - download Python 3 installer (32 bit)
     when: ansible_os_family == "Windows" and
           (ansible_architecture == "32-bit" or ansible_architecture == "32-разрядная")
     win_get_url:
       url: 'http://dist.l.postgrespro.ru/resources/windows/python-3.8.exe'
       dest: 'C:\Users\test\python-3.8.exe'
 
-  - name: windows - download Python 3.8 installer  (64 bit)
+  - name: windows - download Python 3 installer (64 bit)
     when: ansible_os_family == "Windows" and
           (ansible_architecture == "64-bit" or ansible_architecture == "64-разрядная")
     win_get_url:
       url: 'http://dist.l.postgrespro.ru/resources/windows/python-3.8-amd64.exe'
       dest: 'C:\Users\test\python-3.8.exe'
 
-  - name: windows - install python
+  - name: windows - install Python 3
     when: ansible_os_family == "Windows"
     win_shell: 'C:\Users\test\python-3.8.exe /quiet TargetDir=C:\Python38'
 
@@ -764,7 +775,6 @@
       data: "O:NSG:BAD:P(A;;GA;;;BA)(A;;GR;;;IU)(A;;GAGR;;;RM)S:P(AU;FA;GA;;;WD)(AU;SA;GXGW;;;WD)"
       type: string
 
-  # Microsoft Windows Server 2019 allow smb guest access
   - name: windows - Server 2019 allow smb guest access
     when: ansible_os_family == "Windows"
     win_regedit:
@@ -777,6 +787,6 @@
     when: ansible_os_family == "Windows"
     win_command: 'powershell -Command "Register-ScheduledTask -TaskName Restart-WinRM -User System -Action (New-ScheduledTaskAction -Execute \"Powershell.exe\" -Argument \"-Command Restart-Service -Name WinRM\"); Start-ScheduledTask -TaskName Restart-WinRM"'
 
-  - name: Wait for system to become reachable (2)
+  - name: windows - wait for system to become reachable (2)
     when: ansible_os_family == "Windows"
     wait_for_connection: delay=10 timeout=600

@@ -1,27 +1,32 @@
 #!/bin/bash
 
 if which apt-get >/dev/null 2>&1; then
+    (
     apt-get install -y gcc || true
     apt-get install -y make flex bison perl
     apt-get install -y zlib1g-dev || apt-get install -y zlib-devel
-    apt-get install -y libicu-dev || true
-    apt-get install -y libicu-devel || true
+    apt-get install -y libicu-dev || apt-get install -y libicu-devel
     apt-get install -y pkg-config
     apt-get install -y libipc-run-perl || apt-get install -y perl-IPC-Run
     apt-get install -y patch || true
     apt-get install -y perl-devel || true
     apt-get install -y perl-bignum || true
+    ) 2>&1
 elif which zypper >/dev/null 2>&1; then
+    (
     zypper install -y gcc make flex bison perl patch
     zypper install -y --force --force-resolution zlib-devel
     zypper install -y --force --force-resolution libicu-devel
     zypper install -y libipc-run-perl
+    ) 2>&1
 elif which yum >/dev/null 2>&1; then
+    (
     yum install -y gcc make flex bison perl bzip2 zlib-devel libicu-devel patch
     yum install -y perl-devel || true
     yum install -y perl-IPC-Run
     yum install -y perl-Test-Simple perl-Time-HiRes
     yum install -y perl-bignum || true
+    ) 2>&1
     # perl-IPC-Run is not present in some distributions (rhel-7, rosa-sx-7...)
 fi
 if ! perl -e "use IPC::Run"  >/dev/null 2>&1; then
@@ -86,22 +91,22 @@ fi
 sed -s 's|logging_collector = on|# logging_collector = off|' -i `$1/bin/pg_config --sharedir`/postgresql.conf.sample
 
 makeecpg=true
-if patch -p1 --dry-run -i ../patches/make-installcheck-13.patch >/dev/null 2>&1; then
+if patch -p1 --dry-run -F 0 -i ../patches/make-installcheck-13.patch >/dev/null 2>&1; then
     echo "Fixing Makefiles v13 for installcheck-world..."
     patch -p1 -i ../patches/make-installcheck-13.patch
     makeecpg=false
 fi
-if patch -p1 --dry-run -i ../patches/make-installcheck-12.patch >/dev/null 2>&1; then
+if patch -p1 --dry-run -F 0 -i ../patches/make-installcheck-12.patch >/dev/null 2>&1; then
     echo "Fixing Makefiles v12 for installcheck-world..."
     patch -p1 -i ../patches/make-installcheck-12.patch
     makeecpg=false
 fi
-if patch -p1 --dry-run -i ../patches/make-installcheck-11.patch >/dev/null 2>&1; then
+if patch -p1 --dry-run -F 0 -i ../patches/make-installcheck-11.patch >/dev/null 2>&1; then
     echo "Fixing Makefiles v11 for installcheck-world..."
     patch -p1 -i ../patches/make-installcheck-11.patch
     makeecpg=false
 fi
-if patch -p1 --dry-run -i ../patches/make-installcheck-10.patch >/dev/null 2>&1; then
+if patch -p1 --dry-run -F 0 -i ../patches/make-installcheck-10.patch >/dev/null 2>&1; then
     echo "Fixing Makefiles v10 for installcheck-world..."
     patch -p1 -i ../patches/make-installcheck-10.patch
     makeecpg=false
@@ -109,6 +114,9 @@ fi
 
 # Backpatch 69ae9dcb to version 11 (pgsql-bugs #15349) (uri-regress.c: undefined reference to PQconninfoParse, PQconndefaults)
 patch -p1 --dry-run -i ../patches/69ae9dcb.patch >/dev/null 2>&1 && patch -p1 -i ../patches/69ae9dcb.patch
+
+# Enable the installcheck mode for pg_stat_statements testing
+sed 's|NO_INSTALLCHECK|# NO_INSTALLCHECK|' -i contrib/pg_stat_statements/Makefile
 
 #Check /etc/localtime exist
 [ -f /etc/localtime ] || ln -s /usr/share/zoneinfo/UTC /etc/localtime
@@ -128,6 +136,15 @@ done <<< "$opts";
 echo "Running: $confopts make -e installcheck-world ..."
 sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" $confopts make -e installcheck-world EXTRA_TESTS=numeric_big 2>&1" | tee /tmp/installcheck.log; exitcode=$?
 if [ $exitcode -eq 0 ]; then
+    if [ -f ../orafce*.tar* ]; then
+        cd .. &&
+        tar fax orafce*.tar* &&
+        cd orafce*/ && chown -R postgres . &&
+        sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make installcheck"; exitcode=$?
+        cd $BASEDIR
+    fi
+fi
+if [ $exitcode -eq 0 ]; then
     if [ -f ../plv8*.tar* ]; then
         cd .. &&
         tar fax plv8*.tar* &&
@@ -141,6 +158,15 @@ if [ $exitcode -eq 0 ]; then
         cd .. &&
         tar fax pgpro-stats*.tar* &&
         cd pgpro-stats*/ && chown -R postgres . &&
+        sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make USE_PGXS=1 installcheck"; exitcode=$?
+        cd $BASEDIR
+    fi
+fi
+if [ $exitcode -eq 0 ]; then
+    if [ -f ../pg-portal-modify*.tar* ]; then
+        cd .. &&
+        tar fax pg-portal-modify*.tar* &&
+        cd pg-portal-modify*/ && chown -R postgres . &&
         sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make USE_PGXS=1 installcheck"; exitcode=$?
         cd $BASEDIR
     fi
@@ -172,5 +198,5 @@ make installcheck-force -C contrib/test_decoding"
     exitcode=$?
     sudo -u postgres $1/bin/pg_ctl -D tmpdb -w stop
 fi
-for df in `find . -name *.diffs`; do echo;echo "    vvvv $df vvvv    "; cat $df; echo "    ^^^^^^^^"; done
+for df in `find .. -name *.diffs`; do echo;echo "    vvvv $df vvvv    "; cat $df; echo "    ^^^^^^^^"; done
 exit $exitcode

@@ -42,20 +42,20 @@ PRELOAD_LIBRARIES = {
          'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
          'pg_pathman'],
     'std-11':
-        ['auth_delay', 'auto_explain', 'timescaledb',
+        ['auth_delay', 'auto_explain', 'timescaledb', 'pg_stat_statements',
          'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
     'std-12':
-        ['auth_delay', 'auto_explain', 'timescaledb', 'pgpro_stats',
-         'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
+        ['auth_delay', 'auto_explain', 'timescaledb', 'pg_stat_statements',
+         'pgpro_stats', 'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
     'std-13':
-        ['auth_delay', 'auto_explain', 'pgpro_stats',
+        ['auth_delay', 'auto_explain', 'pg_stat_statements',
          'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
     'std-cert-11':
-        ['auth_delay', 'auto_explain',
+        ['auth_delay', 'auto_explain', 'pg_stat_statements',
          'plantuner', 'shared_ispell', 'pg_pathman',
          'pg_proaudit'],
     'std-10':
-        ['auth_delay', 'auto_explain',
+        ['auth_delay', 'auto_explain', 'pg_stat_statements',
          'plantuner', 'shared_ispell', 'pg_pathman'],
     'ent-10':
         ['auth_delay', 'auto_explain', 'in_memory',
@@ -63,10 +63,10 @@ PRELOAD_LIBRARIES = {
          'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
          'pg_pathman'],
     'std-cert-10':
-        ['auth_delay', 'auto_explain', 'pgaudit',
+        ['auth_delay', 'auto_explain', 'pgaudit', 'pg_stat_statements',
          'plantuner', 'shared_ispell', 'pg_pathman'],
     'std-9.6':
-        ['auth_delay', 'auto_explain',
+        ['auth_delay', 'auto_explain', 'pg_stat_statements',
          'plantuner', 'shared_ispell', 'pg_pathman'],
     'ent-9.6':
         ['auth_delay', 'auto_explain',
@@ -87,15 +87,15 @@ PRELOAD_LIBRARIES = {
          'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
          'pg_pathman', 'passwordcheck'],
     '1c-9.6':
-        ['auth_delay', 'auto_explain', 'plantuner'],
+        ['auth_delay', 'auto_explain', 'pg_stat_statements', 'plantuner'],
     '1c-10':
-        ['auth_delay', 'auto_explain', 'plantuner'],
+        ['auth_delay', 'auto_explain', 'pg_stat_statements', 'plantuner'],
     '1c-11':
-        ['auth_delay', 'auto_explain', 'plantuner'],
+        ['auth_delay', 'auto_explain', 'pg_stat_statements', 'plantuner'],
     '1c-12':
-        ['auth_delay', 'auto_explain', 'plantuner'],
+        ['auth_delay', 'auto_explain', 'pg_stat_statements', 'plantuner'],
     '1c-13':
-        ['auth_delay', 'auto_explain', 'plantuner'],
+        ['auth_delay', 'auto_explain', 'pg_stat_statements', 'plantuner'],
 }
 
 
@@ -271,6 +271,9 @@ class PgInstall:
         return base_package
 
     def get_package_version(self, package_name):
+        if self.os.is_windows():
+            pkgs = self.get_packages_in_repo()
+            return pkgs[package_name]
         return self.os.get_package_version(package_name)
 
     def get_product_minor_version(self):
@@ -286,9 +289,17 @@ class PgInstall:
                 ('' if self.version == '9.6' else '-libs'))
 
     def get_packages_in_repo(self):
-        result = []
+        result = {}
         if self.os.is_windows():
-            return result
+            for f in os.listdir(WIN_INST_DIR):
+                inst = os.path.splitext(os.path.basename(f))[0]
+                # PGPRO-4573
+                inst = re.sub(r"-X64$", "", inst)
+                pvre = re.search(r"(.*)-([0-9.]+)$", inst)
+                if pvre:
+                    result[pvre.group(1)] = pvre.group(2)
+                else:
+                    result[inst] = ''
         if self.os.is_pm_yum():
             cmd = "script -q -c \"stty cols 150; " \
                   "LANG=C yum -q --disablerepo='*' " \
@@ -305,10 +316,10 @@ class PgInstall:
                     print("Invalid line in yum list output:", line)
                     raise Exception('Invalid line in yum list output')
                 pkgname = re.sub(r'\.(aarch64|x86_64|noarch)$', '', pkginfo[0])
-                result.append(pkgname)
+                result[pkgname] = pkginfo[1]
             if self.version == '9.6':
                 if 'pgbadger' in result and 'pgpro-pgbadger' in result:
-                    result.remove('pgbadger')
+                    del result['pgbadger']
         elif self.os.is_altlinux():
             # Parsing binary package info in lists/ is unfeasible,
             # so the only way to find packages from the repository is
@@ -348,7 +359,7 @@ class PgInstall:
                         state = 2
                 elif state == 2:
                     if ('(/tmp/t_r/' + self.reponame) in line:
-                        result.append(pkgname)
+                        result[pkgname] = ''
         elif self.os.is_pm_apt():
             cmd = "sh -c \"grep -h -e 'Package:\\s\\+' " \
                   "/var/lib/apt/lists/%s*\"" % self.reponame
@@ -362,7 +373,7 @@ class PgInstall:
                 if pkgname == 'Auto-Built-debug-symbols':
                     continue
                 if pkgname not in result:
-                    result.append(pkgname)
+                    result[pkgname] = ''
             if self.version == '9.6':
                 # PGPRO-2286
                 exclude = []
@@ -371,7 +382,7 @@ class PgInstall:
                         if ('postgrespro-' + pkgname) in result:
                             exclude.append(pkgname)
                 for pkgname in exclude:
-                    result.remove(pkgname)
+                    del result[pkgname]
         elif self.os.is_pm_zypper():
             cmd = "sh -c \"LANG=C zypper search --repo %s\"" % self.reponame
             zsout = command_executor(cmd, self.remote, self.host,
@@ -384,7 +395,7 @@ class PgInstall:
                 pkgname = pkginfo[1].strip()
                 if pkgname == 'Name':
                     continue
-                result.append(pkgname)
+                result[pkgname] = ''
         return result
 
     def get_files_in_package(self, pkgname):
@@ -692,6 +703,10 @@ baseurl=%s
             cmd = "zypper --gpg-auto-import-keys refresh"
             self.exec_cmd_retry(cmd)
         elif self.os.is_windows():
+            reponame = "%s-%s%s" % (
+                self.product,
+                self.edition + '-' if self.product == 'postgrespro' else '',
+                self.version)
             installer_name = self.__get_last_winstaller_file(
                 baseurl, self.os_arch)
             windows_installer_url = baseurl + installer_name
@@ -702,11 +717,11 @@ baseurl=%s
                                                installer_name)
             urlretrieve(windows_installer_url,
                         self.installer_name)
-            msi_files = self.__get_msi_files(baseurl)
-            for msi in msi_files:
+            inst_files = self.__get_inst_files(baseurl)
+            for inst in inst_files:
                 urlretrieve(
-                    baseurl + msi,
-                    os.path.join(WIN_INST_DIR, msi))
+                    baseurl + inst,
+                    os.path.join(WIN_INST_DIR, inst))
         else:
             raise Exception("Unsupported distro %s" % self.os_name)
         self.reponame = reponame
@@ -819,22 +834,6 @@ baseurl=%s
             version = self.get_product_minor_version()
         tar_href = '%s-%s.%s' % (package, version, ext)
         tar_url = baseurl + '/' + tar_href
-        attempt = 1
-        timeout = 0
-        while attempt < 9:
-            try:
-                urlretrieve(tar_url, tar_href)
-                return tar_href
-            except Exception as ex:
-                print('Exception occured while downloading sources "%s":' %
-                      tar_url)
-                print(ex)
-                attempt += 1
-                timeout += 5
-                print('Retrying (attempt %d with delay for %d seconds)...' %
-                      (attempt, timeout))
-                time.sleep(timeout)
-        # Last attempt
         urlretrieve(tar_url, tar_href)
         return tar_href
 
@@ -981,8 +980,19 @@ baseurl=%s
         msis = glob.glob(os.path.join(WIN_INST_DIR, '*.msi'))
         for msi in sorted(msis):
             msilog = "%s.log" % msi
+            print('Installing %s...' % msi)
             cmd = 'msiexec /i %s /quiet /qn /norestart /log %s' % \
                 (msi, msilog)
+            command_executor(cmd, windows=True)
+        exes = glob.glob(os.path.join(WIN_INST_DIR, '*.exe'))
+        for exe in sorted(exes):
+            # PGPRO-4503
+            if os.path.basename(exe).startswith('mamonsu'):
+                continue
+            if exe == self.installer_name:
+                continue
+            print('Installing %s...' % exe)
+            cmd = "%s /S" % exe
             command_executor(cmd, windows=True)
         refresh_env_win()
         self.client_path_needed = False
@@ -995,9 +1005,7 @@ baseurl=%s
             exename = 'ActivePerl-5.22.4.2205-MSWin32-x86-64int-403863.exe'
         url = 'http://dist.l.postgrespro.ru/resources/windows/' + \
             exename
-        if not os.path.exists(WIN_INST_DIR):
-            os.mkdir(WIN_INST_DIR)
-        target_path = os.path.join(WIN_INST_DIR, exename)
+        target_path = os.path.join(tempfile.gettempdir(), exename)
         urlretrieve(url, target_path)
 
         cmd = target_path + " /quiet PERL_PATH=Yes PERL_EXT=Yes ADDLOCAL=PERL"
@@ -1075,25 +1083,25 @@ baseurl=%s
                             (exe_arch, url))
         return setup_files[-1]
 
-    def __get_msi_files(self, url):
+    def __get_inst_files(self, url):
         """Get all msi files from our repo
         :param url: str:
         :return: array with file names
         """
 
-        msi_files = []
+        inst_files = []
         soup = get_soup(url)
         for link in soup.findAll('a'):
             href = link.get('href')
-            if re.search(r'\.msi$', href, re.I):
+            if re.search(r'\.(msi|exe)$', href, re.I):
                 # PGPRO-3184
                 # (pg-probackup-std-10-2.1.5.msi,
                 #  pg-probackup-std-10-2.1.5-standalone-en.msi, and
                 #  pg-probackup-std-10-2.1.5-standalone-en.msi conflict)
                 if re.search('pg-probackup-.*standalone', href):
                     continue
-                msi_files.append(href)
-        return msi_files
+                inst_files.append(href)
+        return inst_files
 
     def delete_repo(self):
         """ Delete repo file

@@ -225,7 +225,7 @@ index da5e088bdde..6783f921868 100644
  all: isolationtester$(X) pg_isolation_regress$(X)
  
 +installed-all:
-+       USE_INSTALLED_ASSETS=1 $(MAKE) all
++	USE_INSTALLED_ASSETS=1 $(MAKE) all
 +
  # Though we don't install these binaries, build them during installation
  # (including temp-install).  Otherwise, "make -j check-world" and "make -j
