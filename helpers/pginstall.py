@@ -49,7 +49,7 @@ PRELOAD_LIBRARIES = {
          'pgpro_stats', 'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
     'std-13':
         ['auth_delay', 'auto_explain', 'pg_stat_statements',
-         'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
+         'pgpro_stats', 'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
     'std-cert-11':
         ['auth_delay', 'auto_explain', 'pg_stat_statements',
          'plantuner', 'shared_ispell', 'pg_pathman',

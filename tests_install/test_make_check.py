@@ -96,7 +96,7 @@ class TestMakeCheck(object):
         # TODO: PGPRO-4567 pg-portal-modify, pg-repack, pg-filedump
         # TODO: pgpro-stats
         # TODO: pgpro-pwr
-        for comp in ['orafce', 'plv8']:
+        for comp in ['orafce', 'plv8', 'pgpro-stats']:
             pkgname = '%s-%s-%s' % (comp, edition, version)
             if pkgname not in pginst.get_packages_in_repo():
                 pkgname = comp
