@@ -147,7 +147,7 @@ if [ $exitcode -eq 0 ]; then
         echo "Performing 'make installcheck' for $comp"
         tar fax $comp*.tar* &&
         cd $comp*/ && chown -R postgres . &&
-        sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make installcheck"; exitcode=$?
+        sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make USE_PGXS=1 installcheck"; exitcode=$?
         cd $BASEDIR
     fi
 fi
