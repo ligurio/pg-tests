@@ -163,6 +163,15 @@ if [ $exitcode -eq 0 ]; then
     fi
 fi
 if [ $exitcode -eq 0 ]; then
+    if [ -f ../pgpro_pwr*.tar* ]; then
+        cd .. &&
+        tar fax pgpro_pwr*.tar* &&
+        cd pgpro_pwr*/ && chown -R postgres . &&
+        sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make USE_PGXS=1 installcheck"; exitcode=$?
+        cd $BASEDIR
+    fi
+fi
+if [ $exitcode -eq 0 ]; then
     if [ -f ../pg_portal_modify*.tar* ]; then
         cd .. &&
         tar fax pg_portal_modify*.tar* &&

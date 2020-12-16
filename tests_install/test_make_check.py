@@ -93,8 +93,7 @@ class TestMakeCheck(object):
         tar = tarfile.open(tarball, 'r:bz2')
         tar.extractall()
         tar.close()
-        # TODO: pgpro-pwr
-        for comp in ['orafce', 'plv8', 'pgpro-stats',
+        for comp in ['orafce', 'plv8', 'pgpro-stats', 'pgpro-pwr',
                      'pg-filedump', 'pg-portal-modify', 'pg-repack']:
             pkgname = '%s-%s-%s' % (comp, edition, version)
             if pkgname not in pginst.get_packages_in_repo():
