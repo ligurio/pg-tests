@@ -135,70 +135,24 @@ done <<< "$opts";
 [ "$makeecpg" = true ] && sudo -u postgres sh -c "make -C src/interfaces/ecpg"
 echo "Running: $confopts make -e installcheck-world ..."
 sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" $confopts make -e installcheck-world EXTRA_TESTS=numeric_big 2>&1" | tee /tmp/installcheck.log; exitcode=$?
+
+for comp in orafce plv8 pgpro_stats pgpro_pwr pg_filedump pg_portal_modify pg_repack; do
 if [ $exitcode -eq 0 ]; then
-    if [ -f ../orafce*.tar* ]; then
-        cd .. &&
-        tar fax orafce*.tar* &&
-        cd orafce*/ && chown -R postgres . &&
-        sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make installcheck"; exitcode=$?
-        cd $BASEDIR
-    fi
-fi
-if [ $exitcode -eq 0 ]; then
-    if [ -f ../plv8*.tar* ]; then
-        cd .. &&
-        tar fax plv8*.tar* &&
-        cd plv8*/ && chown -R postgres . &&
-        sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make installcheck"; exitcode=$?
-        cd $BASEDIR
-    fi
-fi
-if [ $exitcode -eq 0 ]; then
-    if [ -f ../pgpro_stats*.tar* ]; then
-        cd .. &&
-        tar fax pgpro_stats*.tar* &&
-        cd pgpro_stats*/ && chown -R postgres . &&
+    if [ -f ../$comp*.tar* ]; then
+        cd ..
+        if [ $comp == pg_repack ]; then
+            sudo -u postgres mkdir tmp/testts &&
+            sudo -u postgres "$1/bin/psql" -c "create tablespace testts location '`pwd`/tmp/testts'"
+        fi
+        echo "Performing 'make installcheck' for $comp"
+        tar fax $comp*.tar* &&
+        cd $comp*/ && chown -R postgres . &&
         sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make USE_PGXS=1 installcheck"; exitcode=$?
         cd $BASEDIR
     fi
 fi
-if [ $exitcode -eq 0 ]; then
-    if [ -f ../pgpro_pwr*.tar* ]; then
-        cd .. &&
-        tar fax pgpro_pwr*.tar* &&
-        cd pgpro_pwr*/ && chown -R postgres . &&
-        sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make USE_PGXS=1 installcheck"; exitcode=$?
-        cd $BASEDIR
-    fi
-fi
-if [ $exitcode -eq 0 ]; then
-    if [ -f ../pg_portal_modify*.tar* ]; then
-        cd .. &&
-        tar fax pg_portal_modify*.tar* &&
-        cd pg_portal_modify*/ && chown -R postgres . &&
-        sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make USE_PGXS=1 installcheck"; exitcode=$?
-        cd $BASEDIR
-    fi
-fi
-if [ $exitcode -eq 0 ]; then
-    if [ -f ../pg_repack*.tar* ]; then
-        cd .. && sudo -u postgres mkdir tmp/testts &&
-        tar fax pg_repack*.tar* &&
-        cd pg_repack*/ && chown -R postgres . &&
-        sudo -u postgres "$1/bin/psql" -c "create tablespace testts location '`pwd`/../tmp/testts'" &&
-        sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make USE_PGXS=1 installcheck"; exitcode=$?
-        cd $BASEDIR
-    fi
-fi
-if [ $exitcode -eq 0 ]; then
-    if [ -f ../pg_filedump*.tar* ]; then
-        cd .. &&
-        tar fax pg_filedump*.tar* &&
-        cd pg_filedump*/ && chown -R postgres . &&
-        sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make USE_PGXS=1 installcheck"; exitcode=$?
-        cd $BASEDIR
-    fi
-fi
+done
+
 if [ $exitcode -eq 0 ]; then
     # Extra tests
     sudo -u postgres $1/bin/initdb -D tmpdb
