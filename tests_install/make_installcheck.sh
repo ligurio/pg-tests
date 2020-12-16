@@ -139,11 +139,12 @@ sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" $confopts make -e installcheck-wor
 for comp in orafce plv8 pgpro_stats pgpro_pwr pg_filedump pg_portal_modify pg_repack; do
 if [ $exitcode -eq 0 ]; then
     if [ -f ../$comp*.tar* ]; then
-        cd .. &&
-        if [ $comp == pg_repack ] then
+        cd ..
+        if [ $comp == pg_repack ]; then
             sudo -u postgres mkdir tmp/testts &&
             sudo -u postgres "$1/bin/psql" -c "create tablespace testts location '`pwd`/tmp/testts'"
         fi
+        echo "Performing 'make installcheck' for $comp"
         tar fax $comp*.tar* &&
         cd $comp*/ && chown -R postgres . &&
         sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make installcheck"; exitcode=$?
