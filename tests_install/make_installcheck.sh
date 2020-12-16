@@ -154,19 +154,19 @@ if [ $exitcode -eq 0 ]; then
     fi
 fi
 if [ $exitcode -eq 0 ]; then
-    if [ -f ../pgpro-stats*.tar* ]; then
+    if [ -f ../pgpro_stats*.tar* ]; then
         cd .. &&
-        tar fax pgpro-stats*.tar* &&
-        cd pgpro-stats*/ && chown -R postgres . &&
+        tar fax pgpro_stats*.tar* &&
+        cd pgpro_stats*/ && chown -R postgres . &&
         sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make USE_PGXS=1 installcheck"; exitcode=$?
         cd $BASEDIR
     fi
 fi
 if [ $exitcode -eq 0 ]; then
-    if [ -f ../pg-portal-modify*.tar* ]; then
+    if [ -f ../pg_portal_modify*.tar* ]; then
         cd .. &&
-        tar fax pg-portal-modify*.tar* &&
-        cd pg-portal-modify*/ && chown -R postgres . &&
+        tar fax pg_portal_modify*.tar* &&
+        cd pg_portal_modify*/ && chown -R postgres . &&
         sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make USE_PGXS=1 installcheck"; exitcode=$?
         cd $BASEDIR
     fi

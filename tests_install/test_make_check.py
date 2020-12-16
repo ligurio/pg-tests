@@ -93,17 +93,16 @@ class TestMakeCheck(object):
         tar = tarfile.open(tarball, 'r:bz2')
         tar.extractall()
         tar.close()
-        # TODO: PGPRO-4567 pg-portal-modify, pg-repack, pg-filedump
-        # TODO: pgpro-stats
         # TODO: pgpro-pwr
-        for comp in ['orafce', 'plv8', 'pgpro-stats']:
+        for comp in ['orafce', 'plv8', 'pgpro-stats',
+                     'pg-filedump', 'pg-portal-modify', 'pg-repack']:
             pkgname = '%s-%s-%s' % (comp, edition, version)
             if pkgname not in pginst.get_packages_in_repo():
                 pkgname = comp
                 if pkgname not in pginst.get_packages_in_repo():
                     continue
             pginst.download_source(
-                comp,
+                comp.replace('-', '_'),
                 pginst.get_package_version(pkgname), 'tar.gz')
         if self.system != 'Windows':
             pginst.install_full()
