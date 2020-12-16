@@ -144,7 +144,7 @@ if [ $exitcode -eq 0 ]; then
             sudo -u postgres mkdir tmp/testts &&
             sudo -u postgres "$1/bin/psql" -c "create tablespace testts location '`pwd`/tmp/testts'"
         fi
-        echo "Performing 'make installcheck' for $comp"
+        echo "Performing 'make installcheck' for $comp..."
         tar fax $comp*.tar* &&
         cd $comp*/ && chown -R postgres . &&
         sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make USE_PGXS=1 installcheck"; exitcode=$?

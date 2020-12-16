@@ -1,5 +1,7 @@
 SET MD=c:\msys32
 
+SET PGTD=%cd%
+
 IF EXIST %MD%\NUL GOTO main
 :setup
 PowerShell -Command "Set-MpPreference -DisableRealtimeMonitoring $true" 2>NUL
@@ -42,6 +44,9 @@ icacls %MD%\var\src /grant *S-1-5-32-545:(OI)(CI)F /T
 mkdir %1\lib\pgxs
 icacls %1\lib\pgxs /grant *S-1-5-32-545:(OI)(CI)F /T
 
+@REM Grant access to Users to %PGTD%/tmp
+icacls %PGTD%\tmp /grant *S-1-5-32-545:(OI)(CI)F /T
+
 @REM "Switching log messages language to English (for src/bin/scripts/ tests)"
 (echo. & echo lc_messages = 'English_United States.1252') >> %1\share\postgresql.conf.sample
 
@@ -55,7 +60,7 @@ powershell -Command "$group=(New-Object System.Security.Principal.SecurityIdenti
 :main
 echo %time%: Main cmd script starting
 
-%MD%\usr\bin\bash --login -i /var/src/make_check.sh %1
+%MD%\usr\bin\bash --login -i /var/src/make_check.sh %1 %PGTD%
 SET LEVEL=%ERRORLEVEL%
 echo %time%: Main cmd script finishing
 exit /b %LEVEL%
@@ -64,6 +69,7 @@ ___BASH_SCRIPT___
 
 set -e
 echo "`date -Iseconds`: Starting shell... ";
+HD=$2
 PGPATH=$(echo $1 | sed -e "s@c:[/\\\\]@/c/@i" -e "s@\\\\@/@g");
 if file "$PGPATH/bin/postgres.exe" | grep '80386. for MS Windows$'; then
 bitness=32; gcc=mingw-w64-i686-gcc; host=i686-w64-mingw32;
@@ -82,6 +88,8 @@ tar fax IPC-Run*
 (cd IPC-Run*/ && perl Makefile.PL && make && make install)
 echo "`date -Iseconds`: Source archive extracting... "
 cd postgres*/
+BASEDIR=`pwd`
+
 echo 'The source archive buildinfo:'
 cat doc/buildinfo.txt
 
@@ -141,61 +149,23 @@ set +e
 echo "`date -Iseconds`: Running $confopts make -e installcheck-world ..."
 sh -c "$confopts EXTRA_REGRESS_OPTS='--dlpath=\"$PGPATH/lib\"' make -e installcheck-world EXTRA_TESTS=numeric_big" 2>&1 | gawk '{ print strftime("%H:%M:%S "), $0; fflush() }' | tee /tmp/installcheck.log; exitcode=$?
 
+# TODO: Add orafce pg_filedump pgpro_pwr
+for comp in plv8 pgpro_stats pg_portal_modify pg_repack; do
 if [ $exitcode -eq 0 ]; then
-    if [ -f ../plv8*.tar* ]; then
-        cd .. &&
-        tar fax plv8*.tar* &&
-        cd plv8*/ &&
-        sh -c "PATH=\"$1/bin:$PATH\" make installcheck"; exitcode=$?
+    if [ -f ../$comp*.tar* ]; then
+        cd ..
+        if [ $comp == pg_repack ]; then
+            mkdir "$HD/tmp/testts" &&
+            "$PGPATH/bin/psql" -c "create tablespace testts location '$HD/tmp/testts'"
+        fi
+        echo "Performing 'make installcheck' for $comp..."
+        tar fax $comp*.tar* &&
+        cd $comp*/ &&
+        make USE_PGXS=1 installcheck; exitcode=$?
         cd $BASEDIR
     fi
 fi
-if [ $exitcode -eq 0 ]; then
-    if [ -f ../pgpro_stats*.tar* ]; then
-        cd .. &&
-        tar fax pgpro_stats*.tar* &&
-        cd pgpro_stats*/ &&
-        sh -c "PATH=\"$1/bin:$PATH\" make USE_PGXS=1 installcheck"; exitcode=$?
-        cd $BASEDIR
-    fi
-fi
-if [ $exitcode -eq 0 ]; then
-    if [ -f ../pgpro_pwr*.tar* ]; then
-        cd .. &&
-        tar fax pgpro_pwr*.tar* &&
-        cd pgpro_pwr*/ &&
-        sh -c "PATH=\"$1/bin:$PATH\" make USE_PGXS=1 installcheck"; exitcode=$?
-        cd $BASEDIR
-    fi
-fi
-if [ $exitcode -eq 0 ]; then
-    if [ -f ../pg_portal_modify*.tar* ]; then
-        cd .. &&
-        tar fax pg_portal_modify*.tar* &&
-        cd pg_portal_modify*/ &&
-        sh -c "PATH=\"$1/bin:$PATH\" make USE_PGXS=1 installcheck"; exitcode=$?
-        cd $BASEDIR
-    fi
-fi
-if [ $exitcode -eq 0 ]; then
-    if [ -f ../pg_repack*.tar* ]; then
-        cd .. && mkdir tmp/testts &&
-        tar fax pg_repack*.tar* &&
-        cd pg_repack*/ &&
-        "$1/bin/psql" -c "create tablespace testts location '`pwd`/../tmp/testts'" &&
-        sh -c "PATH=\"$1/bin:$PATH\" make USE_PGXS=1 installcheck"; exitcode=$?
-        cd $BASEDIR
-    fi
-fi
-if [ $exitcode -eq 0 ]; then
-    if [ -f ../pg_filedump*.tar* ]; then
-        cd .. &&
-        tar fax pg_filedump*.tar* &&
-        cd pg_filedump*/ &&
-        sh -c "PATH=\"$1/bin:$PATH\" make USE_PGXS=1 installcheck"; exitcode=$?
-        cd $BASEDIR
-    fi
-fi
+done
 
 for df in `find . /var/src -name *.diffs`; do echo;echo "    vvvv $df vvvv    "; cat $df; echo "    ^^^^^^^^"; done;
 exit $exitcode
