@@ -21,18 +21,20 @@
             distribution {{ ansible_distribution }}, major version {{ ansible_distribution_major_version }} \
             ({{ ansible_architecture }})."
 
+  # sles-12 sometimes fail mount on boot
   - name: mount DVD(s) (if available)
     shell: if /sbin/blkid /dev/sr0; then
       sed -i '/^\/dev\/sr0\s/d' /etc/fstab; umount /dev/sr0;
       mkdir /mnt/dvd &&
-      echo "/dev/sr0       /mnt/dvd   auto    ro,user,exec,utf8        0    0" >> /etc/fstab &&
+      echo "/dev/sr0       /mnt/dvd   auto    ro,user,exec,utf8,nofail        0    0" >> /etc/fstab &&
       mount /dev/sr0;
       fi;
       if /sbin/blkid /dev/sr1; then
       mkdir /mnt/dvd2 &&
-      echo "/dev/sr1       /mnt/dvd2  auto    ro,user,exec,utf8        0    0" >> /etc/fstab &&
+      echo "/dev/sr1       /mnt/dvd2  auto    ro,user,exec,utf8,nofail        0    0" >> /etc/fstab &&
       mount /dev/sr1;
       fi;
+      echo "mount -a" >> /etc/rc.local
     when: use_ssh is not defined and ansible_os_family != "Windows"
     become_method: su
     become: true
