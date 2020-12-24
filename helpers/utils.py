@@ -98,6 +98,9 @@ def urlretrieve(url, target, retry_cnt=5):
         try:
             if os.path.exists(target):
                 os.remove(target)
+            req = urlopen(url)
+            if req.getcode() >= 400:
+                raise Exception("HTTP Error %s" % req.getcode())
             return urlrequest.urlretrieve(url, target)
         except Exception as ex:
             print('Exception occured while retrieving url "%s":' % url)
