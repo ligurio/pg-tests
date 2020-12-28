@@ -704,7 +704,7 @@ baseurl=%s
             reponame = "%s-%s%s" % (
                 self.product,
                 self.edition + '-' if self.product == 'postgrespro' else '',
-                self.version)
+                self.fullversion)
             installer_name = self.__get_last_winstaller_file(
                 baseurl, self.os_arch)
             windows_installer_url = baseurl + installer_name
@@ -989,7 +989,8 @@ baseurl=%s
             # PGPRO-4503
             if os.path.basename(exe).startswith('mamonsu'):
                 continue
-            if exe == self.installer_name:
+            # Don't install installer and other arch installer
+            if exe == self.installer_name or exe.startswith('Postgres'):
                 continue
             print('Installing %s...' % exe)
             cmd = "%s /S" % exe
