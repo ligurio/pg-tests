@@ -977,25 +977,26 @@ baseurl=%s
                       (("port=%s\n" % port) if port else ""))
         cmd = "%s /S /init=%s" % (self.installer_name, ininame)
         command_executor(cmd, windows=True)
-        msis = glob.glob(os.path.join(repodir, '*.msi'))
-        for msi in sorted(msis):
-            msilog = "%s.log" % msi
-            print('Installing %s...' % msi)
-            cmd = 'msiexec /i %s /quiet /qn /norestart /log %s' % \
-                (msi, msilog)
-            command_executor(cmd, windows=True)
-        exes = glob.glob(os.path.join(repodir, '*.exe'))
-        for exe in sorted(exes):
-            # PGPRO-4503
-            if os.path.basename(exe).startswith('mamonsu'):
-                continue
-            # Don't install installer and other arch installer
-            if exe == self.installer_name or \
-                    os.path.basename(exe).startswith('Postgre'):
-                continue
-            print('Installing %s...' % exe)
-            cmd = "%s /S" % exe
-            command_executor(cmd, windows=True)
+        if self.os_arch == 'AMD64':
+            msis = glob.glob(os.path.join(repodir, '*.msi'))
+            for msi in sorted(msis):
+                msilog = "%s.log" % msi
+                print('Installing %s...' % msi)
+                cmd = 'msiexec /i %s /quiet /qn /norestart /log %s' % \
+                    (msi, msilog)
+                command_executor(cmd, windows=True)
+            exes = glob.glob(os.path.join(repodir, '*.exe'))
+            for exe in sorted(exes):
+                # PGPRO-4503
+                if os.path.basename(exe).startswith('mamonsu'):
+                    continue
+                # Don't install installer and other arch installer
+                if exe == self.installer_name or \
+                        os.path.basename(exe).startswith('Postgre'):
+                    continue
+                print('Installing %s...' % exe)
+                cmd = "%s /S" % exe
+                command_executor(cmd, windows=True)
         refresh_env_win()
         self.client_path_needed = False
         self.server_path_needed = False
