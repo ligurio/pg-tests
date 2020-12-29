@@ -990,7 +990,8 @@ baseurl=%s
             if os.path.basename(exe).startswith('mamonsu'):
                 continue
             # Don't install installer and other arch installer
-            if exe == self.installer_name or exe.startswith('Postgre'):
+            if exe == self.installer_name or \
+                    os.path.basename(exe).startswith('Postgre'):
                 continue
             print('Installing %s...' % exe)
             cmd = "%s /S" % exe
