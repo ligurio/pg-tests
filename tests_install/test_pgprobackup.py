@@ -186,7 +186,10 @@ class TestPgprobackup():
                         '001/tests/incr_restore.py',
                         os.path.join(dir, 'tests', 'incr_restore.py'))
         self.fix_permissions(dir)
-        subprocess.check_call('pip2 install testgres==1.8.2', shell=True)
+        subprocess.check_call('pip%s install testgres%s' %
+                              (sys.version_info[0],
+                               '1.8.2' if sys.version_info[0] == 2 else ''),
+                              shell=True)
         # PGPRO-4108 wait ptrack2.0 in 10
         cmd = "%s sh -c 'PG_CONFIG=\"%s/pg_config\"" \
               " LANG=C PG_PROBACKUP_PTRACK=%s " \
