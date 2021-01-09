@@ -198,7 +198,8 @@ class TestPgprobackup():
                  'ON' if compare_versions(self.pginst.version, '10') > 0
                  else 'OFF',
                  '2.7' if self.pginst.os_name in REDHAT_BASED and
-                 self.pginst.os_version.startswith('6') else '')
+                 self.pginst.os_version.startswith('6') else
+                 sys.version_info[0])
         print(subprocess.check_output(cmd, cwd=dir, shell=True).decode())
         print("OK")
 
