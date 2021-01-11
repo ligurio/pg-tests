@@ -34,7 +34,8 @@
       echo "/dev/sr1       /mnt/dvd2  auto    ro,user,exec,utf8,nofail        0    0" >> /etc/fstab &&
       mount /dev/sr1;
       fi;
-      echo "mount -a" >> /etc/rc.local
+      echo "mount -a > /tmp/mount.log 2>&1" >> /etc/rc.local
+      echo "mount -a > /tmp/mount.log 2>&1" >> /etc/init.d/boot.local
     when: use_ssh is not defined and ansible_os_family != "Windows"
     become_method: su
     become: true
