@@ -374,7 +374,8 @@ class TestUpgradeMinor():
                       'wb') as out:
                 pgold.exec_psql_file(
                     dump_file_name,
-                    '-q%s' % ('' if pgold.os_arch == 'x86' else ' -v ON_ERROR_STOP=1'),
+                    '-q%s' % ('' if pgold.os_arch == 'x86' else
+                              ' -v ON_ERROR_STOP=1'),
                     stdout=out
                 )
 
