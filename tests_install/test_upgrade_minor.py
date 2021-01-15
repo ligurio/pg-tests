@@ -372,8 +372,12 @@ class TestUpgradeMinor():
             pgold.load_shared_libraries()
             with open(os.path.join(tempdir, 'load-%s.log' % oldversion),
                       'wb') as out:
-                pgold.exec_psql_file(dump_file_name, '-q -v ON_ERROR_STOP=1',
-                                     stdout=out)
+                pgold.exec_psql_file(
+                    dump_file_name,
+                    '-q%s' % ('' if pgold.os_arch == 'x86' else
+                              ' -v ON_ERROR_STOP=1'),
+                    stdout=out
+                )
 
             expected_file_name = os.path.join(tempdir,
                                               "%s-expected.sql" % key)
