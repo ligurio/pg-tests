@@ -8,6 +8,7 @@ if which apt-get >/dev/null 2>&1; then
     apt-get install -y libicu-dev || apt-get install -y libicu-devel
     apt-get install -y pkg-config
     apt-get install -y libipc-run-perl || apt-get install -y perl-IPC-Run
+    apt-get install -y libio-pty-perl || apt-get install -y perl-IO-Tty || true
     apt-get install -y patch || true
     apt-get install -y perl-devel || true
     apt-get install -y perl-bignum || true
@@ -17,13 +18,15 @@ elif which zypper >/dev/null 2>&1; then
     zypper install -y gcc make flex bison perl patch
     zypper install -y --force --force-resolution zlib-devel
     zypper install -y --force --force-resolution libicu-devel
-    zypper install -y libipc-run-perl
+    zypper install -y perl-IPC-Run
+    zypper install -y perl-IO-Tty
     ) 2>&1
 elif which yum >/dev/null 2>&1; then
     (
     yum install -y gcc make flex bison perl bzip2 zlib-devel libicu-devel patch
     yum install -y perl-devel || true
     yum install -y perl-IPC-Run
+    yum install -y perl-IO-Tty || true
     yum install -y perl-Test-Simple perl-Time-HiRes
     yum install -y perl-bignum || true
     ) 2>&1
@@ -34,6 +37,13 @@ if ! perl -e "use IPC::Run"  >/dev/null 2>&1; then
 IPC-Run-20200505.0.tar.gz && \
     tar fax IPC-Run* && \
     (cd IPC-Run*/ && perl Makefile.PL && make && make install)
+fi
+
+if ! perl -e "use IO::Pty"  >/dev/null 2>&1; then
+    curl -O https://cpan.metacpan.org/authors/id/T/TO/TODDR/\
+IO-Tty-1.15.tar.gz && \
+    tar fax IO-Tty* && \
+    (cd IO-Tty*/ && perl Makefile.PL && make && make install)
 fi
 
 if [ -d ~test/pg-tests ]; then
