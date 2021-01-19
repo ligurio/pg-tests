@@ -418,9 +418,15 @@ def setup_env(domipaddress, domname, linux_os, tests_dir, target_ssh=False):
     if DEBUG:
         ansible_cmd += " -vvv"
     print(ansible_cmd)
-    retcode = call(ansible_cmd.split(' '))
+    retcode = 0
+    for i in range(3):
+        print("Executing ansible playbook (%d)..." % (i + 1))
+        retcode = call(ansible_cmd.split(' '))
+        if retcode == 0:
+            break
     if retcode != 0:
-        raise Exception("Setup of the test environment %s failed." % domname)
+        raise Exception("Setup of the test environment %s failed (%d)." %
+                        (domname, retcode))
 
 
 def make_test_cmd(domname, linux_os, reportname, tests=None,
