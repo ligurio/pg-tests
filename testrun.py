@@ -189,8 +189,6 @@ def prepare_payload(tests_dir, clean):
     pgtd = os.path.join(tempdir, 'pg-tests')
     shutil.copytree('.', pgtd,
                     ignore=shutil.ignore_patterns('.git', 'reports'))
-    exec_retry("wget -q https://bootstrap.pypa.io/get-pip.py", pgtd,
-               'Downloading get-pip')
 
     exec_retry(
         "wget -T 60 -q https://codeload.github.com/postgrespro/"

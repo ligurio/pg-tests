@@ -5,6 +5,7 @@
     payload_linux: resources/pg-tests.tgz
     payload_win: resources/pg-tests.zip
     use_become_method: "{{ 'sudo' if use_ssh is defined else 'su' }}"
+    get_pip_url: "{{ 'https://bootstrap.pypa.io/2.7/get-pip.py' if ansible_python_version.startswith('2.') else 'https://bootstrap.pypa.io/get-pip.py'}}"
 
   tasks:
 
@@ -502,6 +503,15 @@
       - ansible_distribution != "Altlinux"
     become_method: sudo
     become: true
+
+  - name: download get-pip.py
+    get_url:
+      url: "{{get_pip_url}}"
+      dest: /home/test/pg-tests/get-pip.py
+      validate_certs: no
+      force: yes
+    when:
+      - ansible_os_family != "Windows"
 
   - name: install pip
     command: "python /home/test/pg-tests/get-pip.py"
