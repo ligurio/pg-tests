@@ -125,6 +125,7 @@ echo "Disabling recovery/*logical_decoding test (PGPRO-1527)"
 ls src/test/recovery/t/*logical_decoding*.pl >/dev/null 2>&1 && rm src/test/recovery/t/*logical_decoding*.pl
 echo "Dirty fix for undefined random()"
 sed -e "s@(long) random()@(long) rand()@" -i src/interfaces/libpq/fe-connect.c
+sed -e "s@(uint32) random()@(uint32) rand()@" -i src/interfaces/libpq/fe-connect.c
 echo "Fix for TZ setting in the MSYS environment (Don't pass timezone environment to non-msys applications)"
 [ -f src/bin/pg_controldata/t/002_pg_controldata_legacy.pl ] && patch -p1 -i /var/src/patches/pg_controldata-test-msys.patch
 echo "Disabling multimaster tests (PGPRO-1430)"
