@@ -101,8 +101,9 @@
     become_method: "{{ use_become_method }}"
     become: true
 
-  - name: fix repositories and prepare local repository; update tzdata (МСВСфера)
+  - name: fix repositories and prepare local repository (МСВСфера)
     shell: if [ -d /mnt/dvd/repodata ]; then
+      yum -y install createrepo &&
       ln -s /mnt/dvd /media/MSVSphere_6.3_Server &&
       sed s/enabled=0/enabled=1/ -i /etc/yum.repos.d/install.repo;
       sed s/enabled=1/enabled=0/ -i /etc/yum.repos.d/pgpro.repo;
@@ -113,11 +114,9 @@
       wget http://vault.centos.org/6.8/os/x86_64/Packages/libicu-devel-4.2.1-14.el6.x86_64.rpm && \
       createrepo . && cd ~ && \
       rpm --import http://vault.centos.org/6.8/os/x86_64/RPM-GPG-KEY-CentOS-6 && \
-      printf "[localrepo]\nname=localrepo\nbaseurl=file:///opt/localrepo\nenabled=1\n" > /etc/yum.repos.d/local.repo; \
-      yum update; \
-      curl -O http://vault.centos.org/6.8/os/x86_64/Packages/tzdata-2016c-1.el6.noarch.rpm && \
-      yum install -y tzdata-*.rpm
-    when: use_ssh is not defined and ansible_distribution == "МСВСфера"
+      printf "[localrepo]\nname=localrepo\nbaseurl=file:///opt/localrepo\nenabled=1\n" > /etc/yum.repos.d/local.repo &&
+      yum -y update;
+    when: use_ssh is not defined and (ansible_distribution == "МСВСфера" or ansible_distribution == "MSVSphere")
     become_method: "{{ use_become_method }}"
     become: true
 
