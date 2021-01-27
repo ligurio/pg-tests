@@ -6,6 +6,7 @@
     payload_win: resources/pg-tests.zip
     use_become_method: "{{ 'sudo' if use_ssh is defined else 'su' }}"
     get_pip_url: "{{ 'https://bootstrap.pypa.io/2.7/get-pip.py' if ansible_python_version.startswith('2.') else 'https://bootstrap.pypa.io/get-pip.py'}}"
+    python_cmd: "{{ 'python' if ansible_python_version.startswith('2.') else 'python3' }}"
 
   tasks:
 
@@ -515,7 +516,7 @@
       - ansible_os_family != "Windows"
 
   - name: install pip
-    command: "python /home/test/pg-tests/get-pip.py"
+    command: "{{ python_cmd }} /home/test/pg-tests/get-pip.py"
     retries: 5
     delay: 10
     register: result
