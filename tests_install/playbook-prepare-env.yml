@@ -24,14 +24,15 @@
 
   # sles-12 sometimes fail mount on boot
   - name: mount DVD(s) (if available)
-    shell: if /sbin/blkid /dev/sr0; then
-      sed -i '/^\/dev\/sr0\s/d' /etc/fstab; umount /dev/sr0;
-      mkdir /mnt/dvd &&
+    shell: if /sbin/blkid /dev/sr0 && [ ! -d /mnt/dvd ]; then
+      mkdir /mnt/dvd; umount /dev/sr0;
+      sed -i '/^\/dev\/sr0\s/d' /etc/fstab;
       echo "/dev/sr0       /mnt/dvd   auto    ro,user,exec,utf8,nofail        0    0" >> /etc/fstab &&
       mount /dev/sr0;
       fi;
-      if /sbin/blkid /dev/sr1; then
-      mkdir /mnt/dvd2 &&
+      if /sbin/blkid /dev/sr1 && [ ! -d /mnt/dvd2 ]; then
+      mkdir /mnt/dvd2; umount /dev/sr1;
+      sed -i '/^\/dev\/sr1\s/d' /etc/fstab;
       echo "/dev/sr1       /mnt/dvd2  auto    ro,user,exec,utf8,nofail        0    0" >> /etc/fstab &&
       mount /dev/sr1;
       fi;
