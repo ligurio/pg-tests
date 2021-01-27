@@ -137,6 +137,11 @@ sudo -u postgres ./configure --enable-tap-tests --without-readline --prefix=$1 $
 test -f contrib/mchar/mchar.sql.in && make -C contrib/mchar mchar.sql
 # Pass to `make installcheck` all the options (with-*, enable-*), which were passed to configure
 confopts="python_majorversion=2"
+if which python >/dev/null 2>&1; then
+    confopts="python_majorversion=`python\" -c 'import sys; print(sys.version_info.major)'`"
+else
+    which python3 >/dev/null 2>&1 && confopts="python_majorversion=3"
+fi
 opts=`$1/bin/pg_config --configure | grep -Eo "'[^']*'|[^' ]*" | sed -e "s/^'//" -e "s/'$//"`
 while read -r opt;
     do case "$opt" in --with-*=*) ;; --with-* | --enable-*) opt="${opt/#--/}"; opt="${opt//-/_}" confopts="$confopts $opt=yes ";; esac;
