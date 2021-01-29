@@ -29,10 +29,16 @@ PSQL_BASE = "http://download.postgresql.org/pub"
 WIN_INST_DIR = "C:\\Users\\test\\pg-tests\\pg_installer"
 
 PRELOAD_LIBRARIES = {
+    'ent-13':
+        ['auth_delay', 'auto_explain', 'in_memory',
+         'pgpro_scheduler', 'ptrack', 'pgpro_stats',
+         'pg_stat_statements', 'plantuner',
+         'shared_ispell', 'pg_wait_sampling',
+         'pg_pathman'],
     'ent-12':
         ['auth_delay', 'auto_explain', 'in_memory',
          'pgpro_scheduler', 'ptrack', 'pgpro_stats',
-         'pg_stat_statements', 'pgpro_stats', 'plantuner',
+         'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling',
          'pg_pathman'],
     'ent-11':
