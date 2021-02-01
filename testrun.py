@@ -18,7 +18,7 @@ from subprocess import call
 
 from helpers.utils import (copy_file, copy_reports_win,
                            exec_command, gen_name, exec_retry,
-                           exec_command_win, wait_for_boot,
+                           exec_command_win,
                            REMOTE_LOGIN, REMOTE_PASSWORD,
                            REMOTE_ROOT_PASSWORD, is_remote_file_differ,
                            urlcontent, urlretrieve)
@@ -427,6 +427,28 @@ def setup_env(domipaddress, domname, linux_os, tests_dir, target_ssh=False):
                         (domname, retcode))
 
 
+def wait_for_boot(dom, host, linux):
+    print("Waiting for control protocol availability...")
+    retries = 5
+    for attempt in range(retries):
+        try:
+            if linux:
+                exec_command(
+                    None, host, REMOTE_LOGIN, REMOTE_PASSWORD,
+                    connect_retry_count=30)
+            else:
+                exec_command_win(
+                    None, host, REMOTE_LOGIN, REMOTE_PASSWORD,
+                    connect_retry_count=30)
+        except Exception as ex:
+            if attempt < retries - 1:
+                print('Performing reset and retry (%d)...' %
+                      attempt + 1)
+                dom.reset()
+            else:
+                raise ex
+
+
 def make_test_cmd(domname, linux_os, reportname, tests=None,
                   product_name=None,
                   product_version=None,
@@ -722,7 +744,7 @@ def main(conn):
                     domipaddress = create_env(
                         target, domname, get_dom_disk(domname), dommac)[0]
                     print("Waiting for boot (%s)..." % domipaddress)
-                    wait_for_boot(domipaddress, linux=linux_os)
+                    wait_for_boot(dom, domipaddress, linux_os)
                     print("Boot completed.")
                 except Exception as e:
                     # Don't leave a domain that is failed to boot running
