@@ -443,7 +443,7 @@ def wait_for_boot(dom, host, linux):
         except Exception as ex:
             if attempt < retries - 1:
                 print('Performing reset and retry (%d)...' %
-                      attempt + 1)
+                      (attempt + 1))
                 dom.reset()
             else:
                 raise ex
