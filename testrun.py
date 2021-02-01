@@ -427,7 +427,7 @@ def setup_env(domipaddress, domname, linux_os, tests_dir, target_ssh=False):
                         (domname, retcode))
 
 
-def wait_for_boot(dom, host, linux):
+def wait_for_boot(domname, host, linux):
     print("Waiting for control protocol availability...")
     retries = 5
     for attempt in range(retries):
@@ -441,12 +441,14 @@ def wait_for_boot(dom, host, linux):
                     None, host, REMOTE_LOGIN, REMOTE_PASSWORD,
                     connect_retry_count=30)
         except Exception as ex:
-            if attempt < retries - 1:
-                print('Performing reset and retry (%d)...' %
-                      (attempt + 1))
-                dom.reset()
-            else:
+            if '@' in domname or attempt == retries - 1:
                 raise ex
+            print('Performing reset and retry (%d)...' % (attempt + 1))
+            import libvirt
+            conn = libvirt.open(None)
+            dom = conn.lookupByName(domname)
+            dom.reset()
+            conn.close()
 
 
 def make_test_cmd(domname, linux_os, reportname, tests=None,
@@ -744,7 +746,7 @@ def main(conn):
                     domipaddress = create_env(
                         target, domname, get_dom_disk(domname), dommac)[0]
                     print("Waiting for boot (%s)..." % domipaddress)
-                    wait_for_boot(dom, domipaddress, linux_os)
+                    wait_for_boot(domname, domipaddress, linux_os)
                     print("Boot completed.")
                 except Exception as e:
                     # Don't leave a domain that is failed to boot running
