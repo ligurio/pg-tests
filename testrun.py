@@ -347,18 +347,27 @@ def create_env(name, domname, domimage=None, mac=None):
     if dom is None:
         print("Failed to create a test domain")
 
-    timeout = 0
-    while True:
-        domipaddress = lookupIPbyMac(conn, dommac)
+    retries = 5
+    for attempt in range(retries):
+        timeout = 0
+        while True:
+            domipaddress = lookupIPbyMac(conn, dommac)
+            if domipaddress:
+                break
+            timeout += 5
+            if timeout > 60:
+                errmsg = "Failed to obtain IP address (for MAC %s)" \
+                    " in domain %s." % (dommac, domname)
+                if attempt == retries - 1:
+                    raise Exception(errmsg)
+                print(errmsg)
+                print('Performing reset and retry (%d)...' % (attempt + 1))
+                dom.reset()
+                break
+            print("Waiting for IP address...%d" % timeout)
+            time.sleep(timeout)
         if domipaddress:
             break
-        timeout += 5
-        if timeout > 80:
-            raise Exception(
-                "Failed to obtain IP address (for MAC %s) in domain %s." %
-                (dommac, domname))
-        print("Waiting for IP address...%d" % timeout)
-        time.sleep(timeout)
 
     print("Domain name: %s\nIP address: %s, MAC address: %s" % (dom.name(),
                                                                 domipaddress,
