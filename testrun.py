@@ -444,11 +444,11 @@ def wait_for_boot(domname, host, linux):
             if linux:
                 exec_command(
                     None, host, REMOTE_LOGIN, REMOTE_PASSWORD,
-                    connect_retry_count=30)
+                    connect_retry_count=40)
             else:
                 exec_command_win(
                     None, host, REMOTE_LOGIN, REMOTE_PASSWORD,
-                    connect_retry_count=30)
+                    connect_retry_count=40)
         except Exception as ex:
             if '@' in domname or attempt == retries - 1:
                 raise ex
