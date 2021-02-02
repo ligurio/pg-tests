@@ -90,12 +90,12 @@
 
   - name: setup DVD as zypper repository (SUSE)
     shell: if [ -f /mnt/dvd/content ]; then
-      zypper addrepo -t yast2 /mnt/dvd/ disk1;
+      zypper removerepo disk1 2>/dev/null; zypper addrepo -t yast2 /mnt/dvd/ disk1;
       elif [ -d /mnt/dvd/media.1 ]; then
-      zypper addrepo /mnt/dvd/ disk1;
+      zypper removerepo disk1 2>/dev/null; zypper addrepo /mnt/dvd/ disk1;
       fi;
       if [ -f /mnt/dvd2/content ]; then
-      zypper addrepo -t yast2 file:///mnt/dvd2/./ disk2;
+      zypper removerepo disk2 2>/dev/null; zypper addrepo -t yast2 file:///mnt/dvd2/./ disk2;
       fi
     when: ansible_os_family == 'Suse'
     become_method: "{{ use_become_method }}"
