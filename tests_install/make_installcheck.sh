@@ -146,10 +146,12 @@ echo "Running: $confopts make -e installcheck-world ..."
 sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" $confopts make -e installcheck-world EXTRA_TESTS=numeric_big 2>&1" | tee /tmp/installcheck.log; exitcode=$?
 
 if [ $exitcode -eq 0 ]; then
-    # Reconfigure shared_preload_libraries
-    spl=`sudo -u postgres "$1/bin/psql" -t -P format=unaligned -c 'SHOW shared_preload_libraries'`
-    sudo -u postgres "$1/bin/psql" -c "ALTER SYSTEM SET shared_preload_libraries = $spl, pgpro_stats"
-    service "$2" restart
+    # Reconfigure shared_preload_libraries if pgpro_stats going to be tested
+    if [ -f ../pgpro_stats*.tar* ]; then
+        spl=`sudo -u postgres "$1/bin/psql" -t -P format=unaligned -c 'SHOW shared_preload_libraries'`
+        sudo -u postgres "$1/bin/psql" -c "ALTER SYSTEM SET shared_preload_libraries = $spl, pgpro_stats"
+        service "$2" restart
+    fi
 fi
 
 #TODO: Add pg_repack (stabilize the test)
