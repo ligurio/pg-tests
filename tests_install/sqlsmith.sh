@@ -3,7 +3,6 @@ if grep -q 'ALT Linux 6\.' /etc/altlinux-release || \
    grep -q 'PRETTY_NAME="ALT Linux 7' /etc/os-release || \
    grep -q 'PRETTY_NAME="Astra Linux (Smolensk 1.5)"' /etc/os-release || \
    grep -q 'PRETTY_NAME="Debian GNU/Linux 7' /etc/os-release || \
-   grep -q 'PRETTY_NAME="SUSE Linux Enterprise Server 11' /etc/os-release || \
    grep -q 'GosLinux release 6' /etc/goslinux-release || \
    grep -q 'ROSA Enterprise Linux Server release 6.6' /etc/system-release || \
    grep -q 'CentOS release 6.7' /etc/system-release || \

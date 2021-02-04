@@ -1,11 +1,4 @@
 FIRST_RELEASE = {
-    # sles-11
-    "SLES 11.4": {
-        'postgresql--9.6': None,
-        'postgresql--10': None,
-        'postgresql--11': None,
-        'postgresql--12': None,
-    },
     # rosa-sx-7
     "ROSA Enterprise Linux Cobalt 7.3": {
         'postgresql--9.6': None,

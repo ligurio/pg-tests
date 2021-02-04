@@ -432,15 +432,6 @@ class PgInstall:
 
         return pkgs
 
-    def get_supported_vanilla_versions(self):
-        if self.os.is_altlinux():
-            return ['10']
-        elif self.os.is_redhat_based() or self.os.is_debian_based():
-            return ['9.6', '10', '11']
-        elif self.os.is_suse() and self.os_version != "11.4":
-            return ['9.6', '10', '11']
-        return []
-
     def get_distname_for_pgpro(self):
         if self.os_name == "ALT Linux" and \
            self.os_version in ["7.0.4", "6.0.1"]:
@@ -676,12 +667,8 @@ baseurl=%s
                 cmd = "wget -nv %s -O gpg.key" % gpg_key_url
                 self.exec_cmd_retry(cmd)
                 cmd = "rpm --import ./gpg.key"
-                try:
-                    # SLES 11 fails when the key is already imported
-                    command_executor(cmd, self.remote, self.host,
-                                     REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-                except Exception:
-                    pass
+                command_executor(cmd, self.remote, self.host,
+                                 REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             if self.product == "postgrespro":
                 dir = self.os_version.split('.')[0]
                 if self.os_name == 'SLES' and \
