@@ -51,12 +51,6 @@ if [ -d ~test/pg-tests ]; then
     cd ~test/pg-tests
 fi
 
-if grep 'SUSE Linux Enterprise Server 11' /etc/SuSE-release >/dev/null 2>&1; then
-    # Update Test::More to minimum required version (0.87)
-    tar fax extras/test-more* && \
-    (cd test-more*/ && perl Makefile.PL && make && make install)
-fi
-
 cd postgres*/
 BASEDIR=`pwd`
 echo 'The source archive buildinfo:'
