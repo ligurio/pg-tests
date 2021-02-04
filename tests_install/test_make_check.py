@@ -80,9 +80,9 @@ class TestMakeCheck(object):
                 # installcheck environment is presumably prepared,
                 # so just run make_installcheck (once more)
                 subprocess.check_call(
-                    '"%s" "%s"' % (os.path.join(curpath,
-                                                'make_installcheck.cmd'),
-                                   get_pg_prefix(pginst)),
+                    '"%s" "%s" "%s"' % (
+                        os.path.join(curpath, 'make_installcheck.cmd'),
+                        get_pg_prefix(pginst), pginst.service_name),
                     shell=True)
                 pginst.make_check_passed = True
                 return
@@ -159,8 +159,9 @@ class TestMakeCheck(object):
         else:
             # First run is performed to setup the environment
             subprocess.check_call(
-                '"%s" "%s"' % (os.path.join(curpath, 'make_installcheck.cmd'),
-                               get_pg_prefix(pginst)),
+                '"%s" "%s" "%s"' % (
+                    os.path.join(curpath, 'make_installcheck.cmd'),
+                    get_pg_prefix(pginst), pginst.service_name),
                 shell=True)
             request.session.customexitstatus = 222
 
