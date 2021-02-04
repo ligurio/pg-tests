@@ -37,7 +37,7 @@ PRELOAD_LIBRARIES = {
          'pg_pathman'],
     'ent-12':
         ['auth_delay', 'auto_explain', 'in_memory',
-         'pgpro_scheduler', 'ptrack', 'pgpro_stats',
+         'pgpro_scheduler', 'ptrack',
          'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling',
          'pg_pathman'],
@@ -52,10 +52,10 @@ PRELOAD_LIBRARIES = {
          'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
     'std-12':
         ['auth_delay', 'auto_explain', 'timescaledb', 'pg_stat_statements',
-         'pgpro_stats', 'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
+         'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
     'std-13':
         ['auth_delay', 'auto_explain', 'pg_stat_statements',
-         'pgpro_stats', 'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
+         'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
     'std-cert-11':
         ['auth_delay', 'auto_explain', 'pg_stat_statements',
          'plantuner', 'shared_ispell', 'pg_pathman',
@@ -1531,10 +1531,6 @@ baseurl=%s
                         compare_versions(self.get_product_minor_version(),
                                          '11.9.1') < 0:
                     preload_libs.remove('ptrack')
-                if 'pgpro_stats' in preload_libs and self.version == '12' and \
-                        compare_versions(self.get_product_minor_version(),
-                                         '12.5.1') < 0:
-                    preload_libs.remove('pgpro_stats')
                 libs = ','.join(preload_libs)
         if libs:
             self.exec_psql(

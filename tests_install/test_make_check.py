@@ -151,8 +151,9 @@ class TestMakeCheck(object):
         pginst.restart_service()
         if self.system != 'Windows':
             subprocess.check_call(
-                '"%s" "%s"' % (os.path.join(curpath, 'make_installcheck.sh'),
-                               get_pg_prefix(pginst)),
+                '"%s" "%s" "%s"' % (
+                    os.path.join(curpath, 'make_installcheck.sh'),
+                    get_pg_prefix(pginst), pginst.service_name),
                 shell=True)
             pginst.make_check_passed = True
         else:
