@@ -50,6 +50,9 @@ icacls %PGTD%\tmp /grant *S-1-5-32-545:(OI)(CI)F /T
 @REM "Switching log messages language to English (for src/bin/scripts/ tests)"
 (echo. & echo lc_messages = 'English_United States.1252') >> %1\share\postgresql.conf.sample
 
+@REM Give Built-in users (BU) the same permissions to control PG service as Built-in administrators have (BA)
+sc sdset "%2" "D:(A;;CCLCSWRPWPDTLOCRRC;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BU)(A;;CCLCSWLOCRRC;;;IU)(A;;CCLCSWLOCRRC;;;SU)S:(AU;FA;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;WD)"
+
 @REM Add current user to the Remote Management Users group
 powershell -Command "$group=(New-Object System.Security.Principal.SecurityIdentifier('S-1-5-32-580')).Translate([System.Security.Principal.NTAccount]).Value.Split('\\')[1]; net localgroup $group %username% /add"
 
@@ -60,7 +63,7 @@ powershell -Command "$group=(New-Object System.Security.Principal.SecurityIdenti
 :main
 echo %time%: Main cmd script starting
 
-%MD%\usr\bin\bash --login -i /var/src/make_check.sh %1 %PGTD%
+%MD%\usr\bin\bash --login -i /var/src/make_check.sh %1 %2 %PGTD%
 SET LEVEL=%ERRORLEVEL%
 echo %time%: Main cmd script finishing
 exit /b %LEVEL%
@@ -69,7 +72,8 @@ ___BASH_SCRIPT___
 
 set -e
 echo "`date -Iseconds`: Starting shell... ";
-HD=$2
+SN=$2
+HD=$3
 PGPATH=$(echo $1 | sed -e "s@c:[/\\\\]@/c/@i" -e "s@\\\\@/@g");
 if file "$PGPATH/bin/postgres.exe" | grep '80386. for MS Windows$'; then
 bitness=32; gcc=mingw-w64-i686-gcc; host=i686-w64-mingw32;
@@ -158,6 +162,12 @@ if [ $exitcode -eq 0 ]; then
         if [ $comp == pg_repack ]; then
             mkdir "$HD/tmp/testts" &&
             "$PGPATH/bin/psql" -c "create tablespace testts location '$HD/tmp/testts'"
+        fi
+        if [ $comp == pgpro_stats ]; then
+            # Reconfigure shared_preload_libraries
+            spl=`"$PGPATH/bin/psql" -t -P format=unaligned -c 'SHOW shared_preload_libraries'`
+            "$PGPATH/bin/psql" -c "ALTER SYSTEM SET shared_preload_libraries = $spl, $comp"
+            powershell -Command "Restart-Service '$2'"
         fi
         echo "Performing 'make installcheck' for $comp..."
         tar fax $comp*.tar* &&
