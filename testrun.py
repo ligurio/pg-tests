@@ -704,6 +704,11 @@ def main(conn):
         print("No target name")
         sys.exit(1)
 
+    failexpected = False
+    # TODO: Remove when EE13 will be ready
+    if args.product_edition == 'ent' and args.product_version == '13':
+        failexpected = True
+
     if not os.path.exists(args.run_tests):
         print("Test(s) '%s' is not found." % args.run_tests)
         sys.exit(1)
@@ -822,7 +827,7 @@ def main(conn):
                     log("Test execution failed.")
                     if not args.keep:
                         try:
-                            close_env(domname, leavedom=True)
+                            close_env(domname, leavedom=not(failexpected))
                         except Exception:
                             pass
                     raise ex
@@ -834,7 +839,7 @@ def main(conn):
 
                 if retcode != 0:
                     if not args.keep:
-                        close_env(domname, leavedom=True)
+                        close_env(domname, leavedom=not(failexpected))
                     reporturl = os.path.join(REPORT_SERVER_URL, reportname)
                     print("Test (for target: %s, domain: %s,"
                           " IP address: %s) returned error: %d.\n" %
