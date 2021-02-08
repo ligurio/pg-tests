@@ -787,10 +787,10 @@ baseurl=%s
                 extra_yum_repo = "oraclelinux-7"
 
         if extra_yum_repo and self.os.os_arch != 'aarch64':
-            cmd = "sh -c 'mkdir /opt/{0}; cd $_; " \
+            cmd = "sh -c 'mkdir /opt/{0} && cd $_ && " \
                   "wget -q -r -nd --no-parent -A \"*.rpm\" " \
-                  "http://dist.l.postgrespro.ru/resources/linux/{1}/;" \
-                  "yum install -y createrepo; {2} createrepo .; " \
+                  "http://dist.l.postgrespro.ru/resources/linux/{1}/ && " \
+                  "yum install -y createrepo && {2} createrepo . && " \
                   "printf \"[{0}]\\nname={0}\\nbaseurl=file:///opt/{0}" \
                   "\\nenabled=1\\\\ngpgcheck=0\\nmodule_hotfixes=True\\n\" " \
                   "> /etc/yum.repos.d/{0}.repo'".\
