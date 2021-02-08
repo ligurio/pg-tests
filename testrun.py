@@ -31,6 +31,7 @@ if not sys.version_info > (3, 0):
     sys.setdefaultencoding('utf8')
 
 MAX_DURATION = 5 * 60 * 60
+MAX_LEAVED_DOMAINS = 3
 DEBUG = False
 
 IMAGE_BASE_URL = 'http://dist.l.postgrespro.ru/vm-images/test/'
@@ -600,20 +601,34 @@ def restore_env(domname):
     shutil.copy(diskfile + '.s0', diskfile)
 
 
-def close_env(domname, saveimg=False, destroys0=False):
+def close_env(domname, leavedom=False, destroys0=True, saveimg=False):
     if domname.find('@') != -1:
         return
     import libvirt
     conn = libvirt.open(None)
     dom = conn.lookupByName(domname)
     imgfile = os.path.join(WORK_DIR, domname + '.img')
+    destroydom = True
 
     if saveimg:
         if dom.save(imgfile) < 0:
             print('Unable to save state of %s to %s.' % (domname, imgfile))
         else:
             print('Domain %s state saved to %s.' % (domname, imgfile))
+        destroydom = False
     else:
+        if leavedom:
+            paused_domains = conn.listAllDomains(
+                libvirt.VIR_CONNECT_LIST_DOMAINS_PAUSED)
+            if len(paused_domains) < MAX_LEAVED_DOMAINS:
+                print('Leaving domain %s for investigation.' % domname)
+                dom.suspend()
+                destroydom = False
+            else:
+                print("Couldn't leave domain %s for investigation "
+                      " (too many domains already suspended)." % domname)
+
+    if destroydom:
         timeout = 0
         print('Destroying domain...')
         while True:
@@ -735,7 +750,7 @@ def main(conn):
             except Exception as e:
                 # Don't leave a domain that is failed to setup running
                 try:
-                    close_env(domname, saveimg=False, destroys0=True)
+                    close_env(domname, leavedom=False)
                 except Exception:
                     pass
                 raise e
@@ -762,7 +777,7 @@ def main(conn):
                     try:
                         # Temporary leave domain
                         pass
-                        # close_env(domname, saveimg=False, destroys0=True)
+                        # close_env(domname, leavedom=True)
                     except Exception:
                         pass
                     raise e
@@ -807,7 +822,7 @@ def main(conn):
                     log("Test execution failed.")
                     if not args.keep:
                         try:
-                            close_env(domname, False, True)
+                            close_env(domname, leavedom=True)
                         except Exception:
                             pass
                     raise ex
@@ -819,7 +834,7 @@ def main(conn):
 
                 if retcode != 0:
                     if not args.keep:
-                        close_env(domname, saveimg=False, destroys0=True)
+                        close_env(domname, leavedom=True)
                     reporturl = os.path.join(REPORT_SERVER_URL, reportname)
                     print("Test (for target: %s, domain: %s,"
                           " IP address: %s) returned error: %d.\n" %
@@ -830,7 +845,7 @@ def main(conn):
                 break
 
         if not args.keep or len(tests) > 1:
-            close_env(domname, saveimg=False, destroys0=True)
+            close_env(domname, leavedom=False)
 
         print("Target %s done in %s." %
               (target, time.strftime(
@@ -856,7 +871,7 @@ if __name__ == "__main__":
                 p.terminate()
                 if not keep:
                     try:
-                        close_env(domname, False, True)
+                        close_env(domname, leavedom=True)
                     except Exception:
                         pass
                 raise Exception('Timed out')
