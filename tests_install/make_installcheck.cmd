@@ -154,8 +154,8 @@ set +e
 echo "`date -Iseconds`: Running $confopts make -e installcheck-world ..."
 sh -c "$confopts EXTRA_REGRESS_OPTS='--dlpath=\"$PGPATH/lib\"' make -e installcheck-world EXTRA_TESTS=numeric_big" 2>&1 | gawk '{ print strftime("%H:%M:%S "), $0; fflush() }' | tee /tmp/installcheck.log; exitcode=$?
 
-# TODO: Add orafce pg_filedump pgpro_pwr pg_repack
-for comp in plv8 pgpro_stats pg_portal_modify; do
+# TODO: Add orafce pg_filedump pg_repack
+for comp in plv8 pgpro_stats pgpro_pwr pg_portal_modify; do
 if [ $exitcode -eq 0 ]; then
     if [ -f ../$comp*.tar* ]; then
         cd ..
