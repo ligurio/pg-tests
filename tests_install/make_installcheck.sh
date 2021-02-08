@@ -145,15 +145,6 @@ done <<< "$opts";
 echo "Running: $confopts make -e installcheck-world ..."
 sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" $confopts make -e installcheck-world EXTRA_TESTS=numeric_big 2>&1" | tee /tmp/installcheck.log; exitcode=$?
 
-if [ $exitcode -eq 0 ]; then
-    # Reconfigure shared_preload_libraries if pgpro_stats going to be tested
-    if [ -f ../pgpro_stats*.tar* ]; then
-        spl=`sudo -u postgres "$1/bin/psql" -t -P format=unaligned -c 'SHOW shared_preload_libraries'`
-        sudo -u postgres "$1/bin/psql" -c "ALTER SYSTEM SET shared_preload_libraries = $spl, pgpro_stats"
-        service "$2" restart
-    fi
-fi
-
 #TODO: Add pg_repack (stabilize the test)
 for comp in orafce plv8 pgpro_stats pgpro_pwr pg_filedump pg_portal_modify; do
 if [ $exitcode -eq 0 ]; then
@@ -162,6 +153,12 @@ if [ $exitcode -eq 0 ]; then
         if [ $comp == pg_repack ]; then
             sudo -u postgres mkdir tmp/testts &&
             sudo -u postgres "$1/bin/psql" -c "create tablespace testts location '`pwd`/tmp/testts'"
+        fi
+        if [ $comp == pgpro_stats ]; then
+            # Reconfigure shared_preload_libraries
+            spl=`sudo -u postgres "$1/bin/psql" -t -P format=unaligned -c 'SHOW shared_preload_libraries'`
+            sudo -u postgres "$1/bin/psql" -c "ALTER SYSTEM SET shared_preload_libraries = $spl, $comp"
+            service "$2" restart
         fi
         echo "Performing 'make installcheck' for $comp..."
         tar fax $comp*.tar* &&
