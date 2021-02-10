@@ -122,6 +122,9 @@ patch -p1 --dry-run -i ../patches/69ae9dcb.patch >/dev/null 2>&1 && patch -p1 -i
 # Enable the installcheck mode for pg_stat_statements testing
 sed 's|NO_INSTALLCHECK|# NO_INSTALLCHECK|' -i contrib/pg_stat_statements/Makefile
 
+# Fixing in_memory Makefile (PGPRO-4563)
+sed "s|regresscheck-install:.*|regresscheck-install:|" -i contrib/in_memory/Makefile
+
 #Check /etc/localtime exist
 [ -f /etc/localtime ] || ln -s /usr/share/zoneinfo/UTC /etc/localtime
 
