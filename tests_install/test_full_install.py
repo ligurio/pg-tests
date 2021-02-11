@@ -9,7 +9,7 @@ import allure
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall
 from helpers.os_helpers import get_directory_size, get_process_pids
-from helpers.utils import ConsoleEncoding, get_distro
+from helpers.utils import ConsoleEncoding, get_distro, compare_versions
 
 
 SERVER_APPLICATIONS = {
@@ -554,6 +554,56 @@ $$ LANGUAGE plpgsql;"""
                 raise Exception(
                     "Directory /usr/src/debug/postgrespro* is not empty.")
             print("Directory %s is empty." % pgsrcdir)
+
+    def test_cfs(self, request):
+
+        pginst = request.cls.pginst
+        if not pginst.edition.startswith('ent'):
+            pytest.skip("This test only for enterprise versions.")
+        tablespace_path = os.path.join(os.getcwd(), 'tmp', 'cfs')
+        os.mkdir(tablespace_path)
+        if self.system != 'Windows':
+            import pwd
+            import grp
+            os.chown(tablespace_path,
+                     pwd.getpwnam("postgres").pw_uid,
+                     grp.getgrnam("postgres").gr_gid)
+        else:
+            subprocess.check_call(
+                'icacls "%s" /grant *S-1-5-32-545:(OI)(CI)F /T' %
+                tablespace_path,
+                shell=True)
+            subprocess.check_call(
+                'icacls "%s" /grant *S-1-5-20:(OI)(CI)F /T' % tablespace_path,
+                shell=True)
+        algorithm = 'zstd'
+        if compare_versions(pginst.version, '13') >= 0 and \
+                pginst.os_name + ' ' + pginst.os_version != \
+                'Astra Linux (Smolensk) 1.5':
+            algorithm = 'lz4'
+        pginst.exec_psql(
+            'CREATE TABLESPACE compressed LOCATION \'%s\''
+            ' WITH (compression=\'%s\');' % (tablespace_path, algorithm))
+        pginst.exec_psql(
+            "CREATE TABLE tbl TABLESPACE compressed"
+            " AS SELECT i, repeat('a', 30)"
+            " FROM generate_series(0,100000) AS i;")
+        cfm_present = False
+        real_algorithm = ''
+        for root, directories, files in os.walk(tablespace_path):
+            for filename in files:
+                fn, ext = os.path.splitext(filename)
+                if ext == '.cfm':
+                    cfm_present = True
+                if fn == 'pg_compression':
+                    with open(root + os.sep + fn, 'r') as f:
+                        real_algorithm = f.read().strip()
+                if cfm_present and real_algorithm:
+                    break
+            if cfm_present and real_algorithm:
+                break
+        assert cfm_present
+        assert real_algorithm == algorithm
 
     def test_full_remove(self, request):
         """Try to delete all installed packages for version under test
