@@ -8,6 +8,7 @@ if which apt-get >/dev/null 2>&1; then
     apt-get install -y libicu-dev || apt-get install -y libicu-devel
     apt-get install -y pkg-config
     apt-get install -y libipc-run-perl || apt-get install -y perl-IPC-Run
+    apt-get install -y libio-pty-perl || apt-get install -y perl-IO-Tty || true
     apt-get install -y patch || true
     apt-get install -y perl-devel || true
     apt-get install -y perl-bignum || true
@@ -17,13 +18,15 @@ elif which zypper >/dev/null 2>&1; then
     zypper install -y gcc make flex bison perl patch
     zypper install -y --force --force-resolution zlib-devel
     zypper install -y --force --force-resolution libicu-devel
-    zypper install -y libipc-run-perl
+    zypper install -y perl-IPC-Run
+    zypper install -y perl-IO-Tty
     ) 2>&1
 elif which yum >/dev/null 2>&1; then
     (
     yum install -y gcc make flex bison perl bzip2 zlib-devel libicu-devel patch
     yum install -y perl-devel || true
     yum install -y perl-IPC-Run
+    yum install -y perl-IO-Tty || true
     yum install -y perl-Test-Simple perl-Time-HiRes
     yum install -y perl-bignum || true
     ) 2>&1
@@ -36,15 +39,16 @@ IPC-Run-20200505.0.tar.gz && \
     (cd IPC-Run*/ && perl Makefile.PL && make && make install)
 fi
 
+if ! perl -e "use IO::Pty"  >/dev/null 2>&1; then
+    curl -O https://cpan.metacpan.org/authors/id/T/TO/TODDR/\
+IO-Tty-1.15.tar.gz && \
+    tar fax IO-Tty* && \
+    (cd IO-Tty*/ && perl Makefile.PL && make && make install)
+fi
+
 if [ -d ~test/pg-tests ]; then
     chmod 777 ~test/pg-tests
     cd ~test/pg-tests
-fi
-
-if grep 'SUSE Linux Enterprise Server 11' /etc/SuSE-release >/dev/null 2>&1; then
-    # Update Test::More to minimum required version (0.87)
-    tar fax extras/test-more* && \
-    (cd test-more*/ && perl Makefile.PL && make && make install)
 fi
 
 cd postgres*/
@@ -118,6 +122,9 @@ patch -p1 --dry-run -i ../patches/69ae9dcb.patch >/dev/null 2>&1 && patch -p1 -i
 # Enable the installcheck mode for pg_stat_statements testing
 sed 's|NO_INSTALLCHECK|# NO_INSTALLCHECK|' -i contrib/pg_stat_statements/Makefile
 
+# Fixing in_memory Makefile (PGPRO-4563)
+sed "s|regresscheck-install:.*|regresscheck-install:|" -i contrib/in_memory/Makefile
+
 #Check /etc/localtime exist
 [ -f /etc/localtime ] || ln -s /usr/share/zoneinfo/UTC /etc/localtime
 
@@ -127,6 +134,11 @@ sudo -u postgres ./configure --enable-tap-tests --without-readline --prefix=$1 $
 test -f contrib/mchar/mchar.sql.in && make -C contrib/mchar mchar.sql
 # Pass to `make installcheck` all the options (with-*, enable-*), which were passed to configure
 confopts="python_majorversion=2"
+if which python >/dev/null 2>&1; then
+    confopts="python_majorversion=`python -c 'import sys; print(sys.version_info.major)'`"
+else
+    which python3 >/dev/null 2>&1 && confopts="python_majorversion=3"
+fi
 opts=`$1/bin/pg_config --configure | grep -Eo "'[^']*'|[^' ]*" | sed -e "s/^'//" -e "s/'$//"`
 while read -r opt;
     do case "$opt" in --with-*=*) ;; --with-* | --enable-*) opt="${opt/#--/}"; opt="${opt//-/_}" confopts="$confopts $opt=yes ";; esac;
@@ -135,61 +147,31 @@ done <<< "$opts";
 [ "$makeecpg" = true ] && sudo -u postgres sh -c "make -C src/interfaces/ecpg"
 echo "Running: $confopts make -e installcheck-world ..."
 sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" $confopts make -e installcheck-world EXTRA_TESTS=numeric_big 2>&1" | tee /tmp/installcheck.log; exitcode=$?
+
+#TODO: Add pg_repack (stabilize the test)
+for comp in orafce plv8 pgpro_stats pgpro_pwr pg_filedump pg_portal_modify; do
 if [ $exitcode -eq 0 ]; then
-    if [ -f ../orafce*.tar* ]; then
-        cd .. &&
-        tar fax orafce*.tar* &&
-        cd orafce*/ && chown -R postgres . &&
-        sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make installcheck"; exitcode=$?
-        cd $BASEDIR
-    fi
-fi
-if [ $exitcode -eq 0 ]; then
-    if [ -f ../plv8*.tar* ]; then
-        cd .. &&
-        tar fax plv8*.tar* &&
-        cd plv8*/ && chown -R postgres . &&
-        sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make installcheck"; exitcode=$?
-        cd $BASEDIR
-    fi
-fi
-if [ $exitcode -eq 0 ]; then
-    if [ -f ../pgpro-stats*.tar* ]; then
-        cd .. &&
-        tar fax pgpro-stats*.tar* &&
-        cd pgpro-stats*/ && chown -R postgres . &&
+    if [ -f ../$comp*.tar* ]; then
+        cd ..
+        if [ $comp == pg_repack ]; then
+            sudo -u postgres mkdir tmp/testts &&
+            sudo -u postgres "$1/bin/psql" -c "create tablespace testts location '`pwd`/tmp/testts'"
+        fi
+        if [ $comp == pgpro_stats ]; then
+            # Reconfigure shared_preload_libraries
+            spl=`sudo -u postgres "$1/bin/psql" -t -P format=unaligned -c 'SHOW shared_preload_libraries'`
+            sudo -u postgres "$1/bin/psql" -c "ALTER SYSTEM SET shared_preload_libraries = $spl, $comp"
+            service "$2" restart
+        fi
+        echo "Performing 'make installcheck' for $comp..."
+        tar fax $comp*.tar* &&
+        cd $comp*/ && chown -R postgres . &&
         sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make USE_PGXS=1 installcheck"; exitcode=$?
         cd $BASEDIR
     fi
 fi
-if [ $exitcode -eq 0 ]; then
-    if [ -f ../pg-portal-modify*.tar* ]; then
-        cd .. &&
-        tar fax pg-portal-modify*.tar* &&
-        cd pg-portal-modify*/ && chown -R postgres . &&
-        sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make USE_PGXS=1 installcheck"; exitcode=$?
-        cd $BASEDIR
-    fi
-fi
-if [ $exitcode -eq 0 ]; then
-    if [ -f ../pg_repack*.tar* ]; then
-        cd .. && sudo -u postgres mkdir tmp/testts &&
-        tar fax pg_repack*.tar* &&
-        cd pg_repack*/ && chown -R postgres . &&
-        sudo -u postgres "$1/bin/psql" -c "create tablespace testts location '`pwd`/../tmp/testts'" &&
-        sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make USE_PGXS=1 installcheck"; exitcode=$?
-        cd $BASEDIR
-    fi
-fi
-if [ $exitcode -eq 0 ]; then
-    if [ -f ../pg_filedump*.tar* ]; then
-        cd .. &&
-        tar fax pg_filedump*.tar* &&
-        cd pg_filedump*/ && chown -R postgres . &&
-        sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make USE_PGXS=1 installcheck"; exitcode=$?
-        cd $BASEDIR
-    fi
-fi
+done
+
 if [ $exitcode -eq 0 ]; then
     # Extra tests
     sudo -u postgres $1/bin/initdb -D tmpdb
@@ -210,10 +192,10 @@ psql -c 'SHOW data_directory';
 make installcheck -C src/interfaces/libpq &&
 make installcheck -C src/test/modules/commit_ts &&
 make installcheck -C src/test/modules/test_pg_dump &&
-make installcheck-force -C src/test/modules/snapshot_too_old &&
+echo PGPRO-4563 Disabled: make installcheck-force -C src/test/modules/snapshot_too_old &&
 if [ -d src/test/modules/brin ]; then make installcheck -C src/test/modules/brin; fi &&
 if [ -d src/test/modules/unsafe_tests ]; then make installcheck -C src/test/modules/unsafe_tests; fi &&
-make installcheck-force -C contrib/test_decoding"
+echo PGPRO-4563 Disabled: make installcheck-force -C contrib/test_decoding"
     exitcode=$?
     sudo -u postgres $1/bin/pg_ctl -D tmpdb -w stop
 fi

@@ -29,10 +29,16 @@ PSQL_BASE = "http://download.postgresql.org/pub"
 WIN_INST_DIR = "C:\\Users\\test\\pg-tests\\pg_installer"
 
 PRELOAD_LIBRARIES = {
+    'ent-13':
+        ['auth_delay', 'auto_explain',
+         'ptrack',
+         'pg_stat_statements', 'plantuner',
+         'shared_ispell', 'pg_wait_sampling',
+         'pg_pathman'],
     'ent-12':
         ['auth_delay', 'auto_explain', 'in_memory',
-         'pgpro_scheduler', 'ptrack', 'pgpro_stats',
-         'pg_stat_statements', 'pgpro_stats', 'plantuner',
+         'pgpro_scheduler', 'ptrack',
+         'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling',
          'pg_pathman'],
     'ent-11':
@@ -46,7 +52,7 @@ PRELOAD_LIBRARIES = {
          'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
     'std-12':
         ['auth_delay', 'auto_explain', 'timescaledb', 'pg_stat_statements',
-         'pgpro_stats', 'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
+         'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
     'std-13':
         ['auth_delay', 'auto_explain', 'pg_stat_statements',
          'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
@@ -291,10 +297,8 @@ class PgInstall:
     def get_packages_in_repo(self):
         result = {}
         if self.os.is_windows():
-            for f in os.listdir(WIN_INST_DIR):
+            for f in os.listdir(os.path.join(WIN_INST_DIR, self.reponame)):
                 inst = os.path.splitext(os.path.basename(f))[0]
-                # PGPRO-4573
-                inst = re.sub(r"-X64$", "", inst)
                 pvre = re.search(r"(.*)-([0-9.]+)$", inst)
                 if pvre:
                     result[pvre.group(1)] = pvre.group(2)
@@ -427,15 +431,6 @@ class PgInstall:
                           self.milestone == 'alpha'))]
 
         return pkgs
-
-    def get_supported_vanilla_versions(self):
-        if self.os.is_altlinux():
-            return ['10']
-        elif self.os.is_redhat_based() or self.os.is_debian_based():
-            return ['9.6', '10', '11']
-        elif self.os.is_suse() and self.os_version != "11.4":
-            return ['9.6', '10', '11']
-        return []
 
     def get_distname_for_pgpro(self):
         if self.os_name == "ALT Linux" and \
@@ -672,12 +667,8 @@ baseurl=%s
                 cmd = "wget -nv %s -O gpg.key" % gpg_key_url
                 self.exec_cmd_retry(cmd)
                 cmd = "rpm --import ./gpg.key"
-                try:
-                    # SLES 11 fails when the key is already imported
-                    command_executor(cmd, self.remote, self.host,
-                                     REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
-                except Exception:
-                    pass
+                command_executor(cmd, self.remote, self.host,
+                                 REMOTE_ROOT, REMOTE_ROOT_PASSWORD)
             if self.product == "postgrespro":
                 dir = self.os_version.split('.')[0]
                 if self.os_name == 'SLES' and \
@@ -706,14 +697,15 @@ baseurl=%s
             reponame = "%s-%s%s" % (
                 self.product,
                 self.edition + '-' if self.product == 'postgrespro' else '',
-                self.version)
+                self.fullversion)
             installer_name = self.__get_last_winstaller_file(
                 baseurl, self.os_arch)
             windows_installer_url = baseurl + installer_name
-            if not os.path.exists(WIN_INST_DIR):
-                os.mkdir(WIN_INST_DIR)
+            repodir = os.path.join(WIN_INST_DIR, reponame)
+            if not os.path.exists(repodir):
+                os.makedirs(repodir)
             print(baseurl + installer_name)
-            self.installer_name = os.path.join(WIN_INST_DIR,
+            self.installer_name = os.path.join(repodir,
                                                installer_name)
             urlretrieve(windows_installer_url,
                         self.installer_name)
@@ -721,7 +713,7 @@ baseurl=%s
             for inst in inst_files:
                 urlretrieve(
                     baseurl + inst,
-                    os.path.join(WIN_INST_DIR, inst))
+                    os.path.join(repodir, inst))
         else:
             raise Exception("Unsupported distro %s" % self.os_name)
         self.reponame = reponame
@@ -795,10 +787,10 @@ baseurl=%s
                 extra_yum_repo = "oraclelinux-7"
 
         if extra_yum_repo and self.os.os_arch != 'aarch64':
-            cmd = "sh -c 'mkdir /opt/{0}; cd $_; " \
+            cmd = "sh -c 'mkdir /opt/{0} ; cd $_ && " \
                   "wget -q -r -nd --no-parent -A \"*.rpm\" " \
-                  "http://dist.l.postgrespro.ru/resources/linux/{1}/;" \
-                  "yum install -y createrepo; {2} createrepo .; " \
+                  "http://dist.l.postgrespro.ru/resources/linux/{1}/ && " \
+                  "yum install -y createrepo && {2} createrepo . && " \
                   "printf \"[{0}]\\nname={0}\\nbaseurl=file:///opt/{0}" \
                   "\\nenabled=1\\\\ngpgcheck=0\\nmodule_hotfixes=True\\n\" " \
                   "> /etc/yum.repos.d/{0}.repo'".\
@@ -971,29 +963,33 @@ baseurl=%s
             raise Exception(
                 "Executable installer %s not found." %
                 self.installer_name)
-        ininame = os.path.join(WIN_INST_DIR, "pgpro.ini")
+        repodir = os.path.join(WIN_INST_DIR, self.reponame)
+        ininame = os.path.join(repodir, "pgpro.ini")
         with open(ininame, "w") as ini:
             ini.write("[options]\nenvvar=1\nneedoptimization=0\n" +
                       (("port=%s\n" % port) if port else ""))
         cmd = "%s /S /init=%s" % (self.installer_name, ininame)
         command_executor(cmd, windows=True)
-        msis = glob.glob(os.path.join(WIN_INST_DIR, '*.msi'))
-        for msi in sorted(msis):
-            msilog = "%s.log" % msi
-            print('Installing %s...' % msi)
-            cmd = 'msiexec /i %s /quiet /qn /norestart /log %s' % \
-                (msi, msilog)
-            command_executor(cmd, windows=True)
-        exes = glob.glob(os.path.join(WIN_INST_DIR, '*.exe'))
-        for exe in sorted(exes):
-            # PGPRO-4503
-            if os.path.basename(exe).startswith('mamonsu'):
-                continue
-            if exe == self.installer_name:
-                continue
-            print('Installing %s...' % exe)
-            cmd = "%s /S" % exe
-            command_executor(cmd, windows=True)
+        if self.os_arch == 'AMD64':
+            msis = glob.glob(os.path.join(repodir, '*.msi'))
+            for msi in sorted(msis):
+                msilog = "%s.log" % msi
+                print('Installing %s...' % msi)
+                cmd = 'msiexec /i %s /quiet /qn /norestart /log %s' % \
+                    (msi, msilog)
+                command_executor(cmd, windows=True)
+            exes = glob.glob(os.path.join(repodir, '*.exe'))
+            for exe in sorted(exes):
+                # PGPRO-4503
+                if os.path.basename(exe).startswith('mamonsu'):
+                    continue
+                # Don't install installer and other arch installer
+                if exe == self.installer_name or \
+                        os.path.basename(exe).startswith('Postgre'):
+                    continue
+                print('Installing %s...' % exe)
+                cmd = "%s /S" % exe
+                command_executor(cmd, windows=True)
         refresh_env_win()
         self.client_path_needed = False
         self.server_path_needed = False
@@ -1535,10 +1531,6 @@ baseurl=%s
                         compare_versions(self.get_product_minor_version(),
                                          '11.9.1') < 0:
                     preload_libs.remove('ptrack')
-                if 'pgpro_stats' in preload_libs and self.version == '12' and \
-                        compare_versions(self.get_product_minor_version(),
-                                         '12.5.1') < 0:
-                    preload_libs.remove('pgpro_stats')
                 libs = ','.join(preload_libs)
         if libs:
             self.exec_psql(

@@ -1,14 +1,7 @@
 set -x
-if grep -q 'ALT Linux 6\.' /etc/altlinux-release || \
-   grep -q 'PRETTY_NAME="ALT Linux 7' /etc/os-release || \
+if grep -q 'PRETTY_NAME="ALT Linux 7' /etc/os-release || \
    grep -q 'PRETTY_NAME="Astra Linux (Smolensk 1.5)"' /etc/os-release || \
-   grep -q 'PRETTY_NAME="Debian GNU/Linux 7' /etc/os-release || \
-   grep -q 'PRETTY_NAME="SUSE Linux Enterprise Server 11' /etc/os-release || \
-   grep -q 'GosLinux release 6' /etc/goslinux-release || \
-   grep -q 'ROSA Enterprise Linux Server release 6.6' /etc/system-release || \
-   grep -q 'CentOS release 6.7' /etc/system-release || \
-   grep -q 'cpe:/o:msvsphere:msvsphere:6server' /etc/system-release-cpe || \
-   grep -q '\(Red Hat\|ROSA\) Enterprise Linux Server release 6' /etc/redhat-release; \
+   grep -q 'cpe:/o:msvsphere:msvsphere:6server' /etc/system-release-cpe; \
 then
     echo 'C++11 is not present on this platform. Test skipped.'
     exit 0
@@ -22,9 +15,6 @@ if which apt-get; then
     apt-get install -y gcc-c++
     apt-get install -y boost-regex-devel
     apt-get install -y gcc5-c++
-    if grep 'PRETTY_NAME="Ubuntu 14\.04' /etc/os-release; then
-        CONF_OPTIONS="--with-boost-libdir=/usr/lib/x86_64-linux-gnu"
-    fi
     if grep 'PRETTY_NAME="ALT 8' /etc/os-release; then
         apt-get install -y autoconf_2.60 automake_1.14 libtool_2.4
     fi
@@ -50,16 +40,6 @@ elif which yum; then
        grep -q 'CentOS Linux release 8.' /etc/redhat-release; then
         yum install -y http://mirror.centos.org/centos/\
 7/os/x86_64/Packages/autoconf-archive-2017.03.21-1.el7.noarch.rpm
-    fi
-
-    if grep -q 'CentOS release 6.7' /etc/redhat-release; then
-        yum install -y centos-release-scl
-        yum install -y devtoolset-3-toolchain python27
-        source /opt/rh/devtoolset-3/enable
-        ln -s /usr/local/bin/python2.7 /usr/local/bin/python
-        export PATH=/usr/local/bin:$PATH
-        yum install -y http://math.sgu.ru/soft/Linux/distributions/epel-bk/\
-6/x86_64/autoconf-archive-2012.09.08-1.el6.noarch.rpm
     fi
 fi
 export PATH=$1/bin:$PATH

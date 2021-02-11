@@ -98,6 +98,9 @@ def urlretrieve(url, target, retry_cnt=5):
         try:
             if os.path.exists(target):
                 os.remove(target)
+            req = urlopen(url)
+            if req.getcode() >= 400:
+                raise Exception("HTTP Error %s" % req.getcode())
             return urlrequest.urlretrieve(url, target)
         except Exception as ex:
             print('Exception occured while retrieving url "%s":' % url)
@@ -379,16 +382,6 @@ def exec_command_win(cmd, hostname,
             raise Exception('Command "%s" failed.' % cmd)
         else:
             return retcode, stdout, stderr
-
-
-def wait_for_boot(host, time=600, linux=True):
-    print("Waiting for control protocol availability.")
-    if linux:
-        exec_command(None, host, REMOTE_LOGIN, REMOTE_PASSWORD,
-                     connect_retry_count=(int)(time / CONNECT_RETRY_DELAY))
-    else:
-        exec_command_win(None, host, REMOTE_LOGIN, REMOTE_PASSWORD,
-                         connect_retry_count=(int)(time / CONNECT_RETRY_DELAY))
 
 
 def gen_name(name, prefix="pgt"):

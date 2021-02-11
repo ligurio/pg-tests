@@ -5,6 +5,8 @@
     payload_linux: resources/pg-tests.tgz
     payload_win: resources/pg-tests.zip
     use_become_method: "{{ 'sudo' if use_ssh is defined else 'su' }}"
+    get_pip_url: "{{ 'https://bootstrap.pypa.io/2.7/get-pip.py' if ansible_python_version.startswith('2.') else 'https://bootstrap.pypa.io/get-pip.py'}}"
+    cur_python: "{{ 'python' if ansible_python_version.startswith('2.') else 'python3' }}"
 
   tasks:
 
@@ -21,16 +23,18 @@
             distribution {{ ansible_distribution }}, major version {{ ansible_distribution_major_version }} \
             ({{ ansible_architecture }})."
 
+  # sles-12 sometimes fail mount on boot
   - name: mount DVD(s) (if available)
-    shell: if /sbin/blkid /dev/sr0; then
-      sed -i '/^\/dev\/sr0\s/d' /etc/fstab; umount /dev/sr0;
-      mkdir /mnt/dvd &&
-      echo "/dev/sr0       /mnt/dvd   auto    ro,user,exec,utf8        0    0" >> /etc/fstab &&
+    shell: if /sbin/blkid /dev/sr0 && [ ! -d /mnt/dvd ]; then
+      mkdir /mnt/dvd; umount /dev/sr0;
+      sed -i '/^\/dev\/sr0\s/d' /etc/fstab;
+      echo "/dev/sr0       /mnt/dvd   auto    ro,user,exec,utf8,nofail        0    0" >> /etc/fstab &&
       mount /dev/sr0;
       fi;
-      if /sbin/blkid /dev/sr1; then
-      mkdir /mnt/dvd2 &&
-      echo "/dev/sr1       /mnt/dvd2  auto    ro,user,exec,utf8        0    0" >> /etc/fstab &&
+      if /sbin/blkid /dev/sr1 && [ ! -d /mnt/dvd2 ]; then
+      mkdir /mnt/dvd2; umount /dev/sr1;
+      sed -i '/^\/dev\/sr1\s/d' /etc/fstab;
+      echo "/dev/sr1       /mnt/dvd2  auto    ro,user,exec,utf8,nofail        0    0" >> /etc/fstab &&
       mount /dev/sr1;
       fi;
       echo "mount -a > /tmp/mount.log 2>&1" >> /etc/rc.local;
@@ -87,19 +91,20 @@
 
   - name: setup DVD as zypper repository (SUSE)
     shell: if [ -f /mnt/dvd/content ]; then
-      zypper addrepo -t yast2 /mnt/dvd/ disk1;
+      zypper removerepo disk1 2>/dev/null; zypper addrepo -t yast2 /mnt/dvd/ disk1;
       elif [ -d /mnt/dvd/media.1 ]; then
-      zypper addrepo /mnt/dvd/ disk1;
+      zypper removerepo disk1 2>/dev/null; zypper addrepo /mnt/dvd/ disk1;
       fi;
       if [ -f /mnt/dvd2/content ]; then
-      zypper addrepo -t yast2 file:///mnt/dvd2/./ disk2;
+      zypper removerepo disk2 2>/dev/null; zypper addrepo -t yast2 file:///mnt/dvd2/./ disk2;
       fi
     when: ansible_os_family == 'Suse'
     become_method: "{{ use_become_method }}"
     become: true
 
-  - name: fix repositories and prepare local repository; update tzdata (МСВСфера)
+  - name: fix repositories and prepare local repository (МСВСфера)
     shell: if [ -d /mnt/dvd/repodata ]; then
+      yum -y install createrepo &&
       ln -s /mnt/dvd /media/MSVSphere_6.3_Server &&
       sed s/enabled=0/enabled=1/ -i /etc/yum.repos.d/install.repo;
       sed s/enabled=1/enabled=0/ -i /etc/yum.repos.d/pgpro.repo;
@@ -110,11 +115,9 @@
       wget http://vault.centos.org/6.8/os/x86_64/Packages/libicu-devel-4.2.1-14.el6.x86_64.rpm && \
       createrepo . && cd ~ && \
       rpm --import http://vault.centos.org/6.8/os/x86_64/RPM-GPG-KEY-CentOS-6 && \
-      printf "[localrepo]\nname=localrepo\nbaseurl=file:///opt/localrepo\nenabled=1\n" > /etc/yum.repos.d/local.repo; \
-      yum update; \
-      curl -O http://vault.centos.org/6.8/os/x86_64/Packages/tzdata-2016c-1.el6.noarch.rpm && \
-      yum install -y tzdata-*.rpm
-    when: use_ssh is not defined and ansible_distribution == "МСВСфера"
+      printf "[localrepo]\nname=localrepo\nbaseurl=file:///opt/localrepo\nenabled=1\n" > /etc/yum.repos.d/local.repo &&
+      yum -y update;
+    when: use_ssh is not defined and (ansible_distribution == "МСВСфера" or ansible_distribution == "MSVSphere")
     become_method: "{{ use_become_method }}"
     become: true
 
@@ -290,19 +293,19 @@
     become_method: sudo
     become: true
 
-  - name: install required packages (YUM)
-    shell: yum install -y acpid tar gcc gdb python-devel wget libicu-devel
-    args:
-      warn: no
-    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "yum"
-    become_method: sudo
-    become: true
-
-  - name: install required packages (DNF)
-    shell: dnf install -y acpid tar gcc gdb python3-devel wget libicu-devel
-    args:
-      warn: no
-    when: ansible_os_family != "Windows" and ansible_pkg_mgr == "dnf"
+  - name: install required packages (YUM/DNF)
+    package:
+      name:
+        - acpid
+        - tar
+        - gcc
+        - gdb
+        - "{{cur_python}}-devel"
+        - wget
+        - libicu-devel
+      state: present
+      update_cache: true
+    when: ansible_os_family != "Windows" and (ansible_pkg_mgr == "yum" or ansible_pkg_mgr == "dnf")
     become_method: sudo
     become: true
 
@@ -324,25 +327,12 @@
   - name: install required python-dev (APT)
     apt:
       name:
-        - python-dev
+        - "{{ cur_python }}-dev"
       state: present
       update_cache: yes
-    when: (ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu' or
+    when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu' or
           ansible_distribution == 'OSNova Linux (Onyx)' or
-          ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux')) and
-          ansible_python_version.startswith('2.')
-    become_method: sudo
-    become: true
-
-  - name: install required python3-dev (APT)
-    apt:
-      name:
-        - python3-dev
-      state: present
-      update_cache: yes
-    when: (ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu' or
-          ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux')) and
-          ansible_python_version.startswith('3.')
+          ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux')
     become_method: sudo
     become: true
 
@@ -400,8 +390,8 @@
       name:
         - gcc
         - gdb
-        - python-devel
-        - python-xml
+        - "{{ cur_python }}-devel"
+        - "{{ cur_python }}-xml"
       state: present
       update_cache: yes
       force: yes
@@ -503,8 +493,17 @@
     become_method: sudo
     become: true
 
+  - name: download get-pip.py
+    get_url:
+      url: "{{get_pip_url}}"
+      dest: /home/test/pg-tests/get-pip.py
+      validate_certs: no
+      force: yes
+    when:
+      - ansible_os_family != "Windows"
+
   - name: install pip
-    command: "python /home/test/pg-tests/get-pip.py"
+    command: "{{ cur_python }} /home/test/pg-tests/get-pip.py"
     retries: 5
     delay: 10
     register: result

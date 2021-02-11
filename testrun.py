@@ -18,7 +18,7 @@ from subprocess import call
 
 from helpers.utils import (copy_file, copy_reports_win,
                            exec_command, gen_name, exec_retry,
-                           exec_command_win, wait_for_boot,
+                           exec_command_win,
                            REMOTE_LOGIN, REMOTE_PASSWORD,
                            REMOTE_ROOT_PASSWORD, is_remote_file_differ,
                            urlcontent, urlretrieve)
@@ -31,6 +31,7 @@ if not sys.version_info > (3, 0):
     sys.setdefaultencoding('utf8')
 
 MAX_DURATION = 5 * 60 * 60
+MAX_LEAVED_DOMAINS = 3
 DEBUG = False
 
 IMAGE_BASE_URL = 'http://dist.l.postgrespro.ru/vm-images/test/'
@@ -189,8 +190,6 @@ def prepare_payload(tests_dir, clean):
     pgtd = os.path.join(tempdir, 'pg-tests')
     shutil.copytree('.', pgtd,
                     ignore=shutil.ignore_patterns('.git', 'reports'))
-    exec_retry("wget -q https://bootstrap.pypa.io/get-pip.py", pgtd,
-               'Downloading get-pip')
 
     exec_retry(
         "wget -T 60 -q https://codeload.github.com/postgrespro/"
@@ -335,11 +334,11 @@ def create_env(name, domname, domimage=None, mac=None):
                       <source mode="bind"/>
                       <target type='virtio' name='org.qemu.guest_agent.0'/>
                     </channel>
-                    <!--rng model='virtio'>
+                    <rng model='virtio'>
                       <backend model='random'>/dev/random</backend>
                       <address type='pci' domain='0x0000'
                       bus='0x00' slot='0x06' function='0x0'/>
-                    </rng-->
+                    </rng>
                   </devices>
                 </domain>
                 """ % (domname, ram_size, cpus, features, cpus, clock,
@@ -349,18 +348,27 @@ def create_env(name, domname, domimage=None, mac=None):
     if dom is None:
         print("Failed to create a test domain")
 
-    timeout = 0
-    while True:
-        domipaddress = lookupIPbyMac(conn, dommac)
+    retries = 5
+    for attempt in range(retries):
+        timeout = 0
+        while True:
+            domipaddress = lookupIPbyMac(conn, dommac)
+            if domipaddress:
+                break
+            timeout += 5
+            if timeout > 60:
+                errmsg = "Failed to obtain IP address (for MAC %s)" \
+                    " in domain %s." % (dommac, domname)
+                if attempt == retries - 1:
+                    raise Exception(errmsg)
+                print(errmsg)
+                print('Performing reset and retry (%d)...' % (attempt + 1))
+                dom.reset()
+                break
+            print("Waiting for IP address...%d" % timeout)
+            time.sleep(timeout)
         if domipaddress:
             break
-        timeout += 5
-        if timeout > 80:
-            raise Exception(
-                "Failed to obtain IP address (for MAC %s) in domain %s." %
-                (dommac, domname))
-        print("Waiting for IP address...%d" % timeout)
-        time.sleep(timeout)
 
     print("Domain name: %s\nIP address: %s, MAC address: %s" % (dom.name(),
                                                                 domipaddress,
@@ -418,9 +426,39 @@ def setup_env(domipaddress, domname, linux_os, tests_dir, target_ssh=False):
     if DEBUG:
         ansible_cmd += " -vvv"
     print(ansible_cmd)
-    retcode = call(ansible_cmd.split(' '))
+    retcode = 0
+    for i in range(3):
+        print("Executing ansible playbook (%d)..." % (i + 1))
+        retcode = call(ansible_cmd.split(' '))
+        if retcode == 0:
+            break
     if retcode != 0:
-        raise Exception("Setup of the test environment %s failed." % domname)
+        raise Exception("Setup of the test environment %s failed (%d)." %
+                        (domname, retcode))
+
+
+def wait_for_boot(domname, host, linux):
+    print("Waiting for control protocol availability...")
+    retries = 5
+    for attempt in range(retries):
+        try:
+            if linux:
+                exec_command(
+                    None, host, REMOTE_LOGIN, REMOTE_PASSWORD,
+                    connect_retry_count=40)
+            else:
+                exec_command_win(
+                    None, host, REMOTE_LOGIN, REMOTE_PASSWORD,
+                    connect_retry_count=40)
+        except Exception as ex:
+            if '@' in domname or attempt == retries - 1:
+                raise ex
+            print('Performing reset and retry (%d)...' % (attempt + 1))
+            import libvirt
+            conn = libvirt.open(None)
+            dom = conn.lookupByName(domname)
+            dom.reset()
+            conn.close()
 
 
 def make_test_cmd(domname, linux_os, reportname, tests=None,
@@ -563,20 +601,34 @@ def restore_env(domname):
     shutil.copy(diskfile + '.s0', diskfile)
 
 
-def close_env(domname, saveimg=False, destroys0=False):
+def close_env(domname, leavedom=False, destroys0=True, saveimg=False):
     if domname.find('@') != -1:
         return
     import libvirt
     conn = libvirt.open(None)
     dom = conn.lookupByName(domname)
     imgfile = os.path.join(WORK_DIR, domname + '.img')
+    destroydom = True
 
     if saveimg:
         if dom.save(imgfile) < 0:
             print('Unable to save state of %s to %s.' % (domname, imgfile))
         else:
             print('Domain %s state saved to %s.' % (domname, imgfile))
+        destroydom = False
     else:
+        if leavedom:
+            paused_domains = conn.listAllDomains(
+                libvirt.VIR_CONNECT_LIST_DOMAINS_PAUSED)
+            if len(paused_domains) < MAX_LEAVED_DOMAINS:
+                print('Leaving domain %s for investigation.' % domname)
+                dom.suspend()
+                destroydom = False
+            else:
+                print("Couldn't leave domain %s for investigation "
+                      " (too many domains already suspended)." % domname)
+
+    if destroydom:
         timeout = 0
         print('Destroying domain...')
         while True:
@@ -652,6 +704,11 @@ def main(conn):
         print("No target name")
         sys.exit(1)
 
+    failexpected = False
+    # TODO: Remove when EE13 will be ready
+    if args.product_edition == 'ent' and args.product_version == '13':
+        failexpected = True
+
     if not os.path.exists(args.run_tests):
         print("Test(s) '%s' is not found." % args.run_tests)
         sys.exit(1)
@@ -698,7 +755,7 @@ def main(conn):
             except Exception as e:
                 # Don't leave a domain that is failed to setup running
                 try:
-                    close_env(domname, saveimg=False, destroys0=True)
+                    close_env(domname, leavedom=False)
                 except Exception:
                     pass
                 raise e
@@ -718,14 +775,14 @@ def main(conn):
                     domipaddress = create_env(
                         target, domname, get_dom_disk(domname), dommac)[0]
                     print("Waiting for boot (%s)..." % domipaddress)
-                    wait_for_boot(domipaddress, linux=linux_os)
+                    wait_for_boot(domname, domipaddress, linux_os)
                     print("Boot completed.")
                 except Exception as e:
                     # Don't leave a domain that is failed to boot running
                     try:
                         # Temporary leave domain
                         pass
-                        # close_env(domname, saveimg=False, destroys0=True)
+                        # close_env(domname, leavedom=True)
                     except Exception:
                         pass
                     raise e
@@ -770,7 +827,7 @@ def main(conn):
                     log("Test execution failed.")
                     if not args.keep:
                         try:
-                            close_env(domname, False, True)
+                            close_env(domname, leavedom=not(failexpected))
                         except Exception:
                             pass
                     raise ex
@@ -782,7 +839,7 @@ def main(conn):
 
                 if retcode != 0:
                     if not args.keep:
-                        close_env(domname, saveimg=False, destroys0=True)
+                        close_env(domname, leavedom=not(failexpected))
                     reporturl = os.path.join(REPORT_SERVER_URL, reportname)
                     print("Test (for target: %s, domain: %s,"
                           " IP address: %s) returned error: %d.\n" %
@@ -793,7 +850,7 @@ def main(conn):
                 break
 
         if not args.keep or len(tests) > 1:
-            close_env(domname, saveimg=False, destroys0=True)
+            close_env(domname, leavedom=False)
 
         print("Target %s done in %s." %
               (target, time.strftime(
@@ -819,7 +876,7 @@ if __name__ == "__main__":
                 p.terminate()
                 if not keep:
                     try:
-                        close_env(domname, False, True)
+                        close_env(domname, leavedom=True)
                     except Exception:
                         pass
                 raise Exception('Timed out')

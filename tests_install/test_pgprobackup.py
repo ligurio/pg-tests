@@ -163,8 +163,8 @@ class TestPgprobackup():
             print("PgProBackup test is only for postgrespro std and ent.")
             return
         self.pginst = request.cls.pginst
-        # PBCKP-103
-        if sys.version_info > (3, 0):
+        if sys.version_info > (3, 0) and \
+                compare_versions(self.version, '2.4.5') < 0:
             print("Only 2 python temporary supported")
             return
         if self.system == 'Windows':
@@ -181,12 +181,15 @@ class TestPgprobackup():
         dir = '.'.join(tar_file.split('.')[:-2])
         print(dir)
         # Patch tests for 2.4.2
-        if (self.version == '2.4.2'):
+        if self.version == '2.4.2':
             urlretrieve('https://github.com/postgrespro/pg_probackup/raw/8147'
                         '001/tests/incr_restore.py',
                         os.path.join(dir, 'tests', 'incr_restore.py'))
         self.fix_permissions(dir)
-        subprocess.check_call('pip2 install testgres==1.8.2', shell=True)
+        subprocess.check_call('pip%s install testgres%s' %
+                              (sys.version_info[0],
+                               '==1.8.2' if sys.version_info[0] == 2 else ''),
+                              shell=True)
         # PGPRO-4108 wait ptrack2.0 in 10
         cmd = "%s sh -c 'PG_CONFIG=\"%s/pg_config\"" \
               " LANG=C PG_PROBACKUP_PTRACK=%s " \
@@ -195,7 +198,8 @@ class TestPgprobackup():
                  'ON' if compare_versions(self.pginst.version, '10') > 0
                  else 'OFF',
                  '2.7' if self.pginst.os_name in REDHAT_BASED and
-                 self.pginst.os_version.startswith('6') else '')
+                 self.pginst.os_version.startswith('6') else
+                 sys.version_info[0])
         print(subprocess.check_output(cmd, cwd=dir, shell=True).decode())
         print("OK")
 

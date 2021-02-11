@@ -1,5 +1,7 @@
 SET MD=c:\msys32
 
+SET PGTD=%cd%
+
 IF EXIST %MD%\NUL GOTO main
 :setup
 PowerShell -Command "Set-MpPreference -DisableRealtimeMonitoring $true" 2>NUL
@@ -42,8 +44,14 @@ icacls %MD%\var\src /grant *S-1-5-32-545:(OI)(CI)F /T
 mkdir %1\lib\pgxs
 icacls %1\lib\pgxs /grant *S-1-5-32-545:(OI)(CI)F /T
 
+@REM Grant access to Users to %PGTD%/tmp
+icacls %PGTD%\tmp /grant *S-1-5-32-545:(OI)(CI)F /T
+
 @REM "Switching log messages language to English (for src/bin/scripts/ tests)"
 (echo. & echo lc_messages = 'English_United States.1252') >> %1\share\postgresql.conf.sample
+
+@REM Give Built-in users (BU) the same permissions to control PG service as Built-in administrators have (BA)
+sc sdset "%2" "D:(A;;CCLCSWRPWPDTLOCRRC;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BU)(A;;CCLCSWLOCRRC;;;IU)(A;;CCLCSWLOCRRC;;;SU)S:(AU;FA;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;WD)"
 
 @REM Add current user to the Remote Management Users group
 powershell -Command "$group=(New-Object System.Security.Principal.SecurityIdentifier('S-1-5-32-580')).Translate([System.Security.Principal.NTAccount]).Value.Split('\\')[1]; net localgroup $group %username% /add"
@@ -55,7 +63,7 @@ powershell -Command "$group=(New-Object System.Security.Principal.SecurityIdenti
 :main
 echo %time%: Main cmd script starting
 
-%MD%\usr\bin\bash --login -i /var/src/make_check.sh %1
+%MD%\usr\bin\bash --login -i /var/src/make_check.sh %1 %2 %PGTD%
 SET LEVEL=%ERRORLEVEL%
 echo %time%: Main cmd script finishing
 exit /b %LEVEL%
@@ -64,6 +72,8 @@ ___BASH_SCRIPT___
 
 set -e
 echo "`date -Iseconds`: Starting shell... ";
+SN=$2
+HD=$3
 PGPATH=$(echo $1 | sed -e "s@c:[/\\\\]@/c/@i" -e "s@\\\\@/@g");
 if file "$PGPATH/bin/postgres.exe" | grep '80386. for MS Windows$'; then
 bitness=32; gcc=mingw-w64-i686-gcc; host=i686-w64-mingw32;
@@ -82,6 +92,8 @@ tar fax IPC-Run*
 (cd IPC-Run*/ && perl Makefile.PL && make && make install)
 echo "`date -Iseconds`: Source archive extracting... "
 cd postgres*/
+BASEDIR=`pwd`
+
 echo 'The source archive buildinfo:'
 cat doc/buildinfo.txt
 
@@ -117,10 +129,13 @@ echo "Disabling recovery/*logical_decoding test (PGPRO-1527)"
 ls src/test/recovery/t/*logical_decoding*.pl >/dev/null 2>&1 && rm src/test/recovery/t/*logical_decoding*.pl
 echo "Dirty fix for undefined random()"
 sed -e "s@(long) random()@(long) rand()@" -i src/interfaces/libpq/fe-connect.c
+sed -e "s@(uint32) random()@(uint32) rand()@" -i src/interfaces/libpq/fe-connect.c
 echo "Fix for TZ setting in the MSYS environment (Don't pass timezone environment to non-msys applications)"
 [ -f src/bin/pg_controldata/t/002_pg_controldata_legacy.pl ] && patch -p1 -i /var/src/patches/pg_controldata-test-msys.patch
 echo "Disabling multimaster tests (PGPRO-1430)"
 [ -f contrib/mmts/Makefile ] && sed -e "s@^installcheck@#installcheck@" -i contrib/mmts/Makefile
+echo "Fixing in_memory Makefile (PGPRO-4563)"
+[ -f contrib/in_memory/Makefile ] && sed -e "s@regresscheck-install:.*@regresscheck-install:@" -i contrib/in_memory/Makefile
 echo "`date -Iseconds`: Making native MinGW libs 1"
 (cd src/common && make 2>&1 | tee /tmp/make_common.log)
 echo "`date -Iseconds`: Making native MinGW libs 2"
@@ -140,6 +155,30 @@ cp src/test/regress/pg_regress.exe "$1/lib/pgxs/src/test/regress/"
 set +e
 echo "`date -Iseconds`: Running $confopts make -e installcheck-world ..."
 sh -c "$confopts EXTRA_REGRESS_OPTS='--dlpath=\"$PGPATH/lib\"' make -e installcheck-world EXTRA_TESTS=numeric_big" 2>&1 | gawk '{ print strftime("%H:%M:%S "), $0; fflush() }' | tee /tmp/installcheck.log; exitcode=$?
+
+# TODO: Add orafce pg_filedump pg_repack
+for comp in plv8 pgpro_stats pgpro_pwr pg_portal_modify; do
+if [ $exitcode -eq 0 ]; then
+    if [ -f ../$comp*.tar* ]; then
+        cd ..
+        if [ $comp == pg_repack ]; then
+            mkdir "$HD/tmp/testts" &&
+            "$PGPATH/bin/psql" -c "create tablespace testts location '$HD/tmp/testts'"
+        fi
+        if [ $comp == pgpro_stats ]; then
+            # Reconfigure shared_preload_libraries
+            spl=`"$PGPATH/bin/psql" -t -P format=unaligned -c 'SHOW shared_preload_libraries'`
+            "$PGPATH/bin/psql" -c "ALTER SYSTEM SET shared_preload_libraries = $spl, $comp"
+            powershell -Command "Restart-Service '$2'"
+        fi
+        echo "Performing 'make installcheck' for $comp..."
+        tar fax $comp*.tar* &&
+        cd $comp*/ &&
+        make USE_PGXS=1 installcheck; exitcode=$?
+        cd $BASEDIR
+    fi
+fi
+done
 
 for df in `find . /var/src -name *.diffs`; do echo;echo "    vvvv $df vvvv    "; cat $df; echo "    ^^^^^^^^"; done;
 exit $exitcode

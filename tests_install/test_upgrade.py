@@ -205,12 +205,13 @@ def install_server(product, edition, version, milestone, branch, windows,
     return pg
 
 
-def generate_db(pg, pgnew, custom_dump=None):
+def generate_db(pg, pgnew, custom_dump=None, on_error_stop=True):
     key = "-".join([pg.product, pg.edition, pg.version])
     dump_file_name = download_dump(pg.product, pg.edition, pg.version,
                                    tempdir, custom_dump)
     with open(os.path.join(tempdir, 'load-%s.log' % key), 'wb') as out:
-        pg.exec_psql_file(dump_file_name, '-q -v ON_ERROR_STOP=1',
+        pg.exec_psql_file(dump_file_name, '-q%s' %
+                          (' -v ON_ERROR_STOP=1' if on_error_stop else ''),
                           stdout=out)
     if compare_versions(pg.version, '12') < 0 and \
             compare_versions(pgnew.version, '12') >= 0:
@@ -454,7 +455,10 @@ class TestUpgrade():
             if self.system != 'Windows':
                 init_cluster(pgold, True, initdb_params, None, True)
 
-            generate_db(pgold, pg)
+            generate_db(
+                pgold, pg,
+                on_error_stop=False if pgold.os_arch == 'x86' else True
+            )
             dumpall(pgold,
                     os.path.join(tempdir, "%s.sql" % old_key))
             stop(pgold)
@@ -547,7 +551,10 @@ class TestUpgrade():
                 if self.system != 'Windows':
                     init_cluster(pgold, True, initdb_params, None, True)
 
-                generate_db(pgold, pg)
+                generate_db(
+                    pgold, pg,
+                    on_error_stop=False if pgold.os_arch == 'x86' else True
+                )
                 dumpall(pgold, file_name)
                 stop(pgold)
 

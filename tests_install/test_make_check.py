@@ -80,9 +80,9 @@ class TestMakeCheck(object):
                 # installcheck environment is presumably prepared,
                 # so just run make_installcheck (once more)
                 subprocess.check_call(
-                    '"%s" "%s"' % (os.path.join(curpath,
-                                                'make_installcheck.cmd'),
-                                   get_pg_prefix(pginst)),
+                    '"%s" "%s" "%s"' % (
+                        os.path.join(curpath, 'make_installcheck.cmd'),
+                        get_pg_prefix(pginst), pginst.service_name),
                     shell=True)
                 pginst.make_check_passed = True
                 return
@@ -93,17 +93,15 @@ class TestMakeCheck(object):
         tar = tarfile.open(tarball, 'r:bz2')
         tar.extractall()
         tar.close()
-        # TODO: PGPRO-4567 pg-portal-modify, pg-repack, pg-filedump
-        # TODO: pgpro-stats
-        # TODO: pgpro-pwr
-        for comp in ['orafce', 'plv8']:
+        for comp in ['orafce', 'plv8', 'pgpro-stats', 'pgpro-pwr',
+                     'pg-filedump', 'pg-portal-modify', 'pg-repack']:
             pkgname = '%s-%s-%s' % (comp, edition, version)
             if pkgname not in pginst.get_packages_in_repo():
                 pkgname = comp
                 if pkgname not in pginst.get_packages_in_repo():
                     continue
             pginst.download_source(
-                comp,
+                comp.replace('-', '_'),
                 pginst.get_package_version(pkgname), 'tar.gz')
         if self.system != 'Windows':
             pginst.install_full()
@@ -153,15 +151,17 @@ class TestMakeCheck(object):
         pginst.restart_service()
         if self.system != 'Windows':
             subprocess.check_call(
-                '"%s" "%s"' % (os.path.join(curpath, 'make_installcheck.sh'),
-                               get_pg_prefix(pginst)),
+                '"%s" "%s" "%s"' % (
+                    os.path.join(curpath, 'make_installcheck.sh'),
+                    get_pg_prefix(pginst), pginst.service_name),
                 shell=True)
             pginst.make_check_passed = True
         else:
             # First run is performed to setup the environment
             subprocess.check_call(
-                '"%s" "%s"' % (os.path.join(curpath, 'make_installcheck.cmd'),
-                               get_pg_prefix(pginst)),
+                '"%s" "%s" "%s"' % (
+                    os.path.join(curpath, 'make_installcheck.cmd'),
+                    get_pg_prefix(pginst), pginst.service_name),
                 shell=True)
             request.session.customexitstatus = 222
 
