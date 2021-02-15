@@ -576,7 +576,9 @@ $$ LANGUAGE plpgsql;"""
             subprocess.check_call(
                 'icacls "%s" /grant *S-1-5-20:(OI)(CI)F /T' % tablespace_path,
                 shell=True)
-        algorithm = 'zstd'
+        algorithm = 'true'
+        if compare_versions(pginst.version, '12') >= 0:
+            algorithm = 'zstd'
         if compare_versions(pginst.version, '13') >= 0 and \
                 pginst.os_name + ' ' + pginst.os_version != \
                 'Astra Linux (Smolensk) 1.5':
@@ -603,7 +605,7 @@ $$ LANGUAGE plpgsql;"""
             if cfm_present and real_algorithm:
                 break
         assert cfm_present
-        assert real_algorithm == algorithm
+        assert real_algorithm == ('zstd' if algorithm == 'true' else algorithm)
 
     def test_full_remove(self, request):
         """Try to delete all installed packages for version under test
