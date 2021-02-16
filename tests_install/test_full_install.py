@@ -577,12 +577,15 @@ $$ LANGUAGE plpgsql;"""
                 'icacls "%s" /grant *S-1-5-20:(OI)(CI)F /T' % tablespace_path,
                 shell=True)
         algorithm = 'true'
+        expected_algorithm = 'zlib' if self.system == 'Windows' else 'zstd'
         if compare_versions(pginst.version, '12') >= 0:
             algorithm = 'zstd'
+            expected_algorithm = 'zstd'
         if compare_versions(pginst.version, '13') >= 0 and \
                 pginst.os_name + ' ' + pginst.os_version != \
                 'Astra Linux (Smolensk) 1.5':
             algorithm = 'lz4'
+            expected_algorithm = 'lz4'
         pginst.exec_psql(
             'CREATE TABLESPACE compressed LOCATION \'%s\''
             ' WITH (compression=\'%s\');' % (tablespace_path, algorithm))
@@ -605,7 +608,7 @@ $$ LANGUAGE plpgsql;"""
             if cfm_present and real_algorithm:
                 break
         assert cfm_present
-        assert real_algorithm == ('zstd' if algorithm == 'true' else algorithm)
+        assert real_algorithm == expected_algorithm
 
     def test_full_remove(self, request):
         """Try to delete all installed packages for version under test
