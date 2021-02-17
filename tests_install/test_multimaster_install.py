@@ -432,23 +432,25 @@ class Multimaster(object):
 
     def wait_for_referee(self, node=1, timeout=600):
         start_time = time.time()
+        cl_state = []
         while time.time() - start_time <= timeout:
-            cl_state = []
-            while time.time() - start_time <= timeout:
-                cl_state = self.get_cluster_state(node, True)
-                if cl_state is None:
-                    time.sleep(0.5)
-                else:
-                    break
-            if int(cl_state[0]) == node:
-                if cl_state[1] == 'online' and int(cl_state[3]) == int(
-                        self.size / 2):
-                    return True
+            cl_state = self.get_cluster_state(node, True)
+            if cl_state is None:
+                time.sleep(0.5)
+            else:
+                break
+        if cl_state is None:
+            raise Exception('Time is out, cannot get node status')
+        if int(cl_state[0]) == node:
+            if cl_state[1] == 'online' and int(cl_state[3]) == int(
+                    self.size / 2):
+                return True
             else:
                 print(cl_state)
-                raise Exception('node mismatch')
-            time.sleep(0.5)
-        raise Exception('Time is out')
+                raise Exception('Wrong status')
+        else:
+            print(cl_state)
+            raise Exception('node mismatch')
 
 
 class TestMultimasterInstall():
