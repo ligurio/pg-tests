@@ -149,7 +149,7 @@ echo "Running: $confopts make -e installcheck-world ..."
 sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" $confopts make -e installcheck-world EXTRA_TESTS=numeric_big 2>&1" | tee /tmp/installcheck.log; exitcode=$?
 
 #TODO: Add pg_repack (stabilize the test)
-for comp in orafce plv8 pgpro_stats pgpro_pwr pg_filedump pg_portal_modify; do
+for comp in orafce plv8 pgpro_stats pgpro_pwr pgpro_controldata pg_filedump pg_portal_modify; do
 if [ $exitcode -eq 0 ]; then
     if [ -f ../$comp*.tar* ]; then
         cd ..
@@ -165,8 +165,13 @@ if [ $exitcode -eq 0 ]; then
         fi
         echo "Performing 'make installcheck' for $comp..."
         tar fax $comp*.tar* &&
+        if [ $comp == pgpro_controldata ]; then
+        cd $comp*/ && chown -R postgres . &&
+        sudo -u postgres sh -c "enable_tap_tests=yes PATH=\"$1/bin:$PATH\" PROVE=\"PG_REGRESS=$1/lib/test/regress/pg_regress prove\" PROVE_FLAGS=\"-I $BASEDIR/src/test/perl\" make -e USE_PGXS=1 installcheck"; exitcode=$?
+        else
         cd $comp*/ && chown -R postgres . &&
         sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make USE_PGXS=1 installcheck"; exitcode=$?
+        fi
         cd $BASEDIR
     fi
 fi
