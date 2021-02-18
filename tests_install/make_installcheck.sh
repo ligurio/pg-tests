@@ -166,12 +166,12 @@ if [ $exitcode -eq 0 ]; then
         echo "Performing 'make installcheck' for $comp..."
         tar fax $comp*.tar* &&
         if [ $comp == pgpro_controldata ]; then
-        cd $comp*/ && chown -R postgres . &&
-        sudo -u postgres sh -c "enable_tap_tests=yes PATH=\"$1/bin:$PATH\" PROVE=\"PG_REGRESS=$1/lib/test/regress/pg_regress prove\" PROVE_FLAGS=\"-I $BASEDIR/src/test/perl\" make -e USE_PGXS=1 installcheck"; exitcode=$?
+        $EXTRAVARS="enable_tap_tests=yes PATH=\"$1/bin:$PATH\" PROVE=\"PG_REGRESS=$1/lib/pgxs/src/test/regress/pg_regress prove\" PROVE_FLAGS=\"-I $BASEDIR/src/test/perl\""
         else
-        cd $comp*/ && chown -R postgres . &&
-        sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make USE_PGXS=1 installcheck"; exitcode=$?
+        $EXTRAVARS=""
         fi
+        cd $comp*/ && chown -R postgres . &&
+        sudo -u postgres sh -c "$EXTRAVARS PATH=\"$1/bin:$PATH\" make -e USE_PGXS=1 installcheck"; exitcode=$?
         cd $BASEDIR
     fi
 fi
