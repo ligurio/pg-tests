@@ -163,11 +163,11 @@ if [ $exitcode -eq 0 ]; then
             sudo -u postgres "$1/bin/psql" -c "ALTER SYSTEM SET shared_preload_libraries = $spl, $comp"
             service "$2" restart
         fi
-        echo "Performing 'make installcheck' for $comp..."
-        tar fax $comp*.tar* &&
         if [ $comp == pgpro_controldata ]; then
         $EXTRAVARS="enable_tap_tests=yes PROVE=\"PG_REGRESS=$1/lib/pgxs/src/test/regress/pg_regress prove\" PROVE_FLAGS=\"-I $BASEDIR/src/test/perl\""
         fi
+        echo "Performing 'make installcheck' for $comp..."
+        tar fax $comp*.tar* &&
         cd $comp*/ && chown -R postgres . &&
         sudo -u postgres sh -c "$EXTRAVARS PATH=\"$1/bin:$PATH\" make -e USE_PGXS=1 installcheck"; exitcode=$?
         cd $BASEDIR
