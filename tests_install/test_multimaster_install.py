@@ -435,7 +435,11 @@ class Multimaster(object):
         cl_state = []
         while time.time() - start_time <= timeout:
             cl_state = self.get_cluster_state(node, True)
-            if cl_state is None:
+            # If we cannot get cluster state or cluster state is not degraded
+            # we should wait for degraded state
+            if (cl_state is None) or (int(cl_state[0]) == node and
+                                      cl_state[1] == 'online' and
+                                      int(cl_state[3]) > int(self.size/2)):
                 time.sleep(0.5)
             else:
                 break
