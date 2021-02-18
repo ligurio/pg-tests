@@ -149,7 +149,7 @@ echo "Running: $confopts make -e installcheck-world ..."
 sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" $confopts make -e installcheck-world EXTRA_TESTS=numeric_big 2>&1" | tee /tmp/installcheck.log; exitcode=$?
 
 #TODO: Add pg_repack (stabilize the test)
-for comp in orafce plv8 pgpro_stats pgpro_pwr pg_filedump pg_portal_modify; do
+for comp in orafce plv8 pgpro_stats pgpro_pwr pgpro_controldata pg_filedump pg_portal_modify; do
 if [ $exitcode -eq 0 ]; then
     if [ -f ../$comp*.tar* ]; then
         cd ..
@@ -163,10 +163,13 @@ if [ $exitcode -eq 0 ]; then
             sudo -u postgres "$1/bin/psql" -c "ALTER SYSTEM SET shared_preload_libraries = $spl, $comp"
             service "$2" restart
         fi
+        if [ $comp == pgpro_controldata ]; then
+            EXTRAVARS="enable_tap_tests=yes PROVE=\"PG_REGRESS=$1/lib/pgxs/src/test/regress/pg_regress prove\" PROVE_FLAGS=\"-I $BASEDIR/src/test/perl\""
+        fi
         echo "Performing 'make installcheck' for $comp..."
         tar fax $comp*.tar* &&
         cd $comp*/ && chown -R postgres . &&
-        sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" make USE_PGXS=1 installcheck"; exitcode=$?
+        sudo -u postgres sh -c "$EXTRAVARS PATH=\"$1/bin:$PATH\" make -e USE_PGXS=1 installcheck"; exitcode=$?
         cd $BASEDIR
     fi
 fi
