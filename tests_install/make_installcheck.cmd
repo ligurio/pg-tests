@@ -1,4 +1,9 @@
 SET MD=c:\msys32
+SET MSYS_HREF="http://dist.l.postgrespro.ru/resources/windows/msys2-base-i686-20200517.tar.xz"
+If "%PROCESSOR_ARCHITECTURE%"=="AMD64" ( 
+SET MSYS_HREF="http://dist.l.postgrespro.ru/resources/windows/msys2-base-x86_64-20210215.tar.xz"
+SET MD=c:\msys64
+)
 
 SET PGTD=%cd%
 
@@ -21,19 +26,21 @@ cd /D c:\
 powershell -Command "((new-object net.webclient).DownloadFile('http://dist.l.postgrespro.ru/resources/windows/7za920.zip', '%TEMP%\7z.zip'))"
 powershell -Command "$shell = New-Object -ComObject Shell.Application; $zip_src = $shell.NameSpace('%TEMP%\7z.zip'); $zip_dest = $shell.NameSpace('%TEMP%'); $zip_dest.CopyHere($zip_src.Items(), 1044)"
 @REM Download and extract msys
-powershell -Command "((new-object net.webclient).DownloadFile('http://dist.l.postgrespro.ru/resources/windows/msys2-base-i686-20200517.tar.xz', '%TEMP%\msys.tar.xz'))"
+powershell -Command "((new-object net.webclient).DownloadFile('%MSYS_HREF%', '%TEMP%\msys.tar.xz'))"
 %TEMP%\7za.exe x %TEMP%\msys.tar.xz -so 2>%TEMP%/7z-msys0.log | %TEMP%\7za.exe  x -aoa -si -ttar >%TEMP%/7z-msys1.log 2>&1
 
 @REM First run is performed to setup the environment
 %MD%\usr\bin\bash --login -i -c exit >%TEMP%\msys-setup.log 2>&1
 
 @REM Keyring updated manually due to invalid key 4A6129F4E4B84AE46ED7F635628F528CF3053E04 (waiting for a newer msys2- base...)
+If "%PROCESSOR_ARCHITECTURE%"=="AMD64" GOTO skip_msys_key
 %MD%\usr\bin\bash --login -i -c ^" ^
 curl -sS -O http://repo.msys2.org/msys/x86_64/msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz ^&^& ^
 curl -sS -O http://repo.msys2.org/msys/x86_64/msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz.sig ^&^& ^
 pacman --noconfirm -U --config ^<(echo) msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz ^&^& ^
 pacman --noconfirm -Sy ^" >%TEMP%\msys-update.log 2>&1
 
+:skip_msys_key
 %MD%\usr\bin\bash --login -i -c "pacman --noconfirm -S tar make diffutils patch perl" >>%TEMP%\msys-update.log 2>&1
 call %MD%\autorebase >>%TEMP%\msys-update.log 2>&1
 
