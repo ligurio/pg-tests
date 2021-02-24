@@ -1,4 +1,9 @@
 SET MD=c:\msys32
+SET MSYS_HREF="http://dist.l.postgrespro.ru/resources/windows/msys2-base-i686-20200517.tar.xz"
+If "%PROCESSOR_ARCHITECTURE%"=="AMD64" ( 
+SET MSYS_HREF="http://dist.l.postgrespro.ru/resources/windows/msys2-base-x86_64-20210215.tar.xz"
+SET MD=c:\msys64
+)
 
 SET PGTD=%cd%
 
@@ -21,19 +26,21 @@ cd /D c:\
 powershell -Command "((new-object net.webclient).DownloadFile('http://dist.l.postgrespro.ru/resources/windows/7za920.zip', '%TEMP%\7z.zip'))"
 powershell -Command "$shell = New-Object -ComObject Shell.Application; $zip_src = $shell.NameSpace('%TEMP%\7z.zip'); $zip_dest = $shell.NameSpace('%TEMP%'); $zip_dest.CopyHere($zip_src.Items(), 1044)"
 @REM Download and extract msys
-powershell -Command "((new-object net.webclient).DownloadFile('http://dist.l.postgrespro.ru/resources/windows/msys2-base-i686-20200517.tar.xz', '%TEMP%\msys.tar.xz'))"
+powershell -Command "((new-object net.webclient).DownloadFile('%MSYS_HREF%', '%TEMP%\msys.tar.xz'))"
 %TEMP%\7za.exe x %TEMP%\msys.tar.xz -so 2>%TEMP%/7z-msys0.log | %TEMP%\7za.exe  x -aoa -si -ttar >%TEMP%/7z-msys1.log 2>&1
 
 @REM First run is performed to setup the environment
 %MD%\usr\bin\bash --login -i -c exit >%TEMP%\msys-setup.log 2>&1
 
 @REM Keyring updated manually due to invalid key 4A6129F4E4B84AE46ED7F635628F528CF3053E04 (waiting for a newer msys2- base...)
+If "%PROCESSOR_ARCHITECTURE%"=="AMD64" GOTO skip_msys_key
 %MD%\usr\bin\bash --login -i -c ^" ^
 curl -sS -O http://repo.msys2.org/msys/x86_64/msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz ^&^& ^
 curl -sS -O http://repo.msys2.org/msys/x86_64/msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz.sig ^&^& ^
 pacman --noconfirm -U --config ^<(echo) msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz ^&^& ^
 pacman --noconfirm -Sy ^" >%TEMP%\msys-update.log 2>&1
 
+:skip_msys_key
 %MD%\usr\bin\bash --login -i -c "pacman --noconfirm -S tar make diffutils patch perl" >>%TEMP%\msys-update.log 2>&1
 call %MD%\autorebase >>%TEMP%\msys-update.log 2>&1
 
@@ -157,7 +164,7 @@ echo "`date -Iseconds`: Running $confopts make -e installcheck-world ..."
 sh -c "$confopts EXTRA_REGRESS_OPTS='--dlpath=\"$PGPATH/lib\"' make -e installcheck-world EXTRA_TESTS=numeric_big" 2>&1 | gawk '{ print strftime("%H:%M:%S "), $0; fflush() }' | tee /tmp/installcheck.log; exitcode=$?
 
 # TODO: Add orafce pg_filedump pg_repack
-for comp in plv8 pgpro_stats pgpro_pwr pg_portal_modify; do
+for comp in plv8 pgpro_stats pgpro_pwr pgpro_controldata pg_portal_modify; do
 if [ $exitcode -eq 0 ]; then
     if [ -f ../$comp*.tar* ]; then
         cd ..
@@ -171,10 +178,14 @@ if [ $exitcode -eq 0 ]; then
             "$PGPATH/bin/psql" -c "ALTER SYSTEM SET shared_preload_libraries = $spl, $comp"
             powershell -Command "Restart-Service '$2'"
         fi
+        if [ $comp == pgpro_controldata ]; then
+            export PATH="$PGPATH/../pgpro_controldata:$PATH"
+            EXTRAVARS="enable_tap_tests=yes PROVE=\"PG_REGRESS=$PGPATH/lib/pgxs/src/test/regress/pg_regress prove\" PROVE_FLAGS=\"-I $BASEDIR/src/test/perl\""
+        fi
         echo "Performing 'make installcheck' for $comp..."
         tar fax $comp*.tar* &&
         cd $comp*/ &&
-        make USE_PGXS=1 installcheck; exitcode=$?
+        sh -c "$EXTRAVARS make -e USE_PGXS=1 installcheck"; exitcode=$?
         cd $BASEDIR
     fi
 fi

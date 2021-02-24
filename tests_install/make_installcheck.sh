@@ -164,7 +164,9 @@ if [ $exitcode -eq 0 ]; then
             service "$2" restart
         fi
         if [ $comp == pgpro_controldata ]; then
-            EXTRAVARS="enable_tap_tests=yes PROVE=\"PG_REGRESS=$1/lib/pgxs/src/test/regress/pg_regress prove\" PROVE_FLAGS=\"-I $BASEDIR/src/test/perl\""
+            datadir=`sudo -u postgres "$1/bin/psql" -t -P format=unaligned -c 'SHOW data_directory'`
+            pgxsdir="`dirname $($1/bin/pg_config --pgxs)`/../.."
+            EXTRAVARS="enable_tap_tests=yes PROVE=\"PG_REGRESS=$pgxsdir/src/test/regress/pg_regress prove\" PROVE_FLAGS=\"-I $BASEDIR/src/test/perl\""
         fi
         echo "Performing 'make installcheck' for $comp..."
         tar fax $comp*.tar* &&
