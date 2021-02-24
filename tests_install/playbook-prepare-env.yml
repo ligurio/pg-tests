@@ -38,12 +38,12 @@
       mount /dev/sr1;
       fi;
       if [ -f /etc/rc.local ]; then
-      echo "mount -a > /tmp/mount.log 2>&1" >> /etc/rc.local;
+      printf "mount -a > /tmp/mount.log 2>&1\n" >> /etc/rc.local;
       else
-      echo "#!/bin/bash\nmount -a > /tmp/mount.log 2>&1" >> /etc/rc.local;
+      printf "#!/bin/bash\nmount -a > /tmp/mount.log 2>&1\n" >> /etc/rc.local;
       fi;
       chmod +x /etc/rc.local;
-      echo "mount -a > /tmp/mount.log 2>&1" >> /etc/init.d/boot.local;
+      printf "mount -a > /tmp/mount.log 2>&1\n" >> /etc/init.d/boot.local;
     when: use_ssh is not defined and ansible_os_family != "Windows"
     become_method: su
     become: true
