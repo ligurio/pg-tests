@@ -577,7 +577,9 @@ $$ LANGUAGE plpgsql;"""
                 'icacls "%s" /grant *S-1-5-20:(OI)(CI)F /T' % tablespace_path,
                 shell=True)
         algorithm = 'true'
-        expected_algorithm = 'zlib' if self.system == 'Windows' else 'zstd'
+        expected_algorithm = 'zlib' \
+            if self.system == 'Windows' and pginst.version != '9.6' \
+            else 'zstd'
         if compare_versions(pginst.version, '12') >= 0:
             algorithm = 'zstd'
             expected_algorithm = 'zstd'
