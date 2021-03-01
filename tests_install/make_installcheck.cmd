@@ -164,7 +164,8 @@ echo "`date -Iseconds`: Running $confopts make -e installcheck-world ..."
 sh -c "$confopts EXTRA_REGRESS_OPTS='--dlpath=\"$PGPATH/lib\"' make -e installcheck-world EXTRA_TESTS=numeric_big" 2>&1 | gawk '{ print strftime("%H:%M:%S "), $0; fflush() }' | tee /tmp/installcheck.log; exitcode=$?
 
 # TODO: Add orafce pg_filedump pg_repack
-for comp in plv8 pgpro_stats pgpro_pwr pgpro_controldata pg_portal_modify; do
+# TODO: Enable pgpro_pwr test again (PGPRO-4781)
+for comp in plv8 pgpro_stats pgpro_controldata pg_portal_modify; do
 if [ $exitcode -eq 0 ]; then
     if [ -f ../$comp*.tar* ]; then
         cd ..
@@ -179,7 +180,7 @@ if [ $exitcode -eq 0 ]; then
             powershell -Command "Restart-Service '$2'"
         fi
         if [ $comp == pgpro_controldata ]; then
-            export PATH="$PGPATH/../pgpro_controldata:$PATH"
+            export PATH="$PGPATH/../../PostgresPro/pgpro_controldata:$PATH"
             EXTRAVARS="enable_tap_tests=yes PROVE=\"PG_REGRESS=$PGPATH/lib/pgxs/src/test/regress/pg_regress prove\" PROVE_FLAGS=\"-I $BASEDIR/src/test/perl\""
         fi
         echo "Performing 'make installcheck' for $comp..."
