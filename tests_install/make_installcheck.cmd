@@ -176,6 +176,7 @@ if [ $exitcode -eq 0 ]; then
         if [ $comp == pgpro_stats ]; then
             # Reconfigure shared_preload_libraries
             spl=`"$PGPATH/bin/psql" -t -P format=unaligned -c 'SHOW shared_preload_libraries'`
+            spl=`echo $spl | sed -E "s/pg_stat_statements,?//"`
             "$PGPATH/bin/psql" -c "ALTER SYSTEM SET shared_preload_libraries = $spl, $comp"
             powershell -Command "Restart-Service '$2'"
         fi
