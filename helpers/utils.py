@@ -96,6 +96,11 @@ def urlretrieve(url, target, retry_cnt=5):
     attempt = 1
     while attempt < retry_cnt:
         try:
+            if retry_cnt == attempt + 1:
+                print('Last attempt to retrieve url...\n')
+            elif attempt > 1:
+                print('Retrying (attempt %d with delay for %d seconds)...' %
+                      (attempt, timeout))
             if os.path.exists(target):
                 os.remove(target)
             req = urlopen(url)
@@ -107,15 +112,10 @@ def urlretrieve(url, target, retry_cnt=5):
             print(ex)
             print('========')
             attempt += 1
-            timeout += 5
-            print('Retrying (attempt %d with delay for %d seconds)...' %
-                  (attempt, timeout))
+            timeout += 1
+            if attempt + 1 > retry_cnt:
+                raise ex
             time.sleep(timeout)
-    if retry_cnt > 1:
-        print('Last attempt to retrieve url...\n')
-    if os.path.exists(target):
-        os.remove(target)
-    return urlrequest.urlretrieve(url, target)
 
 
 def command_executor(cmd, remote=False, host=None,
