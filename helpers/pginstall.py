@@ -1491,7 +1491,7 @@ baseurl=%s
             decode(ConsoleEncoding)
 
     def pg_isready(self):
-        cmd = '%s"%spg_isready" %s %s' % \
+        cmd = '%s"%spg_isready" --timeout=10 %s %s' % \
             (
                 self.pg_sudo_cmd if self.use_sudo_cmd else '',
                 self.get_server_bin_path(),
