@@ -160,6 +160,7 @@ if [ $exitcode -eq 0 ]; then
         if [ $comp == pgpro_stats ]; then
             # Reconfigure shared_preload_libraries
             spl=`sudo -u postgres "$1/bin/psql" -t -P format=unaligned -c 'SHOW shared_preload_libraries'`
+            spl=`echo $spl | sed -E "s/pg_stat_statements,?//"`
             sudo -u postgres "$1/bin/psql" -c "ALTER SYSTEM SET shared_preload_libraries = $spl, $comp"
             service "$2" restart
         fi
