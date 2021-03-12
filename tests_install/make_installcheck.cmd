@@ -44,7 +44,7 @@ pacman --noconfirm -Sy ^" >%TEMP%\msys-update.log 2>&1
 %MD%\usr\bin\bash --login -i -c "pacman --noconfirm -S tar make diffutils patch perl" >>%TEMP%\msys-update.log 2>&1
 If NOT "%PROCESSOR_ARCHITECTURE%"=="AMD64" call %MD%\autorebase >>%TEMP%\msys-update.log 2>&1
 
-@REM Grant access to Users (including postgres user) to src/test/regress/testtablespace/
+@REM Grant access to Users (including postgres user) to the whole /var/src contents
 icacls %MD%\var\src /grant *S-1-5-32-545:(OI)(CI)F /T >>%TEMP%\icacls.log
 
 @REM Grant access to Users to %PGROOT%/lib/pgxs
