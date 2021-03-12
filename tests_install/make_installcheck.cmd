@@ -45,14 +45,14 @@ pacman --noconfirm -Sy ^" >%TEMP%\msys-update.log 2>&1
 If NOT "%PROCESSOR_ARCHITECTURE%"=="AMD64" call %MD%\autorebase >>%TEMP%\msys-update.log 2>&1
 
 @REM Grant access to Users (including postgres user) to src/test/regress/testtablespace/
-icacls %MD%\var\src /grant *S-1-5-32-545:(OI)(CI)F /T
+icacls %MD%\var\src /grant *S-1-5-32-545:(OI)(CI)F /T >>%TEMP%\icacls.log
 
 @REM Grant access to Users to %PGROOT%/lib/pgxs
 mkdir %1\lib\pgxs
-icacls %1\lib\pgxs /grant *S-1-5-32-545:(OI)(CI)F /T
+icacls %1\lib\pgxs /grant *S-1-5-32-545:(OI)(CI)F /T >>%TEMP%\icacls.log
 
 @REM Grant access to Users to %PGTD%/tmp
-icacls %PGTD%\tmp /grant *S-1-5-32-545:(OI)(CI)F /T
+icacls %PGTD%\tmp /grant *S-1-5-32-545:(OI)(CI)F /T >>%TEMP%\icacls.log
 
 @REM "Switching log messages language to English (for src/bin/scripts/ tests)"
 (echo. & echo lc_messages = 'English_United States.1252') >> %1\share\postgresql.conf.sample
