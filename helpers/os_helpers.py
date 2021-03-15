@@ -243,16 +243,25 @@ class OsHelper:
             cmd = "yum install -y %s" % pkg_name
             self.exec_cmd_retry(cmd)
         elif self.is_pm_apt():
+            refresh_cmd = None
             if self.is_altlinux():
                 cmd = "sh -c \"apt-get install -y %s\"" % \
                       pkg_name.replace('*', '.*')
+                if self.os_version.startswith("7.") or \
+                   self.os_version.startswith("8."):
+                    refresh_cmd = "sh -c \"apt-get update\""
             else:
                 cmd = "sh -c \"DEBIAN_FRONTEND='noninteractive' " \
                       "apt-get -y -o " \
                       "Dpkg::Options::='--force-confdef' -o " \
                       "Dpkg::Options::='--force-confold' install %s\"" % \
                       pkg_name.replace('*', '.*')
-            self.exec_cmd_retry(cmd)
+                # needed at least for debian-8;
+                # not needed for modern OSes, but the precise condition would
+                # be cumbersome. so just execute this on all Debian-based OSes
+                refresh_cmd = "sh -c \"DEBIAN_FRONTEND='noninteractive' " \
+                              "apt-get update\""
+            self.exec_cmd_retry(cmd, refresh_cmd=refresh_cmd)
         elif self.is_pm_zypper():
             cmd = "zypper install -y -l --force-resolution %s" % pkg_name
             self.exec_cmd_retry(cmd)
@@ -312,7 +321,7 @@ class OsHelper:
         else:
             raise Exception("Unsupported system: %s." % self.os_name)
 
-    def exec_cmd_retry(self, cmd, retry_cnt=5, stdout=False):
+    def exec_cmd_retry(self, cmd, retry_cnt=5, stdout=False, refresh_cmd=None):
         timeout = 0
         attempt = 1
         while attempt < retry_cnt:
@@ -329,6 +338,15 @@ class OsHelper:
                 print('Retrying (attempt %d with delay for %d seconds)...' %
                       (attempt, timeout))
                 time.sleep(timeout)
+                if refresh_cmd:
+                    try:
+                        return command_executor(refresh_cmd,
+                                                self.remote, self.host,
+                                                REMOTE_ROOT,
+                                                REMOTE_ROOT_PASSWORD,
+                                                stdout)
+                    except Exception as ex:
+                        pass
         if retry_cnt > 1:
             print('Last attempt to execute the command...\n')
         return command_executor(cmd, self.remote, self.host,
