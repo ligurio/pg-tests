@@ -340,11 +340,9 @@ class OsHelper:
                 time.sleep(timeout)
                 if refresh_cmd:
                     try:
-                        return command_executor(refresh_cmd,
-                                                self.remote, self.host,
-                                                REMOTE_ROOT,
-                                                REMOTE_ROOT_PASSWORD,
-                                                stdout)
+                        command_executor(refresh_cmd, self.remote, self.host,
+                                         REMOTE_ROOT, REMOTE_ROOT_PASSWORD,
+                                         stdout)
                     except Exception as ex:
                         pass
         if retry_cnt > 1:
