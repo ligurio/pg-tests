@@ -149,7 +149,8 @@ echo "Running: $confopts make -e installcheck-world ..."
 sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" $confopts make -e installcheck-world EXTRA_TESTS=numeric_big 2>&1" | tee /tmp/installcheck.log; exitcode=$?
 
 #TODO: Add pg_repack (stabilize the test)
-for comp in orafce plv8 pgpro_stats pgpro_pwr pgpro_controldata pg_filedump pg_portal_modify; do
+#TODO: Enable the pgpro_pwr test again (PGPRO-4842)
+for comp in orafce plv8 pgpro_stats pgpro_controldata pg_filedump pg_portal_modify; do
 if [ $exitcode -eq 0 ]; then
     if [ -f ../$comp*.tar* ]; then
         cd ..
