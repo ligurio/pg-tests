@@ -490,13 +490,8 @@ class TestMultimasterInstall():
         request.node.add_marker(tag_mark)
         branch = request.config.getoption('--branch')
 
-        if version.startswith('9.') or version == '10' \
-                or version == '13' \
-                or not edition.startswith('ent'):
+        if not (edition.startswith('ent') and version == '12'):
             print('Version %s %s is not supported' % (edition, version))
-            return
-        elif version == '11' and dist == 'Windows':
-            print('Windows is not supported under version %s' % version)
             return
 
         # Step 1
