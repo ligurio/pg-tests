@@ -389,7 +389,7 @@ FIRST_RELEASE = {
         'postgrespro-std-9.6': None,
         'postgrespro-std-10': None,
         'postgrespro-std-11': None,
-        'postgrespro-std-12': None,
+        'postgrespro-std-12': '12.5.1',
         'postgrespro-ent-9.6': None,
         'postgrespro-ent-10': None,
         'postgrespro-ent-11': None,
