@@ -193,6 +193,7 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgresql--13': None,
         'postgrespro-std-9.6': None,
         'postgrespro-std-10': '10.9.1',
         'postgrespro-std-11': '11.4.1',
