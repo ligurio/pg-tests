@@ -1155,7 +1155,7 @@ baseurl=%s
         subprocess.check_call(cmd, shell=True,
                               cwd="/", env=self.env, stdout=stdout)
 
-    def do_in_all_dbs(self, script):
+    def do_in_all_dbs(self, script, script_name):
         dbs = self.exec_psql_select("SELECT datname FROM pg_database"). \
             split(os.linesep)
         preoptions = os.environ['PGOPTIONS'] \
@@ -1164,6 +1164,7 @@ baseurl=%s
             preoptions + ' --client-min-messages=warning'
         for db in dbs:
             if db != 'template0':
+                print('Executing %s in %s' % (script_name, db))
                 os.environ['PGDATABASE'] = db
                 self.exec_psql_script(script, '-v ON_ERROR_STOP=1')
         del os.environ['PGDATABASE']
