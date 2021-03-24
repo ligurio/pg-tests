@@ -226,15 +226,11 @@ def generate_db(pg, pgnew, custom_dump=None, on_error_stop=True):
     if pgnew.edition in ['ent', 'ent-cert'] and \
             pg.edition not in ['ent', 'ent-cert']:
         pg.do_in_all_dbs(remove_xid_type_columns_sql, 'remove_xid_type_cols')
-    expected_file_name = os.path.join(tempdir,
-                                      "%s-expected.sql" % key)
     # wait for multimaster in ENT 13 -- PGPRO-4074
     if pgnew.version == '13' and pgnew.edition in ['ent', 'ent-cert']:
-        crr = pgnew.exec_psql_select(
-            "SELECT COUNT(*) FROM pg_database WHERE "
-            "datname='contrib_regression_referee'")
-        if crr == '1':
-            pgnew.exec_psql('DROP DATABASE contrib_regression_referee')
+        pg.exec_psql('DROP DATABASE IF EXISTS contrib_regression_referee')
+    expected_file_name = os.path.join(tempdir,
+                                      "%s-expected.sql" % key)
 
     dumpall(pgnew, expected_file_name)
 
