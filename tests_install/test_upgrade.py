@@ -215,17 +215,17 @@ def generate_db(pg, pgnew, custom_dump=None, on_error_stop=True):
                           stdout=out)
     if compare_versions(pg.version, '12') < 0 and \
             compare_versions(pgnew.version, '12') >= 0:
-        pg.do_in_all_dbs(prepare_for_12_plus_sql)
+        pg.do_in_all_dbs(prepare_for_12_plus_sql, 'prepare_for_12_plus')
     if compare_versions(pg.version, '13') < 0 and \
             compare_versions(pgnew.version, '13') >= 0:
-        pg.do_in_all_dbs(prepare_for_13_plus_sql)
+        pg.do_in_all_dbs(prepare_for_13_plus_sql, 'prepare_for_13_plus')
     # wait for 12.5
     if pg.version == '12':
         pg.exec_psql('DROP TABLE IF EXISTS test_like_5c CASCADE',
                      '-d regression')
     if pgnew.edition in ['ent', 'ent-cert'] and \
             pg.edition not in ['ent', 'ent-cert']:
-        pg.do_in_all_dbs(remove_xid_type_columns_sql)
+        pg.do_in_all_dbs(remove_xid_type_columns_sql, 'remove_xid_type_cols')
     expected_file_name = os.path.join(tempdir,
                                       "%s-expected.sql" % key)
     dumpall(pgnew, expected_file_name)
@@ -238,7 +238,7 @@ def dump_and_diff_dbs(oldKey, pgNew, prefix):
     file2 = os.path.join(tempdir, '%s-expected.sql' % oldKey)
     diff_file = os.path.join(tempdir, "%s-%s.sql.diff" % (prefix, oldKey))
     diff_dbs(file2, file1, diff_file)
-    pgNew.do_in_all_dbs(amcheck_sql)
+    pgNew.do_in_all_dbs(amcheck_sql, 'amcheck')
 
 
 def upgrade(pg, pgOld):
