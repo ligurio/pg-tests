@@ -233,6 +233,7 @@ FIRST_RELEASE = {
     },
     # debian-8
     "Debian GNU/Linux 8": {
+        'postgresql--13': None,
         'postgrespro-1c-9.6': '9.6.19',
     },
     # debian-9
