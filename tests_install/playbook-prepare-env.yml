@@ -403,10 +403,11 @@
     become_method: sudo
     become: true
 
-  - name: setup en_US locale for Debian-based OS # Needed for the orafce test
+  - name: setup en_US locale for Debian-based OS # Needed for the orafce test; /etc/default/locale manipulation needed for astra-smolensk-1.5
     shell: if ! locale -a | grep en_US.utf8; then
            sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen;
            dpkg-reconfigure --frontend=noninteractive locales;
+           [ -f /etc/default/locale ] && sed -i -e 's/#LANG=/LANG=/' /etc/default/locale;
            fi
     when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu' or
           ansible_distribution == 'OSNova Linux (Onyx)' or
