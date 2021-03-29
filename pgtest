@@ -94,4 +94,4 @@ pgpro | pgproee | pg1c )
 esac
 
 sudo chmod -R 777 .
-sudo -u tester -i sh -c "cd '$PWD'; ./testrun.py --product_name $product --product_edition $edition --product_version $version --vm_description="$1" $targetopt $extraopt --test tests_install/$stest --clean --export $2 $3 $4"
+sudo -u tester -i sh -c "cd '$PWD'; ./testrun.py --product_name $product --product_edition $edition --product_version $version --vm_description="Jenkins job: $2" $targetopt $extraopt --test tests_install/$stest --clean --export $2 $3 $4"
