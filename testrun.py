@@ -248,7 +248,7 @@ def prepare_payload(tests_dir, clean):
         pass
 
 
-def create_env(name, domname, domimage=None, mac=None):
+def create_env(name, domname, domimage=None, mac=None, domdesc=''):
     import libvirt
     conn = libvirt.open(None)
 
@@ -297,6 +297,7 @@ def create_env(name, domname, domimage=None, mac=None):
 
     xmldesc = """<domain type='kvm'>
                   <name>%s</name>
+                  <description>%s</description>
                   <memory unit='MB'>%d</memory>
                   <vcpu>%d</vcpu>
                   <os>
@@ -341,7 +342,7 @@ def create_env(name, domname, domimage=None, mac=None):
                     </rng>
                   </devices>
                 </domain>
-                """ % (domname, ram_size, cpus, features, cpus, clock,
+                """ % (domname, domdesc, ram_size, cpus, features, cpus, clock,
                        qemu_path, domimage, cdroms, dommac, network_driver)
 
     dom = conn.createLinux(xmldesc, 0)
@@ -691,8 +692,11 @@ def main(conn):
     parser.add_argument('--clean', dest="clean",
                         help='clean resources before run', action='store_true')
     parser.add_argument('--vm_prefix', dest="vm_prefix",
-                        help='virtual machine prefix', action='store',
+                        help='virtual machine name prefix', action='store',
                         default="pgt")
+    parser.add_argument('--vm_description', dest="vm_desc",
+                        help='virtual machine description', action='store',
+                        default="")
 
     args = parser.parse_args()
 
@@ -748,7 +752,7 @@ def main(conn):
             domname = gen_name(target, args.vm_prefix)
             conn.send([domname, args.keep])
             try:
-                dom = create_env(target, domname)
+                dom = create_env(target, domname, domdesc=args.vm_desc)
                 domipaddress = dom[0]
                 dommac = dom[3]
                 setup_env(domipaddress, domname, linux_os, tests_dir)
@@ -773,7 +777,8 @@ def main(conn):
                     print("Creating environment (%s, %s)..." %
                           (target, domname))
                     domipaddress = create_env(
-                        target, domname, get_dom_disk(domname), dommac)[0]
+                        target, domname, get_dom_disk(domname),
+                        dommac, args.vm_desc)[0]
                     print("Waiting for boot (%s)..." % domipaddress)
                     wait_for_boot(domname, domipaddress, linux_os)
                     print("Boot completed.")
