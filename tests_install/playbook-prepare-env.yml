@@ -620,7 +620,7 @@
           ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux') or
           ansible_distribution == 'ROSA'
 
-  - name: windows - enable high perfomance power mode
+  - name: windows - enable high performance power mode
     when: ansible_os_family == "Windows"
     win_command: powercfg /s 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c
 
