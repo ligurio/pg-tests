@@ -5,6 +5,7 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgresql--13': None,
         'postgrespro-1c-9.6': '9.6.19',
     },
     # rosa-el-7
@@ -13,6 +14,7 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgresql--13': None,
         'postgrespro-1c-9.6': '9.6.19',
     },
     # sles-12
@@ -21,6 +23,7 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgresql--13': None,
         'postgrespro-std-cert-10': None,
         'postgrespro-std-9.6': None,
         'postgrespro-ent-9.6': None,
@@ -32,6 +35,7 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgresql--13': None,
         'postgrespro-std-cert-10': None,
         'postgrespro-1c-9.6': '9.6.19',
     },
@@ -41,6 +45,7 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgresql--13': None,
     },
     # altlinux-8
     "ALT Server 8.0": {
@@ -48,6 +53,7 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgresql--13': None,
         'postgrespro-1c-9.6': '9.6.19',
     },
     # altlinux-spt-8
@@ -56,6 +62,7 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgresql--13': None,
         'postgrespro-std-9.6': None,
         'postgrespro-ent-9.6': None,
         'postgrespro-std-10': '10.13.1',
@@ -75,6 +82,7 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgresql--13': None,
         'postgrespro-std-9.6': None,
         'postgrespro-ent-9.6': None,
         'postgrespro-std-10': '10.11.1',
@@ -89,6 +97,7 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgresql--13': None,
         'postgrespro-std-9.6': None,
         'postgrespro-ent-9.6': None,
         'postgrespro-std-10': None,
@@ -107,6 +116,7 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgresql--13': None,
         'postgrespro-std-9.6': None,
         'postgrespro-ent-9.6': None,
         'postgrespro-ent-10': None,
@@ -119,6 +129,7 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgresql--13': None,
     },
     # redos-7
     "RED OS 7.2": {
@@ -126,6 +137,7 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgresql--13': None,
         'postgrespro-std-9.6': '9.6.19.1',
         'postgrespro-ent-9.6': None,
         'postgrespro-std-10': '10.14.1',
@@ -145,6 +157,7 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgresql--13': None,
         'postgrespro-1c-9.6': '9.6.19',
     },
     # astra-smolensk-1.6
@@ -153,6 +166,7 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgresql--13': None,
         'postgrespro-ent-9.6': '9.6.12.1',
         'postgrespro-1c-9.6': '9.6.19',
     },
@@ -172,6 +186,7 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgresql--13': None,
         'postgrespro-1c-9.6': None,
     },
     # centos-8 ARM64
@@ -193,6 +208,7 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgresql--13': None,
         'postgrespro-std-9.6': None,
         'postgrespro-std-10': '10.9.1',
         'postgrespro-std-11': '11.4.1',
@@ -207,6 +223,7 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgresql--13': None,
         'postgrespro-std-9.6': None,
         'postgrespro-std-10': '10.9.1',
         'postgrespro-std-11': '11.4.1',
@@ -216,6 +233,7 @@ FIRST_RELEASE = {
     },
     # debian-8
     "Debian GNU/Linux 8": {
+        'postgresql--13': None,
         'postgrespro-1c-9.6': '9.6.19',
     },
     # debian-9
@@ -316,6 +334,7 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgresql--13': None,
         'postgrespro-std-9.6': None,
         'postgrespro-std-10': '10.9.1',
         'postgrespro-std-11': '11.2.1',
@@ -331,6 +350,7 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgresql--13': None,
         'postgrespro-std-9.6': None,
         'postgrespro-std-10': '10.14.1',
         'postgrespro-std-11': '11.9.1',
@@ -353,6 +373,7 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgresql--13': None,
         'postgrespro-std-9.6': None,
         'postgrespro-std-10': '10.10.1',
         'postgrespro-std-11': '11.5.1',
@@ -386,10 +407,11 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgresql--13': None,
         'postgrespro-std-9.6': None,
         'postgrespro-std-10': None,
         'postgrespro-std-11': None,
-        'postgrespro-std-12': None,
+        'postgrespro-std-12': '12.5.1',
         'postgrespro-ent-9.6': None,
         'postgrespro-ent-10': None,
         'postgrespro-ent-11': None,
@@ -405,6 +427,7 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgresql--13': None,
         'postgrespro-ent-12': '12.3.1',
         'postgrespro-1c-9.6': None,
         'postgrespro-1c-10': '10.13',
@@ -416,6 +439,7 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgresql--13': None,
         'postgrespro-ent-12': '12.3.1',
         'postgrespro-1c-10': '10.13',
         'postgrespro-1c-11': '11.8',
@@ -425,6 +449,7 @@ FIRST_RELEASE = {
         'postgresql--10': None,
         'postgresql--11': None,
         'postgresql--12': None,
+        'postgresql--13': None,
         # Dump crash server for earlier versions
         'postgrespro-ent-9.6': '9.6.10.3',
         'postgrespro-ent-12': '12.3.1',
@@ -740,6 +765,9 @@ UPGRADE_ROUTES = {
                 'name': 'postgrespro', 'edition': 'ent', 'version': '11'
             },
             {
+                'name': 'postgrespro', 'edition': 'ent', 'version': '12'
+            },
+            {
                 'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
             },
             {
@@ -752,6 +780,9 @@ UPGRADE_ROUTES = {
                 'name': 'postgrespro', 'edition': 'std', 'version': '12'
             },
             {
+                'name': 'postgrespro', 'edition': 'std', 'version': '13'
+            },
+            {
                 'name': 'postgresql', 'edition': '', 'version': '10',
                 'initdb-params': '--locale=C'
             },
@@ -761,6 +792,10 @@ UPGRADE_ROUTES = {
             },
             {
                 'name': 'postgresql', 'edition': '', 'version': '12',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '13',
                 'initdb-params': '--locale=C'
             },
             {
@@ -970,6 +1005,9 @@ DUMP_RESTORE_ROUTES = {
                 'name': 'postgrespro', 'edition': 'ent', 'version': '11'
             },
             {
+                'name': 'postgrespro', 'edition': 'ent', 'version': '12'
+            },
+            {
                 'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
             },
             {
@@ -982,6 +1020,9 @@ DUMP_RESTORE_ROUTES = {
                 'name': 'postgrespro', 'edition': 'std', 'version': '12'
             },
             {
+                'name': 'postgrespro', 'edition': 'std', 'version': '13'
+            },
+            {
                 'name': 'postgresql', 'edition': '', 'version': '10',
                 'initdb-params': '--locale=C'
             },
@@ -991,6 +1032,10 @@ DUMP_RESTORE_ROUTES = {
             },
             {
                 'name': 'postgresql', 'edition': '', 'version': '12',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '13',
                 'initdb-params': '--locale=C'
             },
             {

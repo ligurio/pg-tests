@@ -270,7 +270,7 @@ class TestPgprobackup():
             " FROM generate_series(0,100000) AS i;")
 
         before_backup_file = os.path.join(tempdir, 'before.sql')
-        self.pginst.do_in_all_dbs(truncate_unlogged_sql)
+        self.pginst.do_in_all_dbs(truncate_unlogged_sql, 'truncate_unlogged')
         self.pginst.exec_client_bin('pg_dumpall', '-f "%s"' %
                                     before_backup_file)
 
