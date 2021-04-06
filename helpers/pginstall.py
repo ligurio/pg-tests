@@ -1491,6 +1491,14 @@ baseurl=%s
                                        cwd="/", env=self.env). \
             decode(ConsoleEncoding)
 
+    def exec_pg_setup(self, options=''):
+        cmd = '"%spg-setup" %s' % \
+            (
+                self.get_server_bin_path(),
+                options
+            )
+        return subprocess.check_call(cmd, shell=True)
+
     def pg_isready(self):
         cmd = '%s"%spg_isready" --timeout=10 %s %s' % \
             (
