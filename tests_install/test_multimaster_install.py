@@ -518,7 +518,9 @@ class TestMultimasterInstall():
         tag_mark = allure.label(LabelType.TAG, product_info)
         request.node.add_marker(tag_mark)
         branch = request.config.getoption('--branch')
-
+        if dist == 'Windows':
+            print('Windows is currently not supported')
+            return
         if not (edition.startswith('ent') and version in ['12', '13']):
             print('Version %s %s is not supported' % (edition, version))
             return
