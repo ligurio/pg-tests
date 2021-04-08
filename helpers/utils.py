@@ -80,7 +80,7 @@ def urlopen(url):
     return urlrequest.urlopen(url)
 
 
-def is_remote_file_differ(url, file_name):
+def updated_image_detected(url, file_name):
     try:
         req = urlopen(url)
     except Exception as e:
