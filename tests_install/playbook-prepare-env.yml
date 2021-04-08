@@ -505,7 +505,8 @@
       validate_certs: no
       force: yes
     when:
-      - ansible_os_family != "Windows"
+      - ansible_os_family != "Windows" and ansible_distribution != "Astra Linux (Smolensk)"
+
 
   - name: install pip
     command: "{{ cur_python }} /home/test/pg-tests/get-pip.py"
@@ -521,7 +522,9 @@
           not ((ansible_distribution == "GosLinux" or
                 ansible_distribution == "ROSA" or ansible_os_family == "RedHat") and
                 ansible_distribution_major_version != "7") and
-          not (ansible_distribution == "SLES" and ansible_distribution_major_version == "11")
+          not (ansible_distribution == "SLES" and ansible_distribution_major_version == "11") and
+          ansible_distribution != "Astra Linux (Smolensk)"
+
 
   - name: install required pip modules 3+
     pip:

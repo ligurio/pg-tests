@@ -80,8 +80,11 @@ def urlopen(url):
     return urlrequest.urlopen(url)
 
 
-def is_remote_file_differ(url, file_name):
-    req = urlopen(url)
+def updated_image_detected(url, file_name):
+    try:
+        req = urlopen(url)
+    except Exception as e:
+        return False
     return int(req.info()['Content-Length']) != \
         int(os.stat(file_name).st_size)
 

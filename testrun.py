@@ -20,7 +20,7 @@ from helpers.utils import (copy_file, copy_reports_win,
                            exec_command, gen_name, exec_retry,
                            exec_command_win,
                            REMOTE_LOGIN, REMOTE_PASSWORD,
-                           REMOTE_ROOT_PASSWORD, is_remote_file_differ,
+                           REMOTE_ROOT_PASSWORD, updated_image_detected,
                            urlcontent, urlretrieve)
 
 # py2compat
@@ -117,7 +117,7 @@ def create_image(domname, name):
     image_original = TEMPLATE_DIR + name + '.qcow2'
 
     if os.path.isfile(image_original) and \
-            is_remote_file_differ(image_url, image_original):
+            updated_image_detected(image_url, image_original):
         print('Remote image differs with local, erasing it...')
         os.remove(image_original)
 
