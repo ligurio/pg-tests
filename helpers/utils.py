@@ -83,7 +83,7 @@ def urlopen(url):
 def is_remote_file_differ(url, file_name):
     try:
         req = urlopen(url)
-    except:
+    except Exception as e:
         return False
     return int(req.info()['Content-Length']) != \
         int(os.stat(file_name).st_size)
