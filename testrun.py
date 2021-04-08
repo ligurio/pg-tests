@@ -709,9 +709,6 @@ def main(conn):
         sys.exit(1)
 
     failexpected = False
-    # TODO: Remove when EE13 will be ready
-    if args.product_edition == 'ent' and args.product_version == '13':
-        failexpected = True
 
     if not os.path.exists(args.run_tests):
         print("Test(s) '%s' is not found." % args.run_tests)
