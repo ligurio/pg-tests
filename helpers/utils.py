@@ -348,6 +348,7 @@ def exec_command_win(cmd, hostname,
             break
         except (winrm.exceptions.WinRMOperationTimeoutError,
                 winrm.exceptions.WinRMTransportError,
+                winrm.exceptions.WinRMError,
                 requests.exceptions.ConnectionError,
                 socket.error) as e:
             if trc == connect_retry_count:
