@@ -212,6 +212,9 @@ class TestMakeCheck(object):
                 raise Exception("After the update, the service was restarted")
 
     def test_sqlsmith(self, request):
+        if self.system == 'Windows':
+            print("sqlsmith is not supported on Windows")
+            return
         pginst = request.cls.pginst
         if not pginst.make_check_passed:
             return
@@ -222,9 +225,6 @@ class TestMakeCheck(object):
                          "-d regression")
         pg_prefix = pginst.get_default_pg_prefix()
         curpath = os.path.dirname(os.path.abspath(__file__))
-        if self.system == 'Windows':
-            print("sqlsmith is not supported on Windows")
-            return
         subprocess.check_call(
             '"%s" "%s"' % (os.path.join(curpath, 'sqlsmith.sh'),
                            pg_prefix),
