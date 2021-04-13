@@ -365,6 +365,12 @@ def exec_command_win(cmd, hostname,
     stdout = stdout.decode(ConsoleEncoding)
     stderr = stderr.decode(ConsoleEncoding)
 
+    if not (skip_ret_code_check) and retcode != 0:
+        print("Return code for command  \'%s\' is %d.\n" % (cmd, retcode))
+        print("The command stdout:\n%s" % stdout)
+        print("The command stderr:\n%s" % stderr)
+        raise Exception('Command "%s" failed.' % cmd)
+
     # These operations fail when the current user excluded from
     # the Administrators group, so just ignore the error.
     try:
@@ -376,16 +382,7 @@ def exec_command_win(cmd, hostname,
     except winrm.exceptions.WinRMError:
         pass
 
-    if skip_ret_code_check:
-        return retcode, stdout, stderr
-    else:
-        if retcode != 0:
-            print("Return code for command  \'%s\' is %d.\n" % (cmd, retcode))
-            print("The command stdout:\n%s" % stdout)
-            print("The command stderr:\n%s" % stderr)
-            raise Exception('Command "%s" failed.' % cmd)
-        else:
-            return retcode, stdout, stderr
+    return retcode, stdout, stderr
 
 
 def gen_name(name, prefix="pgt"):
