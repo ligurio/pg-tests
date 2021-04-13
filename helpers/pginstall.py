@@ -31,7 +31,7 @@ WIN_INST_DIR = "C:\\Users\\test\\pg-tests\\pg_installer"
 PRELOAD_LIBRARIES = {
     'ent-13':
         ['auth_delay', 'auto_explain', 'in_memory',
-         'ptrack',
+         'pgpro_scheduler', 'ptrack',
          'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling',
          'pg_pathman'],
