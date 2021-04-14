@@ -80,7 +80,8 @@ class TestMakeCheck(object):
 
         run_test_ou = False
         if edition == "ent" and version == "13" and self.system == "Linux":
-            if dist not in ["Astra Linux (Smolensk) 1.5"] and random() < 0.2:
+            if dist not in ["Astra Linux (Smolensk) 1.5",
+                            "ALT Linux 7.0.4"] and random() < 0.2:
                 print("Test performed with pgpro-online-upgrade")
                 run_test_ou = True
 
