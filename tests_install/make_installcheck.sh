@@ -129,22 +129,29 @@ sed "s|regresscheck-install:.*|regresscheck-install:|" -i contrib/in_memory/Make
 [ -f /etc/localtime ] || ln -s /usr/share/zoneinfo/UTC /etc/localtime
 
 set -o pipefail
-sudo -u postgres ./configure --enable-tap-tests --without-readline --prefix=$1 $extraoption || exit $?
 
-test -f contrib/mchar/mchar.sql.in && make -C contrib/mchar mchar.sql
-# Pass to `make installcheck` all the options (with-*, enable-*), which were passed to configure
 confopts="python_majorversion=2"
 if which python >/dev/null 2>&1; then
     confopts="python_majorversion=`python -c 'import sys; print(sys.version_info.major)'`"
 else
     which python3 >/dev/null 2>&1 && confopts="python_majorversion=3"
 fi
+disconfopts=""
 opts=`$1/bin/pg_config --configure | grep -Eo "'[^']*'|[^' ]*" | sed -e "s/^'//" -e "s/'$//"`
-while read -r opt;
-    do case "$opt" in --with-*=*) ;; --with-* | --enable-*) opt="${opt/#--/}"; opt="${opt//-/_}" confopts="$confopts $opt=yes ";; esac;
+while read -r opt; do
+    case "$opt" in --with-*=*) ;; --with-* | --enable-*) opt="${opt/#--/}"; opt="${opt//-/_}" confopts="$confopts $opt=yes ";; esac;
+    case "$opt" in --disable-dependency-tracking | --disable-rpath) ;; --disable-*) disconfopts="$disconfopts $opt" ;; esac;
 done <<< "$opts";
 
+# Pass to `./configure` disable-* options, that were passed to configure (if any; namely, --disable-online-upgrade)
+echo "Configuring with options: --enable-tap-tests --without-readline --prefix=$1 $disconfopts $extraoption"
+sudo -u postgres ./configure --enable-tap-tests --without-readline --prefix=$1 $disconfopts $extraoption || exit $?
+
+test -f contrib/mchar/mchar.sql.in && make -C contrib/mchar mchar.sql
+
 [ "$makeecpg" = true ] && sudo -u postgres sh -c "make -C src/interfaces/ecpg"
+
+# Pass to `make installcheck` all the options (with-*, enable-*), which were passed to configure
 echo "Running: $confopts make -e installcheck-world ..."
 sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" $confopts make -e installcheck-world EXTRA_TESTS=numeric_big 2>&1" | tee /tmp/installcheck.log; exitcode=$?
 
