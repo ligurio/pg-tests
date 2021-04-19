@@ -380,8 +380,9 @@ def exec_command_win(cmd, hostname,
     try:
         p.close_shell(shell_id)
     except winrm.exceptions.WinRMError:
-        pass
-
+        print("Trying to reconnect to WinRM after a failure on "
+              "winrm.close_shell()")
+        exec_command_win(None, hostname, user, password, connect_retry_count=5)
     return retcode, stdout, stderr
 
 
@@ -688,3 +689,15 @@ def get_soup(url):
     else:
         soup = BeautifulSoup(urlopen(url))
     return soup
+
+
+def revoke_admin_right(domipaddress, remote_login, remote_password,
+                       windows=False):
+    if windows:
+        cmd = "powershell -Command \"$group=(New-Object System.Security."\
+            "Principal.SecurityIdentifier (\'S-1-5-32-544\')).Translate"\
+            "([System.Security.Principal.NTAccount]).Value.Split(\'\\\\\')"\
+            "[1]; net localgroup $group %s /delete\"" % remote_login
+        exec_command_win(cmd, domipaddress, remote_login, remote_password)
+    else:
+        raise("Not implemented.")
