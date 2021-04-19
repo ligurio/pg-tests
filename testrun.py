@@ -21,7 +21,7 @@ from helpers.utils import (copy_file, copy_reports_win,
                            exec_command_win,
                            REMOTE_LOGIN, REMOTE_PASSWORD,
                            REMOTE_ROOT_PASSWORD, updated_image_detected,
-                           urlcontent, urlretrieve)
+                           urlcontent, urlretrieve, revoke_admin_right)
 
 # py2compat
 if not sys.version_info > (3, 0):
@@ -837,6 +837,9 @@ def main(conn):
 
                 if retcode == 222:
                     stage += 1
+                    revoke_admin_right(
+                        domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD,
+                        not linux_os)
                     continue
 
                 if retcode != 0:
