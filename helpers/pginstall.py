@@ -31,7 +31,7 @@ WIN_INST_DIR = "C:\\Users\\test\\pg-tests\\pg_installer"
 PRELOAD_LIBRARIES = {
     'ent-13':
         ['auth_delay', 'auto_explain', 'in_memory',
-         'ptrack',
+         'pgpro_scheduler', 'ptrack',
          'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling',
          'pg_pathman'],
@@ -1490,6 +1490,14 @@ baseurl=%s
         return subprocess.check_output(cmd, shell=True,
                                        cwd="/", env=self.env). \
             decode(ConsoleEncoding)
+
+    def exec_pg_setup(self, options=''):
+        cmd = '"%spg-setup" %s' % \
+            (
+                self.get_server_bin_path(),
+                options
+            )
+        return subprocess.check_call(cmd, shell=True)
 
     def pg_isready(self):
         cmd = '%s"%spg_isready" --timeout=10 %s %s' % \

@@ -80,8 +80,11 @@ def urlopen(url):
     return urlrequest.urlopen(url)
 
 
-def is_remote_file_differ(url, file_name):
-    req = urlopen(url)
+def updated_image_detected(url, file_name):
+    try:
+        req = urlopen(url)
+    except Exception as e:
+        return False
     return int(req.info()['Content-Length']) != \
         int(os.stat(file_name).st_size)
 
@@ -345,6 +348,7 @@ def exec_command_win(cmd, hostname,
             break
         except (winrm.exceptions.WinRMOperationTimeoutError,
                 winrm.exceptions.WinRMTransportError,
+                winrm.exceptions.WinRMError,
                 requests.exceptions.ConnectionError,
                 socket.error) as e:
             if trc == connect_retry_count:
@@ -361,6 +365,12 @@ def exec_command_win(cmd, hostname,
     stdout = stdout.decode(ConsoleEncoding)
     stderr = stderr.decode(ConsoleEncoding)
 
+    if not (skip_ret_code_check) and retcode != 0:
+        print("Return code for command  \'%s\' is %d.\n" % (cmd, retcode))
+        print("The command stdout:\n%s" % stdout)
+        print("The command stderr:\n%s" % stderr)
+        raise Exception('Command "%s" failed.' % cmd)
+
     # These operations fail when the current user excluded from
     # the Administrators group, so just ignore the error.
     try:
@@ -370,18 +380,10 @@ def exec_command_win(cmd, hostname,
     try:
         p.close_shell(shell_id)
     except winrm.exceptions.WinRMError:
-        pass
-
-    if skip_ret_code_check:
-        return retcode, stdout, stderr
-    else:
-        if retcode != 0:
-            print("Return code for command  \'%s\' is %d.\n" % (cmd, retcode))
-            print("The command stdout:\n%s" % stdout)
-            print("The command stderr:\n%s" % stderr)
-            raise Exception('Command "%s" failed.' % cmd)
-        else:
-            return retcode, stdout, stderr
+        print("Trying to reconnect to WinRM after a failure on "
+              "winrm.close_shell()")
+        exec_command_win(None, hostname, user, password, connect_retry_count=5)
+    return retcode, stdout, stderr
 
 
 def gen_name(name, prefix="pgt"):
@@ -687,3 +689,15 @@ def get_soup(url):
     else:
         soup = BeautifulSoup(urlopen(url))
     return soup
+
+
+def revoke_admin_right(domipaddress, remote_login, remote_password,
+                       windows=False):
+    if windows:
+        cmd = "powershell -Command \"$group=(New-Object System.Security."\
+            "Principal.SecurityIdentifier (\'S-1-5-32-544\')).Translate"\
+            "([System.Security.Principal.NTAccount]).Value.Split(\'\\\\\')"\
+            "[1]; net localgroup $group %s /delete\"" % remote_login
+        exec_command_win(cmd, domipaddress, remote_login, remote_password)
+    else:
+        raise("Not implemented.")

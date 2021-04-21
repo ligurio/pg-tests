@@ -58,6 +58,14 @@ class Pgbench(object):
         self.process.wait()
         return self.process.communicate()
 
+    def check(self):
+        if self.process is None or self.process.poll() is None:
+            return True
+        else:
+            print('PGBENCH on node %i (PID %i) exitted with rc %i' %
+                  (self.number, self.process.pid, self.process.returncode))
+            self.start()
+
 
 class Node(object):
     def __init__(self, pginst, datadir,
@@ -241,18 +249,26 @@ class Multimaster(object):
         for i, node in self.nodes.items():
             node.start()
         for i, node in self.nodes.items():
+            conns = []
+            nodes = []
             if not node.referee:
                 self.psql('CREATE EXTENSION multimaster', node=i)
                 conn = []
                 for j in range(1, self.size + 1):
                     if not self.nodes[j].referee:
+                        nodes.append(str(j))
                         conn.append(
                             "(%i, 'dbname=%s user=%s host=%s port=%i', %r)" % (
                                 j, self.db, self.dbuser,
                                 self.nodes[j].listen_ips[i],
                                 self.nodes[j].port, (i == j)))
+                conns.append(', '.join(conn))
+                if self.pginst.version == '13':
+                    self.psql("SELECT mtm.state_create('{%s}')" %
+                              ', '.join(nodes), node=i)
                 self.psql("INSERT INTO mtm.cluster_nodes VALUES %s" %
-                          ', '.join(conn), node=i)
+                          ', '.join(conns), node=i)
+
         for i in range(1, self.size + 1):
             if not self.nodes[i].referee:
                 self.wait(i)
@@ -323,11 +339,19 @@ class Multimaster(object):
             query, '-d %s -U %s %s' % (self.db, self.dbuser, a_options))
 
     def get_txid_current(self, node=1):
-        return int(self.psql('SELECT txid_current()', '-Aqt', node=node))
+        try:
+            txid = int(self.psql('SELECT txid_current()', '-Aqt', node=node))
+        except Exception:
+            self.wait(node)
+            txid = int(self.psql('SELECT txid_current()', '-Aqt', node=node))
+        return txid
 
     def check(self, node):
         try:
-            self.psql('SELECT version()', node=node)
+            if self.pginst.version == '13':
+                self.psql('SELECT mtm.ping()', node=node)
+            else:
+                self.psql('SELECT version()', node=node)
         except Exception:
             return False
         else:
@@ -346,13 +370,18 @@ class Multimaster(object):
             raise Exception('Timeout %i seconds expired node: %i' % (
                 timeout, node))
 
-    def wait_for_txid(self, txid, node=1, timeout=600):
+    def wait_for_txid(self, txid, pgbench, node=1, timeout=600):
         start_time = time.time()
+        target_txid = self.get_txid_current(node) + txid
         print('Wait for %i\n' % txid)
         cur_txid = 0
         while time.time() - start_time <= timeout:
             cur_txid = self.get_txid_current(node)
-            if cur_txid >= txid:
+#           print('DEBUG: current txid is %s', cur_txid)
+            for i in range(1, self.size+1):
+                if not self.nodes[i].referee:
+                    pgbench[i].check()
+            if cur_txid >= target_txid:
                 return cur_txid
             else:
                 time.sleep(0.5)
@@ -489,10 +518,15 @@ class TestMultimasterInstall():
         tag_mark = allure.label(LabelType.TAG, product_info)
         request.node.add_marker(tag_mark)
         branch = request.config.getoption('--branch')
-
-        if not (edition.startswith('ent') and version == '12'):
+        if dist == 'Windows':
+            print('Windows is currently not supported')
+            return
+        if not (edition.startswith('ent') and version in ['12', '13']):
             print('Version %s %s is not supported' % (edition, version))
             return
+        # Resize /dev/shm under Linux
+        if self.system == 'Linux':
+            os.system('mount -t tmpfs -o remount,size=1500M tmpfs /dev/shm')
 
         # Step 1
         pginst = PgInstall(product=name, edition=edition,
@@ -508,9 +542,15 @@ class TestMultimasterInstall():
         else:
             pginst.install_postgres_win()
             pginst.stop_service()
-        mm = Multimaster(size=2, pginst=pginst,
+        if version == '12':
+            mm_size = 2
+        else:
+            mm_size = 3
+        mm = Multimaster(size=mm_size, pginst=pginst,
                          rootdir=os.path.abspath(
                              os.path.join(pginst.get_datadir(), os.pardir)))
+        print('Multimaster: size=%i has_referee: %r' %
+              (mm.size, mm.has_referee))
         mm.start()
         for i, cl_state in mm.get_cluster_state_all().items():
             if int(cl_state[0]) != i:
@@ -537,7 +577,7 @@ class TestMultimasterInstall():
                 print('Running pgbench on node%i' % i)
                 pgbench[i].start()
 
-        mm.wait_for_txid(600)
+        mm.wait_for_txid(600, pgbench)
         print('Cluster state:')
         print(mm.get_cluster_state_all())
         print(mm.get_nodes_state_all())
@@ -549,7 +589,10 @@ class TestMultimasterInstall():
             mm.wait_for_referee(1, 60)
             pgbench[1].wait()
             pgbench[1].start()
-        mm.wait_for_txid(2700)
+        else:
+            for i in range(1, mm.size + 1):
+                pgbench[i].check()
+        mm.wait_for_txid(2700, pgbench)
         print('Cluster state:')
         print(mm.get_cluster_state_all(allow_fail=True))
         print(mm.get_nodes_state_all(allow_fail=True))
@@ -563,8 +606,8 @@ class TestMultimasterInstall():
         print('Cluster state:')
         print(mm.get_cluster_state_all(allow_fail=True))
         print(mm.get_nodes_state_all(allow_fail=True))
-        mm.wait_for_txid(3500)
-        for i in range(1, mm.size):
+        mm.wait_for_txid(3500, pgbench)
+        for i in range(1, mm.size+1):
             if not mm.nodes[i].referee:
                 print('Pgbench %i terminated rc=%i' % (i, pgbench[i].stop()))
                 mm.sure_pgbench_is_dead(i)

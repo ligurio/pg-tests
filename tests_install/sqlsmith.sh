@@ -38,8 +38,8 @@ elif which yum; then
     if grep -q '\(Red Hat\|ROSA\) Enterprise Linux \(Server \|Cobalt \|\)release \(7\|8\)'\
      /etc/redhat-release || \
        grep -q 'CentOS Linux release 8.' /etc/redhat-release; then
-        yum install -y http://mirror.centos.org/centos/\
-7/os/x86_64/Packages/autoconf-archive-2017.03.21-1.el7.noarch.rpm
+        yum install -y http://dist.l.postgrespro.ru/resources/linux/centos-7/\
+autoconf-archive-2017.03.21-1.el7.noarch.rpm
     fi
 fi
 export PATH=$1/bin:$PATH

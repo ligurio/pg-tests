@@ -504,8 +504,9 @@
       dest: /home/test/pg-tests/get-pip.py
       validate_certs: no
       force: yes
-    when:
-      - ansible_os_family != "Windows"
+    when: ansible_os_family != "Windows" and ansible_distribution != "Astra Linux (Smolensk)" and
+          not (ansible_distribution == "Altlinux" and ansible_distribution_major_version == "7")
+
 
   - name: install pip
     command: "{{ cur_python }} /home/test/pg-tests/get-pip.py"
@@ -521,7 +522,10 @@
           not ((ansible_distribution == "GosLinux" or
                 ansible_distribution == "ROSA" or ansible_os_family == "RedHat") and
                 ansible_distribution_major_version != "7") and
-          not (ansible_distribution == "SLES" and ansible_distribution_major_version == "11")
+          not (ansible_distribution == "SLES" and ansible_distribution_major_version == "11") and
+          ansible_distribution != "Astra Linux (Smolensk)" and
+          not (ansible_distribution == "Altlinux" and ansible_distribution_major_version == "7")
+
 
   - name: install required pip modules 3+
     pip:
@@ -620,7 +624,7 @@
           ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux') or
           ansible_distribution == 'ROSA'
 
-  - name: windows - enable high perfomance power mode
+  - name: windows - enable high performance power mode
     when: ansible_os_family == "Windows"
     win_command: powercfg /s 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c
 

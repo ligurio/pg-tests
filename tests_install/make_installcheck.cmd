@@ -63,8 +63,6 @@ sc sdset "%2" "D:(A;;CCLCSWRPWPDTLOCRRC;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA
 @REM Add current user to the Remote Management Users group
 powershell -Command "$group=(New-Object System.Security.Principal.SecurityIdentifier('S-1-5-32-580')).Translate([System.Security.Principal.NTAccount]).Value.Split('\\')[1]; net localgroup $group %username% /add"
 
-@REM Exclude current user from the Administrators group
-powershell -Command "$group=(New-Object System.Security.Principal.SecurityIdentifier('S-1-5-32-544')).Translate([System.Security.Principal.NTAccount]).Value.Split('\\')[1]; net localgroup $group %username% /delete"
 @exit /b 0
 
 :main
@@ -105,8 +103,6 @@ echo 'The source archive buildinfo:'
 cat doc/buildinfo.txt
 
 set -o pipefail
-echo "`date -Iseconds`: Configuring... "
-CFLAGS=" -D WINVER=0x0600 -D _WIN32_WINNT=0x0600" LIBS="-lktmw32 -ladvapi32" ./configure --enable-tap-tests --host=$host --without-zlib --prefix="$PGPATH" 2>&1 | tee configure.log
 pwd
 
 # Enable the installcheck mode for pg_stat_statements testing
@@ -114,13 +110,20 @@ sed 's|NO_INSTALLCHECK|# NO_INSTALLCHECK|' -i contrib/pg_stat_statements/Makefil
 
 test -f contrib/mchar/mchar.sql.in && make -C contrib/mchar mchar.sql
 
-# Pass to `make installcheck` all the options (with-*, enable-*), that were passed to configure
+
+disconfopts=""
 confopts="python_majorversion=`\"$PYTHONHOME\\python\" -c 'import sys; print(sys.version_info.major)'`"
 opts=`"$PGPATH/bin/pg_config" --configure | grep -Eo "'[^']*'|[^' ]*" | sed -e "s/^'//" -e "s/'$//"`
-while read -r opt;
-    do case "$opt" in --with-*=*) ;; --with-* | --enable-*) opt="${opt/#--/}"; opt="${opt//-/_}" confopts="$confopts $opt=yes ";; esac;
+while read -r opt; do
+    case "$opt" in --with-*=*) ;; --with-* | --enable-*) opt="${opt/#--/}"; opt="${opt//-/_}" confopts="$confopts $opt=yes ";; esac;
+    case "$opt" in --disable-dependency-tracking | --disable-rpath) ;; --disable-*) disconfopts="$disconfopts $opt" ;; esac;
 done <<< "$opts";
 echo "confopts: $confopts"
+
+# Pass to `./configure` disable-* options, that were passed to configure (if any; namely, --disable-online-upgrade)
+echo "`date -Iseconds`: Configuring with options: --enable-tap-tests --host=$host --without-zlib --prefix="$PGPATH" $disconfopts"
+CFLAGS=" -D WINVER=0x0600 -D _WIN32_WINNT=0x0600" LIBS="-lktmw32 -ladvapi32" ./configure --enable-tap-tests --host=$host --without-zlib --prefix="$PGPATH" $disconfopts 2>&1 | tee configure.log
+
 echo "Fixing ECPG test for installcheck..."
 sed -e "s@^ECPG = ../../preproc/ecpg@ECPG = ecpg@" \
     -e "s@^ECPG_TEST_DEPENDENCIES = ../../preproc/ecpg\$(X)@ECPG_TEST_DEPENDENCIES = @" \
@@ -160,11 +163,13 @@ cp src/Makefile.global src/Makefile.shlib src/Makefile.port "$1/lib/pgxs/src/"
 cp src/test/regress/pg_regress.exe "$1/lib/pgxs/src/test/regress/"
 
 set +e
+# Pass to `make installcheck` all the options (with-*, enable-*), that were passed to configure
 echo "`date -Iseconds`: Running $confopts make -e installcheck-world ..."
 sh -c "$confopts EXTRA_REGRESS_OPTS='--dlpath=\"$PGPATH/lib\"' make -e installcheck-world EXTRA_TESTS=numeric_big" 2>&1 | gawk '{ print strftime("%H:%M:%S "), $0; fflush() }' | tee /tmp/installcheck.log; exitcode=$?
 
 # TODO: Add orafce pg_filedump pg_repack
-for comp in plv8 pgpro_stats pgpro_pwr pgpro_controldata pg_portal_modify; do
+# TODO: Enable the pgpro_pwr test again (after defeating "Permission denied")
+for comp in plv8 pgpro_stats pgpro_controldata pg_portal_modify; do
 if [ $exitcode -eq 0 ]; then
     if [ -f ../$comp*.tar* ]; then
         cd ..

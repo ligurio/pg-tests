@@ -65,14 +65,6 @@ class TestCleanInstall():
     def test_pg_setup(self, request):
         pginst = request.cls.pginst
 
-        def exec_pg_setup(options=''):
-            cmd = '"%spg-setup" %s' % \
-                (
-                    pginst.get_client_bin_path(),
-                    options
-                )
-            return subprocess.check_output(cmd, shell=True)
-
         if self.system == 'Windows' or \
                 pginst.product != "postgrespro" or \
                 pginst.version in ['9.5', '9.6'] or \
@@ -87,8 +79,8 @@ class TestCleanInstall():
         dbpath = os.path.join(tempdir, 'db1')
         if os.path.isdir(dbpath):
             shutil.rmtree(dbpath, True)
-        exec_pg_setup('initdb -D "%s"' % dbpath)
-        exec_pg_setup('service start')
-        exec_pg_setup('service status')
+        pginst.exec_pg_setup('initdb -D "%s"' % dbpath)
+        pginst.exec_pg_setup('service start')
+        pginst.exec_pg_setup('service status')
         pginst.get_server_version()
-        exec_pg_setup('service stop')
+        pginst.exec_pg_setup('service stop')

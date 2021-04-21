@@ -6,6 +6,7 @@ import os
 import re
 import tarfile
 import allure
+from random import random
 
 from allure_commons.types import LabelType
 from helpers.pginstall import PgInstall, PRELOAD_LIBRARIES
@@ -72,6 +73,18 @@ class TestMakeCheck(object):
         if pginst.os.is_altlinux() and pginst.os.os_arch == 'aarch64':
             os.environ['LANG'] = 'en_US.UTF-8'
 
+        distro = pginst.dist_info
+        if distro[2] == 'x86_64' or self.system == 'Windows':
+            distro = distro[:-1]
+        dist = " ".join(distro)
+
+        run_test_ou = False
+        if edition == "ent" and version == "13" and self.system == "Linux":
+            if dist not in ["Astra Linux (Smolensk) 1.5",
+                            "ALT Linux 7.0.4"] and random() < 0.2:
+                print("Test performed with pgpro-online-upgrade")
+                run_test_ou = True
+
         if self.system == 'Windows':
             if os.path.exists(pginst.get_default_bin_path()):
                 # Refresh environment to get correct PYTHONHOME
@@ -106,7 +119,14 @@ class TestMakeCheck(object):
                 pginst.get_package_version(pkgname), 'tar.gz')
         if self.system != 'Windows':
             pginst.install_full()
-            pginst.initdb_start()
+            if not run_test_ou:
+                pginst.initdb_start()
+            else:
+                pginst.stop_service()
+                pginst.remove_data(True)
+                pginst.exec_pg_setup("initdb --enable-online-upgrade "
+                                     "--tune=empty")
+                pginst.start_service()
         else:
             pginst.install_perl_win()
             pginst.install_postgres_win(port=55432)
@@ -115,6 +135,12 @@ class TestMakeCheck(object):
             except Exception:
                 subprocess.check_call('SETX PYTHONHOME C:\\Python27 -m',
                                       shell=True)
+        if run_test_ou:
+            ret = pginst.exec_psql_select("SHOW shared_memory_type")
+            if ret != "sysv":
+                raise Exception(
+                    "pgpro-online-upgrade does not support "
+                    " shared_memory_type %s" % ret)
         if version != "9.6" or self.system == 'Windows' or \
                 (edition == '1c' and pginst.os_name not in DEBIAN_BASED):
             buildinfo = os.path.join(pginst.get_pg_prefix(),
@@ -132,7 +158,8 @@ class TestMakeCheck(object):
             assert(re.search(r'^SPEC', bitxt, re.MULTILINE))
             print("The binary package buildinfo:\n%s\n" % bitxt)
 
-        pginst.install_default_config()
+        if not run_test_ou:
+            pginst.install_default_config()
 
         pginst.exec_psql("ALTER SYSTEM SET max_worker_processes = 16")
         pginst.exec_psql("ALTER SYSTEM SET lc_messages = 'C'")
@@ -165,8 +192,30 @@ class TestMakeCheck(object):
                     get_pg_prefix(pginst), pginst.service_name),
                 shell=True)
             request.session.customexitstatus = 222
+        if run_test_ou:
+            # PGPRO-3837
+            old_postmaster = open(pginst.get_datadir() + "/postmaster.pid",
+                                  "r").read()
+            if pginst.os.is_pm_yum():
+                cmd = "yum reinstall -y %s"
+            elif pginst.os.is_pm_apt():
+                cmd = "apt-get install --reinstall -y %s"
+            elif pginst.os.is_pm_zypper():
+                cmd = "zypper in -y -f %s"
+            else:
+                raise Exception("Unsupported system: %s" % pginst.os_name)
+            subprocess.check_call(
+                cmd % pginst.get_server_package_name(), shell=True)
+            pginst.exec_psql("select 1")
+            new_postmaster = open(pginst.get_datadir() + "/postmaster.pid",
+                                  "r").read()
+            if old_postmaster != new_postmaster:
+                raise Exception("After the update, the service was restarted")
 
     def test_sqlsmith(self, request):
+        if self.system == 'Windows':
+            print("sqlsmith is not supported on Windows")
+            return
         pginst = request.cls.pginst
         if not pginst.make_check_passed:
             return
@@ -177,9 +226,6 @@ class TestMakeCheck(object):
                          "-d regression")
         pg_prefix = pginst.get_default_pg_prefix()
         curpath = os.path.dirname(os.path.abspath(__file__))
-        if self.system == 'Windows':
-            print("sqlsmith is not supported on Windows")
-            return
         subprocess.check_call(
             '"%s" "%s"' % (os.path.join(curpath, 'sqlsmith.sh'),
                            pg_prefix),

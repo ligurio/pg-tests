@@ -20,8 +20,8 @@ from helpers.utils import (copy_file, copy_reports_win,
                            exec_command, gen_name, exec_retry,
                            exec_command_win,
                            REMOTE_LOGIN, REMOTE_PASSWORD,
-                           REMOTE_ROOT_PASSWORD, is_remote_file_differ,
-                           urlcontent, urlretrieve)
+                           REMOTE_ROOT_PASSWORD, updated_image_detected,
+                           urlcontent, urlretrieve, revoke_admin_right)
 
 # py2compat
 if not sys.version_info > (3, 0):
@@ -117,7 +117,7 @@ def create_image(domname, name):
     image_original = TEMPLATE_DIR + name + '.qcow2'
 
     if os.path.isfile(image_original) and \
-            is_remote_file_differ(image_url, image_original):
+            updated_image_detected(image_url, image_original):
         print('Remote image differs with local, erasing it...')
         os.remove(image_original)
 
@@ -709,9 +709,6 @@ def main(conn):
         sys.exit(1)
 
     failexpected = False
-    # TODO: Remove when EE13 will be ready
-    if args.product_edition == 'ent' and args.product_version == '13':
-        failexpected = True
 
     if not os.path.exists(args.run_tests):
         print("Test(s) '%s' is not found." % args.run_tests)
@@ -840,6 +837,9 @@ def main(conn):
 
                 if retcode == 222:
                     stage += 1
+                    revoke_admin_right(
+                        domipaddress, REMOTE_LOGIN, REMOTE_PASSWORD,
+                        not linux_os)
                     continue
 
                 if retcode != 0:
