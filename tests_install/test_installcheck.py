@@ -104,8 +104,21 @@ class TestMakeCheck(object):
         print("Running on %s." % target)
         tarball = pginst.download_source()
         tar = tarfile.open(tarball, 'r:bz2')
+        tinfo = tar.next()
+        src_buildinfo = os.path.join(tinfo.name, 'doc', 'buildinfo.txt')
         tar.extractall()
         tar.close()
+
+        with open(src_buildinfo, 'r') as bif:
+            bitxt = bif.read()
+            print("The source package buildinfo:\n%s\n" % bitxt)
+            sre = re.search(r'^Source version:\s+([0-9a-fA-F]+)\s+',
+                            bitxt, re.MULTILINE)
+            if sre:
+                src_commit_id = sre.group(1)
+
+        assert src_commit_id
+
         for comp in ['orafce', 'plv8', 'pgpro-stats', 'pgpro-pwr',
                      'pgpro-controldata', 'pg-filedump', 'pg-portal-modify',
                      'pg-repack']:
@@ -143,20 +156,30 @@ class TestMakeCheck(object):
                     " shared_memory_type %s" % ret)
         if version != "9.6" or self.system == 'Windows' or \
                 (edition == '1c' and pginst.os_name not in DEBIAN_BASED):
-            buildinfo = os.path.join(pginst.get_pg_prefix(),
-                                     'doc', 'buildinfo.txt')
+            bin_buildinfo = os.path.join(pginst.get_pg_prefix(),
+                                         'doc', 'buildinfo.txt')
         else:
-            buildinfo = subprocess.check_output(
+            bin_buildinfo = subprocess.check_output(
                 'ls /usr/share/doc/postgres*pro*/buildinfo.txt',
                 shell=True).decode(ConsoleEncoding).strip()
 
-        with open(buildinfo, 'r') as bi:
-            bitxt = bi.read()
-            assert(re.search(r'^Documentation translation', bitxt,
-                             re.MULTILINE))
-            assert(re.search(r'^Source', bitxt, re.MULTILINE))
-            assert(re.search(r'^SPEC', bitxt, re.MULTILINE))
+        with open(bin_buildinfo, 'r') as bif:
+            bitxt = bif.read()
+            assert re.search(r'^Documentation translation', bitxt,
+                             re.MULTILINE)
+            assert re.search(r'^Source', bitxt, re.MULTILINE)
+            assert re.search(r'^SPEC', bitxt, re.MULTILINE)
             print("The binary package buildinfo:\n%s\n" % bitxt)
+            sre = re.search(r'^Source version:\s+([0-9a-fA-F]+)\s+',
+                            bitxt, re.MULTILINE)
+            if sre:
+                bin_commit_id = sre.group(1)
+        assert bin_commit_id
+
+        if bin_commit_id != src_commit_id:
+            raise Exception(
+                "Bin commit (%s) doesn't match to Source commit (%s)" %
+                (bin_commit_id, src_commit_id))
 
         if not run_test_ou:
             pginst.install_default_config()

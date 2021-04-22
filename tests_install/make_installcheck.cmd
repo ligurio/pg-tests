@@ -99,9 +99,6 @@ echo "`date -Iseconds`: Source archive extracting... "
 cd postgres*/
 BASEDIR=`pwd`
 
-echo 'The source archive buildinfo:'
-cat doc/buildinfo.txt
-
 set -o pipefail
 pwd
 
