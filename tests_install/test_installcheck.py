@@ -109,6 +109,7 @@ class TestMakeCheck(object):
         tar.extractall()
         tar.close()
 
+        src_commit_id = None
         with open(src_buildinfo, 'r') as bif:
             bitxt = bif.read()
             print("The source package buildinfo:\n%s\n" % bitxt)
@@ -163,6 +164,7 @@ class TestMakeCheck(object):
                 'ls /usr/share/doc/postgres*pro*/buildinfo.txt',
                 shell=True).decode(ConsoleEncoding).strip()
 
+        bin_commit_id = None
         with open(bin_buildinfo, 'r') as bif:
             bitxt = bif.read()
             assert re.search(r'^Documentation translation', bitxt,
