@@ -312,7 +312,8 @@ def after_upgrade(pg, pgOld):
                                    '-'.join([pgOld.product, pgOld.edition,
                                              pgOld.version])),
                       'wb') as out:
-                pg.exec_psql_file(file_name, stdout=out)
+                pg.exec_psql_file(file_name, ' -v ON_ERROR_STOP=1',
+                                  stdout=out)
     print("after_upgrade complete in %s sec" % (time.time()-start_time))
 
 
