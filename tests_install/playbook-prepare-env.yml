@@ -309,7 +309,7 @@
         - libicu-devel
       state: present
       update_cache: true
-    when: ansible_architecture != "ppc64le" and ansible_os_family != "Windows" and (ansible_pkg_mgr == "yum" or ansible_pkg_mgr == "dnf")
+    when: use_ssh is not defined and ansible_os_family != "Windows" and (ansible_pkg_mgr == "yum" or ansible_pkg_mgr == "dnf")
     become_method: sudo
     become: true
 
@@ -451,7 +451,7 @@
       enabled: yes
     become_method: sudo
     become: true
-    when: ansible_architecture != "ppc64le" and ansible_os_family != "Windows" and ansible_os_family != 'Suse'
+    when: use_ssh is not defined and ansible_os_family != "Windows" and ansible_os_family != 'Suse'
 
   - name: remove pg-tests
     file:
