@@ -297,10 +297,19 @@
     become_method: sudo
     become: true
 
-  - name: install required packages (YUM/DNF)
+  - name: install acpid package (YUM/DNF)
     package:
       name:
         - acpid
+      state: present
+      update_cache: true
+    when: use_ssh is not defined and ansible_os_family != "Windows" and (ansible_pkg_mgr == "yum" or ansible_pkg_mgr == "dnf")
+    become_method: sudo
+    become: true
+
+  - name: install required packages (YUM/DNF)
+    package:
+      name:
         - tar
         - gcc
         - gdb
@@ -309,7 +318,7 @@
         - libicu-devel
       state: present
       update_cache: true
-    when: use_ssh is not defined and ansible_os_family != "Windows" and (ansible_pkg_mgr == "yum" or ansible_pkg_mgr == "dnf")
+    when: ansible_os_family != "Windows" and (ansible_pkg_mgr == "yum" or ansible_pkg_mgr == "dnf")
     become_method: sudo
     become: true
 
