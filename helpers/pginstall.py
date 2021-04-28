@@ -1597,3 +1597,8 @@ baseurl=%s
         if self.version == '9.6' and self.os.is_debian_based():
             with open(config_file, 'w') as f:
                 f.write("data_directory='%s'" % self.get_datadir())
+
+    def get_postmaster_pid(self):
+        with open(self.get_datadir() + "/postmaster.pid", "r") as file:
+            ret = file.readline()
+        return int(ret)

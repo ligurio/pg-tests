@@ -64,7 +64,10 @@ def setup_sender(pginst, waldir, backup_targetdir):
     pginst.exec_psql("ALTER SYSTEM SET wal_level TO 'hot_standby'")
     pginst.exec_psql("ALTER SYSTEM SET archive_mode TO 'on'")
     pginst.exec_psql("ALTER SYSTEM SET max_wal_senders TO '5'")
-    pginst.exec_psql("ALTER SYSTEM SET wal_keep_segments TO '10'")
+    if pginst.version in ['9.6', '10', '11', '12']:
+        pginst.exec_psql("ALTER SYSTEM SET wal_keep_segments TO '10'")
+    else:
+        pginst.exec_psql("ALTER SYSTEM SET max_wal_size TO '10GB'")
     pginst.exec_psql("ALTER SYSTEM SET listen_addresses TO '*'")
     pginst.exec_psql("ALTER SYSTEM SET hot_standby TO 'on'")
     if windows_os:

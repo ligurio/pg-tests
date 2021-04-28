@@ -99,16 +99,12 @@ echo "`date -Iseconds`: Source archive extracting... "
 cd postgres*/
 BASEDIR=`pwd`
 
-echo 'The source archive buildinfo:'
-cat doc/buildinfo.txt
-
 set -o pipefail
 pwd
 
 # Enable the installcheck mode for pg_stat_statements testing
 sed 's|NO_INSTALLCHECK|# NO_INSTALLCHECK|' -i contrib/pg_stat_statements/Makefile
 
-test -f contrib/mchar/mchar.sql.in && make -C contrib/mchar mchar.sql
 
 
 disconfopts=""
@@ -124,6 +120,7 @@ echo "confopts: $confopts"
 echo "`date -Iseconds`: Configuring with options: --enable-tap-tests --host=$host --without-zlib --prefix="$PGPATH" $disconfopts"
 CFLAGS=" -D WINVER=0x0600 -D _WIN32_WINNT=0x0600" LIBS="-lktmw32 -ladvapi32" ./configure --enable-tap-tests --host=$host --without-zlib --prefix="$PGPATH" $disconfopts 2>&1 | tee configure.log
 
+test -f contrib/mchar/mchar.sql.in && make -C contrib/mchar mchar.sql
 echo "Fixing ECPG test for installcheck..."
 sed -e "s@^ECPG = ../../preproc/ecpg@ECPG = ecpg@" \
     -e "s@^ECPG_TEST_DEPENDENCIES = ../../preproc/ecpg\$(X)@ECPG_TEST_DEPENDENCIES = @" \

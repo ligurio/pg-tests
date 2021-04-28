@@ -121,8 +121,7 @@ class TestPgprobackup():
         branch = request.config.getoption('--branch')
 
         request.cls.skip = False
-        if name != 'postgrespro' or edition == '1c' or version == '13':
-            # TODO: Enable this test for v13
+        if name != 'postgrespro' or edition == '1c':
             print("PgProBackup test is only for postgrespro std and ent.")
             request.cls.skip = True
             return
