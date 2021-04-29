@@ -177,7 +177,7 @@ def check_executables(pginst, packages):
                 decode(ConsoleEncoding).split("\n")
             good_lines = 0
             for line in gdbout:
-                if re.match(r'Breakpoint 1, [a-z0-9_:]*main ', line):
+                if re.match(r'Breakpoint 1, [a-z0-9_:\s]*main ', line):
                     good_lines |= 1
                 if re.match(r'#0\s+([a-z0-9_:]*main|'
                             r'get_progname|pg_logging_init)\s+\(', line):
