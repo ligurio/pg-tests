@@ -319,7 +319,8 @@ class PgInstall:
                 if len(pkginfo) != 3:
                     print("Invalid line in yum list output:", line)
                     raise Exception('Invalid line in yum list output')
-                pkgname = re.sub(r'\.(aarch64|x86_64|noarch)$', '', pkginfo[0])
+                pkgname = re.sub(r'\.(aarch64|x86_64|noarch|ppc64le)$', '',
+                                 pkginfo[0])
                 result[pkgname] = pkginfo[1]
             if self.version == '9.6':
                 if 'pgbadger' in result and 'pgpro-pgbadger' in result:
