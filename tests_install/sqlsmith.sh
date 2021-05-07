@@ -17,6 +17,11 @@ if which apt-get; then
     apt-get install -y gcc5-c++
     if grep 'PRETTY_NAME="ALT 8' /etc/os-release; then
         apt-get install -y autoconf_2.60 automake_1.14 libtool_2.4
+        if grep 'VERSION_ID=8.2' /etc/os-release; then
+          wget http://dist.l.postgrespro.ru/resources/linux/centos-7/\
+autoconf-archive-2017.03.21-1.el7.noarch.rpm
+          rpm -i autoconf-archive*.noarch.rpm
+        fi
     fi
 elif which zypper; then
     zypper install -y gcc-c++
