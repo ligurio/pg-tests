@@ -439,7 +439,8 @@ class PgInstall:
             return "altlinux-spt"
         elif self.os_name == "ALT Linux" and self.os_version == "7.0.5":
             return "altlinux"
-        elif self.os_name == "ALT SPServer" and self.os_version == "8.0":
+        elif self.os_name == "ALT SPServer" and \
+                self.os_version.startswith("8."):
             return "altlinux-spt"
         elif self.os_name == "ROSA Enterprise Linux Server":
             if self.os_version == "6.8":
@@ -641,7 +642,11 @@ baseurl=%s
                 repo = "deb %s %s main" % (baseurl, codename)
                 if self.os.is_altlinux():
                     print('OS_VERSION: %s' % self.os_version)
-                    os_major_version = self.os_version.split('.')[0]
+                    if self.os_name == "ALT SPServer" and \
+                            self.os_version == "8.2":
+                        os_major_version = "8.2"
+                    else:
+                        os_major_version = self.os_version.split('.')[0]
                     os_major_version = os_major_version.replace('p', '')
                     repo = "rpm %s/%s %s pgpro\n" \
                            "rpm %s/%s noarch pgpro\n" % \
@@ -727,7 +732,7 @@ baseurl=%s
             list_file = 'yandex'
             if not self.os_version.startswith('9.'):
                 list_file = 'alt'
-                if self.os_version == '8.0' and self.os_name == 'ALT SPServer':
+                if self.os_version.startswith('8.') and self.os_name == 'ALT SPServer':
                     list_file = 'altsp'
             cmd = r"perl -i -pe 's/^\s*([^#](.*?)x86_64)(\s+classic\s*)$/" \
                   "$1$3$1 debuginfo\n/' /etc/apt/sources.list.d/%s.list" % \
