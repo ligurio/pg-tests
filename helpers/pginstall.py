@@ -732,7 +732,8 @@ baseurl=%s
             list_file = 'yandex'
             if not self.os_version.startswith('9.'):
                 list_file = 'alt'
-                if self.os_version.startswith('8.') and self.os_name == 'ALT SPServer':
+                if self.os_version.startswith('8.') and \
+                        self.os_name == 'ALT SPServer':
                     list_file = 'altsp'
             cmd = r"perl -i -pe 's/^\s*([^#](.*?)x86_64)(\s+classic\s*)$/" \
                   "$1$3$1 debuginfo\n/' /etc/apt/sources.list.d/%s.list" % \
