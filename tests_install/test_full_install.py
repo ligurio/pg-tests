@@ -182,9 +182,9 @@ def check_executables(pginst, packages):
                 if re.match(r'#0\s+([a-z0-9_:]*main|'
                             r'get_progname|pg_logging_init)\s+\(', line):
                     good_lines |= 2
-                # PGPRO-3733 (system libraries CRC failed in altlinux-spt-8)
+                # PGPRO-3733 (system libraries CRC failed in altlinux-spt-8*)
                 if not (pginst.os_name == 'ALT SPServer'
-                        and pginst.os_version == '8.0'
+                        and pginst.os_version.startswith('8.')
                         and re.match(r'warning:.*/usr/lib', line)) \
                         and re.match(r'warning:.*\(CRC mismatch\).', line):
                     print("gdb for %s output:" % f, gdbout)
