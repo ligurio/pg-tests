@@ -76,6 +76,27 @@ FIRST_RELEASE = {
         'postgrespro-1c-11': '11.8',
         'postgrespro-1c-12': '12.3',
     },
+    # altlinux-spt-8.2
+    "ALT SPServer 8.2": {
+        'postgresql--9.6': None,
+        'postgresql--10': None,
+        'postgresql--11': None,
+        'postgrespro-std-9.6': None,
+        'postgrespro-std-10': '10.17.1',
+        'postgrespro-std-11': '11.12.1',
+        'postgrespro-std-12': '12.7.1',
+        'postgrespro-std-13': '13.3.1',
+        'postgrespro-ent-9.6': None,
+        'postgrespro-ent-10': '10.17.1',
+        'postgrespro-ent-11': '11.12.1',
+        'postgrespro-ent-12': '12.7.1',
+        'postgrespro-ent-13': '13.3.1',
+        'postgrespro-1c-9.6': None,
+        'postgrespro-1c-10': '10.17',
+        'postgrespro-1c-11': '11.12',
+        'postgrespro-1c-12': '12.7',
+        'postgrespro-1c-13': '13.3',
+    },
     # altlinux-9
     "ALT Server 9.0": {
         'postgresql--9.6': None,
