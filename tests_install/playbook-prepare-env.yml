@@ -20,8 +20,8 @@
     debug:
       msg: "System {{ inventory_hostname }}/{{ ansible_host }} \
             ({{ ansible_connection }}) has os_family {{ ansible_os_family }}, \
-            distribution {{ ansible_distribution }}, major version {{ ansible_distribution_major_version }} \
-            ({{ ansible_architecture }})."
+            distribution {{ ansible_distribution }}, major version {{ ansible_distribution_major_version }}, \
+            version {{ansible_distribution_version}} ({{ ansible_architecture }})."
 
   # sles-12 sometimes fail mount on boot
   - name: mount DVD(s) (if available)
@@ -67,6 +67,19 @@
       apt-get update;
       fi;
     when: use_ssh is not defined and ansible_distribution == 'Astra Linux (Orel)'
+    become_method: su
+    become: true
+
+  - name: setup DVDs as apt repositories (Altlinux SP8)
+    shell: if [ -d /mnt/dvd/ALTLinux ]; then
+      echo "rpm file:///mnt/dvd/ ALTLinux main" > /etc/apt/sources.list.d/repo-dvd.list;
+      fi;
+      if [ -d /mnt/dvd2/ALTLinux ]; then
+      echo "rpm file:///mnt/dvd2/ ALTLinux addon" > /etc/apt/sources.list.d/repo-dvd2.list;
+      fi;
+      apt-get update;
+    when: use_ssh is not defined and (ansible_distribution == 'ALT' or ansible_distribution == 'Altlinux') and
+      ansible_distribution_version == "8.2"
     become_method: su
     become: true
 
@@ -274,7 +287,8 @@
       state=present
     become_method: sudo
     become: true
-    when: (ansible_distribution == "ALT" or ansible_distribution == "Altlinux") and ansible_distribution_major_version == "9"
+    when: (ansible_distribution == "ALT" or ansible_distribution == "Altlinux") and
+      (ansible_distribution_major_version == "9" or ansible_distribution_major_version == "8.2")
 
   - name: update repos and install acpid-events-power, gdb (ALT)
     shell: apt-get update &&
@@ -323,7 +337,7 @@
     become: true
 
   - name: install required packages (APT)
-    apt:
+    package:
       name:
         - acpid
         - gcc
@@ -332,18 +346,20 @@
       state: present
       update_cache: yes
     when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu' or
+          ((ansible_distribution == 'ALT' or ansible_distribution == 'Altlinux') and ansible_distribution_version == "8.2") or
           ansible_distribution == 'OSNova Linux (Onyx)' or
           ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux')
     become_method: sudo
     become: true
 
   - name: install required python-dev (APT)
-    apt:
+    package:
       name:
         - "{{ cur_python }}-dev"
       state: present
       update_cache: yes
     when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu' or
+          ((ansible_distribution == 'ALT' or ansible_distribution == 'Altlinux') and ansible_distribution_version == "8.2") or
           ansible_distribution == 'OSNova Linux (Onyx)' or
           ansible_distribution.startswith('Astra Linux') or ansible_distribution.startswith('Astra-Linux')
     become_method: sudo

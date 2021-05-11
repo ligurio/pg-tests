@@ -139,7 +139,7 @@ def create_image(domname, name):
               IMAGE_BASE_URL)
     isos = re.findall(r'''href=['"]?([^'" >]+)\.iso"''', page)
     for isoname in isos:
-        if isoname.startswith(name):
+        if isoname.startswith(name + '-'):
             iso_url = IMAGE_BASE_URL + isoname + '.iso'
             target_iso = TEMPLATE_DIR + isoname + '.iso'
             if not os.path.isfile(target_iso):
@@ -282,7 +282,7 @@ def create_env(name, domname, domimage=None, mac=None, domdesc=''):
         cpus = 2
         features = ""
         clock = "<clock offset='utc'/>"
-    domisos = glob.glob(TEMPLATE_DIR + name + '*.iso')
+    domisos = glob.glob(TEMPLATE_DIR + name + '-*.iso')
     cdroms = ""
     cdromletter = "c"
     for diso in sorted(domisos):
