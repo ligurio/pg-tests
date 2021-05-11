@@ -173,7 +173,8 @@ def install_server(product, edition, version, milestone, branch, windows,
                    version=version, milestone=milestone,
                    branch=branch, windows=windows)
     pg.setup_repo()
-    if pg.os.is_altlinux() and pg.os.os_arch == 'aarch64':
+    if pg.os.is_altlinux() and (pg.os.os_arch == 'aarch64' or
+       pg.os.os_arch == 'ppc64le'):
         os.environ['LANG'] = 'en_US.UTF-8'
     if not windows:
         if old and pg.os_name == 'SLES' and pg.os_version.startswith('12.'):

@@ -45,7 +45,8 @@ class TestExtensions():
         request.cls.pginst = pginst
         pginst.setup_repo()
         print("Running on %s." % target)
-        if pginst.os.is_altlinux() and pginst.os.os_arch == 'aarch64':
+        if pginst.os.is_altlinux() and (pginst.os.os_arch == 'aarch64' or
+           pginst.os.os_arch == 'ppc64le'):
             os.environ['LANG'] = 'en_US.UTF-8'
         if self.system != 'Windows':
             pginst.install_full()

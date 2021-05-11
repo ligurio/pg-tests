@@ -533,7 +533,8 @@ class TestMultimasterInstall():
                            version=version, milestone=milestone,
                            branch=branch, windows=(self.system == 'Windows'))
         request.cls.pginst = pginst
-        if pginst.os.is_altlinux() and pginst.os.os_arch == 'aarch64':
+        if pginst.os.is_altlinux() and (pginst.os.os_arch == 'aarch64' or
+           pginst.os.os_arch == 'ppc64le'):
             os.environ['LANG'] = 'en_US.UTF-8'
         pginst.setup_repo()
         print("Running on %s." % target)
