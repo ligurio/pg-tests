@@ -789,9 +789,11 @@ baseurl=%s
                     self.os_version.startswith('7'):
                 self.exec_cmd_retry('yum install -y wget')
                 extra_yum_repo = "rhel-7"
-            if self.os_name.startswith("Oracle Linux Server") and \
-                    self.os_version.startswith('7.'):
-                extra_yum_repo = "oraclelinux-7"
+            if self.os_name.startswith("Oracle Linux Server"):
+                if self.os_version.startswith('7.'):
+                    extra_yum_repo = "oraclelinux-7"
+                if self.os_version.startswith('8.'):
+                    extra_yum_repo = "oraclelinux-8"
 
         if extra_yum_repo and self.os.os_arch != 'aarch64':
             cmd = "sh -c 'mkdir /opt/{0} ; cd $_ && " \
