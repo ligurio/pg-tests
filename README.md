@@ -127,10 +127,7 @@
 ## Системные требования к окружению
 
 Необходимо создать каталог /pgpro на диске. В данном каталоге будут хранится виртуальные машины, используемые для запуска тестов.
-- пакеты для RPM-based дистрибутивов:
-```
-yum install -y git libvirt libvirt-python qemu-kvm gcc openssl-devel python-devel python-cffi vim samba
-```
+
 Версия пакета libvirt должна быть не ниже 2.0.
 
 ## Рекомендации для тестов:
@@ -139,14 +136,15 @@ yum install -y git libvirt libvirt-python qemu-kvm gcc openssl-devel python-deve
 
 ## Настройка сервера для запуска тестов:
 
-- пакеты для RPM-based дистрибутивов:
+- пакеты для Debian-based дистрибутивов:
 ```
-yum install -y git libvirt libvirt-python qemu-kvm gcc openssl-devel python-devel python-cffi vim samba
+apt-get install -y git qemu-kvm gcc libssl-dev python-dev vim samba python3-libvirt libvirt-clients libvirt-daemon python3-distro python3-distutils
 ```
+
 - установить PyPA:
 ```
 curl -O https://bootstrap.pypa.io/get-pip.py
-python get-pip.py
+python3 get-pip.py
 ```
 - установить зависимости для [Ansible](https://www.ansible.com/) (см. также
 [инструкцию](http://docs.ansible.com/ansible/intro_installation.html)):
@@ -154,29 +152,10 @@ python get-pip.py
 	Debian-based: apt install -y libssl-dev gcc
 	RPM-based: yum install -y openssl-devel gcc
 ```
-- установить Ansible и модули для него: ```sudo pip install ansible pywinrm paramiko```
-- если для запуска ВМ скрипт не найдет шаблон ВМ, то он его загрузит, но можно
-заранее загрузить все шаблоны виртуальных машин. Например так: ```wget -np -nd
--A qcow2 -r -l 1 http://dist.l.postgrespro.ru/vm-images/test/```
-- для доступа по SSH ключам в гостевые ОС нужно скопировать ключи из репозитория:
-```
-	cp static/id_rsa ~/.ssh/id_rsa.pg-tests
-	cat static/authorized_keys >> ~/.ssh/authorized_keys
-	chmod 700 ~/.ssh/id_rsa.pg-tests
-```
-и добавить их вместе с полезными опциями в конфиг ~/.ssh/config:
-```
-	Compression yes
-	CompressionLevel 9
-	HashKnownHosts yes
-	ServerAliveInterval 120
-	TCPKeepAlive no
+- установить Ansible и модули для него: ```sudo pip3 install ansible pywinrm paramiko```
+- ssh-keygen
+- touch ~/.ssh/known_hosts
 
-	Host *
-        User							test
-        UseRoaming=no
-        IdentityFile                    ~/.ssh/id_rsa.pg-tests
-```
 
 ### Настройки тестируемой ОС
 
