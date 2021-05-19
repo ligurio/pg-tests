@@ -218,7 +218,6 @@ class TestMakeCheck(object):
                 shell=True)
             request.session.customexitstatus = 222
         if run_test_ou:
-            # PGPRO-3837
             is_aslr = self.is_aslr_active(pginst)
             if is_aslr:
                 raise Exception("ASLR enabled but it's not "
