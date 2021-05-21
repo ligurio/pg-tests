@@ -16,6 +16,7 @@ import re
 
 system = platform.system()
 tempdir = os.path.join(os.path.abspath(os.getcwd()), 'tmp')
+tablespacedir = os.path.join(tempdir, 'ts')
 
 upgrade_dir = os.path.join(tempdir, 'upgrade')
 amcheck_sql = """
@@ -205,6 +206,13 @@ def install_server(product, edition, version, milestone, branch, windows,
     return pg
 
 
+def prepare_ts_dir(pg):
+    if os.path.exists(tablespacedir):
+        shutil.rmtree(tablespacedir)
+    pg.exec_psql("COPY (SELECT 1) TO PROGRAM 'mkdir %s';" %
+                 tablespacedir)
+
+
 def generate_db(pg, pgnew, custom_dump=None, on_error_stop=True):
     key = "-".join([pg.product, pg.edition, pg.version])
     dump_file_name = download_dump(pg.product, pg.edition, pg.version,
@@ -213,6 +221,16 @@ def generate_db(pg, pgnew, custom_dump=None, on_error_stop=True):
         pg.exec_psql_file(dump_file_name, '-q%s' %
                           (' -v ON_ERROR_STOP=1' if on_error_stop else ''),
                           stdout=out)
+    if pg.edition in ['ent', 'ent-cert']:
+        # TEST-162
+        prepare_ts_dir(pg)
+        pg.exec_psql(
+            "CREATE TABLESPACE ts"
+            " LOCATION '%s' WITH(compression = true); "
+            "CREATE TABLE tbl TABLESPACE ts"
+            " AS SELECT i, rpad('',30,'a')"
+            " FROM generate_series(0,10000) AS i;" % tablespacedir)
+
     if compare_versions(pg.version, '12') < 0 and \
             compare_versions(pgnew.version, '12') >= 0:
         pg.do_in_all_dbs(prepare_for_12_plus_sql, 'prepare_for_12_plus')
@@ -547,6 +565,7 @@ class TestUpgrade():
 
             if (os.path.isfile(file_name)):
                 start(pg)
+                prepare_ts_dir(pg)
                 with open(os.path.join(tempdir, 'load-dr-%s.log' % old_key),
                           'wb') as out:
                     pg.exec_psql_file(file_name, '-q', stdout=out)
