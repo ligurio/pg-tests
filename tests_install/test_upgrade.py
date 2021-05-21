@@ -226,10 +226,11 @@ def generate_db(pg, pgnew, custom_dump=None, on_error_stop=True):
         prepare_ts_dir(pg)
         pg.exec_psql(
             "CREATE TABLESPACE ts"
-            " LOCATION '%s' WITH(compression = true); "
+            " LOCATION '%s' WITH(compression = true);" % tablespacedir)
+        pg.exec_psql(
             "CREATE TABLE tbl TABLESPACE ts"
             " AS SELECT i, rpad('',30,'a')"
-            " FROM generate_series(0,10000) AS i;" % tablespacedir)
+            " FROM generate_series(0,10000) AS i;")
 
     if compare_versions(pg.version, '12') < 0 and \
             compare_versions(pgnew.version, '12') >= 0:
