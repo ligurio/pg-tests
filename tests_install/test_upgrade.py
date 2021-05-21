@@ -16,7 +16,7 @@ import re
 
 system = platform.system()
 tempdir = os.path.join(os.path.abspath(os.getcwd()), 'tmp')
-tablespace_path = tempdir + os.sep + 'ts'
+tablespacedir = os.path.join(tempdir, 'ts')
 
 upgrade_dir = os.path.join(tempdir, 'upgrade')
 amcheck_sql = """
@@ -207,10 +207,10 @@ def install_server(product, edition, version, milestone, branch, windows,
 
 
 def prepare_ts_dir(pg):
-    if os.path.exists(tablespace_path):
-        shutil.rmtree(tablespace_path)
+    if os.path.exists(tablespacedir):
+        shutil.rmtree(tablespacedir)
     pg.exec_psql("COPY (SELECT 1) TO PROGRAM 'mkdir %s';" %
-                 tablespace_path)
+                 tablespacedir)
 
 
 def generate_db(pg, pgnew, custom_dump=None, on_error_stop=True):
@@ -224,17 +224,15 @@ def generate_db(pg, pgnew, custom_dump=None, on_error_stop=True):
     if pg.edition in ['ent', 'ent-cert']:
         # TEST-162
         prepare_ts_dir(pg)
-        # os.mkdir(tablespace_path)
-        # pg.os.fix_permissions(tablespace_path)
-        create_command = 'CREATE TABLESPACE ts ' \
-                         'LOCATION \'%s\' WITH(compression = true);' % \
-                         tablespace_path
-
-        pg.exec_psql(create_command)
+        pg.exec_psql('CREATE TABLESPACE ts '
+                     'LOCATION \'%s\' WITH(compression = true);' %
+                     tablespacedir)
         pg.exec_psql(
+            "CREATE TABLESPACE ts"
+            " LOCATION \'%s\' WITH(compression = true); "
             "CREATE TABLE tbl TABLESPACE ts"
             " AS SELECT i, rpad('',30,'a')"
-            " FROM generate_series(0,10000) AS i;")
+            " FROM generate_series(0,10000) AS i;" % tablespacedir)
 
     if compare_versions(pg.version, '12') < 0 and \
             compare_versions(pgnew.version, '12') >= 0:
