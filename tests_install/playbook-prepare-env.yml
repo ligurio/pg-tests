@@ -765,6 +765,14 @@
       creates: C:\Users\test\pg_tests
     when: ansible_os_family == "Windows"
 
+  - name: add FullControl for tmp
+    win_acl:
+      path: C:\Users\test\pg-tests\tmp
+      user: "NETWORK SERVICE"
+      rights: FullControl
+      type: allow
+    when: ansible_os_family == "Windows"
+
   - name: windows - install python requirements
     when: ansible_os_family == "Windows"
     win_shell: 'pip3 install -r C:\Users\test\pg-tests\tests_install\requirements.txt'
