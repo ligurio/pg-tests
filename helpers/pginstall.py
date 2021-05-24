@@ -31,67 +31,70 @@ WIN_INST_DIR = "C:\\Users\\test\\pg-tests\\pg_installer"
 PRELOAD_LIBRARIES = {
     'ent-13':
         ['auth_delay', 'auto_explain', 'in_memory',
-         'pgpro_scheduler', 'ptrack',
+         'pgpro_scheduler', 'ptrack', 'pg_query_state',
          'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling',
          'pg_pathman'],
     'ent-12':
         ['auth_delay', 'auto_explain', 'in_memory',
-         'pgpro_scheduler', 'ptrack',
+         'pgpro_scheduler', 'ptrack', 'pg_query_state',
          'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling',
          'pg_pathman'],
     'ent-11':
         ['auth_delay', 'auto_explain', 'in_memory', 'timescaledb',
-         'pgpro_scheduler', 'ptrack',
+         'pgpro_scheduler', 'ptrack', 'pg_query_state',
          'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
          'pg_pathman'],
     'std-11':
         ['auth_delay', 'auto_explain', 'timescaledb', 'pg_stat_statements',
-         'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
+         'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack',
+         'pg_query_state'],
     'std-12':
         ['auth_delay', 'auto_explain', 'timescaledb', 'pg_stat_statements',
-         'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
+         'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack',
+         'pg_query_state'],
     'std-13':
         ['auth_delay', 'auto_explain', 'pg_stat_statements',
-         'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
+         'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack',
+         'pg_query_state'],
     'std-cert-11':
         ['auth_delay', 'auto_explain', 'pg_stat_statements',
          'plantuner', 'shared_ispell', 'pg_pathman',
-         'pg_proaudit'],
+         'pg_proaudit', 'pg_query_state'],
     'std-10':
         ['auth_delay', 'auto_explain', 'pg_stat_statements',
-         'plantuner', 'shared_ispell', 'pg_pathman'],
+         'plantuner', 'shared_ispell', 'pg_pathman', 'pg_query_state'],
     'ent-10':
         ['auth_delay', 'auto_explain', 'in_memory',
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
-         'pg_pathman'],
+         'pg_pathman', 'pg_query_state'],
     'std-cert-10':
         ['auth_delay', 'auto_explain', 'pgaudit', 'pg_stat_statements',
-         'plantuner', 'shared_ispell', 'pg_pathman'],
+         'plantuner', 'shared_ispell', 'pg_pathman', 'pg_query_state'],
     'std-9.6':
         ['auth_delay', 'auto_explain', 'pg_stat_statements',
-         'plantuner', 'shared_ispell', 'pg_pathman'],
+         'plantuner', 'shared_ispell', 'pg_pathman', 'pg_query_state'],
     'ent-9.6':
         ['auth_delay', 'auto_explain',
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
-         'shared_ispell', 'pg_wait_sampling', 'pg_pathman'],
+         'shared_ispell', 'pg_wait_sampling', 'pg_pathman', 'pg_query_state'],
     'ent-cert-9.6':
         ['auth_delay', 'auto_explain',
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
-         'shared_ispell', 'pg_wait_sampling', 'pg_pathman'],
+         'shared_ispell', 'pg_wait_sampling', 'pg_pathman', 'pg_query_state'],
     'ent-cert-10':
         ['auth_delay', 'auto_explain', 'in_memory', 'pgaudit',
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
-         'pg_pathman'],
+         'pg_pathman', 'pg_query_state'],
     'ent-cert-11':
         ['auth_delay', 'auto_explain', 'in_memory', 'pg_proaudit',
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
-         'pg_pathman', 'passwordcheck'],
+         'pg_pathman', 'passwordcheck', 'pg_query_state'],
     '1c-9.6':
         ['auth_delay', 'auto_explain', 'pg_stat_statements', 'plantuner'],
     '1c-10':
