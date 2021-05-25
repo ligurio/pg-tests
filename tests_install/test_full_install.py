@@ -283,10 +283,6 @@ class TestFullInstall():
         pginst = PgInstall(product=name, edition=edition,
                            version=version, milestone=milestone,
                            branch=branch, windows=(self.system == 'Windows'))
-        # This is a workaround for the problem described in PGPRO-3596
-        if pginst.os.is_altlinux() and (pginst.os.os_arch == 'aarch64' or
-           pginst.os.os_arch == 'ppc64le'):
-            os.environ['LANG'] = 'en_US.UTF-8'
         request.cls.pginst = pginst
         pginst.setup_repo()
         print("Running on %s." % target)

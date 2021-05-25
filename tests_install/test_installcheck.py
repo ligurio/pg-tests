@@ -70,9 +70,6 @@ class TestMakeCheck(object):
         request.cls.pginst = pginst
         pginst.make_check_passed = False
         curpath = os.path.dirname(os.path.abspath(__file__))
-        if pginst.os.is_altlinux() and (pginst.os.os_arch == 'aarch64' or
-           pginst.os.os_arch == 'ppc64le'):
-            os.environ['LANG'] = 'en_US.UTF-8'
         distro = pginst.dist_info
         if distro[2] == 'x86_64' or self.system == 'Windows':
             distro = distro[:-1]

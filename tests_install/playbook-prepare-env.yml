@@ -440,6 +440,14 @@
     become_method: sudo
     become: true
 
+  - name: setup en_US locale for Altlinux
+    shell: echo "LANG=en_US.UTF-8">/etc/locale.conf;
+    when: (ansible_distribution == 'ALT' or ansible_distribution == 'Altlinux'
+      or ansible_distribution == 'starter kit' or ansible_distribution == 'ALT Starterkit (Hypericum)') and
+      (ansible_distribution_major_version == "8" or ansible_distribution_major_version == "9" or ansible_distribution_major_version == "p9")
+    become_method: sudo
+    become: true
+
   - name: configure locale
     shell: if localectl | grep -E 'System Locale:\s*n/a'; then
        if locale -a | grep en_US.utf8; then

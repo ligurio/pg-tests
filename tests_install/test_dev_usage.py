@@ -51,9 +51,6 @@ class TestDevUsage(object):
                            branch=branch, windows=(self.system == 'Windows'))
         pginst.setup_repo()
         print("Running on %s." % target)
-        if pginst.os.is_altlinux() and (pginst.os.os_arch == 'aarch64' or
-           pginst.os.os_arch == 'ppc64le'):
-            os.environ['LANG'] = 'en_US.UTF-8'
         if self.system != 'Windows':
             pginst.install_server_dev()
             pg_bin_path = pginst.get_default_bin_path()

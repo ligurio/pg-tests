@@ -43,9 +43,6 @@ class TestCleanInstall():
         pginst = PgInstall(product=name, edition=edition,
                            version=version, milestone=milestone,
                            branch=branch, windows=(self.system == 'Windows'))
-        if pginst.os.is_altlinux() and (pginst.os.os_arch == 'aarch64' or
-           pginst.os.os_arch == 'ppc64le'):
-            os.environ['LANG'] = 'en_US.UTF-8'
         request.cls.pginst = pginst
         pginst.setup_repo()
         print("Running on %s." % target)
@@ -73,10 +70,6 @@ class TestCleanInstall():
         pginst.stop_service()
         os.unlink('/etc/default/postgrespro-%s-%s' %
                   (pginst.alter_edtn, pginst.version))
-        # This is a workaround for the problem described in PGPRO-3596
-        if pginst.os.is_altlinux() and (pginst.os.os_arch == 'aarch64' or
-           pginst.os.os_arch == 'ppc64le'):
-            os.environ['LANG'] = 'en_US.UTF-8'
         dbpath = os.path.join(tempdir, 'db1')
         if os.path.isdir(dbpath):
             shutil.rmtree(dbpath, True)
