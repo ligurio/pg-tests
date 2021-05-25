@@ -31,67 +31,70 @@ WIN_INST_DIR = "C:\\Users\\test\\pg-tests\\pg_installer"
 PRELOAD_LIBRARIES = {
     'ent-13':
         ['auth_delay', 'auto_explain', 'in_memory',
-         'pgpro_scheduler', 'ptrack',
+         'pgpro_scheduler', 'ptrack', 'pg_query_state',
          'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling',
          'pg_pathman'],
     'ent-12':
         ['auth_delay', 'auto_explain', 'in_memory',
-         'pgpro_scheduler', 'ptrack',
+         'pgpro_scheduler', 'ptrack', 'pg_query_state',
          'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling',
          'pg_pathman'],
     'ent-11':
         ['auth_delay', 'auto_explain', 'in_memory', 'timescaledb',
-         'pgpro_scheduler', 'ptrack',
+         'pgpro_scheduler', 'ptrack', 'pg_query_state',
          'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
          'pg_pathman'],
     'std-11':
         ['auth_delay', 'auto_explain', 'timescaledb', 'pg_stat_statements',
-         'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
+         'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack',
+         'pg_query_state'],
     'std-12':
         ['auth_delay', 'auto_explain', 'timescaledb', 'pg_stat_statements',
-         'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
+         'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack',
+         'pg_query_state'],
     'std-13':
         ['auth_delay', 'auto_explain', 'pg_stat_statements',
-         'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack'],
+         'plantuner', 'shared_ispell', 'pg_pathman', 'ptrack',
+         'pg_query_state'],
     'std-cert-11':
         ['auth_delay', 'auto_explain', 'pg_stat_statements',
          'plantuner', 'shared_ispell', 'pg_pathman',
-         'pg_proaudit'],
+         'pg_proaudit', 'pg_query_state'],
     'std-10':
         ['auth_delay', 'auto_explain', 'pg_stat_statements',
-         'plantuner', 'shared_ispell', 'pg_pathman'],
+         'plantuner', 'shared_ispell', 'pg_pathman', 'pg_query_state'],
     'ent-10':
         ['auth_delay', 'auto_explain', 'in_memory',
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
-         'pg_pathman'],
+         'pg_pathman', 'pg_query_state'],
     'std-cert-10':
         ['auth_delay', 'auto_explain', 'pgaudit', 'pg_stat_statements',
-         'plantuner', 'shared_ispell', 'pg_pathman'],
+         'plantuner', 'shared_ispell', 'pg_pathman', 'pg_query_state'],
     'std-9.6':
         ['auth_delay', 'auto_explain', 'pg_stat_statements',
-         'plantuner', 'shared_ispell', 'pg_pathman'],
+         'plantuner', 'shared_ispell', 'pg_pathman', 'pg_query_state'],
     'ent-9.6':
         ['auth_delay', 'auto_explain',
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
-         'shared_ispell', 'pg_wait_sampling', 'pg_pathman'],
+         'shared_ispell', 'pg_wait_sampling', 'pg_pathman', 'pg_query_state'],
     'ent-cert-9.6':
         ['auth_delay', 'auto_explain',
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
-         'shared_ispell', 'pg_wait_sampling', 'pg_pathman'],
+         'shared_ispell', 'pg_wait_sampling', 'pg_pathman', 'pg_query_state'],
     'ent-cert-10':
         ['auth_delay', 'auto_explain', 'in_memory', 'pgaudit',
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
-         'pg_pathman'],
+         'pg_pathman', 'pg_query_state'],
     'ent-cert-11':
         ['auth_delay', 'auto_explain', 'in_memory', 'pg_proaudit',
          'pgpro_scheduler', 'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling', 'pg_shardman',
-         'pg_pathman', 'passwordcheck'],
+         'pg_pathman', 'passwordcheck', 'pg_query_state'],
     '1c-9.6':
         ['auth_delay', 'auto_explain', 'pg_stat_statements', 'plantuner'],
     '1c-10':
@@ -789,9 +792,11 @@ baseurl=%s
                     self.os_version.startswith('7'):
                 self.exec_cmd_retry('yum install -y wget')
                 extra_yum_repo = "rhel-7"
-            if self.os_name.startswith("Oracle Linux Server") and \
-                    self.os_version.startswith('7.'):
-                extra_yum_repo = "oraclelinux-7"
+            if self.os_name.startswith("Oracle Linux Server"):
+                if self.os_version.startswith('7.'):
+                    extra_yum_repo = "oraclelinux-7"
+                if self.os_version.startswith('8.'):
+                    extra_yum_repo = "oraclelinux-8"
 
         if extra_yum_repo and self.os.os_arch != 'aarch64':
             cmd = "sh -c 'mkdir /opt/{0} ; cd $_ && " \
