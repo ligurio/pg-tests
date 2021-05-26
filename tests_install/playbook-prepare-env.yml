@@ -177,6 +177,15 @@
     become_method: "{{ use_become_method }}"
     become: true
 
+  - name: disable updates and backports in Ubuntu 21.04
+    lineinfile:
+      path: /etc/apt/sources.list
+      state: absent
+      regexp: 'hirsute\-updates|hirsute\-backports'
+    when: ansible_distribution == "Ubuntu" and ansible_distribution_version == "21.04"
+    become_method: "{{ use_become_method }}"
+    become: true
+
   - name: clean DNF metadata
     command: dnf clean packages
     args:
