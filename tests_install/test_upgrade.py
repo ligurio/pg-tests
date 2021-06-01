@@ -222,7 +222,7 @@ def generate_db(pg, pgnew, custom_dump=None, on_error_stop=True):
     # PGPRO-3241 EE9.6 in windows configured without zstd
     if pg.edition in ['ent', 'ent-cert'] and \
             not (pg.os.is_windows() and pg.version == '9.6'
-                 and compare_versions(pgnew.version, 12) < 0):
+                 and compare_versions(pgnew.version, '12') < 0):
         # TEST-162
         prepare_ts_dir(pg)
         pg.exec_psql(
