@@ -94,6 +94,7 @@ if [ ! -z "`which coredumpctl 2>/dev/null`" ]; then
 fi
 if [ ! -z "`ls /var/coredumps`" ]; then
     for dump in /var/coredumps/*; do
+        # PGPRO-4687
         case $dump in
             *":!bin!bash")
                 # The bash coredump encountered on MSVSphere 6.3
@@ -125,6 +126,10 @@ if [ ! -z "`ls /var/coredumps`" ]; then
                 ;;
             *":!bin!sh")
                 The sh coredump on SIGQUIT encountered on AltLinux SPT 7
+                continue
+                ;;
+            *":!bin!sh4")
+                The sh4 coredump on SIGQUIT encountered on AltLinux SPT 8.2
                 continue
                 ;;
         esac
