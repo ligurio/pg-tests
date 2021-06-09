@@ -258,15 +258,6 @@ def dump_and_diff_dbs(oldKey, pgNew, prefix):
     file2 = os.path.join(tempdir, '%s-expected.sql' % oldKey)
     diff_file = os.path.join(tempdir, "%s-%s.sql.diff" % (prefix, oldKey))
     diff_dbs(file2, file1, diff_file)
-
-    # PGPRO-4882
-    if pgNew.version == '13' and pgNew.edition in ['ent', 'ent-cert']:
-        crpi = pgNew.exec_psql_select(
-            "SELECT COUNT(*) FROM pg_database WHERE "
-            "datname='contrib_regression_pageinspect'")
-        if crpi == '1':
-            pgNew.exec_psql('DROP EXTENSION IF EXISTS pageinspect',
-                            '-d contrib_regression_pageinspect')
     pgNew.do_in_all_dbs(amcheck_sql, 'amcheck')
 
 
