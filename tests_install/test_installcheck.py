@@ -215,10 +215,6 @@ class TestMakeCheck(object):
                 shell=True)
             request.session.customexitstatus = 222
         if run_test_ou:
-            is_aslr = self.is_aslr_active(pginst)
-            if is_aslr:
-                raise Exception("ASLR enabled but it's not "
-                                "compatible with pgpro-online-upgrade.")
             pid_old = pginst.get_postmaster_pid()
             if pginst.os.is_pm_yum():
                 cmd = "yum reinstall -y %s"
@@ -253,22 +249,3 @@ class TestMakeCheck(object):
             '"%s" "%s"' % (os.path.join(curpath, 'sqlsmith.sh'),
                            pg_prefix),
             shell=True)
-
-    def is_aslr_active(self, pginst):
-        def read_maps(pid):
-            maps = []
-            with open("/proc/%s/maps" % pid) as file:
-                for line in file.readlines():
-                    if not re.search(
-                            r'SYSV|\/dev\/shm\/|\[heap\]|PostgreSQL', line):
-                        maps.append(line)
-            return ''.join(maps)
-        pid_old = pginst.get_postmaster_pid()
-        maps_old = read_maps(pid_old)
-        pginst.restart_service()
-        pid_new = pginst.get_postmaster_pid()
-        maps_new = read_maps(pid_new)
-        if pid_old == pid_new:
-            raise Exception(
-                "Postmaster PID not changed after the service restart.")
-        return not maps_old == maps_new
