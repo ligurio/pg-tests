@@ -127,7 +127,7 @@
       sed s/enabled=1/enabled=0/ -i /etc/yum.repos.d/pgpro.repo;
       fi; \
       echo "Workaround for PGPRO-1259"; \
-      mkdir /opt/localrepo && cd /opt/localrepo && \
+      rm -rf /opt/localrepo; mkdir /opt/localrepo && cd /opt/localrepo && \
       wget http://vault.centos.org/6.8/os/x86_64/Packages/libicu-4.2.1-14.el6.x86_64.rpm && \
       wget http://vault.centos.org/6.8/os/x86_64/Packages/libicu-devel-4.2.1-14.el6.x86_64.rpm && \
       createrepo . && cd ~ && \
