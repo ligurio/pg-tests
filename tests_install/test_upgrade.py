@@ -189,7 +189,7 @@ BEGIN
             "public"."box_ops" USING "gist2" CASCADE';
     EXCEPTION WHEN OTHERS THEN
         -- gist2 doesn't exists in some dumps
-    END;        
+    END;
 END;
 $$;
 """
