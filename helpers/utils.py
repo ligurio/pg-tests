@@ -590,14 +590,19 @@ def read_dump(file):
     ]
     copy_pattern = re.compile(r"\s?COPY\s+.*FROM\sstdin.*")
     rt_pattern = re.compile(r"\s?CREATE\s+TYPE.*AS\s+RANGE\s.*")
-    remove_mr_tn_pattern = re.compile(r"([^(^,]?)(,?\s+multirange_type_name\s?=\s?[^\s^)^,]+)(,?\)?.*)")
-    alter_op_family_pattern = re.compile(r"\s?ALTER\s+OPERATOR\s+FAMILY\s+([^\s]+)\s+USING\s+[^\s]+\s+ADD.*")
+    remove_mr_tn_pattern = re.compile(
+        r"([^(^,]?)(,?\s+multirange_type_name\s?=\s?[^\s^)^,]+)(,?\)?.*)"
+    )
+    alter_op_family_pattern = re.compile(
+        r"\s?ALTER\s+OPERATOR\s+FAMILY\s+([^\s]+)\s+USING\s+[^\s]+\s+ADD.*"
+    )
     sort_item = []
     sort_body = []
     sort_items = []
     rt_items = []
     aof = None
     op_families = {}
+    operator = False
     with open(file, 'rb') as f:
         for line in f:
             line = preprocess(line.decode()).strip()
@@ -612,12 +617,21 @@ def read_dump(file):
                     if line.endswith(';'):
                         aof = None
                     continue
-                for pattern in sort_patterns:
+                for idx, pattern in enumerate(sort_patterns):
                     if pattern.match(line):
                         sort_item.append('')
                         sort_body = []
+                        if idx == 1:
+                            operator = True
                         break
                 if sort_item:
+                    if operator:
+                        search = re.search(
+                            r"\s?FOR\s+TYPE\s+[^\s]+\s+USING"
+                            r"\s+[^\s]+\s+FAMILY\s+([^\s]+)\s+.*", line)
+                        if search and search.group(1) in op_families:
+                            sort_body.extend(op_families[search.group(1)])
+                            operator = False
                     if len(sort_item) > 1:
                         sort_body.append(line[:-1].strip())
                     else:
@@ -627,6 +641,7 @@ def read_dump(file):
                         sort_item.extend(sort_body)
                         sort_items.append("\n".join(sort_item))
                         sort_item = []
+                        operator = False
                     continue
 
                 if rt_items or rt_pattern.match(line):
@@ -654,7 +669,6 @@ def read_dump(file):
                     lines_to_sort.append(line)
     sort_items.sort()
     lines.extend(sort_items)
-    print(op_families)
     return [line + '\n' for line in lines]
 
 
