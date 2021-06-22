@@ -713,18 +713,18 @@ UPGRADE_ROUTES = {
 
     'postgrespro-1c-14': {
         'from': [
-            # {
-            #     'name': 'postgresql', 'edition': '', 'version': '9.6',
-            #     'initdb-params': '--locale=C'
-            # },
-            # {
-            #     'name': 'postgresql', 'edition': '', 'version': '10',
-            #     'initdb-params': '--locale=C'
-            # },
-            # {
-            #     'name': 'postgresql', 'edition': '', 'version': '11',
-            #     'initdb-params': '--locale=C'
-            # },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '9.6',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '10',
+                'initdb-params': '--locale=C'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '11',
+                'initdb-params': '--locale=C'
+            },
             {
                 'name': 'postgresql', 'edition': '', 'version': '12',
                 'initdb-params': '--locale=C'

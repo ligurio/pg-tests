@@ -607,21 +607,21 @@ def read_dump(file):
         for line in f:
             line = preprocess(line.decode()).strip()
             if line:
-                if alter_op_family_pattern.match(line):
-                    aof = alter_op_family_pattern.search(line).group(1)
+                aof_search = alter_op_family_pattern.search(line)
+                if aof_search:
+                    aof = aof_search.group(1)
                     op_families[aof] = []
                     continue
                 if aof:
-                    op_families[aof].append(line[:-1] if line.endswith(';')
-                                            else line)
+                    op_families[aof].append(line.rstrip(';'))
                     if line.endswith(';'):
                         aof = None
                     continue
-                for idx, pattern in enumerate(sort_patterns):
+                for pattern in sort_patterns:
                     if pattern.match(line):
                         sort_item.append('')
                         sort_body = []
-                        if idx == 1:
+                        if 'OPERATOR' in pattern.pattern:
                             operator = True
                         break
                 if sort_item:
