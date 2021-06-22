@@ -103,7 +103,9 @@ set -o pipefail
 pwd
 
 # Enable the installcheck mode for pg_stat_statements testing
-sed 's|NO_INSTALLCHECK|# NO_INSTALLCHECK|' -i contrib/pg_stat_statements/Makefile
+if "$PGPATH/bin/psql" -c "SHOW shared_preload_libraries;" | grep "pg_stat_statements" > /dev/null 2>&1; then
+    sed 's|NO_INSTALLCHECK|# NO_INSTALLCHECK|' -i contrib/pg_stat_statements/Makefile
+fi
 
 
 

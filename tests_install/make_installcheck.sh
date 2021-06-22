@@ -118,7 +118,7 @@ fi
 patch -p1 --dry-run -i ../patches/69ae9dcb.patch >/dev/null 2>&1 && patch -p1 -i ../patches/69ae9dcb.patch
 
 # Enable the installcheck mode for pg_stat_statements testing
-if ! sudo -u postgres "$1/bin/psql" -c "SHOW compute_query_id;" > /dev/null 2>&1; then
+if sudo -u postgres "$1/bin/psql" -c "SHOW shared_preload_libraries;" | grep "pg_stat_statements" > /dev/null 2>&1; then
   sed 's|NO_INSTALLCHECK|# NO_INSTALLCHECK|' -i contrib/pg_stat_statements/Makefile
 fi
 # Fixing in_memory Makefile (PGPRO-4563)

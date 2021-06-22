@@ -559,16 +559,23 @@ def read_dump(file):
             return ''
         ustr = str.upper()
         result = str
+        if '--' in result:
+            result = re.sub(r"\s?--.*", "", result)
         if 'ALTER ROLE' in ustr:
             result = alterrolere.sub(r"\1PASSWORD ''", result)
+        elif (ustr.strip().startswith('CREATE ') or
+              ustr.strip().startswith('ALTER ') or
+              ustr.strip().startswith('REVOKE ') or
+              ustr.strip().startswith('GRANT ')) and \
+                ('PROCEDURE ' in ustr or 'FUNCTION ' in ustr) and \
+                'TRIGGER' not in ustr:
+            result = re.sub(r"IN\s+", "", result)
         elif 'CREATE DATABASE' in ustr:
             result = createdatabaselocalere.sub(
                 r"\1LC_COLLATE = '\2' LC_CTYPE = '\2'\3", result)
             result = createdatabasere.sub(r"\1LC_COLLATE = '\2'\3", result)
         elif 'EXECUTE' in ustr:
             result = exre.sub(r"EXECUTE ***", result)
-        if '--' in result:
-            result = re.sub(r"\s?--.*", "", result)
         result = normalize_numbers(result)
         return result
 
@@ -582,28 +589,54 @@ def read_dump(file):
         re.compile(r"\s?ALTER\s+TABLE\s+(ONLY\s+)?.*(ADD\sCONSTRAINT\s)?.*")
     ]
     copy_pattern = re.compile(r"\s?COPY\s+.*FROM\sstdin.*")
+    rt_pattern = re.compile(r"\s?CREATE\s+TYPE.*AS\s+RANGE\s.*")
+    remove_mr_tn_pattern = re.compile(r"([^(^,]?)(,?\s+multirange_type_name\s?=\s?[^\s^)^,]+)(,?\)?.*)")
+    alter_op_family_pattern = re.compile(r"\s?ALTER\s+OPERATOR\s+FAMILY\s+([^\s]+)\s+USING\s+[^\s]+\s+ADD.*")
     sort_item = []
     sort_body = []
     sort_items = []
+    rt_items = []
+    aof = None
+    op_families = {}
     with open(file, 'rb') as f:
         for line in f:
             line = preprocess(line.decode()).strip()
             if line:
+                if alter_op_family_pattern.match(line):
+                    aof = alter_op_family_pattern.search(line).group(1)
+                    op_families[aof] = []
+                    continue
+                if aof:
+                    op_families[aof].append(line[:-1] if line.endswith(';')
+                                            else line)
+                    if line.endswith(';'):
+                        aof = None
+                    continue
                 for pattern in sort_patterns:
                     if pattern.match(line):
                         sort_item.append('')
                         sort_body = []
                         break
-                if (sort_item):
+                if sort_item:
                     if len(sort_item) > 1:
                         sort_body.append(line[:-1].strip())
                     else:
                         sort_item.append(line)
-                    if (line.endswith(';')):
+                    if line.endswith(';'):
                         sort_body.sort()
                         sort_item.extend(sort_body)
                         sort_items.append("\n".join(sort_item))
                         sort_item = []
+                    continue
+
+                if rt_items or rt_pattern.match(line):
+                    rt_items.append(line)
+                    if line.endswith(';'):
+                        rt_line = " ".join(rt_items)
+                        lines.append(re.sub(r"\(,", "(",
+                                            remove_mr_tn_pattern.
+                                            sub(r"\1\3", rt_line)))
+                        rt_items = []
                     continue
 
                 if copy_pattern.match(line):
@@ -621,6 +654,7 @@ def read_dump(file):
                     lines_to_sort.append(line)
     sort_items.sort()
     lines.extend(sort_items)
+    print(op_families)
     return [line + '\n' for line in lines]
 
 
