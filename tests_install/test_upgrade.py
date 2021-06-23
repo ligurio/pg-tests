@@ -75,7 +75,8 @@ BEGIN
 END;
 $$;
 """
-prepare_for_12_plus_sql = """
+prepares = {
+    "12": """
 DO $$
 DECLARE
     table_name TEXT;
@@ -112,8 +113,8 @@ BEGIN
     END LOOP;
 END;
 $$;
-"""
-prepare_for_13_plus_sql = """
+""",
+    "13": """
 DO $$
 DECLARE
     con_name TEXT;
@@ -133,7 +134,66 @@ BEGIN
     EXECUTE 'DROP EXTENSION IF EXISTS hunspell_ne_np CASCADE';
 END;
 $$;
+""",
+    "14": """
+DO $$
+DECLARE
+    name TEXT;
+BEGIN
+    FOR name IN
+        SELECT
+            '"' || n.nspname || '"."' || c.conname || '"' AS cname
+        FROM pg_catalog.pg_conversion c, pg_catalog.pg_namespace n
+        WHERE c.connamespace = n.oid AND c.oid >= 16384
+    LOOP
+        EXECUTE 'DROP CONVERSION ' || name || ' CASCADE;';
+    END LOOP;
+    -- We need drop all user-defined posfix operators and
+    -- operators with numeric_fac function
+    FOR name IN
+        SELECT n.nspname || '.' || o.oprname || ' (' ||
+            CASE WHEN o.oprleft > 0 THEN lt.fulltn ELSE 'NONE' END ||
+            ',' ||
+            CASE WHEN o.oprright > 0 THEN rt.fulltn ELSE 'NONE' END || ')'
+                as opname
+        FROM pg_catalog.pg_operator o
+            LEFT JOIN
+                (
+                    SELECT t.oid, tn.nspname || '.' || t.typname AS fulltn
+                    FROM
+                    pg_catalog.pg_type t JOIN pg_catalog.pg_namespace tn ON
+                    t.typnamespace = tn.oid
+                ) lt
+                ON o.oprleft=lt.oid
+            LEFT JOIN
+                (
+                    SELECT t.oid, tn.nspname || '.' || t.typname AS fulltn
+                    FROM
+                    pg_catalog.pg_type t JOIN pg_catalog.pg_namespace tn ON
+                        t.typnamespace = tn.oid
+                ) rt
+                ON o.oprright=rt.oid
+             JOIN
+             pg_catalog.pg_namespace n ON o.oprnamespace = n.oid
+        WHERE (o.oprright = 0 OR o.oprcode::text = 'numeric_fac') AND
+              o.oid >= 16384
+    LOOP
+        EXECUTE 'DROP OPERATOR ' || name || ' CASCADE;';
+    END LOOP;
+    EXECUTE 'DROP AGGREGATE IF EXISTS
+        "public"."array_cat_accum"("anyarray") CASCADE';
+    EXECUTE 'DROP AGGREGATE IF EXISTS
+        "public"."first_el_agg_any"("anyelement") CASCADE';
+    BEGIN
+        EXECUTE 'DROP OPERATOR CLASS IF EXISTS
+            "public"."box_ops" USING "gist2" CASCADE';
+    EXCEPTION WHEN OTHERS THEN
+        -- gist2 doesn't exists in some dumps
+    END;
+END;
+$$;
 """
+}
 
 
 def start(pg):
@@ -233,16 +293,11 @@ def generate_db(pg, pgnew, custom_dump=None, on_error_stop=True):
             " AS SELECT i, rpad('',30,'a')"
             " FROM generate_series(0,10000) AS i;")
 
-    if compare_versions(pg.version, '12') < 0 and \
-            compare_versions(pgnew.version, '12') >= 0:
-        pg.do_in_all_dbs(prepare_for_12_plus_sql, 'prepare_for_12_plus')
-    if compare_versions(pg.version, '13') < 0 and \
-            compare_versions(pgnew.version, '13') >= 0:
-        pg.do_in_all_dbs(prepare_for_13_plus_sql, 'prepare_for_13_plus')
-    # wait for 12.5
-    if pg.version == '12':
-        pg.exec_psql('DROP TABLE IF EXISTS test_like_5c CASCADE',
-                     '-d regression')
+    for version in prepares:
+        if compare_versions(pg.version, version) < 0 and \
+                compare_versions(pgnew.version, version) >= 0:
+            pg.do_in_all_dbs(prepares[version],
+                             'prepare_for_%s_plus' % version)
     if pgnew.edition in ['ent', 'ent-cert'] and \
             pg.edition not in ['ent', 'ent-cert']:
         pg.do_in_all_dbs(remove_xid_type_columns_sql, 'remove_xid_type_cols')
@@ -305,13 +360,15 @@ def dumpall(pg, file):
 def after_upgrade(pg, pgOld):
     start_time = time.time()
     if not system == "Windows":
-        subprocess.check_call('sudo -u postgres ./analyze_new_cluster.sh',
-                              shell=True, cwd=upgrade_dir)
+        if compare_versions(pg.version, '14') < 0:
+            subprocess.check_call('sudo -u postgres ./analyze_new_cluster.sh',
+                                  shell=True, cwd=upgrade_dir)
         subprocess.check_call('./delete_old_cluster.sh',
                               shell=True, cwd=upgrade_dir)
     else:
-        subprocess.check_call('analyze_new_cluster.bat',
-                              shell=True, cwd=upgrade_dir)
+        if compare_versions(pg.version, '14') < 0:
+            subprocess.check_call('analyze_new_cluster.bat',
+                                  shell=True, cwd=upgrade_dir)
         subprocess.check_call('delete_old_cluster.bat',
                               shell=True, cwd=upgrade_dir)
     # Find any sql's after upgrade

@@ -73,6 +73,8 @@ PKG_CONFIG_PATH=$basedir/libpqxx/lib/pkgconfig/:$1/lib/pkgconfig/ \
 LIBPQXX_LIBS="-L$1/lib -L$basedir/libpqxx/lib -lpqxx -lpq" ./configure $CONF_OPTIONS || exit 1
 [ -f gitrev.h ] || echo "#define GITREV \"1\"" >gitrev.h # To do without git
 sed -i -e 's|/\* re-throw to outer loop to recover session. \*/|return 1;|' sqlsmith.cc
+sed -i -e "s|\(case 'r': /\* range \*/\)|\1\n  case 'm': /* multirange */|" postgres.cc
+sed -i -e "s|    if (strlen(errmsg))|    if (!conn)|" postgres.cc
 make || exit $?
 LD_LIBRARY_PATH=$1/lib \
 ./sqlsmith --max-queries=10000 --dump-all-queries --verbose \
