@@ -184,6 +184,12 @@ BEGIN
         "public"."array_cat_accum"("anyarray") CASCADE';
     EXECUTE 'DROP AGGREGATE IF EXISTS
         "public"."first_el_agg_any"("anyelement") CASCADE';
+    BEGIN
+        EXECUTE 'DROP OPERATOR CLASS IF EXISTS
+            "public"."box_ops" USING "gist2" CASCADE';
+    EXCEPTION WHEN OTHERS THEN
+        -- gist2 doesn't exists in some dumps
+    END;
 END;
 $$;
 """
@@ -292,10 +298,6 @@ def generate_db(pg, pgnew, custom_dump=None, on_error_stop=True):
                 compare_versions(pgnew.version, version) >= 0:
             pg.do_in_all_dbs(prepares[version],
                              'prepare_for_%s_plus' % version)
-    # wait for 12.5
-    if pg.version == '12':
-        pg.exec_psql('DROP TABLE IF EXISTS test_like_5c CASCADE',
-                     '-d regression')
     if pgnew.edition in ['ent', 'ent-cert'] and \
             pg.edition not in ['ent', 'ent-cert']:
         pg.do_in_all_dbs(remove_xid_type_columns_sql, 'remove_xid_type_cols')

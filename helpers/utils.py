@@ -534,6 +534,8 @@ def read_dump(file):
         r"(CREATE DATABASE.*)LOCALE\s*=\s*'([^']+)'(.*)")
     createdatabasere = re.compile(
         r"(CREATE DATABASE.*)LC_COLLATE\s*=\s*'([^@]+)@[^']+'(.*)")
+    ddl_procre = re.compile(r"\s?(CREATE|ALTER|GRANT\s+(ALL)?\s?ON|"
+                            r"REVOKE\s+(ALL)?\s?ON)\s+(PROCEDURE|FUNCTION)")
 
     def normalize_numbers(line):
         def norma(match):
@@ -563,12 +565,7 @@ def read_dump(file):
             result = re.sub(r"\s?--.*", "", result)
         if 'ALTER ROLE' in ustr:
             result = alterrolere.sub(r"\1PASSWORD ''", result)
-        elif (ustr.strip().startswith('CREATE ') or
-              ustr.strip().startswith('ALTER ') or
-              ustr.strip().startswith('REVOKE ') or
-              ustr.strip().startswith('GRANT ')) and \
-                ('PROCEDURE ' in ustr or 'FUNCTION ' in ustr) and \
-                'TRIGGER' not in ustr:
+        elif ddl_procre.match(ustr):
             result = re.sub(r"IN\s+", "", result)
         elif 'CREATE DATABASE' in ustr:
             result = createdatabaselocalere.sub(
@@ -590,25 +587,49 @@ def read_dump(file):
     ]
     copy_pattern = re.compile(r"\s?COPY\s+.*FROM\sstdin.*")
     rt_pattern = re.compile(r"\s?CREATE\s+TYPE.*AS\s+RANGE\s.*")
-    remove_mr_tn_pattern = re.compile(r"([^(^,]?)(,?\s+multirange_type_name\s?=\s?[^\s^)^,]+)(,?\)?.*)")
-    alter_op_family_pattern = re.compile(r"\s?ALTER\s+OPERATOR\s+FAMILY\s+([^\s]+)\s+USING\s+[^\s]+\s+ADD.*")
+    remove_mr_tn_pattern = re.compile(
+        r"([^(^,]?)(,?\s+multirange_type_name\s?=\s?[^\s^)^,]+)(,?\)?.*)"
+    )
+    alter_op_family_pattern = re.compile(
+        r"\s?ALTER\s+OPERATOR\s+FAMILY\s+([^\s]+)\s+USING\s+[^\s]+\s+ADD.*"
+    )
     sort_item = []
     sort_body = []
     sort_items = []
     rt_items = []
     aof = None
     op_families = {}
+    operator = False
     with open(file, 'rb') as f:
         for line in f:
             line = preprocess(line.decode()).strip()
             if line:
-                if alter_op_family_pattern.match(line):
-                    aof = alter_op_family_pattern.search(line).group(1)
+                # In 14th+ common objects for OPERATOR CLASSES were
+                # moved to FAMILY
+                # For example:
+                # ALTER OPERATOR FAMILY public.custom_opclass USING hash ADD
+                # FUNCTION 2(integer, integer) \
+                # public.dummy_hashint4(integer, bigint)
+                # and FUNCTION 2.. is absent in CREATE OPERATOR CLASS:
+                # CREATE OPERATOR CLASS public.custom_opclass
+                # FOR TYPE integer USING hash FAMILY public.custom_opclass A
+                # OPERATOR 1 =(integer,integer)
+                # but in 13th- public.custom_opclass defined as
+                # CREATE OPERATOR CLASS public.custom_opclass
+                # FOR TYPE integer USING hash FAMILY public.custom_opclass A
+                # FUNCTION 2 (integer, integer) \
+                # public.dummy_hashint4(integer,bigint)
+                # OPERATOR 1 =(integer,integer)
+                # -----
+                # We search for "ALTER OPERATOR FAMILY schema.name ADD"
+                # and collect FUNCTIONS AND OPERATORS "FUNCTION num ..."
+                aof_search = alter_op_family_pattern.search(line)
+                if aof_search:
+                    aof = aof_search.group(1)
                     op_families[aof] = []
                     continue
                 if aof:
-                    op_families[aof].append(line[:-1] if line.endswith(';')
-                                            else line)
+                    op_families[aof].append(line.rstrip(';'))
                     if line.endswith(';'):
                         aof = None
                     continue
@@ -616,8 +637,19 @@ def read_dump(file):
                     if pattern.match(line):
                         sort_item.append('')
                         sort_body = []
+                        if 'OPERATOR' in pattern.pattern:
+                            operator = True
                         break
                 if sort_item:
+                    if operator:
+                        # Determine FAMILY for OPERATOR
+                        search = re.search(
+                            r"\s?FOR\s+TYPE\s+[^\s]+\s+USING"
+                            r"\s+[^\s]+\s+FAMILY\s+([^\s]+)\s+.*", line)
+                        # And substitute all objects from FAMILY
+                        if search and search.group(1) in op_families:
+                            sort_body.extend(op_families[search.group(1)])
+                            operator = False
                     if len(sort_item) > 1:
                         sort_body.append(line[:-1].strip())
                     else:
@@ -627,6 +659,7 @@ def read_dump(file):
                         sort_item.extend(sort_body)
                         sort_items.append("\n".join(sort_item))
                         sort_item = []
+                        operator = False
                     continue
 
                 if rt_items or rt_pattern.match(line):
@@ -654,7 +687,6 @@ def read_dump(file):
                     lines_to_sort.append(line)
     sort_items.sort()
     lines.extend(sort_items)
-    print(op_families)
     return [line + '\n' for line in lines]
 
 
