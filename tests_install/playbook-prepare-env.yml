@@ -44,7 +44,7 @@
       fi;
       chmod +x /etc/rc.local;
       printf "mount -a > /tmp/mount.log 2>&1\n" >> /etc/init.d/boot.local;
-    when: use_ssh is not defined and ansible_os_family != "Windows"
+    when: use_ssh is not defined and ansible_os_family != "Windows" and not (ansible_distribution == 'Astra Linux' and ansible_distribution_version == '1.7_x86-64')
     become_method: su
     become: true
 
