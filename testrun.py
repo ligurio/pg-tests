@@ -284,7 +284,7 @@ def create_env(name, domname, domimage=None, mac=None, domdesc=''):
         clock = "<clock offset='utc'/>"
     domisos = glob.glob(TEMPLATE_DIR + name + '-*.iso')
     cdroms = ""
-    cdromletter = "c"
+    cdromletter = "a"
     for diso in sorted(domisos):
         cdroms += """
                     <disk type='file' device='cdrom'>
