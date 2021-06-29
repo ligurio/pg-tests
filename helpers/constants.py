@@ -751,46 +751,6 @@ UPGRADE_ROUTES = {
         ]
     },
 
-    'postgrespro-1c-14': {
-        'from': [
-            {
-                'name': 'postgresql', 'edition': '', 'version': '9.6',
-                'initdb-params': '--locale=C'
-            },
-            {
-                'name': 'postgresql', 'edition': '', 'version': '10',
-                'initdb-params': '--locale=C'
-            },
-            {
-                'name': 'postgresql', 'edition': '', 'version': '11',
-                'initdb-params': '--locale=C'
-            },
-            {
-                'name': 'postgresql', 'edition': '', 'version': '12',
-                'initdb-params': '--locale=C'
-            },
-            {
-                'name': 'postgresql', 'edition': '', 'version': '13',
-                'initdb-params': '--locale=C'
-            },
-            {
-                'name': 'postgrespro', 'edition': '1c', 'version': '9.6'
-            },
-            {
-                'name': 'postgrespro', 'edition': '1c', 'version': '10'
-            },
-            {
-                'name': 'postgrespro', 'edition': '1c', 'version': '11'
-            },
-            {
-                'name': 'postgrespro', 'edition': '1c', 'version': '12'
-            },
-            {
-                'name': 'postgrespro', 'edition': '1c', 'version': '13'
-            },
-        ]
-    },
-
     'postgrespro-std-9.6': {
         'from': [
             {
