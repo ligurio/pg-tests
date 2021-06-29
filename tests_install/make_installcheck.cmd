@@ -35,9 +35,8 @@ powershell -Command "((new-object net.webclient).DownloadFile('%MSYS_HREF%', '%T
 @REM Keyring updated manually due to invalid key 4A6129F4E4B84AE46ED7F635628F528CF3053E04 (waiting for a newer msys2- base...)
 If "%PROCESSOR_ARCHITECTURE%"=="AMD64" GOTO skip_msys_key
 %MD%\usr\bin\bash --login -i -c ^" ^
-curl -sS -O http://repo.msys2.org/msys/x86_64/msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz ^&^& ^
-curl -sS -O http://repo.msys2.org/msys/x86_64/msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz.sig ^&^& ^
-pacman --noconfirm -U --config ^<(echo) msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz ^&^& ^
+curl -sS -O https://repo.msys2.org/msys/x86_64/msys2-keyring-1~20210213-2-any.pkg.tar.zst ^&^& ^
+pacman --noconfirm -U --config ^<(echo) msys2-keyring-1~20210213-2-any.pkg.tar.zst ^&^& ^
 pacman --noconfirm -Sy ^" >%TEMP%\msys-update.log 2>&1
 
 :skip_msys_key
