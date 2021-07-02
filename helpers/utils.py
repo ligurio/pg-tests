@@ -266,9 +266,6 @@ def exec_command(cmd, hostname, login, password,
 
     import paramiko
 
-    buff_size = 1024
-    stdout = b''
-    stderr = b''
     for trc in range(connect_retry_count):
         try:
             client = paramiko.SSHClient()
@@ -297,12 +294,11 @@ def exec_command(cmd, hostname, login, password,
 
     print("Executing '%s' on %s..." % (cmd, hostname))
     chan.exec_command(cmd)
+    stdout_stream = chan.makefile("r", -1)
+    stderr_stream = chan.makefile_stderr("r", -1)
+    stdout = stdout_stream.read()
+    stderr = stderr_stream.read()
     retcode = chan.recv_exit_status()
-    while chan.recv_ready():
-        stdout += chan.recv(buff_size)
-
-    while chan.recv_stderr_ready():
-        stderr += chan.recv_stderr(buff_size)
 
     chan.close()
     client.close()
