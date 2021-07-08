@@ -152,6 +152,11 @@ echo "`date -Iseconds`: Making ecpg"
 make -C src/interfaces/ecpg
 echo "`date -Iseconds`: Making pg_regress"
 make -C src/test/regress
+# Bandaid for PGPRO-5331
+# Needed after b961bdfe: PQprint() doesn't work when /c/Progra~1/Postgr~1/13/bin/libpq.dll is used
+echo "`date -Iseconds`: Making pg_isolation_regress"
+make -C src/test/isolation
+cp src/interfaces/libpq/libpq.dll src/test/isolation/
 
 echo "Preparing pgxs/ for tests"
 mkdir -p "$1/lib/pgxs/src/makefiles"
