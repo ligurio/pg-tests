@@ -182,6 +182,11 @@ class TestPgprobackup():
             urlretrieve('https://github.com/postgrespro/pg_probackup/raw/8147'
                         '001/tests/incr_restore.py',
                         os.path.join(dir, 'tests', 'incr_restore.py'))
+        # PGPRO-5328 temporary disable test
+        subprocess.check_call("sed 's|test_basic_ptrack_truncate_replica|"
+                              "test_ptrack_truncate_replica|' -i %s" %
+                              os.path.join(dir, 'tests', 'ptrack.py'),
+                              shell=True)
         self.fix_permissions(dir)
         # PGPRO-4108 wait ptrack2.0 in 10
         cmd = "%s sh -c 'PG_CONFIG=\"%s/pg_config\"" \
