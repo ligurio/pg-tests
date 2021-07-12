@@ -491,7 +491,8 @@ def make_test_cmd(domname, linux_os, reportname, tests=None,
               'set PYTHONIOENCODING=UTF-8 && ' + pytest_cmd
     else:
         cmd = "cd /home/test/pg-tests && " + \
-            "sudo sh -c 'PYTHONIOENCODING=UTF-8 " + pytest_cmd + "'"
+            "sudo sh -c 'TERM=xterm-mono PYTHONIOENCODING=UTF-8 " + \
+              pytest_cmd + "'"
 
     if DEBUG:
         cmd += " --verbose --tb=long --full-trace"
