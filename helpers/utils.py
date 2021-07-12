@@ -293,6 +293,7 @@ def exec_command(cmd, hostname, login, password,
         return
 
     print("Executing '%s' on %s..." % (cmd, hostname))
+    chan.get_pty()
     chan.exec_command(cmd)
     stdout_stream = chan.makefile("r", -1)
     stderr_stream = chan.makefile_stderr("r", -1)
