@@ -294,11 +294,26 @@ def exec_command(cmd, hostname, login, password,
 
     print("Executing '%s' on %s..." % (cmd, hostname))
     chan.exec_command(cmd)
-    stdout_stream = chan.makefile("r", -1)
-    stderr_stream = chan.makefile_stderr("r", -1)
-    stdout = stdout_stream.read()
-    stderr = stderr_stream.read()
-    retcode = chan.recv_exit_status()
+    chan.makefile("r", -1)
+    chan.makefile_stderr("r", -1)
+
+    stdout = b''
+    stderr = b''
+    while True:
+        if chan.recv_ready():
+            stdout += chan.recv(len(chan.in_buffer))
+        if chan.recv_stderr_ready():
+            stderr += chan.recv_stderr(len(chan.in_stderr_buffer))
+        if chan.exit_status_ready():
+            retcode = chan.recv_exit_status()
+            break
+        time.sleep(0.1)
+
+    while len(chan.in_buffer) > 0 or len(chan.in_stderr_buffer) > 0:
+        if chan.recv_ready():
+            stdout += chan.recv(len(chan.in_buffer))
+        if chan.recv_stderr_ready():
+            stderr += chan.recv_stderr(len(chan.in_stderr_buffer))
 
     chan.close()
     client.close()
