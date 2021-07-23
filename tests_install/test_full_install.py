@@ -131,6 +131,14 @@ def check_executables(pginst, packages):
         for f in pfiles:
             if f.startswith('/usr/lib/debug/'):
                 continue
+            # PGPRO-5369
+            if f.endswith("/isolationtester") and pginst.version == "14":
+                if (pginst.os_name == "ALT Server" and
+                    pginst.os_version == "9.0") or \
+                    (pginst.os_name in "ALT SPServer" and
+                        pginst.os_version in ("8.0", "8.2")):
+                    print("skip ldd isolationtester")
+                    continue
             fout = subprocess.check_output(
                 'LANG=C file "%s"' % f, shell=True). \
                 decode(ConsoleEncoding).strip()
