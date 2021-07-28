@@ -147,6 +147,14 @@ while read -r opt; do
     case "$opt" in --disable-dependency-tracking | --disable-rpath) ;; --disable-*) disconfopts="$disconfopts $opt" ;; esac;
 done <<< "$opts";
 
+# Workaround for incorrect libpq in isolationtester for v14 on altlinux. (PGPRO-5369)
+ldlib=""
+if grep 'ALT Server 9.0\|ALT 8 SP Server' /etc/*-release >/dev/null 2>&1; then 
+    ver=`$1/bin/pg_config --version | grep -oP '\d{2}'`
+    if [ $ver == 14 ]; then
+        ldlib="LD_LIBRARY_PATH=$1/lib:$LD_LIBRARY_PATH"
+    fi
+fi
 # Pass to `./configure` disable-* options, that were passed to configure (if any; namely, --disable-online-upgrade)
 echo "Configuring with options: --enable-tap-tests --without-readline --prefix=$1 $disconfopts $extraoption"
 sudo -u postgres ./configure --enable-tap-tests --without-readline --prefix=$1 $disconfopts $extraoption || exit $?
@@ -157,7 +165,7 @@ test -f contrib/mchar/mchar.sql.in && make -C contrib/mchar mchar.sql
 
 # Pass to `make installcheck` all the options (with-*, enable-*), which were passed to configure
 echo "Running: $confopts make -e installcheck-world ..."
-sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" $confopts make -e installcheck-world EXTRA_TESTS=numeric_big 2>&1" | tee /tmp/installcheck.log; exitcode=$?
+sudo -u postgres sh -c "PATH=\"$1/bin:$PATH\" $confopts $ldlib make -e installcheck-world EXTRA_TESTS=numeric_big 2>&1" | tee /tmp/installcheck.log; exitcode=$?
 
 #TODO: Add pg_repack (stabilize the test)
 for comp in orafce plv8 pgpro_stats pgpro_pwr pgpro_controldata pg_filedump pg_portal_modify; do
@@ -204,7 +212,7 @@ max_prepared_transactions=10\n" >> tmpdb/postgresql.conf
     cp src/test/modules/test_pg_dump/test_pg_dump*.{control,sql} $share_path/extension/
 
     sudo -u postgres sh -c "
-export PATH=\"$1/bin:$PATH\" PGPORT=25432;
+export PATH=\"$1/bin:$PATH\" $ldlib PGPORT=25432;
 psql -c 'SHOW data_directory';
 make installcheck -C src/interfaces/libpq &&
 make installcheck -C src/test/modules/commit_ts &&
