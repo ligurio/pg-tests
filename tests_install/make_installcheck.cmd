@@ -140,6 +140,8 @@ sed -e "s@(long) random()@(long) rand()@" -i src/interfaces/libpq/fe-connect.c
 sed -e "s@(uint32) random()@(uint32) rand()@" -i src/interfaces/libpq/fe-connect.c
 echo "Fix for TZ setting in the MSYS environment (Don't pass timezone environment to non-msys applications)"
 [ -f src/bin/pg_controldata/t/002_pg_controldata_legacy.pl ] && patch -p1 -i /var/src/patches/pg_controldata-test-msys.patch
+echo "Fix for authentication test in the MSYS environment (PGPRO-5085)"
+[ -f src/test/authentication/t/004_profile.pl ] && patch -p1 -i /var/src/patches/fix-password-policies-tests.patch || true
 echo "Disabling multimaster tests (PGPRO-1430)"
 [ -f contrib/mmts/Makefile ] && sed -e "s@^installcheck@#installcheck@" -i contrib/mmts/Makefile
 echo "Fixing in_memory Makefile (PGPRO-4563)"
