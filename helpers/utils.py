@@ -547,6 +547,9 @@ def read_dump(file):
         r"(CREATE DATABASE.*)LC_COLLATE\s*=\s*'([^@]+)@[^']+'(.*)")
     ddl_procre = re.compile(r"\s?(CREATE|ALTER|GRANT\s+(ALL)?\s?ON|"
                             r"REVOKE\s+(ALL)?\s?ON)\s+(PROCEDURE|FUNCTION)")
+    lastlogin = re.compile(r"(?<=rollastlogin = ').*?(?=')")
+    passsetat = re.compile(r"\sPASSWORD SET AT '(\w|\W)*'(?=;)")
+    createpolicy = re.compile(r"CREATE POLICY.*TO(.*?)USING")
 
     def normalize_numbers(line):
         def norma(match):
@@ -568,7 +571,11 @@ def read_dump(file):
         return newstr
 
     def preprocess(str):
-        if str.strip() == 'SET default_table_access_method = heap;':
+        # TODO need to check pg_role_password depending on the version
+        if str.strip() == 'SET default_table_access_method = heap;' or\
+            str.startswith('INSERT INTO pg_role_password') or\
+            (str.startswith('ALTER PROFILE "default" LIMIT') and
+                'PASSWORD_REQUIRE_COMPLEX 0' in str):
             return ''
         ustr = str.upper()
         result = str
@@ -576,6 +583,7 @@ def read_dump(file):
             result = re.sub(r"\s?--.*", "", result)
         if 'ALTER ROLE' in ustr:
             result = alterrolere.sub(r"\1PASSWORD ''", result)
+            result = passsetat.sub("", result)
         elif ddl_procre.match(ustr):
             result = re.sub(r"IN\s+", "", result)
         elif 'CREATE DATABASE' in ustr:
@@ -584,6 +592,14 @@ def read_dump(file):
             result = createdatabasere.sub(r"\1LC_COLLATE = '\2'\3", result)
         elif 'EXECUTE' in ustr:
             result = exre.sub(r"EXECUTE ***", result)
+        elif result.startswith("UPDATE pg_authid") and\
+                "rolname = 'postgres'" in result:
+            result = lastlogin.sub("***", result)
+        elif result.startswith("CREATE POLICY"):
+            search = createpolicy.search(result)
+            if search and search.group(1):
+                el = search.group(1).replace(" ", "").split(",")
+                result = createpolicy.sub(",".join(sorted(el)), result)
         result = normalize_numbers(result)
         return result
 
