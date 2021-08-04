@@ -56,7 +56,7 @@
       echo "deb file:///mnt/dvd2 smolensk contrib main non-free" >> /etc/apt/sources.list.d/repo-dvd.list;
       fi;
       apt-get update;
-    when: use_ssh is not defined and ansible_distribution == 'Astra Linux (Smolensk)'
+    when: use_ssh is not defined and (ansible_distribution == 'Astra Linux (Smolensk)' or ansible_distribution == 'Astra Linux')
     become_method: su
     become: true
 
@@ -316,7 +316,7 @@
 
   - name: configure ACPI (Astra)
     shell: echo '/sbin/shutdown -h -P now "Power button pressed"' > /etc/acpi/powerbtn-acpi-support.sh
-    when: ansible_distribution == 'Astra Linux (Smolensk)' or ansible_distribution == 'Astra Linux (Orel)'
+    when: ansible_distribution == 'Astra Linux (Smolensk)' or ansible_distribution == 'Astra Linux (Orel)' or ansible_distribution == 'Astra Linux'
     become_method: sudo
     become: true
 
