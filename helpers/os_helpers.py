@@ -26,13 +26,13 @@ YUM_BASED = ['CentOS Linux', 'CentOS',
              " \xd0\xa1\xd0\xb5\xd1\x80\xd0\xb2\xd0\xb5\xd1\x80",
              'RED OS', 'AlterOS']
 DEBIAN_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux',
-                'Astra Linux (Smolensk)', 'Astra Linux (Orel)',
+                'Astra Linux (Smolensk)', 'Astra Linux (Orel)', 'Astra Linux',
                 'OSNova Linux (Onyx)']
 APT_BASED = ['debian', 'Ubuntu', 'Debian GNU/Linux',
-             'Astra Linux (Smolensk)', 'Astra Linux (Orel)',
+             'Astra Linux (Smolensk)', 'Astra Linux (Orel)', 'Astra Linux',
              'ALT Linux', 'ALT Server', 'ALT SPServer', 'starter kit',
              'OSNova Linux (Onyx)']
-ASTRA_BASED = ['Astra Linux (Smolensk)', 'Astra Linux (Orel)']
+ASTRA_BASED = ['Astra Linux (Smolensk)', 'Astra Linux (Orel)', 'Astra Linux']
 ALT_BASED = ['ALT Linux', 'ALT Server', 'ALT SPServer', 'starter kit']
 SUSE_BASED = ['SLES']
 ZYPPER_BASED = ['SLES']
