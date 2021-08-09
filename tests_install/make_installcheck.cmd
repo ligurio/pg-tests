@@ -142,10 +142,10 @@ echo "Fix for TZ setting in the MSYS environment (Don't pass timezone environmen
 [ -f src/bin/pg_controldata/t/002_pg_controldata_legacy.pl ] && patch -p1 -i /var/src/patches/pg_controldata-test-msys.patch
 echo "Fix for authentication test in the MSYS environment (PGPRO-5085)"
 [ -f src/test/authentication/t/004_profile.pl ] && patch -p1 -i /var/src/patches/fix-password-policies-tests.patch || true
+echo "Fix for pg_dump test with password policies"
+[ -f src/bin/pg_dump/t/002_pg_dump.pl ] && patch -p1 -i /var/src/patches/fix-pg_dump_passoword-policies-tests.patch || true
 echo "Disabling multimaster tests (PGPRO-1430)"
 [ -f contrib/mmts/Makefile ] && sed -e "s@^installcheck@#installcheck@" -i contrib/mmts/Makefile
-echo "Fixing in_memory Makefile (PGPRO-4563)"
-[ -f contrib/in_memory/Makefile ] && sed -e "s@regresscheck-install:.*@regresscheck-install:@" -i contrib/in_memory/Makefile
 echo "`date -Iseconds`: Making native MinGW libs 1"
 (cd src/common && make 2>&1 | tee /tmp/make_common.log)
 echo "`date -Iseconds`: Making native MinGW libs 2"

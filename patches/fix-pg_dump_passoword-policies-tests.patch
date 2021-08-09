@@ -1,0 +1,30 @@
+diff --git a/src/bin/pg_dump/t/002_pg_dump.pl b/src/bin/pg_dump/t/002_pg_dump.pl
+index b8d7f044a86..6f75c7e087a 100644
+--- a/src/bin/pg_dump/t/002_pg_dump.pl
++++ b/src/bin/pg_dump/t/002_pg_dump.pl
+@@ -3893,17 +3893,17 @@ $node->command_checks_all(
+ 	[],							# no stdout patterns
+ 	[
+ 		qr/\Qpg_dumpall: dumping cluster that is not managed by Postgres Pro \E
+-		   \QCertified server\E\n/xm,
+-		qr/\Qpg_dumpall: dumping cluster with password policies data\E\n/xm,
++		   \QCertified server\E\r?\n/xm,
++		qr/\Qpg_dumpall: dumping cluster with password policies data\E\r?\n/xm,
+ 		qr/\Qpg_dumpall: dumping cluster with data for the following role \E
+-		   \Qattributes:\E\n
+-		   \Qthe timestamp the role logged in last time\E\n
+-		   \Qthe timestamp of the role's first authentication failure\E\n
++		   \Qattributes:\E\r?\n
++		   \Qthe timestamp the role logged in last time\E\r?\n
++		   \Qthe timestamp of the role's first authentication failure\E\r?\n
+ 		   /xm,
+ 		qr/\Qpg_dumpall: dumping cluster with data for the following profile \E
+-		   \Qattributes:\E\n
+-		   \QFAILED_AUTH_KEEP_TIME parameter value\E\n
+-		   \QUSER_INACTIVE_TIME parameter value\E\n
++		   \Qattributes:\E\r?\n
++		   \QFAILED_AUTH_KEEP_TIME parameter value\E\r?\n
++		   \QUSER_INACTIVE_TIME parameter value\E\r?\n
+ 		   /xm,
+ 	],							# stderr patterns
+ 	'check informational messages when dumping a cluster in verbose '
