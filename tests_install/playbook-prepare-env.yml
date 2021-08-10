@@ -138,6 +138,16 @@
     become_method: "{{ use_become_method }}"
     become: true
 
+  - name: fix repositories and prepare local repository (RED OS)
+    shell:
+      echo "enabled=0" >> /etc/yum.repos.d/RedOS-Base.repo;
+      echo "enabled=0" >> /etc/yum.repos.d/RedOS-Updates.repo;
+      printf "[localrepo]\nname=localrepo\nbaseurl=file:///mnt/dvd\nenabled=1\n" > /etc/yum.repos.d/local.repo &&
+      yum -y update;
+    when: use_ssh is not defined and ansible_distribution == "RED" and ansible_distribution_version == "7.3"
+    become_method: "{{ use_become_method }}"
+    become: true
+
   - name: disable automatic updates (Debian-based)
     shell: for aptconf in `grep -E '^\s*APT::Periodic::(Update-Package-Lists|Unattended-Upgrade)' -l -r /etc/apt/apt.conf.d/`;
       do sed -e 's#^\(\s*APT::Periodic::\(Update-Package-Lists\|Unattended-Upgrade\)\)#// \1#' -i $aptconf; done; \
