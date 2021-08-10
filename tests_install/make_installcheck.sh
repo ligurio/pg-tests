@@ -126,8 +126,6 @@ patch -p1 --dry-run -i ../patches/69ae9dcb.patch >/dev/null 2>&1 && patch -p1 -i
 if sudo -u postgres "$1/bin/psql" -c "SHOW shared_preload_libraries;" | grep "pg_stat_statements" > /dev/null 2>&1; then
   sed 's|NO_INSTALLCHECK|# NO_INSTALLCHECK|' -i contrib/pg_stat_statements/Makefile
 fi
-# Fixing in_memory Makefile (PGPRO-4563)
-sed "s|regresscheck-install:.*|regresscheck-install:|" -i contrib/in_memory/Makefile
 
 #Check /etc/localtime exist
 [ -f /etc/localtime ] || ln -s /usr/share/zoneinfo/UTC /etc/localtime

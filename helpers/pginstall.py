@@ -456,6 +456,9 @@ class PgInstall:
             return "rosa-sx"
         elif self.os_name == "SLES":
             return "sles"
+        elif self.os_name == "Astra Linux":
+            if self.os_version == "1.7_x86-64":
+                return "astra-smolensk/1.7"
         elif self.os_name == "Astra Linux (Smolensk)":
             if self.os_version == "1.5":
                 return "astra-smolensk/1.5"
