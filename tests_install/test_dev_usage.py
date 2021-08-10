@@ -62,7 +62,7 @@ if which apt-get; then
     apt-get install -y make
     grep -E '(Debian GNU/Linux 9|Debian GNU/Linux 10|'\
 '"Ubuntu [0-9]+\.[0-9]+|"OSNova Linux|'\
-'"Astra Linux \(Smolensk 1.6\)"|"Astra Linux \(Orel\)")'\
+'"Astra Linux \(Smolensk 1.6\)"|"Astra Linux \(Orel\)"|"Astra Linux")'\
       /etc/os-release >/dev/null 2>/dev/null && \
     apt install -y libdpkg-perl
 elif which zypper; then
