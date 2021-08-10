@@ -242,7 +242,7 @@ class TestMakeCheck(object):
         pginst.exec_psql("GRANT ALL ON DATABASE regression TO tester")
         pginst.exec_psql("REVOKE EXECUTE ON FUNCTION"
                          " pg_terminate_backend%s FROM PUBLIC" %
-                         '(int)' if pginst.version == '9.6' else '',
+                         ('(int)' if pginst.version == '9.6' else ''),
                          "-d regression")
         pg_prefix = pginst.get_default_pg_prefix()
         curpath = os.path.dirname(os.path.abspath(__file__))
