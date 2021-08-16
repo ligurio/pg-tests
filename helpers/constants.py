@@ -423,6 +423,23 @@ FIRST_RELEASE = {
         'postgrespro-ent-11': '11.5.1',
         'postgrespro-1c-9.6': '9.6.19',
     },
+    "Debian GNU/Linux 11": {
+        'postgrespro-std-9.6': None,
+        'postgrespro-std-10': None,
+        'postgrespro-std-11': '11.13.1',
+        'postgrespro-std-12': '12.8.1',
+        'postgrespro-std-13': '13.4.1',
+        'postgrespro-ent-9.6': None,
+        'postgrespro-ent-10': None,
+        'postgrespro-ent-11': '11.13.1',
+        'postgrespro-ent-12': '12.8.1',
+        'postgrespro-ent-13': '13.4.1',
+        'postgrespro-1c-9.6': None,
+        'postgrespro-1c-10': None,
+        'postgrespro-1c-11': '11.13.1',
+        'postgrespro-1c-12': '12.8.1',
+        'postgrespro-1c-13': '13.4.1',
+    },
     # debian-10 ARM64
     "Debian GNU/Linux 10 aarch64": {
         'postgrespro-std-9.6': None,
