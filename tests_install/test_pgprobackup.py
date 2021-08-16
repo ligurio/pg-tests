@@ -187,6 +187,13 @@ class TestPgprobackup():
                               "test_ptrack_truncate_replica|' -i %s" %
                               os.path.join(dir, 'tests', 'ptrack.py'),
                               shell=True)
+        # Temporary workaround for 2 python
+        subprocess.check_call("sed 's|simple_bootstrap(self, node, role)"
+                              " -> None|simple_bootstrap(self, node, role)"
+                              "|' -i %s" %
+                              os.path.join(dir, 'tests', 'helpers',
+                                           'ptrack_helpers.py'),
+                              shell=True)
         self.fix_permissions(dir)
         # PGPRO-4108 wait ptrack2.0 in 10
         cmd = "%s sh -c 'PG_CONFIG=\"%s/pg_config\"" \
