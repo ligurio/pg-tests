@@ -190,7 +190,7 @@ if [ $exitcode -eq 0 ]; then
             powershell -Command "Restart-Service '$2'"
         fi
         if [ $comp == pgpro_controldata ]; then
-            export PATH="$PGPATH/../../PostgresPro/pgpro_controldata:$PATH"
+            export PATH="$PGPATH/../../PostgresPro/pgpro_controldata/bin:$PATH"
             EXTRAVARS="enable_tap_tests=yes PROVE=\"PG_REGRESS=$PGPATH/lib/pgxs/src/test/regress/pg_regress prove\" PROVE_FLAGS=\"-I $BASEDIR/src/test/perl\""
         fi
         echo "Performing 'make installcheck' for $comp..."
