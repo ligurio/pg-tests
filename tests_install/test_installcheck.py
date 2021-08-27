@@ -185,6 +185,8 @@ class TestMakeCheck(object):
 
         pginst.exec_psql("ALTER SYSTEM SET max_worker_processes = 16")
         pginst.exec_psql("ALTER SYSTEM SET lc_messages = 'C'")
+        # Prepare server for test pg_proaudit
+        pginst.exec_psql("ALTER SYSTEM SET wal_level = 'logical'")
         # Prepare pg_hba.conf for src/interfaces/ecpg/test/connect/test5
         with open(os.path.join(pginst.get_configdir(), 'pg_hba.conf'),
                   'r+') as conf:
