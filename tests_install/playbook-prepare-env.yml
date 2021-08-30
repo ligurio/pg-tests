@@ -140,7 +140,6 @@
 
   - name: fix repositories and prepare local repository (RED OS)
     shell:
-      echo "enabled=0" >> /etc/yum.repos.d/RedOS-Base.repo;
       echo "enabled=0" >> /etc/yum.repos.d/RedOS-Updates.repo;
       printf "[localrepo]\nname=localrepo\nbaseurl=file:///mnt/dvd\nenabled=1\n" > /etc/yum.repos.d/local.repo &&
       yum -y update;
