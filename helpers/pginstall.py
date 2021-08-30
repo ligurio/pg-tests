@@ -1557,6 +1557,10 @@ baseurl=%s
                         compare_versions(self.get_product_minor_version(),
                                          '11.9.1') < 0:
                     preload_libs.remove('ptrack')
+                if 'pg_proaudit' in preload_libs and self.version == '13' and \
+                        compare_versions(self.get_product_minor_version(),
+                                         '13.4.1') < 0:
+                    preload_libs.remove('pg_proaudit')
                 libs = ','.join(preload_libs)
         if libs:
             self.exec_psql(
