@@ -710,6 +710,9 @@ def main(conn):
         sys.exit(1)
 
     failexpected = False
+    # TODO: Remove when v14 will be ready
+    if args.product_version == '14':
+        failexpected = True
 
     if not os.path.exists(args.run_tests):
         print("Test(s) '%s' is not found." % args.run_tests)
