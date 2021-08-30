@@ -710,7 +710,7 @@ def main(conn):
         sys.exit(1)
 
     failexpected = False
-    #TODO: Remove when v14 will be ready
+    # TODO: Remove when v14 will be ready
     if args.product_version == '14':
         failexpected = True
 
