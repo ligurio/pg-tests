@@ -256,10 +256,10 @@ def create_env(name, domname, domimage=None, mac=None, domdesc=''):
         domimage = create_image(domname, name)
     dommac = mac if mac else mac_address_generator()
     qemu_path = ""
-    if distro.linux_distribution()[0] == 'Ubuntu' or \
-       distro.linux_distribution(False)[0] == 'debian':
+    if distro.name() == 'Ubuntu' or \
+       distro.id() == 'debian':
         qemu_path = "/usr/bin/qemu-system-x86_64"
-    elif distro.linux_distribution()[0] == 'CentOS Linux':
+    elif distro.name() == 'CentOS Linux':
         qemu_path = "/usr/libexec/qemu-kvm"
     if name[0:3] == 'win':
         network_driver = "e1000"
@@ -710,6 +710,9 @@ def main(conn):
         sys.exit(1)
 
     failexpected = False
+    # TODO: Remove when v14 will be ready
+    if args.product_version == '14':
+        failexpected = True
 
     if not os.path.exists(args.run_tests):
         print("Test(s) '%s' is not found." % args.run_tests)

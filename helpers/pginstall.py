@@ -34,7 +34,7 @@ PRELOAD_LIBRARIES = {
          'pgpro_scheduler', 'ptrack', 'pg_query_state',
          'pg_stat_statements', 'plantuner',
          'shared_ispell', 'pg_wait_sampling',
-         'pg_pathman'],
+         'pg_pathman', 'pg_proaudit'],
     'ent-12':
         ['auth_delay', 'auto_explain', 'in_memory',
          'pgpro_scheduler', 'ptrack', 'pg_query_state',
@@ -311,7 +311,7 @@ class PgInstall:
                     result[inst] = ''
         if self.os.is_pm_yum():
             cmd = "script -q -c \"stty cols 150; " \
-                  "LANG=C yum -q --disablerepo='*' " \
+                  "LANG=C yum --color=never -q --disablerepo='*' " \
                   "--enablerepo='%s' list available\"" % self.reponame
             ysout = command_executor(cmd, self.remote, self.host,
                                      REMOTE_ROOT, REMOTE_ROOT_PASSWORD,
@@ -1557,6 +1557,10 @@ baseurl=%s
                         compare_versions(self.get_product_minor_version(),
                                          '11.9.1') < 0:
                     preload_libs.remove('ptrack')
+                if 'pg_proaudit' in preload_libs and self.version == '13' and \
+                        compare_versions(self.get_product_minor_version(),
+                                         '13.4.1') < 0:
+                    preload_libs.remove('pg_proaudit')
                 libs = ','.join(preload_libs)
         if libs:
             self.exec_psql(

@@ -440,8 +440,8 @@ def get_distro(remote=False, ip=None):
                     "\xd0\xb5\xd1\x80", \
                     "6.3", \
                     platform.machine()
-            return distro.linux_distribution()[0].strip('"'), \
-                distro.linux_distribution()[1], \
+            return distro.name().strip('"'), \
+                distro.version(), \
                 platform.machine()
         elif "Windows" in os:
             return 'Windows-' + platform.win32_ver()[0], \

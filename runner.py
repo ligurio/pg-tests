@@ -108,10 +108,10 @@ def create_vm(name, domname):
     domimage = create_image(domname, name)
     dommac = mac_address_generator()
     qemu_path = ""
-    if distro.linux_distribution()[0] == 'Ubuntu' or \
-       distro.linux_distribution(False)[0] == 'debian':
+    if distro.name() == 'Ubuntu' or \
+       distro.id() == 'debian':
         qemu_path = "/usr/bin/qemu-system-x86_64"
-    elif distro.linux_distribution()[0] == 'CentOS Linux':
+    elif distro.name() == 'CentOS Linux':
         qemu_path = "/usr/libexec/qemu-kvm"
     if domname[0:3] == 'win':
         network_driver = "e1000"
