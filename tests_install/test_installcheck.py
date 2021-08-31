@@ -76,9 +76,8 @@ class TestMakeCheck(object):
         dist = " ".join(distro)
 
         run_test_ou = False
-        if edition == "ent" and version == "13" and self.system == "Linux":
-            if dist not in ["Astra Linux (Smolensk) 1.5",
-                            "ALT Linux 7.0.4"] and random() < 0.2:
+        if edition == "ent" and version == "13" and self.system == "Linux" \
+                and random() < 0.2:
                 print("Test performed with pgpro-online-upgrade")
                 run_test_ou = True
 
@@ -146,12 +145,6 @@ class TestMakeCheck(object):
             except Exception:
                 subprocess.check_call('SETX PYTHONHOME C:\\Python27 -m',
                                       shell=True)
-        if run_test_ou:
-            ret = pginst.exec_psql_select("SHOW shared_memory_type")
-            if ret != "sysv":
-                raise Exception(
-                    "pgpro-online-upgrade does not support "
-                    " shared_memory_type %s" % ret)
         if version != "9.6" or self.system == 'Windows' or \
                 (edition == '1c' and pginst.os_name not in DEBIAN_BASED):
             bin_buildinfo = os.path.join(pginst.get_pg_prefix(),
@@ -180,8 +173,7 @@ class TestMakeCheck(object):
                 "Bin commit (%s) doesn't match to Source commit (%s)" %
                 (bin_commit_id, src_commit_id))
 
-        if not run_test_ou:
-            pginst.install_default_config()
+        pginst.install_default_config()
 
         pginst.exec_psql("ALTER SYSTEM SET max_worker_processes = 16")
         pginst.exec_psql("ALTER SYSTEM SET lc_messages = 'C'")
