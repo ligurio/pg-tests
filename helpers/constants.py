@@ -675,12 +675,10 @@ UPGRADE_ROUTES = {
     'postgrespro-1c-10': {
         'from': [
             {
-                'name': 'postgresql', 'edition': '', 'version': '9.6',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '9.6'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '10',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '10'
             },
             {
                 'name': 'postgrespro', 'edition': '1c', 'version': '9.6'
@@ -691,16 +689,13 @@ UPGRADE_ROUTES = {
     'postgrespro-1c-11': {
         'from': [
             {
-                'name': 'postgresql', 'edition': '', 'version': '9.6',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '9.6'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '10',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '10'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '11',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '11'
             },
             {
                 'name': 'postgrespro', 'edition': '1c', 'version': '9.6'
@@ -714,20 +709,16 @@ UPGRADE_ROUTES = {
     'postgrespro-1c-12': {
         'from': [
             {
-                'name': 'postgresql', 'edition': '', 'version': '9.6',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '9.6'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '10',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '10'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '11',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '11'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '12',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '12'
             },
             {
                 'name': 'postgrespro', 'edition': '1c', 'version': '9.6'
@@ -744,20 +735,16 @@ UPGRADE_ROUTES = {
     'postgrespro-1c-13': {
         'from': [
             {
-                'name': 'postgresql', 'edition': '', 'version': '9.6',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '9.6'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '10',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '10'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '11',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '11'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '12',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '12'
             },
             {
                 'name': 'postgrespro', 'edition': '1c', 'version': '9.6'
@@ -777,24 +764,19 @@ UPGRADE_ROUTES = {
     'postgrespro-1c-14': {
         'from': [
             {
-                'name': 'postgresql', 'edition': '', 'version': '9.6',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '9.6'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '10',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '10'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '11',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '11'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '12',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '12'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '13',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '13'
             },
             {
                 'name': 'postgrespro', 'edition': '1c', 'version': '9.6'
@@ -817,8 +799,7 @@ UPGRADE_ROUTES = {
     'postgrespro-std-9.6': {
         'from': [
             {
-                'name': 'postgresql', 'edition': '', 'version': '9.6',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '9.6'
             }
         ]
     },
@@ -829,12 +810,10 @@ UPGRADE_ROUTES = {
                 'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '10',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '10'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '9.6',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '9.6'
             },
         ]
     },
@@ -848,16 +827,13 @@ UPGRADE_ROUTES = {
                 'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '11',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '11'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '10',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '10'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '9.6',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '9.6'
             },
         ]
     },
@@ -873,16 +849,13 @@ UPGRADE_ROUTES = {
                 'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '11',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '11'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '10',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '10'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '9.6',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '9.6'
             },
         ]
     },
@@ -901,20 +874,19 @@ UPGRADE_ROUTES = {
                 'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '12',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '13'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '11',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '12'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '10',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '11'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '9.6',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '10'
+            },
+            {
+                'name': 'postgresql', 'edition': '', 'version': '9.6'
             },
         ]
     },
@@ -930,16 +902,13 @@ UPGRADE_ROUTES = {
                 'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '11',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '11'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '10',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '10'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '9.6',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '9.6'
             },
         ]
     },
@@ -987,20 +956,16 @@ UPGRADE_ROUTES = {
                 'name': 'postgrespro', 'edition': 'ent', 'version': '9.6'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '12',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '12'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '11',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '11'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '10',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '10'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '9.6',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '9.6'
             },
         ]
     },
@@ -1035,24 +1000,19 @@ UPGRADE_ROUTES = {
                 'name': 'postgrespro', 'edition': 'std', 'version': '13'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '10',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '10'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '11',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '11'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '12',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '12'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '13',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '13'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '9.6',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '9.6'
             }
         ]
     },
@@ -1064,8 +1024,7 @@ DUMP_RESTORE_ROUTES = {
     'postgrespro-std-9.6': {
         'from': [
             {
-                'name': 'postgresql', 'edition': '', 'version': '9.6',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '9.6'
             }
         ]
     },
@@ -1076,12 +1035,10 @@ DUMP_RESTORE_ROUTES = {
                 'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '10',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '10'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '9.6',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '9.6'
             },
         ]
     },
@@ -1095,16 +1052,13 @@ DUMP_RESTORE_ROUTES = {
                 'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '11',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '11'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '10',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '10'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '9.6',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '9.6'
             },
         ]
     },
@@ -1120,16 +1074,13 @@ DUMP_RESTORE_ROUTES = {
                 'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '11',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '11'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '10',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '10'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '9.6',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '9.6'
             },
         ]
     },
@@ -1148,20 +1099,16 @@ DUMP_RESTORE_ROUTES = {
                 'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '12',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '12'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '11',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '11'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '10',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '10'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '9.6',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '9.6'
             },
         ]
     },
@@ -1177,16 +1124,13 @@ DUMP_RESTORE_ROUTES = {
                 'name': 'postgrespro', 'edition': 'std', 'version': '9.6'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '11',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '11'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '10',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '10'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '9.6',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '9.6'
             },
         ]
     },
@@ -1203,12 +1147,10 @@ DUMP_RESTORE_ROUTES = {
                 'name': 'postgrespro', 'edition': 'std', 'version': '10'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '10',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '10'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '9.6',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '9.6'
             }
         ]
     },
@@ -1231,16 +1173,13 @@ DUMP_RESTORE_ROUTES = {
                 'name': 'postgrespro', 'edition': 'std', 'version': '11'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '10',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '10'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '11',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '11'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '9.6',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '9.6'
             }
         ]
     },
@@ -1275,24 +1214,19 @@ DUMP_RESTORE_ROUTES = {
                 'name': 'postgrespro', 'edition': 'std', 'version': '13'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '10',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '10'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '11',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '11'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '12',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '12'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '13',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '13'
             },
             {
-                'name': 'postgresql', 'edition': '', 'version': '9.6',
-                'initdb-params': '--locale=C'
+                'name': 'postgresql', 'edition': '', 'version': '9.6'
             }
         ]
     },
