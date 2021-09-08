@@ -652,7 +652,8 @@ class TestUpgrade():
                 )
                 dumpall(pgold, file_name)
                 stop(pgold)
-
+                locales[old_key] = locales[old_key] if \
+                    old_key in locales else (None, None)
                 init_cluster(pg, True, locales[old_key], True, False)
                 with open(os.path.join(tempdir, 'load-dr-%s.log' % old_key),
                           'wb') as out:
