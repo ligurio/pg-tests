@@ -388,12 +388,20 @@ def after_upgrade(pg, pgOld):
     print("after_upgrade complete in %s sec" % (time.time()-start_time))
 
 
-def init_cluster(pg, force_remove=True, initdb_params='',
+def init_cluster(pg, force_remove=True, locale=(None, None),
                  stopped=None, load_libs=True):
     if system == 'Windows':
         restore_datadir_win(pg)
     else:
         stop(pg, stopped)
+        initdb_params = ''
+        if locale[0]:
+            initdb_params = " --locale=\"%s%s\"" % (
+                locale[0],
+                locale[1] if locale[1] and pg.edition
+                and pg.edition != '1c'
+                and pg.version != '9.6' else ''
+            )
         pg.init_cluster(force_remove, '-k ' + initdb_params)
         pg.install_default_config()
         start(pg)
@@ -401,6 +409,13 @@ def init_cluster(pg, force_remove=True, initdb_params='',
             pg.load_shared_libraries(restart_service=False)
         stop(pg)
     start(pg)
+    locale = pg.exec_psql_select(
+        "SELECT datcollate from pg_database where datname='postgres';"
+    )
+    colprovider = ''
+    if pg.product == 'postgresql' or pg.edition == '1c':
+        colprovider = '@libc'
+    return locale, colprovider
 
 
 def backup_datadir_win(pg):
@@ -475,6 +490,8 @@ class TestUpgrade():
         request.cls.product_info = product_info
         key = "-".join([name, edition, version])
         request.cls.key = key
+        locales = {}
+        request.cls.locales = locales
 
         print("Running on %s." % target)
 
@@ -482,12 +499,6 @@ class TestUpgrade():
                 FIRST_RELEASE[dist][key] is None:
             print("Platform not supported")
             return
-
-        if key not in UPGRADE_ROUTES:
-            print('No routes for upgrade')
-            return
-
-        upgrade_route = UPGRADE_ROUTES[key]
 
         tag_mark = allure.label(LabelType.TAG, product_info)
         request.node.add_marker(tag_mark)
@@ -498,6 +509,10 @@ class TestUpgrade():
                             branch=branch, windows=(self.system == 'Windows'))
         request.cls.pg = pg
         stop(pg)
+        if key not in UPGRADE_ROUTES:
+            print('No routes for upgrade')
+            return
+        upgrade_route = UPGRADE_ROUTES[key]
 
         if pg.os_name in DEBIAN_BASED and pg.version == '9.6':
             print("Two products 9.6 cannot be "
@@ -508,10 +523,6 @@ class TestUpgrade():
             backup_datadir_win(pg)
 
         for route in upgrade_route['from']:
-            initdb_params = route['initdb-params'] if \
-                'initdb-params' in route else ''
-            init_cluster(pg, True, initdb_params, True, False)
-            stop(pg)
             old_name = route['name']
             old_edition = route['edition']
             old_version = route['version']
@@ -533,8 +544,10 @@ class TestUpgrade():
                 version=old_version, milestone=None,
                 branch=None, windows=(self.system == 'Windows'), old=True
             )
+            locales[old_key] = (None, None)
             if self.system != 'Windows':
-                init_cluster(pgold, True, initdb_params, None, True)
+                locales[old_key] = init_cluster(pgold, True, (None, None),
+                                                None, True)
 
             generate_db(
                 pgold, pg,
@@ -543,6 +556,8 @@ class TestUpgrade():
             dumpall(pgold,
                     os.path.join(tempdir, "%s.sql" % old_key))
             stop(pgold)
+            init_cluster(pg, True, locales[old_key], True, False)
+            stop(pg)
             upgrade(pg, pgold)
             start(pg)
             after_upgrade(pg, pgold)
@@ -557,6 +572,7 @@ class TestUpgrade():
                     old_edition != '1c':
                 subprocess.check_call("apt-get purge -y postgrespro-common "
                                       "postgrespro-client-common", shell=True)
+        request.cls.locales = locales
 
     def test_dump_restore(self, request):
         """
@@ -571,6 +587,7 @@ class TestUpgrade():
 
         key = request.cls.key
         dist = request.cls.dist
+        locales = request.cls.locales
 
         print("Test dump-restore %s" % product_info)
 
@@ -593,11 +610,6 @@ class TestUpgrade():
             return
 
         for route in dump_restore_route['from']:
-            initdb_params = route['initdb-params'] if \
-                'initdb-params' in route else ''
-            init_cluster(pg, True, initdb_params, True, False)
-            stop(pg)
-
             old_name = route['name']
             old_edition = route['edition']
             old_version = route['version']
@@ -616,8 +628,8 @@ class TestUpgrade():
 
             file_name = os.path.join(tempdir, "%s.sql" % old_key)
 
-            if (os.path.isfile(file_name)):
-                start(pg)
+            if os.path.isfile(file_name):
+                init_cluster(pg, True, locales[old_key], True, False)
                 prepare_ts_dir(pg)
                 with open(os.path.join(tempdir, 'load-dr-%s.log' % old_key),
                           'wb') as out:
@@ -631,7 +643,8 @@ class TestUpgrade():
                     branch=None, windows=(self.system == 'Windows'), old=True
                 )
                 if self.system != 'Windows':
-                    init_cluster(pgold, True, initdb_params, None, True)
+                    locales[old_key] = init_cluster(pgold, True, (None, None),
+                                                    None, True)
 
                 generate_db(
                     pgold, pg,
@@ -640,7 +653,7 @@ class TestUpgrade():
                 dumpall(pgold, file_name)
                 stop(pgold)
 
-                start(pg)
+                init_cluster(pg, True, locales[old_key], True, False)
                 with open(os.path.join(tempdir, 'load-dr-%s.log' % old_key),
                           'wb') as out:
                     pg.exec_psql_file(file_name, '-q', stdout=out)
