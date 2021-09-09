@@ -1,7 +1,7 @@
 SET MD=c:\msys32
-SET MSYS_HREF="http://dist.l.postgrespro.ru/resources/windows/msys2-base-i686-20200517.tar.xz"
+SET MSYS_HREF="http://dist.l.postgrespro.ru/resources/windows/msys2-base-i686-20210705.tar.xz"
 If "%PROCESSOR_ARCHITECTURE%"=="AMD64" ( 
-SET MSYS_HREF="http://dist.l.postgrespro.ru/resources/windows/msys2-base-x86_64-20210215.tar.xz"
+SET MSYS_HREF="http://dist.l.postgrespro.ru/resources/windows/msys2-base-x86_64-20210725.tar.xz"
 SET MD=c:\msys64
 )
 
@@ -32,16 +32,7 @@ powershell -Command "((new-object net.webclient).DownloadFile('%MSYS_HREF%', '%T
 @REM First run is performed to setup the environment
 %MD%\usr\bin\bash --login -i -c exit >%TEMP%\msys-setup.log 2>&1
 
-@REM Keyring updated manually due to invalid key 4A6129F4E4B84AE46ED7F635628F528CF3053E04 (waiting for a newer msys2- base...)
-If "%PROCESSOR_ARCHITECTURE%"=="AMD64" GOTO skip_msys_key
-%MD%\usr\bin\bash --login -i -c ^" ^
-curl -sS -O https://repo.msys2.org/msys/x86_64/msys2-keyring-1~20210213-2-any.pkg.tar.zst ^&^& ^
-pacman --noconfirm -U --config ^<(echo) msys2-keyring-1~20210213-2-any.pkg.tar.zst ^&^& ^
-pacman --noconfirm -Sy ^" >%TEMP%\msys-update.log 2>&1
-
-:skip_msys_key
 %MD%\usr\bin\bash --login -i -c "pacman --noconfirm -S tar make diffutils patch perl" >>%TEMP%\msys-update.log 2>&1
-If NOT "%PROCESSOR_ARCHITECTURE%"=="AMD64" call %MD%\autorebase >>%TEMP%\msys-update.log 2>&1
 
 @REM Grant access to Users (including postgres user) to the whole /var/src contents
 icacls %MD%\var\src /grant *S-1-5-32-545:(OI)(CI)F /T >>%TEMP%\icacls.log
