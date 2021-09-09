@@ -545,8 +545,13 @@ class TestUpgrade():
                 branch=None, windows=(self.system == 'Windows'), old=True
             )
             locales[old_key] = (None, None)
+            # fix: PGPRO-5555
+            if old_name == 'postgresql' and old_version == '9.6' \
+                    and pg.product == 'postgrespro' and pg.version == '9.6' \
+                    and pg.edition == 'std':
+                locales[old_key] = ('C', None)
             if self.system != 'Windows':
-                locales[old_key] = init_cluster(pgold, True, (None, None),
+                locales[old_key] = init_cluster(pgold, True, locales[old_key],
                                                 None, True)
 
             generate_db(
