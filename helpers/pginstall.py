@@ -1051,7 +1051,8 @@ baseurl=%s
         else:
             pkgs = self.all_packages_in_repo
             if self.os_name == "RED OS" and \
-                    self.os_version == '7.2':
+                    self.os_version == '7.2' and \
+                    r".*zstd.*" not in do_not_remove:
                 do_not_remove.append(r".*zstd.*")
             if do_not_remove:
                 for pkg in pkgs[:]:
