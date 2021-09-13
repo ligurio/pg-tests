@@ -179,6 +179,8 @@ class TestMakeCheck(object):
         pginst.exec_psql("ALTER SYSTEM SET lc_messages = 'C'")
         # Prepare server for test pg_proaudit
         pginst.exec_psql("ALTER SYSTEM SET wal_level = 'logical'")
+        # enable log all autovacuum duration
+        pginst.exec_psql("ALTER SYSTEM SET log_autovacuum_min_duration = '0'")
         # Prepare pg_hba.conf for src/interfaces/ecpg/test/connect/test5
         with open(os.path.join(pginst.get_configdir(), 'pg_hba.conf'),
                   'r+') as conf:
