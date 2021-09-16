@@ -10,7 +10,7 @@ SET PGPATH=%2
 powershell -Command "((new-object net.webclient).DownloadFile('https://netcologne.dl.sourceforge.net/project/sevenzip/7-Zip/9.20/7za920.zip', '%TEMP%\7z.zip'))"
 powershell -Command "$shell = New-Object -ComObject Shell.Application; $zip_src = $shell.NameSpace('%TEMP%\7z.zip'); $zip_dest = $shell.NameSpace('%TEMP%'); $zip_dest.CopyHere($zip_src.Items(), 1044)"
 
-powershell -Command "((new-object net.webclient).DownloadFile('http://dist.l.postgrespro.ru/resources/windows/msys2-base-x86_64-20210215.tar.xz', '%TEMP%\msys.tar.xz'))"
+powershell -Command "((new-object net.webclient).DownloadFile('http://dist.l.postgrespro.ru/resources/windows/msys2-base-x86_64-20210725.tar.xz', '%TEMP%\msys.tar.xz'))"
 %TEMP%\7za.exe x %TEMP%\msys.tar.xz -so 2>%TEMP%/7z-msys0.log | %TEMP%\7za.exe x -aoa -si -ttar >%TEMP%/7z-msys1.log 2>&1
 
 REM First run is performed to setup the environment
