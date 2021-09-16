@@ -163,7 +163,8 @@ if dmesg | grep ' segfault at '; then
 fi
 exit $result
 """
-            script_file = '/tmp/check-coredumps.sh'
+            script_file = os.path.join(os.path.abspath(os.getcwd()), 'tmp',
+                                       'check-coredumps.sh')
             with open(script_file, 'w') as scrf:
                 scrf.write(script)
             os.chmod(script_file, 0o0755)
