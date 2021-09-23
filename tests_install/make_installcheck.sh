@@ -59,7 +59,7 @@ if grep 'SUSE Linux Enterprise Server' /etc/SuSE-release >/dev/null 2>&1; then #
 fi
 
 chown -R postgres:postgres .
-if ./configure --help | grep '  --enable-svt5'; then
+if $1/bin/pg_config --configure | grep 'enable-svt5'; then
     chown -R postgres:postgres $1
     extraoption="--enable-svt5"
     if which apt-get >/dev/null 2>&1; then
