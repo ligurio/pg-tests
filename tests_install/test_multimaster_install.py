@@ -526,7 +526,7 @@ class TestMultimasterInstall():
             return
         # Resize /dev/shm under Linux
         if self.system == 'Linux':
-            os.system('mount -t tmpfs -o remount,size=1500M tmpfs /dev/shm')
+            os.system('mount -t tmpfs -o remount,size=2500M tmpfs /dev/shm')
 
         # Step 1
         pginst = PgInstall(product=name, edition=edition,
