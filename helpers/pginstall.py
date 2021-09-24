@@ -1390,14 +1390,12 @@ baseurl=%s
         return 5432
 
     def initdb_start(self):
-        if self.product == 'postgrespro' and self.version == '9.6':
-            if self.os.is_debian_based():
-                return
-            if self.os.is_altlinux():
+        if self.product == 'postgrespro':
+            if self.version == '9.6' and self.os.is_altlinux():
                 subprocess.check_call('/etc/init.d/postgresql-%s initdb' %
                                       self.version, shell=True)
                 self.start_service()
-            elif self.os.is_redhat_based():
+            elif self.version == '9.6' and self.os.is_redhat_based():
                 if subprocess.call("which systemctl", shell=True) == 0 and \
                         not (self.version == '9.6' and self.edition == '1c'):
                     binpath = self.get_bin_path()
@@ -1409,12 +1407,15 @@ baseurl=%s
                     cmd = 'service "%s" initdb' % self.service_name
                 subprocess.check_call(cmd, shell=True)
                 self.start_service()
-            elif self.os.is_suse():
+            elif self.version == '9.6' and self.os.is_suse():
                 self.start_service()
-            else:
+            elif self.version == '9.6' and not self.os.is_debian_based():
                 raise Exception('OS %s is not supported.' % self.os_name)
+            else:
+                self.wait_for_action('start')
         elif self.product == 'postgresql':
             if self.os.is_debian_based():
+                self.wait_for_action('start')
                 return
             if self.os.is_redhat_based() or self.os.is_suse():
                 if subprocess.call("which systemctl", shell=True) == 0:
@@ -1462,19 +1463,22 @@ baseurl=%s
 
     def service_action(self, action='start', wait_for_completion=True):
         self.os.service_action(self.service_name, action)
-        action_timeout = 120
         if wait_for_completion:
-            for i in range(1, action_timeout):
-                if action == 'stop':
-                    if not self.pg_isready():
-                        return True
-                else:
-                    if self.pg_isready():
-                        return True
-                time.sleep(1)
-            raise Exception("Service action '%s' failed to complete"
-                            " in %d seconds." % (action, action_timeout))
+            self.wait_for_action(action)
         return True
+
+    def wait_for_action(self, action='start'):
+        timeout = 120
+        for i in range(1, timeout):
+            if action == 'stop':
+                if not self.pg_isready():
+                    return True
+            else:
+                if self.pg_isready():
+                    return True
+            time.sleep(1)
+        raise Exception("Server action '%s' failed to complete"
+                        " in %d seconds." % (action, timeout))
 
     def start_service(self):
         return self.service_action('start')
