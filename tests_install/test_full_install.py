@@ -133,10 +133,12 @@ def check_executables(pginst, packages):
                 continue
             # PGPRO-5369
             if f.endswith("/isolationtester") and pginst.version == "14":
-                if (pginst.os_name == "ALT Server" and
-                    pginst.os_version == "9.0") or \
-                    (pginst.os_name in "ALT SPServer" and
-                        pginst.os_version in ("8.0", "8.2")):
+                if ((pginst.os_name == "ALT Server" and
+                     pginst.os_version == "9.0") or
+                    (pginst.os_name == "ALT SPServer" and
+                     pginst.os_version in ("8.0", "8.2")) or
+                    (pginst.os_name == "starter kit" and
+                     pginst.os_version == "p10")):
                     print("skip ldd isolationtester")
                     continue
             fout = subprocess.check_output(
