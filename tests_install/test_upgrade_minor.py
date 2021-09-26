@@ -62,12 +62,6 @@ ARCHIVE_VERSIONS = {
     'Debian GNU/Linux 8': {
         'postgrespro-ent-9.6': '9.6.7.1'
     },
-    # maybe remove?
-    'GosLinux 6.4': {
-        'postgrespro-std-9.6': None,
-        'postgrespro-ent-9.6': None,
-        'postgrespro-ent-10': None
-    },
     'GosLinux 7': {
         'postgrespro-std-9.6': None,
         'postgrespro-std-10': '10.6.1',
