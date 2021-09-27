@@ -81,9 +81,6 @@ class TestMakeCheck(object):
                 print("Test performed with pgpro-online-upgrade")
                 run_test_ou = True
 
-        if edition == "ent" and version == "13" and self.system == "Linux":
-            os.system('mount -t tmpfs -o remount,size=1000M tmpfs /dev/shm')
-
         if self.system == 'Windows':
             if os.path.exists(pginst.get_default_bin_path()):
                 # Refresh environment to get correct PYTHONHOME
