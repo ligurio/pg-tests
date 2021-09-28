@@ -467,10 +467,10 @@ FIRST_RELEASE = {
     "Debian GNU/Linux 10 aarch64": {
         'postgrespro-std-9.6': None,
         'postgrespro-std-10': None,
-        'postgrespro-std-11': '11.5.1',
+        'postgrespro-std-11': '11.8.1',
         'postgrespro-ent-9.6': None,
         'postgrespro-ent-10': None,
-        'postgrespro-ent-11': '11.5.1',
+        'postgrespro-ent-11': '11.8.1',
     },
     # ubuntu-16.04
     "Ubuntu 16.04": {
