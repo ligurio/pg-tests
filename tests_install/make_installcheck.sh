@@ -149,7 +149,7 @@ done <<< "$opts";
 ldlib=""
 if grep 'CPE_NAME="cpe:/o:alt:.*:p10"\|ALT Server 9.0\|ALT 8 SP Server' /etc/*-release >/dev/null 2>&1; then
     ver=`$1/bin/pg_config --version | sed -nE "s/[^0-9]+([0-9]+).*/\1/p"`
-    if [[ ! -z $ver && $ver == 14 ]]; then
+    if [ "$ver" == 14 ]; then
         ldlib="LD_LIBRARY_PATH=$1/lib:$LD_LIBRARY_PATH"
     fi
 fi
