@@ -93,7 +93,8 @@ class Node(object):
             conf.write(
                 'listen_addresses = \'%s\'\n' % ', '.join(
                     self.listen_ips.values()) +
-                'unix_socket_directories = \'\'\n'
+                'unix_socket_directories = \'\'\n' +
+                'multimaster.trans_spill_threshold = \'20MB\'\n'
             )
         with open(os.path.join(self.datadir, 'pg_hba.conf'), 'a') as hba:
             hba.write(
