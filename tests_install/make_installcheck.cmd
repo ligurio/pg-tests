@@ -103,7 +103,7 @@ disconfopts=""
 confopts="python_majorversion=`\"$PYTHONHOME\\python\" -c 'import sys; print(sys.version_info.major)'`"
 opts=`"$PGPATH/bin/pg_config" --configure | grep -Eo "'[^']*'|[^' ]*" | sed -e "s/^'//" -e "s/'$//"`
 while read -r opt; do
-    case "$opt" in --with-*=*) ;; --with-* | --enable-*) opt="${opt/#--/}"; opt="${opt//-/_}" confopts="$confopts $opt=yes ";; esac;
+    case "$opt" in --with-*=* | --enable-nls*) ;; --with-* | --enable-*) opt="${opt/#--/}"; opt="${opt//-/_}" confopts="$confopts $opt=yes ";; esac;
     case "$opt" in --disable-dependency-tracking | --disable-rpath) ;; --disable-*) disconfopts="$disconfopts $opt" ;; esac;
 done <<< "$opts";
 echo "confopts: $confopts"
