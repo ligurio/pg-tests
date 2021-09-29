@@ -61,9 +61,9 @@ fi
 autoreconf -fi
 CXXFLAGS="-std=c++11" ./configure --prefix=$basedir/libpqxx --disable-documentation && make && make install
 cd ~test/pg-tests
-curl --tlsv1.2 -sS -L https://github.com/anse1/sqlsmith/archive/master.tar.gz \
+curl --tlsv1.2 -sS -L https://github.com/anse1/sqlsmith/archive/2dc83ee8.tar.gz \
     -o ss.tar.gz || \
-wget https://github.com/anse1/sqlsmith/archive/master.tar.gz -O ss.tar.gz
+wget https://github.com/anse1/sqlsmith/archive/2dc83ee8.tar.gz -O ss.tar.gz
 tar fax ss.tar.gz
 cd sqlsmith*/
 sed -e 's|\[m4_esyscmd_s(\[git describe --dirty --tags --always\])\]|1|' -i configure.ac # To do with old autoconf and without git
