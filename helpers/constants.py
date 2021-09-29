@@ -269,14 +269,6 @@ FIRST_RELEASE = {
         'postgrespro-ent-11': None,
         'postgrespro-1c-9.6': None
     },
-    # may be remove?
-    "GosLinux 6.4": {
-        'postgresql--9.6': None,
-        'postgresql--10': None,
-        'postgresql--11': None,
-        'postgresql--12': None,
-        'postgresql--13': None,
-    },
     # redos-7
     "RED OS 7.2": {
         'postgresql--9.6': None,
