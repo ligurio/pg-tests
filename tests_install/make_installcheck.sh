@@ -147,7 +147,7 @@ done <<< "$opts";
 
 # Workaround for incorrect libpq in isolationtester for v14 on altlinux. (PGPRO-5369)
 ldlib=""
-if grep 'CPE_NAME="cpe:/o:alt:.*:p10"\|ALT Server 9.0\|ALT 8 SP Server' /etc/*-release >/dev/null 2>&1; then
+if grep 'CPE_NAME="cpe:/o:alt:.*:p10"\|ALT Server 9.0\|ALT 8 SP Server\|ALT Linux 7.0.4  SPT' /etc/*-release >/dev/null 2>&1; then
     ver=`$1/bin/pg_config --version | sed -nE "s/[^0-9]+([0-9]+).*/\1/p"`
     if [ "$ver" == 14 ]; then
         ldlib="LD_LIBRARY_PATH=$1/lib:$LD_LIBRARY_PATH"
