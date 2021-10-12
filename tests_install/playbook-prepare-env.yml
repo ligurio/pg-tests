@@ -363,7 +363,6 @@
         - gcc
         - gdb
         - sudo
-        - gnutls-bin
       state: present
       update_cache: yes
     when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu' or
@@ -390,6 +389,8 @@
     apt:
       name:
         - qemu-guest-agent
+        - gnutls-bin
+        - gnupg
       state: present
       update_cache: yes
     when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
