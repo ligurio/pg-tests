@@ -128,10 +128,11 @@
       fi; \
       echo "Workaround for PGPRO-1259"; \
       rm -rf /opt/localrepo; mkdir /opt/localrepo && cd /opt/localrepo && \
-      wget http://vault.centos.org/6.8/os/x86_64/Packages/libicu-4.2.1-14.el6.x86_64.rpm && \
-      wget http://vault.centos.org/6.8/os/x86_64/Packages/libicu-devel-4.2.1-14.el6.x86_64.rpm && \
+      wget --no-check-certificate http://vault.centos.org/6.8/os/x86_64/Packages/libicu-4.2.1-14.el6.x86_64.rpm && \
+      wget --no-check-certificate http://vault.centos.org/6.8/os/x86_64/Packages/libicu-devel-4.2.1-14.el6.x86_64.rpm && \
       createrepo . && cd ~ && \
-      rpm --import http://vault.centos.org/6.8/os/x86_64/RPM-GPG-KEY-CentOS-6 && \
+      wget --no-check-certificate http://vault.centos.org/6.8/os/x86_64/RPM-GPG-KEY-CentOS-6 && \
+      rpm --import RPM-GPG-KEY-CentOS-6 && \
       printf "[localrepo]\nname=localrepo\nbaseurl=file:///opt/localrepo\nenabled=1\n" > /etc/yum.repos.d/local.repo &&
       yum -y update;
     when: use_ssh is not defined and (ansible_distribution == "МСВСфера" or ansible_distribution == "MSVSphere")
