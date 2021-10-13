@@ -145,14 +145,6 @@ while read -r opt; do
     case "$opt" in --disable-dependency-tracking | --disable-rpath) ;; --disable-*) disconfopts="$disconfopts $opt" ;; esac;
 done <<< "$opts";
 
-# Workaround for incorrect libpq in isolationtester for v14 on altlinux. (PGPRO-5369)
-ldlib=""
-if grep 'CPE_NAME="cpe:/o:alt:.*:p10"\|ALT Server 9.0\|ALT 8 SP Server\|ALT Linux 7.0.4  SPT' /etc/*-release >/dev/null 2>&1; then
-    ver=`$1/bin/pg_config --version | sed -nE "s/[^0-9]+([0-9]+).*/\1/p"`
-    if [ "$ver" == 14 ]; then
-        ldlib="LD_LIBRARY_PATH=$1/lib:$LD_LIBRARY_PATH"
-    fi
-fi
 # Pass to `./configure` disable-* options, that were passed to configure (if any; namely, --disable-online-upgrade)
 echo "Configuring with options: --enable-tap-tests --without-readline --prefix=$1 $disconfopts $extraoption"
 sudo -u postgres ./configure --enable-tap-tests --without-readline --prefix=$1 $disconfopts $extraoption || exit $?
