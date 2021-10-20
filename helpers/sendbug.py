@@ -80,7 +80,7 @@ def createTask(server_base_url, user, password,
 
         server_base_url = 'https://jira.postgrespro.ru'
         complete_url = "%s/rest/api/2/issue" % server_base_url
-        base64string = base64.encodestring('%s:%s' % (user, password))[:-1]
+        base64string = base64.encodebytes('%s:%s' % (user, password))[:-1]
         # pylint: disable=undefined-variable
         request = urllib2.Request(complete_url, json.dumps(data),
                                   {'Content-Type': 'application/json'})

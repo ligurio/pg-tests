@@ -1,7 +1,6 @@
 import os
 import platform
 import pytest
-import settings
 
 
 @pytest.mark.test_stub
