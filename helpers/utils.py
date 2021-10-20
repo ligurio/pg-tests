@@ -793,4 +793,4 @@ def revoke_admin_right(domipaddress, remote_login, remote_password,
             "[1]; net localgroup $group %s /delete\"" % remote_login
         exec_command_win(cmd, domipaddress, remote_login, remote_password)
     else:
-        raise("Not implemented.")
+        raise Exception("Not implemented.")
