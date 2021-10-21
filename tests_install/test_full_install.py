@@ -316,7 +316,7 @@ class TestFullInstall():
                 assert ppedition == 'standard'
             print('pgpro_source_id:',
                   pginst.exec_psql_select("SELECT pgpro_build()"))
-        if version not in ["9.6", "10", "13"]:
+        if version not in ["9.6", "10"]:
             pginst.env = {}
             for var in os.environ:
                 pginst.env[var] = str(os.environ[var])
@@ -326,12 +326,18 @@ class TestFullInstall():
                                            '"%s"' % pginst.get_datadir()
                                            ).split('\n')
             if name == 'postgrespro' and not (edition in ['1c', 'sql']):
-                assert cdout[0].startswith('pg_control edition:')
-                cdedition = cdout[0].replace('pg_control edition:', '').strip()
+                if cdout[0].startswith('pg_control edition:'):
+                    el = 0
+                elif cdout[1].startswith('pg_control edition:'):
+                    el = 1
+                else:
+                    raise Exception('pg_control edition is not found'
+                                    ' in pg_controldata output')
+                cdedn = cdout[el].replace('pg_control edition:', '').strip()
                 if edition == 'ent':
-                    assert cdedition == 'Postgres Pro Enterprise'
+                    assert cdedn == 'Postgres Pro Enterprise'
                 elif edition == 'std':
-                    assert cdedition == 'Postgres Pro Standard'
+                    assert cdedn == 'Postgres Pro Standard'
         print("OK")
 
     def test_mamonsu(self, request):
