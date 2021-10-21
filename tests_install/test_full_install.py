@@ -398,6 +398,7 @@ class TestFullInstall():
                                            '"%s"' % pginst.get_datadir()
                                            ).split('\n')
             if name == 'postgrespro' and not (edition in ['1c', 'sql']):
+                # PGPRO-5015
                 if cdout[0].startswith('pg_control edition:'):
                     el = 0
                 elif cdout[1].startswith('pg_control edition:'):
