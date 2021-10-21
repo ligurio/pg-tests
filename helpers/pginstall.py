@@ -107,6 +107,11 @@ PRELOAD_LIBRARIES = {
         ['auth_delay', 'auto_explain', 'pg_stat_statements', 'plantuner'],
     '1c-14':
         ['auth_delay', 'auto_explain', 'plantuner'],
+    'std-14':
+        # PGPRO-5291 pg_pathman
+        # PGPRO-5278 pg_query_state
+        ['auth_delay', 'auto_explain',
+         'plantuner', 'shared_ispell', 'ptrack'],
 }
 
 
