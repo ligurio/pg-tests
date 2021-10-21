@@ -207,10 +207,10 @@ psql -c 'SHOW data_directory';
 make installcheck -C src/interfaces/libpq &&
 make installcheck -C src/test/modules/commit_ts &&
 make installcheck -C src/test/modules/test_pg_dump &&
-echo PGPRO-4563 Disabled: make installcheck-force -C src/test/modules/snapshot_too_old &&
+make installcheck-force -C src/test/modules/snapshot_too_old &&
 if [ -d src/test/modules/brin ]; then make installcheck -C src/test/modules/brin; fi &&
 if [ -d src/test/modules/unsafe_tests ]; then make installcheck -C src/test/modules/unsafe_tests; fi &&
-echo PGPRO-4563 Disabled: make installcheck-force -C contrib/test_decoding"
+make installcheck-force -C contrib/test_decoding"
     exitcode=$?
     sudo -u postgres $1/bin/pg_ctl -D tmpdb -w stop
 fi
