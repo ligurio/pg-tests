@@ -194,6 +194,13 @@ class TestPgprobackup():
                               os.path.join(dir, 'tests', 'helpers',
                                            'ptrack_helpers.py'),
                               shell=True)
+        # https://github.com/postgrespro/pg_probackup/pull/447
+        if sys.version_info < (3, 0):
+            self.pginst.os.install_package('patch')
+            subprocess.check_call(
+                "patch -p1 -i ../patches/pg_probackup_py2_compat.patch",
+                shell=True, cwd=dir
+            )
         self.fix_permissions(dir)
         # PGPRO-4108 wait ptrack2.0 in 10
         cmd = "%s sh -c 'PG_CONFIG=\"%s/pg_config\"" \
