@@ -46,7 +46,7 @@ SERVER_APPLICATIONS = {
     '1c-12':
         ['initdb', 'pg_archivecleanup', 'pg_controldata', 'pg_ctl',
          'pg_resetwal', 'pg_rewind', 'pg-setup', 'pg_test_fsync',
-         'pg_test_timing', 'pg_upgrade', 'pg_verify_checksums',
+         'pg_test_timing', 'pg_upgrade', 'pg_checksums',
          'pg_waldump', 'postgres', 'postmaster'],
     'std-12':
         ['initdb', 'pg_archivecleanup', 'pg_controldata', 'pg_ctl',
@@ -61,7 +61,7 @@ SERVER_APPLICATIONS = {
     '1c-13':
         ['initdb', 'pg_archivecleanup', 'pg_controldata', 'pg_ctl',
          'pg_resetwal', 'pg_rewind', 'pg-setup', 'pg_test_fsync',
-         'pg_test_timing', 'pg_upgrade', 'pg_verify_checksums',
+         'pg_test_timing', 'pg_upgrade', 'pg_checksums',
          'pg_waldump', 'postgres', 'postmaster'],
     'std-13':
         ['initdb', 'pg_archivecleanup', 'pg_controldata', 'pg_ctl',
@@ -76,7 +76,7 @@ SERVER_APPLICATIONS = {
     '1c-14':
         ['initdb', 'pg_archivecleanup', 'pg_controldata', 'pg_ctl',
          'pg_resetwal', 'pg_rewind', 'pg-setup', 'pg_test_fsync',
-         'pg_test_timing', 'pg_upgrade', 'pg_verify_checksums',
+         'pg_test_timing', 'pg_upgrade', 'pg_checksums',
          'pg_waldump', 'postgres', 'postmaster'],
     'std-14':
         ['initdb', 'pg_archivecleanup', 'pg_controldata', 'pg_ctl',
