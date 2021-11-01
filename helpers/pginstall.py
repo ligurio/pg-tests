@@ -111,7 +111,7 @@ PRELOAD_LIBRARIES = {
         # PGPRO-5291 pg_pathman
         # PGPRO-5278 pg_query_state
         ['auth_delay', 'auto_explain',
-         'plantuner', 'shared_ispell', 'ptrack'],
+         'plantuner', 'shared_ispell', 'ptrack', 'pg_proaudit'],
 }
 
 
